@@ -26,6 +26,13 @@ data/brand_contacts/
 # committed.
 data/brand_deals/
 
+# Agency Profile (Phase 0): single agency-identity file with real
+# agent contact details (email, phone), DNS-verified domain config,
+# Smartlead mailbox IDs. Schema (schemas/agency_profile.schema.json)
+# and spec (docs/agency_setup_workflow.md) are tracked; the data is
+# never committed.
+data/agency_profile.json
+
 # Outreach enrollments: per-(talent, contact) running sequence
 # instances with PII + AI-generated email content. Schema
 # (schemas/pitch_enrollment.schema.json) tracked; data never.

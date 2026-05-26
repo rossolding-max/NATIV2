@@ -32,16 +32,16 @@
 **v0.1 scope is enrichment only — NOT outreach.** The LinkedIn API in v0.1 is used to read profile data, last-activity dates, and search. Sending LinkedIn messages / InMails / connection requests as part of an outreach sequence is **deferred to v2** — see `docs/outreach_workflow.md` § "Email-only in v0.1". When v2 ships LinkedIn-channel sending, we'll evaluate sender vendors (Sales Navigator API vs third-party platforms like Closely / Expandi / La Growth Machine) against LinkedIn's automation-policy enforcement.
 
 ### Smartlead.ai — outreach send + sequence backend (Phase 3b lead vendor)
-**Role:** Powers the cold-outreach engine spec'd in `docs/outreach_workflow.md`. Our app generates per-step AI content (Claude on our side) and pushes it to Smartlead via API; Smartlead handles per-talent mailbox + warmup, send scheduling, open/click tracking, reply detection. Webhooks fire back to our app for kill-logic and analytics.
-**Why Smartlead over alternatives:** API-first design — purpose-built for custom-app integration. Unlimited mailbox warmup included in base plan (critical for per-talent domain strategy). Per-mailbox economics align with our shared-pool / per-talent model. Robust webhook support for the kill-on-reply logic.
+**Role:** Powers the cold-outreach engine spec'd in `docs/outreach_workflow.md`. Our app generates per-step AI content (Claude on our side) and pushes it to Smartlead via API; Smartlead handles the agency's sending mailbox + warmup, send scheduling, open/click tracking, reply detection. Webhooks fire back to our app for kill-logic and analytics.
+**Why Smartlead over alternatives:** API-first design — purpose-built for custom-app integration. Unlimited mailbox warmup included in base plan. Robust webhook support for the kill-on-reply logic. Per-mailbox economics align with our agency-sends-on-behalf model.
 **Why NOT Resend** (initially considered): Resend's terms of service explicitly prohibit cold/unsolicited outreach — they're a transactional email API. Accounts running cold campaigns get suspended. Resend is purpose-built for password resets / receipts / login alerts, not outbound prospecting.
 **Endpoints we'll use:**
 - `POST /campaigns` — create campaign per (talent, template)
 - `POST /campaigns/{id}/leads` — push enrolled contact + AI-generated content
 - `POST /campaigns/{id}/pause` — kill on reply
 - Webhooks: `email_sent`, `email_delivered`, `email_opened`, `email_clicked`, `email_replied`, `email_bounced`, `email_unsubscribed`
-**Per-talent mailbox setup:** Smartlead requires a sending mailbox per talent (we use the talent's own domain — see `docs/onboarding_workflow.md` § Outbound sender domain setup). Warmup ramps up over 2-4 weeks via Smartlead's peer-to-peer warmup network.
-**Cost:** ~$94/mo Pro tier per active talent mailbox; $39/mo Basic for solo creators. Custom pricing at higher volume.
+**Agency-level mailbox setup:** v0.1 uses ONE sending mailbox per agency (typically `{agent_first_name}@{agency_domain}`), set up in Phase 0 per `docs/agency_setup_workflow.md`. Single warmup cycle (2-4 weeks). All talent onboarding plugs into this pre-warmed mailbox — no per-talent warmup wait. v2 multi-agent rosters will add one mailbox per additional agent.
+**Cost:** ~$94/mo Pro tier per active agency mailbox; $39/mo Basic for a single agent. Compared to per-talent pricing this is a major cost reduction — one mailbox serves the whole roster.
 **Env var:** `SMARTLEAD_API_KEY`.
 
 ---

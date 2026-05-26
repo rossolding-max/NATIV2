@@ -23,6 +23,8 @@ For every qualified brand contact, run a personalised multi-step outreach sequen
 
 **Scope note — v0.1 is email-only.** LinkedIn outreach (DMs, InMails, connection requests) is **deferred to v2**. The schemas, templates, and orchestrator all reject non-email channels at v0.1. LinkedIn API is still used in Phase 3a for contact verification and enrichment (see `docs/contact_enrichment_workflow.md`) — that's a separate use case from sending LinkedIn messages.
 
+**Sender model — agency, not talent.** Outreach is sent by the talent's **agency** in the agent's name (e.g. `sarah@nativeagency.com`). Voice: **agent-led on-behalf-of talent** — "I'm Sarah from Native Agency — I represent Jane Doe, who drove 1.24M reach for Gymshark." See `docs/agency_setup_workflow.md` (Phase 0) for the one-time agency identity + sender mailbox + DNS + warmup setup. v0.1: single agent, single agency. v2: multi-agent within one agency.
+
 ## Architecture
 
 ```
@@ -190,11 +192,13 @@ Similar shape, 3 steps, `tone: warm_casual`, preferred_angle_categories favour `
 For each step in the template, the LLM is given:
 
 1. **System prompt** (template-driven):
-   - The talent's identity + voice profile
+   - **Sender context** from `data/agency_profile.json`: the agent's name + title, agency name, voice mode (`agent_led_on_behalf_of_talent` by v0.1 default). LLM instructed: "You are {agent_name}, writing on behalf of {talent_name}. Refer to the talent in third person. Open with a brief self-introduction; the body cites the talent's track record."
+   - The talent's identity + voice profile (used as factual context about whom the agent represents; NOT the speaking voice)
    - The step's `intent` (what this email is for)
    - Template `tone` + guardrails (max_body_chars, must-include unsubscribe, etc.)
-   - The 5–10 applicable angles for this (talent, contact, brand) combo, with their `example_phrasing` patterns
+   - The 5–10 applicable angles for this (talent, contact, brand) combo, with their `example_phrasing` patterns (which already use `{talent_name}` references reflecting the agent-led voice)
    - The step's `preferred_angle_categories` (LLM should lean toward these) and `excluded_angle_categories` (must avoid)
+   - Signature template from `agency_profile.default_signature_template` (LLM appends this verbatim; validation ensures `{unsubscribe_link}`, `{agency_address}`, `{agent_name}` tokens are present)
 
 2. **User-message context**:
    - Full talent profile JSON (excluding sensitive fields)
@@ -397,29 +401,30 @@ When `email_replied` fires:
 
 **v0.1 explicit non-goal:** the analyzer does NOT auto-update `pitch_angles.json` `authored_strength_score`. Output is for human review. Users edit angles manually as they learn. Closed-loop auto-tuning is a v2 goal.
 
-## Per-talent sender domain setup
+## Agency-level sender setup (not per-talent)
 
-Each talent needs their own sending identity for deliverability + authenticity. Configured during onboarding (per the updated `docs/onboarding_workflow.md` Step 2 sub-step).
+**Per the v0.1 architecture:** outreach emails are sent by the talent's **agency**, not by the talent themselves. The agency configures sender identity **once** during Phase 0 (`docs/agency_setup_workflow.md`); all subsequent talent onboarding plugs into the pre-warmed agency mailbox.
 
-**Setup (one-time per talent):**
+**v0.1 model — single agent / single agency:**
+- One sending mailbox per agency: typically `{agent_first_name}@{agency_domain}` (e.g. `sarah@nativeagency.com`)
+- One agent represents all talents in the roster
+- Voice: **agent-led on-behalf-of talent** ("I'm Sarah from Native Agency — I represent Jane Doe, who drove 1.24M reach for Gymshark...")
+- All 42 pitch angles' `example_phrasing` patterns use this voice; `{talent_name}` is a required merge field
 
-1. Talent provides their domain (e.g. `janedoetalent.com`).
-2. We provision a subdomain mailbox: `pitches@janedoetalent.com` (or whatever the talent prefers).
-3. Talent (or their tech contact) adds 3 DNS records:
-   - **SPF** — TXT record: `v=spf1 include:smartlead.io ~all`
-   - **DKIM** — TXT record provided by Smartlead per-domain
-   - **DMARC** — TXT record: `v=DMARC1; p=quarantine; rua=mailto:dmarc-reports@janedoetalent.com`
-4. NATIV2 verifies DNS records via Smartlead.
-5. Smartlead starts the 2–4 week warmup ramp (peer-to-peer warmup network — gradual real conversations with other warmed inboxes to build sender reputation).
-6. Outreach is held until warmup is complete (`sender_warmup_complete: true`).
+**Why agency-level (not per-talent):**
+- **Cost** — Smartlead drops from ~$94/mo per talent to ~$94/mo for the whole agency
+- **Setup** — DNS records + warmup is a one-time cost, not repeated per onboarding
+- **Reply handling** — all replies land in the agency's inbox; the agent triages across the roster (rather than each talent receiving replies for their own deals)
+- **Authenticity for the brand** — they recognise the agent as a real human partnerships professional, not a marketing-platform-as-talent
 
-**Why per-talent domain:**
-- **Deliverability** — Gmail/Yahoo Feb 2024 rules require DMARC + DKIM + SPF; per-domain reputation is independent
-- **Authenticity** — brand recognises `jane@janedoetalent.com` as the talent, not a marketing platform
-- **Isolation** — if one talent's domain triggers spam complaints, other talents' reputations aren't affected
-- **CAN-SPAM compliance** — physical address + unsubscribe link tie to the actual sender, not a generic NATIV2 mailbox
+**DNS records** (set during agency setup):
+- **SPF** — TXT record: `v=spf1 include:smartlead.io ~all`
+- **DKIM** — TXT record provided by Smartlead per-domain
+- **DMARC** — TXT record: `v=DMARC1; p=quarantine; rua=mailto:dmarc-reports@{agency_domain}`
 
-If a talent doesn't have a domain, we suggest registering one as a Day 1 onboarding step (~$12/yr; we can streamline via Cloudflare API in v2).
+**Warmup** — Smartlead's peer-to-peer warmup network builds sender reputation over 2-4 weeks. Talent onboarding can run in parallel; outreach is blocked until `sending_mailboxes[].warmup_status == "complete"`.
+
+**v2 expansion (deferred):** multi-agent rosters. The schema (`schemas/agency_profile.schema.json`) is already array-shaped for `agents[]` and `sending_mailboxes[]`; v0.1 simply constrains `agents` to `maxItems: 1`. v2 lifts the constraint, adds per-agent mailbox warmup, and routes outreach by `agents[].represents_talent_ids[]`.
 
 ## State machine
 

@@ -1,29 +1,49 @@
 {
   "$schema": "../schemas/pitch_angle.schema.json",
-  "$comment": "Curated library of pitch angles the AI generation pipeline draws from. See docs/outreach_workflow.md for how angles plug into the email composition step. Strength scores are hand-authored; v2 will tune them from observed reply data. Edit angles freely as the user learns what works — re-run scripts/analyze_outreach.py to see how observed reply rates compare against authored scores.",
-  "version": "1.0.0",
+  "$comment": "Curated library of pitch angles the AI generation pipeline draws from. Phrasings use AGENT-LED ON-BEHALF-OF voice (v1.1) \u2014 emails are sent by the talent's agency, not the talent themselves. The LLM rewrites tone/context; merge fields with {curly_braces} are substituted at generation time. talent_name is required in nearly every phrasing now. Edit angles freely as the user learns what works. v2 may add per-angle voice_mode overrides for agencies that prefer talent-led messaging.",
+  "version": "1.1.0",
   "updated": "2026-05-26",
   "angles": [
-
     {
       "angle_id": "past_brand_direct_competitor",
       "category": "competitive_proof",
       "name": "Worked with a direct competitor",
-      "description": "Talent has proven track record with a brand the contact's brand directly competes with (per the curated brand_competitors.json graph, not just same industry_id). Strongest competitive proof — shows fit AND creates FOMO.",
+      "description": "Talent has proven track record with a brand the contact's brand directly competes with (per the curated brand_competitors.json graph, not just same industry_id). Strongest competitive proof \u2014 shows fit AND creates FOMO.",
       "trigger": {
         "type": "talent_worked_with_competitor",
-        "config": { "min_competitor_overlap": 1 }
+        "config": {
+          "min_competitor_overlap": 1
+        }
       },
-      "applicable_to_decision_roles": ["buyer", "influencer"],
-      "applicable_to_steps": [1, 2],
+      "applicable_to_decision_roles": [
+        "buyer",
+        "influencer"
+      ],
+      "applicable_to_steps": [
+        1,
+        2
+      ],
       "authored_strength_score": 0.95,
-      "example_phrasing": "I recently wrapped a campaign with {competitor_brand} — same vertical, similar audience overlap with {target_brand}. The {format} hit {metric} with a {engagement_rate} engagement rate. I noticed {target_brand} hasn't worked with someone in my space yet — would love to chat.",
-      "merge_fields_required": ["competitor_brand", "target_brand", "format", "metric", "engagement_rate"],
-      "pair_well_with": ["iab_demographic_overlap", "specific_creative_concept", "values_aligned_search"],
-      "avoid_combining_with": ["talent_worked_in_same_industry", "talent_worked_in_tertiary_industry"],
-      "notes": "Highest authored strength. Use with care if competitor is a particularly bitter rival — frame as 'proven track record in this space' not 'I left them for you'."
+      "example_phrasing": "{talent_name} recently wrapped a campaign with {competitor_brand} \u2014 same vertical, similar audience overlap with {target_brand}. The {format} hit {metric} with a {engagement_rate} engagement rate. {target_brand} hasn't worked with someone in {talent_name}'s space yet \u2014 happy to share the full audit.",
+      "merge_fields_required": [
+        "talent_name",
+        "competitor_brand",
+        "target_brand",
+        "format",
+        "metric",
+        "engagement_rate"
+      ],
+      "pair_well_with": [
+        "iab_demographic_overlap",
+        "specific_creative_concept",
+        "values_aligned_search"
+      ],
+      "avoid_combining_with": [
+        "talent_worked_in_same_industry",
+        "talent_worked_in_tertiary_industry"
+      ],
+      "notes": "Highest authored strength. Use with care if competitor is a particularly bitter rival \u2014 frame as 'proven track record in this space' not 'I left them for you'."
     },
-
     {
       "angle_id": "past_brand_same_industry",
       "category": "competitive_proof",
@@ -33,15 +53,32 @@
         "type": "talent_worked_in_same_industry",
         "config": {}
       },
-      "applicable_to_decision_roles": ["buyer", "influencer"],
-      "applicable_to_steps": [1, 2],
+      "applicable_to_decision_roles": [
+        "buyer",
+        "influencer"
+      ],
+      "applicable_to_steps": [
+        1,
+        2
+      ],
       "authored_strength_score": 0.75,
-      "example_phrasing": "I've done a few campaigns in {industry_display_name} — most recently with {past_brand}. The {format} drove {result}. I think {target_brand}'s {product_line_or_focus} would resonate with my audience even more.",
-      "merge_fields_required": ["industry_display_name", "past_brand", "format", "result"],
-      "pair_well_with": ["niche_primary_affinity", "specific_creative_concept"],
-      "avoid_combining_with": ["past_brand_direct_competitor", "past_brand_adjacent_category"]
+      "example_phrasing": "{talent_name} has done a few campaigns in {industry_display_name} \u2014 most recently with {past_brand}. The {format} drove {result}. We think {target_brand}'s {product_line_or_focus} would resonate with {talent_name}'s audience even more.",
+      "merge_fields_required": [
+        "talent_name",
+        "industry_display_name",
+        "past_brand",
+        "format",
+        "result"
+      ],
+      "pair_well_with": [
+        "niche_primary_affinity",
+        "specific_creative_concept"
+      ],
+      "avoid_combining_with": [
+        "past_brand_direct_competitor",
+        "past_brand_adjacent_category"
+      ]
     },
-
     {
       "angle_id": "past_brand_adjacent_category",
       "category": "competitive_proof",
@@ -51,48 +88,91 @@
         "type": "talent_worked_in_tertiary_industry",
         "config": {}
       },
-      "applicable_to_decision_roles": ["buyer"],
-      "applicable_to_steps": [2, 3],
-      "authored_strength_score": 0.60,
-      "example_phrasing": "I work mostly in {primary_niche} but recently expanded into {adjacent_category} with {past_brand}. The crossover audience is exactly the demographic {target_brand} targets.",
-      "merge_fields_required": ["primary_niche", "adjacent_category", "past_brand", "target_brand"],
-      "avoid_combining_with": ["past_brand_direct_competitor", "past_brand_same_industry"]
+      "applicable_to_decision_roles": [
+        "buyer"
+      ],
+      "applicable_to_steps": [
+        2,
+        3
+      ],
+      "authored_strength_score": 0.6,
+      "example_phrasing": "{talent_name} works mostly in {primary_niche} but recently expanded into {adjacent_category} with {past_brand}. The crossover audience is exactly the demographic {target_brand} targets.",
+      "merge_fields_required": [
+        "talent_name",
+        "primary_niche",
+        "adjacent_category",
+        "past_brand",
+        "target_brand"
+      ],
+      "avoid_combining_with": [
+        "past_brand_direct_competitor",
+        "past_brand_same_industry"
+      ]
     },
-
     {
       "angle_id": "similar_talent_partnered_with_brand",
       "category": "similar_talent_precedent",
       "name": "A similar talent has worked with this brand",
-      "description": "Direct precedent — a similar_talent in our system has a documented past campaign with the target brand. Implicit social proof; positions our talent as a natural follow-on.",
+      "description": "Direct precedent \u2014 a similar_talent in our system has a documented past campaign with the target brand. Implicit social proof; positions our talent as a natural follow-on.",
       "trigger": {
         "type": "similar_talent_partnered_with_brand",
         "config": {}
       },
-      "applicable_to_decision_roles": ["buyer", "influencer", "champion"],
-      "applicable_to_steps": [1, 2],
+      "applicable_to_decision_roles": [
+        "buyer",
+        "influencer",
+        "champion"
+      ],
+      "applicable_to_steps": [
+        1,
+        2
+      ],
       "authored_strength_score": 0.85,
-      "example_phrasing": "I noticed {similar_talent_handle} partnered with {target_brand} on {campaign_reference}. We share ~{audience_overlap_pct}% audience overlap — different content focus but same demographic. Wondering if there's room for a follow-on campaign with a different angle.",
-      "merge_fields_required": ["similar_talent_handle", "target_brand", "campaign_reference", "audience_overlap_pct"],
-      "pair_well_with": ["niche_primary_affinity", "iab_demographic_overlap"]
+      "example_phrasing": "Noticed {similar_talent_handle} partnered with {target_brand} on {campaign_reference}. {talent_name} shares ~{audience_overlap_pct}% audience overlap with them \u2014 different content focus, same demographic. Worth a chat about a follow-on campaign with a different angle?",
+      "merge_fields_required": [
+        "talent_name",
+        "similar_talent_handle",
+        "target_brand",
+        "campaign_reference",
+        "audience_overlap_pct"
+      ],
+      "pair_well_with": [
+        "niche_primary_affinity",
+        "iab_demographic_overlap"
+      ]
     },
-
     {
       "angle_id": "multiple_similar_talents_with_brand",
       "category": "similar_talent_precedent",
       "name": "Multiple similar talents have worked with this brand",
-      "description": "≥3 similar talents have documented campaigns with the target brand. Signals the brand actively buys creator marketing in this lane; our talent positions as differentiated by a specific angle.",
+      "description": "\u22653 similar talents have documented campaigns with the target brand. Signals the brand actively buys creator marketing in this lane; our talent positions as differentiated by a specific angle.",
       "trigger": {
         "type": "multiple_similar_talents_with_brand",
-        "config": { "min_count": 3 }
+        "config": {
+          "min_count": 3
+        }
       },
-      "applicable_to_decision_roles": ["buyer", "gatekeeper"],
-      "applicable_to_steps": [1, 2],
-      "authored_strength_score": 0.90,
-      "example_phrasing": "{target_brand} has worked with {similar_talent_count} creators in my space this past year. My differentiator is {differentiator} — happy to share the case studies and how my approach compares.",
-      "merge_fields_required": ["target_brand", "similar_talent_count", "differentiator"],
-      "pair_well_with": ["specific_creative_concept", "performance_proof_case_study"]
+      "applicable_to_decision_roles": [
+        "buyer",
+        "gatekeeper"
+      ],
+      "applicable_to_steps": [
+        1,
+        2
+      ],
+      "authored_strength_score": 0.9,
+      "example_phrasing": "{target_brand} has worked with {similar_talent_count} creators in {talent_name}'s space this year. {talent_name}'s differentiator is {differentiator} \u2014 happy to share the case studies and how the approach compares.",
+      "merge_fields_required": [
+        "talent_name",
+        "target_brand",
+        "similar_talent_count",
+        "differentiator"
+      ],
+      "pair_well_with": [
+        "specific_creative_concept",
+        "performance_proof_case_study"
+      ]
     },
-
     {
       "angle_id": "similar_talent_at_competitor",
       "category": "similar_talent_precedent",
@@ -102,13 +182,23 @@
         "type": "similar_talent_at_competitor",
         "config": {}
       },
-      "applicable_to_decision_roles": ["buyer"],
-      "applicable_to_steps": [2],
-      "authored_strength_score": 0.70,
-      "example_phrasing": "{similar_talent_handle} just did {campaign_type} with {competitor_brand}. I think {target_brand} would benefit from a creator with {my_specific_angle_vs_them}.",
-      "merge_fields_required": ["similar_talent_handle", "campaign_type", "competitor_brand", "target_brand", "my_specific_angle_vs_them"]
+      "applicable_to_decision_roles": [
+        "buyer"
+      ],
+      "applicable_to_steps": [
+        2
+      ],
+      "authored_strength_score": 0.7,
+      "example_phrasing": "{similar_talent_handle} just did {campaign_type} with {competitor_brand}. We think {target_brand} would benefit from a creator with {talent_name}'s {my_specific_angle_vs_them}.",
+      "merge_fields_required": [
+        "talent_name",
+        "similar_talent_handle",
+        "campaign_type",
+        "competitor_brand",
+        "target_brand",
+        "my_specific_angle_vs_them"
+      ]
     },
-
     {
       "angle_id": "iab_demographic_overlap",
       "category": "demographic_match",
@@ -116,16 +206,34 @@
       "description": "Strong IAB Demographic segment overlap between talent's audience and the brand's target customer profile. Quantitative, data-backed angle.",
       "trigger": {
         "type": "iab_demographic_overlap",
-        "config": { "min_shared_demo_segments": 3 }
+        "config": {
+          "min_shared_demo_segments": 3
+        }
       },
-      "applicable_to_decision_roles": ["buyer", "influencer"],
-      "applicable_to_steps": [1, 2],
-      "authored_strength_score": 0.80,
-      "example_phrasing": "My audience is {dominant_gender_pct}% {dominant_gender}, {dominant_age_band} in {top_country} — direct match for {target_brand}'s {product_target}. Detailed demo report available.",
-      "merge_fields_required": ["dominant_gender_pct", "dominant_gender", "dominant_age_band", "top_country", "target_brand", "product_target"],
-      "pair_well_with": ["past_brand_direct_competitor", "niche_primary_affinity"]
+      "applicable_to_decision_roles": [
+        "buyer",
+        "influencer"
+      ],
+      "applicable_to_steps": [
+        1,
+        2
+      ],
+      "authored_strength_score": 0.8,
+      "example_phrasing": "{talent_name}'s audience is {dominant_gender_pct}% {dominant_gender}, {dominant_age_band} in {top_country} \u2014 direct match for {target_brand}'s {product_target}. Detailed demo report available.",
+      "merge_fields_required": [
+        "talent_name",
+        "dominant_gender_pct",
+        "dominant_gender",
+        "dominant_age_band",
+        "top_country",
+        "target_brand",
+        "product_target"
+      ],
+      "pair_well_with": [
+        "past_brand_direct_competitor",
+        "niche_primary_affinity"
+      ]
     },
-
     {
       "angle_id": "gender_skew_match",
       "category": "demographic_match",
@@ -133,31 +241,49 @@
       "description": "Talent's audience has a strong gender skew (>65%) that matches the brand's primary target demographic.",
       "trigger": {
         "type": "gender_skew_match",
-        "config": { "min_skew_pct": 65 }
+        "config": {
+          "min_skew_pct": 65
+        }
       },
-      "applicable_to_decision_roles": ["buyer"],
-      "applicable_to_steps": [1],
+      "applicable_to_decision_roles": [
+        "buyer"
+      ],
+      "applicable_to_steps": [
+        1
+      ],
       "authored_strength_score": 0.55,
-      "example_phrasing": "{gender_pct}% of my audience is {gender} — historically your strongest converting segment for {product_category}.",
-      "merge_fields_required": ["gender_pct", "gender", "product_category"]
+      "example_phrasing": "{gender_pct}% of {talent_name}'s audience is {gender} \u2014 historically your strongest converting segment for {product_category}.",
+      "merge_fields_required": [
+        "talent_name",
+        "gender_pct",
+        "gender",
+        "product_category"
+      ]
     },
-
     {
       "angle_id": "age_band_match",
       "category": "demographic_match",
       "name": "Dominant age band matches brand life-stage target",
-      "description": "Talent's dominant audience age band aligns with the brand's typical life-stage target (e.g. 30-34 dominant → home buyers; 18-24 dominant → first-job demographic).",
+      "description": "Talent's dominant audience age band aligns with the brand's typical life-stage target (e.g. 30-34 dominant \u2192 home buyers; 18-24 dominant \u2192 first-job demographic).",
       "trigger": {
         "type": "age_band_match",
         "config": {}
       },
-      "applicable_to_decision_roles": ["buyer"],
-      "applicable_to_steps": [2],
+      "applicable_to_decision_roles": [
+        "buyer"
+      ],
+      "applicable_to_steps": [
+        2
+      ],
       "authored_strength_score": 0.65,
-      "example_phrasing": "My dominant age band is {age_band} — exactly {target_brand}'s {life_stage_descriptor} demographic.",
-      "merge_fields_required": ["age_band", "target_brand", "life_stage_descriptor"]
+      "example_phrasing": "{talent_name}'s dominant age band is {age_band} \u2014 exactly {target_brand}'s {life_stage_descriptor} demographic.",
+      "merge_fields_required": [
+        "talent_name",
+        "age_band",
+        "target_brand",
+        "life_stage_descriptor"
+      ]
     },
-
     {
       "angle_id": "niche_directly_relevant_to_brand",
       "category": "niche_fit",
@@ -167,14 +293,28 @@
         "type": "niche_primary_affinity",
         "config": {}
       },
-      "applicable_to_decision_roles": ["buyer", "influencer"],
-      "applicable_to_steps": [1, 2],
-      "authored_strength_score": 0.70,
-      "example_phrasing": "I'm a {niche_display_name} creator — {target_brand}'s {product_line} is directly in my content sweet spot. I'd love to do a {proposed_format}.",
-      "merge_fields_required": ["niche_display_name", "target_brand", "product_line", "proposed_format"],
-      "pair_well_with": ["iab_demographic_overlap", "specific_creative_concept"]
+      "applicable_to_decision_roles": [
+        "buyer",
+        "influencer"
+      ],
+      "applicable_to_steps": [
+        1,
+        2
+      ],
+      "authored_strength_score": 0.7,
+      "example_phrasing": "{talent_name} is a {niche_display_name} creator \u2014 {target_brand}'s {product_line} is directly in {talent_name}'s content sweet spot. Pitching a {proposed_format}.",
+      "merge_fields_required": [
+        "talent_name",
+        "niche_display_name",
+        "target_brand",
+        "product_line",
+        "proposed_format"
+      ],
+      "pair_well_with": [
+        "iab_demographic_overlap",
+        "specific_creative_concept"
+      ]
     },
-
     {
       "angle_id": "niche_specific_content_series",
       "category": "niche_fit",
@@ -184,14 +324,26 @@
         "type": "niche_specific_content_series",
         "config": {}
       },
-      "applicable_to_decision_roles": ["buyer"],
-      "applicable_to_steps": [1],
+      "applicable_to_decision_roles": [
+        "buyer"
+      ],
+      "applicable_to_steps": [
+        1
+      ],
       "authored_strength_score": 0.75,
-      "example_phrasing": "My recent {series_name} series hit {series_metrics}. The content focuses on {series_topic} — would naturally feature {target_brand}'s {product}.",
-      "merge_fields_required": ["series_name", "series_metrics", "series_topic", "target_brand", "product"],
-      "pair_well_with": ["specific_creative_concept"]
+      "example_phrasing": "{talent_name}'s recent {series_name} series hit {series_metrics}. The content focuses on {series_topic} \u2014 would naturally feature {target_brand}'s {product}.",
+      "merge_fields_required": [
+        "talent_name",
+        "series_name",
+        "series_metrics",
+        "series_topic",
+        "target_brand",
+        "product"
+      ],
+      "pair_well_with": [
+        "specific_creative_concept"
+      ]
     },
-
     {
       "angle_id": "brand_recent_funding",
       "category": "brand_momentum",
@@ -199,16 +351,30 @@
       "description": "Target brand has a recent funding round (Series A-D), typically detected via Brand Discovery Search 15. Signals fresh budget + scaling phase. Time-sensitive.",
       "trigger": {
         "type": "brand_recent_funding",
-        "config": { "max_age_months": 6 }
+        "config": {
+          "max_age_months": 6
+        }
       },
-      "applicable_to_decision_roles": ["buyer", "influencer"],
-      "applicable_to_steps": [1],
-      "authored_strength_score": 0.60,
-      "example_phrasing": "Congrats on the {funding_round} — perfect moment to scale your creator program. I work in {category} and have done {past_campaigns_short}.",
-      "merge_fields_required": ["funding_round", "category", "past_campaigns_short"],
-      "pair_well_with": ["past_brand_direct_competitor", "specific_creative_concept"]
+      "applicable_to_decision_roles": [
+        "buyer",
+        "influencer"
+      ],
+      "applicable_to_steps": [
+        1
+      ],
+      "authored_strength_score": 0.6,
+      "example_phrasing": "Congrats on the {funding_round} \u2014 perfect moment to scale your creator program. {talent_name} works in {category} and has done {past_campaigns_short}.",
+      "merge_fields_required": [
+        "talent_name",
+        "funding_round",
+        "category",
+        "past_campaigns_short"
+      ],
+      "pair_well_with": [
+        "past_brand_direct_competitor",
+        "specific_creative_concept"
+      ]
     },
-
     {
       "angle_id": "brand_new_product_launch",
       "category": "brand_momentum",
@@ -216,15 +382,25 @@
       "description": "Product launch detected via Brand Discovery (Search 15 or 16). Time-sensitive opportunity to tie content to the launch window.",
       "trigger": {
         "type": "brand_new_product_launch",
-        "config": { "max_age_weeks": 8 }
+        "config": {
+          "max_age_weeks": 8
+        }
       },
-      "applicable_to_decision_roles": ["buyer"],
-      "applicable_to_steps": [1],
-      "authored_strength_score": 0.70,
-      "example_phrasing": "Saw the {product_name} launch {launch_timeframe} — congrats. I'd love to do a {content_piece} tied to your launch window.",
-      "merge_fields_required": ["product_name", "launch_timeframe", "content_piece"]
+      "applicable_to_decision_roles": [
+        "buyer"
+      ],
+      "applicable_to_steps": [
+        1
+      ],
+      "authored_strength_score": 0.7,
+      "example_phrasing": "Saw the {product_name} launch {launch_timeframe} \u2014 congrats. {talent_name} would be a strong fit for a {content_piece} tied to your launch window.",
+      "merge_fields_required": [
+        "talent_name",
+        "product_name",
+        "launch_timeframe",
+        "content_piece"
+      ]
     },
-
     {
       "angle_id": "brand_trending_on_social",
       "category": "brand_momentum",
@@ -232,15 +408,25 @@
       "description": "Target brand surfaced in Brand Discovery Search 16 (last30days) with high engagement signal. Pitch a content amplification.",
       "trigger": {
         "type": "brand_trending_30d",
-        "config": { "min_engagement_signal_strength": "medium" }
+        "config": {
+          "min_engagement_signal_strength": "medium"
+        }
       },
-      "applicable_to_decision_roles": ["buyer", "champion"],
-      "applicable_to_steps": [1, 2],
+      "applicable_to_decision_roles": [
+        "buyer",
+        "champion"
+      ],
+      "applicable_to_steps": [
+        1,
+        2
+      ],
       "authored_strength_score": 0.55,
-      "example_phrasing": "Watched the {recent_viral_moment} play out — my audience is exactly who's loving this. Let's amplify with a follow-on.",
-      "merge_fields_required": ["recent_viral_moment"]
+      "example_phrasing": "Watched the {recent_viral_moment} play out \u2014 {talent_name}'s audience is exactly who's loving this. Worth amplifying with a follow-on.",
+      "merge_fields_required": [
+        "talent_name",
+        "recent_viral_moment"
+      ]
     },
-
     {
       "angle_id": "brand_market_expansion",
       "category": "brand_momentum",
@@ -250,30 +436,51 @@
         "type": "brand_market_expansion",
         "config": {}
       },
-      "applicable_to_decision_roles": ["buyer"],
-      "applicable_to_steps": [1],
+      "applicable_to_decision_roles": [
+        "buyer"
+      ],
+      "applicable_to_steps": [
+        1
+      ],
       "authored_strength_score": 0.75,
-      "example_phrasing": "I see {target_brand} is launching in {market_country} — {audience_pct}% of my audience is there, specifically the {demographic_descriptor} you'd want to reach.",
-      "merge_fields_required": ["target_brand", "market_country", "audience_pct", "demographic_descriptor"],
-      "pair_well_with": ["geo_top_country_match", "iab_demographic_overlap"]
+      "example_phrasing": "Saw {target_brand} is launching in {market_country} \u2014 {audience_pct}% of {talent_name}'s audience is there, specifically the {demographic_descriptor} you'd want to reach.",
+      "merge_fields_required": [
+        "talent_name",
+        "target_brand",
+        "market_country",
+        "audience_pct",
+        "demographic_descriptor"
+      ],
+      "pair_well_with": [
+        "geo_top_country_match",
+        "iab_demographic_overlap"
+      ]
     },
-
     {
       "angle_id": "brand_award_or_press",
       "category": "brand_momentum",
       "name": "Brand recently in trade press / received award",
-      "description": "Recent press hit (Adweek, PRWeek, Campaign) or award detected for the brand. Light angle — good as a conversation opener, not a primary hook.",
+      "description": "Recent press hit (Adweek, PRWeek, Campaign) or award detected for the brand. Light angle \u2014 good as a conversation opener, not a primary hook.",
       "trigger": {
         "type": "brand_recent_press_award",
-        "config": { "max_age_weeks": 12 }
+        "config": {
+          "max_age_weeks": 12
+        }
       },
-      "applicable_to_decision_roles": ["influencer"],
-      "applicable_to_steps": [1],
+      "applicable_to_decision_roles": [
+        "influencer"
+      ],
+      "applicable_to_steps": [
+        1
+      ],
       "authored_strength_score": 0.45,
-      "example_phrasing": "Congratulations on the {press_or_award} — saw the {publication} coverage. Would love to chat about extending the moment with creator content.",
-      "merge_fields_required": ["press_or_award", "publication"]
+      "example_phrasing": "Congratulations on the {press_or_award} \u2014 saw the {publication} coverage. {talent_name} could help extend the moment with creator content.",
+      "merge_fields_required": [
+        "talent_name",
+        "press_or_award",
+        "publication"
+      ]
     },
-
     {
       "angle_id": "strong_geo_alignment",
       "category": "geographic_alignment",
@@ -283,45 +490,68 @@
         "type": "geo_top_country_match",
         "config": {}
       },
-      "applicable_to_decision_roles": ["buyer", "influencer"],
-      "applicable_to_steps": [2],
-      "authored_strength_score": 0.50,
-      "example_phrasing": "You sell in {market_country}; {audience_pct}% of my audience is there. Particularly strong in {region_or_cities}.",
-      "merge_fields_required": ["market_country", "audience_pct", "region_or_cities"]
+      "applicable_to_decision_roles": [
+        "buyer",
+        "influencer"
+      ],
+      "applicable_to_steps": [
+        2
+      ],
+      "authored_strength_score": 0.5,
+      "example_phrasing": "You sell in {market_country}; {audience_pct}% of {talent_name}'s audience is there. Particularly strong in {region_or_cities}.",
+      "merge_fields_required": [
+        "talent_name",
+        "market_country",
+        "audience_pct",
+        "region_or_cities"
+      ]
     },
-
     {
       "angle_id": "brand_local_to_audience",
       "category": "geographic_alignment",
       "name": "Brand HQ matches talent's top audience country",
-      "description": "The brand is headquartered in the talent's top audience country. Authenticity-leaning angle — local creator, local brand.",
+      "description": "The brand is headquartered in the talent's top audience country. Authenticity-leaning angle \u2014 local creator, local brand.",
       "trigger": {
         "type": "brand_hq_matches_audience",
         "config": {}
       },
-      "applicable_to_decision_roles": ["buyer"],
-      "applicable_to_steps": [2],
-      "authored_strength_score": 0.50,
-      "example_phrasing": "{nationality_adjective} brand, {nationality_adjective} audience. Would love to be part of your {market_country} creator roster.",
-      "merge_fields_required": ["nationality_adjective", "market_country"]
+      "applicable_to_decision_roles": [
+        "buyer"
+      ],
+      "applicable_to_steps": [
+        2
+      ],
+      "authored_strength_score": 0.5,
+      "example_phrasing": "{nationality_adjective} brand, {nationality_adjective} audience. {talent_name} would be a strong fit for your {market_country} creator roster.",
+      "merge_fields_required": [
+        "talent_name",
+        "nationality_adjective",
+        "market_country"
+      ]
     },
-
     {
       "angle_id": "champion_internal_advocate",
       "category": "mutual_connection",
       "name": "Champion contact at the brand",
-      "description": "A contact at the target brand is classified as `champion` (known fan / internal advocate). Major lift — warm intro from inside.",
+      "description": "A contact at the target brand is classified as `champion` (known fan / internal advocate). Major lift \u2014 warm intro from inside.",
       "trigger": {
         "type": "champion_contact_at_brand",
         "config": {}
       },
-      "applicable_to_decision_roles": ["champion"],
-      "applicable_to_steps": [1],
+      "applicable_to_decision_roles": [
+        "champion"
+      ],
+      "applicable_to_steps": [
+        1
+      ],
       "authored_strength_score": 0.85,
-      "example_phrasing": "{champion_name} mentioned you handle {function} — they thought you'd be a good person to chat with about creator partnerships.",
-      "merge_fields_required": ["champion_name", "function"]
+      "example_phrasing": "{champion_name} mentioned you handle {function} \u2014 they thought you'd be a good person to chat with about a partnership with {talent_name}.",
+      "merge_fields_required": [
+        "talent_name",
+        "champion_name",
+        "function"
+      ]
     },
-
     {
       "angle_id": "aor_prior_relationship",
       "category": "mutual_connection",
@@ -331,29 +561,47 @@
         "type": "aor_prior_relationship",
         "config": {}
       },
-      "applicable_to_decision_roles": ["gatekeeper"],
-      "applicable_to_steps": [1],
-      "authored_strength_score": 0.70,
-      "example_phrasing": "I worked with {aor_name} on {past_campaign} — they suggested I reach out about your roster.",
-      "merge_fields_required": ["aor_name", "past_campaign"]
+      "applicable_to_decision_roles": [
+        "gatekeeper"
+      ],
+      "applicable_to_steps": [
+        1
+      ],
+      "authored_strength_score": 0.7,
+      "example_phrasing": "We worked with {aor_name} on {past_campaign} \u2014 they suggested reaching out about adding {talent_name} to your roster.",
+      "merge_fields_required": [
+        "talent_name",
+        "aor_name",
+        "past_campaign"
+      ]
     },
-
     {
       "angle_id": "event_attended_together",
       "category": "mutual_connection",
       "name": "Met at an event",
-      "description": "Talent and contact attended the same event (manually tagged by the agency). Strong warm-touch — converts to meetings at much higher rates than cold.",
+      "description": "Talent and contact attended the same event (manually tagged by the agency). Strong warm-touch \u2014 converts to meetings at much higher rates than cold.",
       "trigger": {
         "type": "event_attended_together",
         "config": {}
       },
-      "applicable_to_decision_roles": ["buyer", "influencer", "gatekeeper", "champion"],
-      "applicable_to_steps": [1],
+      "applicable_to_decision_roles": [
+        "buyer",
+        "influencer",
+        "gatekeeper",
+        "champion"
+      ],
+      "applicable_to_steps": [
+        1
+      ],
       "authored_strength_score": 0.85,
-      "example_phrasing": "Good to meet you briefly at {event_name} last {event_timeframe}. Following up on {conversation_topic}.",
-      "merge_fields_required": ["event_name", "event_timeframe", "conversation_topic"]
+      "example_phrasing": "Good to meet you briefly at {event_name} last {event_timeframe}. Following up on {conversation_topic} \u2014 wanted to connect about {talent_name}.",
+      "merge_fields_required": [
+        "talent_name",
+        "event_name",
+        "event_timeframe",
+        "conversation_topic"
+      ]
     },
-
     {
       "angle_id": "values_alignment_brand",
       "category": "values_alignment",
@@ -363,30 +611,52 @@
         "type": "values_aligned_search",
         "config": {}
       },
-      "applicable_to_decision_roles": ["buyer", "influencer", "champion"],
-      "applicable_to_steps": [1, 2],
+      "applicable_to_decision_roles": [
+        "buyer",
+        "influencer",
+        "champion"
+      ],
+      "applicable_to_steps": [
+        1,
+        2
+      ],
       "authored_strength_score": 0.55,
-      "example_phrasing": "Your public commitment to {value_alignment} is exactly why my audience would respond well. I focus my content on {related_value}.",
-      "merge_fields_required": ["value_alignment", "related_value"]
+      "example_phrasing": "Your public commitment to {value_alignment} is exactly why {talent_name}'s audience would respond well. {talent_name}'s content centres on {related_value}.",
+      "merge_fields_required": [
+        "talent_name",
+        "value_alignment",
+        "related_value"
+      ]
     },
-
     {
       "angle_id": "past_relationship_eligible",
       "category": "re_engagement",
       "name": "Past relationship eligible for re-engagement",
-      "description": "Talent worked with this brand before; cool-down has elapsed (Search 1 in Brand Discovery). Highest-converting angle — warm re-engagement beats cold every time.",
+      "description": "Talent worked with this brand before; cool-down has elapsed (Search 1 in Brand Discovery). Highest-converting angle \u2014 warm re-engagement beats cold every time.",
       "trigger": {
         "type": "past_brand_eligible_reengagement",
         "config": {}
       },
-      "applicable_to_decision_roles": ["buyer", "champion"],
-      "applicable_to_steps": [1],
+      "applicable_to_decision_roles": [
+        "buyer",
+        "champion"
+      ],
+      "applicable_to_steps": [
+        1
+      ],
       "authored_strength_score": 0.95,
-      "example_phrasing": "Following our campaign in {past_campaign_date} — we hit {past_metric}. I have a new angle to propose for {upcoming_window}.",
-      "merge_fields_required": ["past_campaign_date", "past_metric", "upcoming_window"],
-      "pair_well_with": ["specific_creative_concept", "brand_new_product_launch"]
+      "example_phrasing": "Following {talent_name}'s campaign with you in {past_campaign_date} \u2014 we hit {past_metric}. New angle to propose for {upcoming_window}.",
+      "merge_fields_required": [
+        "talent_name",
+        "past_campaign_date",
+        "past_metric",
+        "upcoming_window"
+      ],
+      "pair_well_with": [
+        "specific_creative_concept",
+        "brand_new_product_launch"
+      ]
     },
-
     {
       "angle_id": "same_contact_positive_history",
       "category": "re_engagement",
@@ -396,13 +666,23 @@
         "type": "same_contact_positive_history",
         "config": {}
       },
-      "applicable_to_decision_roles": ["buyer", "influencer", "gatekeeper", "champion"],
-      "applicable_to_steps": [1],
-      "authored_strength_score": 0.90,
-      "example_phrasing": "Good to circle back, {contact_first_name}. Last time we discussed {previous_topic} — wanted to share an update.",
-      "merge_fields_required": ["contact_first_name", "previous_topic"]
+      "applicable_to_decision_roles": [
+        "buyer",
+        "influencer",
+        "gatekeeper",
+        "champion"
+      ],
+      "applicable_to_steps": [
+        1
+      ],
+      "authored_strength_score": 0.9,
+      "example_phrasing": "Good to circle back, {contact_first_name}. Last time we discussed {previous_topic} with {talent_name} \u2014 wanted to share an update.",
+      "merge_fields_required": [
+        "talent_name",
+        "contact_first_name",
+        "previous_topic"
+      ]
     },
-
     {
       "angle_id": "strong_recent_metrics",
       "category": "performance_proof",
@@ -410,32 +690,56 @@
       "description": "Talent has a recent (last 30 days) post that performed notably above their baseline. Specific proof of current momentum.",
       "trigger": {
         "type": "recent_high_performing_post",
-        "config": { "min_above_baseline_pct": 50 }
+        "config": {
+          "min_above_baseline_pct": 50
+        }
       },
-      "applicable_to_decision_roles": ["buyer"],
-      "applicable_to_steps": [1, 2],
+      "applicable_to_decision_roles": [
+        "buyer"
+      ],
+      "applicable_to_steps": [
+        1,
+        2
+      ],
       "authored_strength_score": 0.65,
-      "example_phrasing": "My recent {post_descriptor} hit {view_count} views / {engagement_rate}% ER — strong indicator of how a {target_brand} feature would perform.",
-      "merge_fields_required": ["post_descriptor", "view_count", "engagement_rate", "target_brand"]
+      "example_phrasing": "{talent_name}'s recent {post_descriptor} hit {view_count} views / {engagement_rate}% ER \u2014 strong indicator of how a {target_brand} feature would perform.",
+      "merge_fields_required": [
+        "talent_name",
+        "post_descriptor",
+        "view_count",
+        "engagement_rate",
+        "target_brand"
+      ]
     },
-
     {
       "angle_id": "case_study_available",
       "category": "performance_proof",
       "name": "Documented past-campaign case study available",
-      "description": "Talent has a previous_brands entry with detailed performance_notes — i.e. a real campaign case study we can share.",
+      "description": "Talent has a previous_brands entry with detailed performance_notes \u2014 i.e. a real campaign case study we can share.",
       "trigger": {
         "type": "case_study_available",
         "config": {}
       },
-      "applicable_to_decision_roles": ["buyer", "influencer"],
-      "applicable_to_steps": [2, 3],
-      "authored_strength_score": 0.70,
-      "example_phrasing": "Happy to share the {past_brand} case study — drove {result_metric} over the {campaign_duration} campaign.",
-      "merge_fields_required": ["past_brand", "result_metric", "campaign_duration"],
-      "pair_well_with": ["specific_creative_concept"]
+      "applicable_to_decision_roles": [
+        "buyer",
+        "influencer"
+      ],
+      "applicable_to_steps": [
+        2,
+        3
+      ],
+      "authored_strength_score": 0.7,
+      "example_phrasing": "Happy to share the {past_brand} case study \u2014 {talent_name} drove {result_metric} over the {campaign_duration} campaign.",
+      "merge_fields_required": [
+        "talent_name",
+        "past_brand",
+        "result_metric",
+        "campaign_duration"
+      ],
+      "pair_well_with": [
+        "specific_creative_concept"
+      ]
     },
-
     {
       "angle_id": "seasonal_relevance",
       "category": "timeliness",
@@ -445,13 +749,21 @@
         "type": "seasonal_window_match",
         "config": {}
       },
-      "applicable_to_decision_roles": ["buyer"],
-      "applicable_to_steps": [1],
-      "authored_strength_score": 0.50,
-      "example_phrasing": "With {seasonal_event} in {time_window}, my audience is actively shopping for {category}. Want to discuss a campaign?",
-      "merge_fields_required": ["seasonal_event", "time_window", "category"]
+      "applicable_to_decision_roles": [
+        "buyer"
+      ],
+      "applicable_to_steps": [
+        1
+      ],
+      "authored_strength_score": 0.5,
+      "example_phrasing": "With {seasonal_event} in {time_window}, {talent_name}'s audience is actively shopping for {category}. Worth a campaign?",
+      "merge_fields_required": [
+        "talent_name",
+        "seasonal_event",
+        "time_window",
+        "category"
+      ]
     },
-
     {
       "angle_id": "talent_upcoming_launch",
       "category": "timeliness",
@@ -461,30 +773,56 @@
         "type": "talent_upcoming_launch",
         "config": {}
       },
-      "applicable_to_decision_roles": ["buyer"],
-      "applicable_to_steps": [1],
-      "authored_strength_score": 0.60,
-      "example_phrasing": "I'm launching {launch_descriptor} in {launch_window} — would love to feature {target_brand}'s {product} in the launch content.",
-      "merge_fields_required": ["launch_descriptor", "launch_window", "target_brand", "product"]
+      "applicable_to_decision_roles": [
+        "buyer"
+      ],
+      "applicable_to_steps": [
+        1
+      ],
+      "authored_strength_score": 0.6,
+      "example_phrasing": "{talent_name} is launching {launch_descriptor} in {launch_window} \u2014 would be a natural moment to feature {target_brand}'s {product} in the launch content.",
+      "merge_fields_required": [
+        "talent_name",
+        "launch_descriptor",
+        "launch_window",
+        "target_brand",
+        "product"
+      ]
     },
-
     {
       "angle_id": "specific_creative_concept",
       "category": "creative_concept",
       "name": "Tailored creative concept",
-      "description": "AI generates a specific content idea based on the full (talent, brand, contact) context — not a generic ask. Always available (the AI generates the concept). Strong support angle to pair with a primary hook.",
+      "description": "AI generates a specific content idea based on the full (talent, brand, contact) context \u2014 not a generic ask. Always available (the AI generates the concept). Strong support angle to pair with a primary hook.",
       "trigger": {
         "type": "ai_creative_concept",
-        "config": { "always_available": true }
+        "config": {
+          "always_available": true
+        }
       },
-      "applicable_to_decision_roles": ["buyer"],
-      "applicable_to_steps": [2, 3],
-      "authored_strength_score": 0.70,
-      "example_phrasing": "Concrete idea: {concept_one_liner}. Would feature {target_brand}'s {product} in {content_format} alongside {related_content_theme}.",
-      "merge_fields_required": ["concept_one_liner", "target_brand", "product", "content_format", "related_content_theme"],
-      "pair_well_with": ["past_brand_direct_competitor", "niche_specific_content_series", "case_study_available"]
+      "applicable_to_decision_roles": [
+        "buyer"
+      ],
+      "applicable_to_steps": [
+        2,
+        3
+      ],
+      "authored_strength_score": 0.7,
+      "example_phrasing": "Concrete idea: {concept_one_liner}. Would feature {target_brand}'s {product} in {content_format} alongside {related_content_theme} \u2014 natural fit for {talent_name}'s feed.",
+      "merge_fields_required": [
+        "talent_name",
+        "concept_one_liner",
+        "target_brand",
+        "product",
+        "content_format",
+        "related_content_theme"
+      ],
+      "pair_well_with": [
+        "past_brand_direct_competitor",
+        "niche_specific_content_series",
+        "case_study_available"
+      ]
     },
-
     {
       "angle_id": "brand_creator_gap",
       "category": "insider_observation",
@@ -494,13 +832,20 @@
         "type": "brand_creator_gap_in_niche",
         "config": {}
       },
-      "applicable_to_decision_roles": ["buyer"],
-      "applicable_to_steps": [2],
+      "applicable_to_decision_roles": [
+        "buyer"
+      ],
+      "applicable_to_steps": [
+        2
+      ],
       "authored_strength_score": 0.55,
-      "example_phrasing": "I noticed {target_brand} hasn't worked with creators in {sub_niche} — that's exactly my space.",
-      "merge_fields_required": ["target_brand", "sub_niche"]
+      "example_phrasing": "Noticed {target_brand} hasn't worked with creators in {sub_niche} \u2014 that's exactly {talent_name}'s space.",
+      "merge_fields_required": [
+        "talent_name",
+        "target_brand",
+        "sub_niche"
+      ]
     },
-
     {
       "angle_id": "brand_content_format_gap",
       "category": "insider_observation",
@@ -510,29 +855,48 @@
         "type": "brand_content_format_gap",
         "config": {}
       },
-      "applicable_to_decision_roles": ["buyer", "influencer"],
-      "applicable_to_steps": [2],
-      "authored_strength_score": 0.50,
-      "example_phrasing": "{target_brand}'s {format} output has been quieter recently — happy to fill that gap with {specific_concept}.",
-      "merge_fields_required": ["target_brand", "format", "specific_concept"]
+      "applicable_to_decision_roles": [
+        "buyer",
+        "influencer"
+      ],
+      "applicable_to_steps": [
+        2
+      ],
+      "authored_strength_score": 0.5,
+      "example_phrasing": "{target_brand}'s {format} output has been quieter recently \u2014 {talent_name} could fill that gap with {specific_concept}.",
+      "merge_fields_required": [
+        "talent_name",
+        "target_brand",
+        "format",
+        "specific_concept"
+      ]
     },
-
     {
       "angle_id": "talent_is_customer",
       "category": "insider_observation",
       "name": "Talent is genuine customer of the brand",
-      "description": "Talent has self-identified (or is verifiably tagged) as a brand customer. Authenticity hook — natural creator-brand alignment.",
+      "description": "Talent has self-identified (or is verifiably tagged) as a brand customer. Authenticity hook \u2014 natural creator-brand alignment.",
       "trigger": {
         "type": "talent_is_customer",
         "config": {}
       },
-      "applicable_to_decision_roles": ["buyer", "champion"],
-      "applicable_to_steps": [1, 2],
+      "applicable_to_decision_roles": [
+        "buyer",
+        "champion"
+      ],
+      "applicable_to_steps": [
+        1,
+        2
+      ],
       "authored_strength_score": 0.65,
-      "example_phrasing": "I've been a customer of {target_brand} for {customer_duration} — finally formalizing the relationship. My audience already knows I use {product}.",
-      "merge_fields_required": ["target_brand", "customer_duration", "product"]
+      "example_phrasing": "{talent_name} has been a customer of {target_brand} for {customer_duration} \u2014 worth formalizing the relationship. Their audience already knows they use {product}.",
+      "merge_fields_required": [
+        "talent_name",
+        "target_brand",
+        "customer_duration",
+        "product"
+      ]
     },
-
     {
       "angle_id": "buyer_specific_ask",
       "category": "role_default",
@@ -542,13 +906,25 @@
         "type": "always_for_buyer",
         "config": {}
       },
-      "applicable_to_decision_roles": ["buyer"],
-      "applicable_to_steps": [3, 4],
-      "authored_strength_score": 0.80,
-      "example_phrasing": "Specific proposal: {deliverable} + {usage_rights} + {exclusivity_terms} = {price}. {past_metric_reference} suggests {expected_outcome}.",
-      "merge_fields_required": ["deliverable", "usage_rights", "exclusivity_terms", "price", "past_metric_reference", "expected_outcome"]
+      "applicable_to_decision_roles": [
+        "buyer"
+      ],
+      "applicable_to_steps": [
+        3,
+        4
+      ],
+      "authored_strength_score": 0.8,
+      "example_phrasing": "Specific proposal for {talent_name}: {deliverable} + {usage_rights} + {exclusivity_terms} = {price}. {past_metric_reference} suggests {expected_outcome}.",
+      "merge_fields_required": [
+        "talent_name",
+        "deliverable",
+        "usage_rights",
+        "exclusivity_terms",
+        "price",
+        "past_metric_reference",
+        "expected_outcome"
+      ]
     },
-
     {
       "angle_id": "influencer_strategic_intro",
       "category": "role_default",
@@ -558,28 +934,41 @@
         "type": "always_for_influencer",
         "config": {}
       },
-      "applicable_to_decision_roles": ["influencer"],
-      "applicable_to_steps": [1, 2],
-      "authored_strength_score": 0.70,
-      "example_phrasing": "I know you sit above the day-to-day creator program — wanted to put me on your radar in case it fits the broader strategy. Happy to be routed to whoever owns the IM budget."
+      "applicable_to_decision_roles": [
+        "influencer"
+      ],
+      "applicable_to_steps": [
+        1,
+        2
+      ],
+      "authored_strength_score": 0.7,
+      "example_phrasing": "I know you sit above the day-to-day creator program \u2014 wanted to put {talent_name} on your radar in case it fits the broader strategy. Happy to be routed to whoever owns the IM budget.",
+      "merge_fields_required": [
+        "talent_name"
+      ]
     },
-
     {
       "angle_id": "gatekeeper_routing_ask",
       "category": "role_default",
       "name": "Brief routing ask (gatekeeper role)",
-      "description": "Default for gatekeepers (EAs, AOR account managers). Short and respectful — just asking for the right routing.",
+      "description": "Default for gatekeepers (EAs, AOR account managers). Short and respectful \u2014 just asking for the right routing.",
       "trigger": {
         "type": "always_for_gatekeeper",
         "config": {}
       },
-      "applicable_to_decision_roles": ["gatekeeper"],
-      "applicable_to_steps": [1],
-      "authored_strength_score": 0.60,
-      "example_phrasing": "Quick ask — who handles creator partnerships at {target_brand}? Happy to send a brief intro to them directly. Don't want to take up your time on the wrong route.",
-      "merge_fields_required": ["target_brand"]
+      "applicable_to_decision_roles": [
+        "gatekeeper"
+      ],
+      "applicable_to_steps": [
+        1
+      ],
+      "authored_strength_score": 0.6,
+      "example_phrasing": "Quick ask \u2014 who handles creator partnerships at {target_brand}? Happy to send a brief intro about {talent_name} to them directly. Don't want to take up your time on the wrong route.",
+      "merge_fields_required": [
+        "talent_name",
+        "target_brand"
+      ]
     },
-
     {
       "angle_id": "champion_advocacy_ask",
       "category": "role_default",
@@ -589,13 +978,21 @@
         "type": "always_for_champion",
         "config": {}
       },
-      "applicable_to_decision_roles": ["champion"],
-      "applicable_to_steps": [1, 2],
+      "applicable_to_decision_roles": [
+        "champion"
+      ],
+      "applicable_to_steps": [
+        1,
+        2
+      ],
       "authored_strength_score": 0.75,
-      "example_phrasing": "Saw your {recent_engagement_with_talent} — really appreciated it. If you ever feel like passing along a creator who'd fit {target_brand}'s next campaign, would love to chat.",
-      "merge_fields_required": ["recent_engagement_with_talent", "target_brand"]
+      "example_phrasing": "Saw your {recent_engagement_with_talent} \u2014 really appreciated it. If you ever feel like passing along {talent_name} as a creator who'd fit {target_brand}'s next campaign, would love to chat.",
+      "merge_fields_required": [
+        "talent_name",
+        "recent_engagement_with_talent",
+        "target_brand"
+      ]
     },
-
     {
       "angle_id": "exclusivity_workaround_proposition",
       "category": "counter_positioning",
@@ -605,75 +1002,139 @@
         "type": "active_exclusivity_workaround",
         "config": {}
       },
-      "applicable_to_decision_roles": ["buyer"],
-      "applicable_to_steps": [1],
-      "authored_strength_score": 0.60,
-      "example_phrasing": "Transparency: I'm currently exclusive with {exclusivity_brand} in {exclusivity_category} through {exclusivity_end_date}. But my audience is hungry for {adjacent_category} — could {target_brand}'s {different_product_line} be a fit?",
-      "merge_fields_required": ["exclusivity_brand", "exclusivity_category", "exclusivity_end_date", "adjacent_category", "target_brand", "different_product_line"],
+      "applicable_to_decision_roles": [
+        "buyer"
+      ],
+      "applicable_to_steps": [
+        1
+      ],
+      "authored_strength_score": 0.6,
+      "example_phrasing": "Transparency: {talent_name} is currently exclusive with {exclusivity_brand} in {exclusivity_category} through {exclusivity_end_date}. But their audience is hungry for {adjacent_category} \u2014 could {target_brand}'s {different_product_line} be a fit?",
+      "merge_fields_required": [
+        "talent_name",
+        "exclusivity_brand",
+        "exclusivity_category",
+        "exclusivity_end_date",
+        "adjacent_category",
+        "target_brand",
+        "different_product_line"
+      ],
       "notes": "Use carefully. Some brands appreciate the transparency; others see it as a flag. Only fire when the adjacent_category is genuinely non-competing."
     },
-
     {
       "angle_id": "past_campaign_specific_metric",
       "category": "performance_proof",
       "name": "Specific past-campaign KPI",
-      "description": "Talent has a documented past campaign (in `data/brand_deals/{talent_id}.json`) with notable KPIs — reach, engagement, video completion, etc. Pitches the target brand with concrete numbers from a similar or competitive campaign. Email generator prefers platform_verified KPIs over self_reported when picking which figure to cite.",
+      "description": "Talent has a documented past campaign (in `data/brand_deals/{talent_id}.json`) with notable KPIs \u2014 reach, engagement, video completion, etc. Pitches the target brand with concrete numbers from a similar or competitive campaign. Email generator prefers platform_verified KPIs over self_reported when picking which figure to cite.",
       "trigger": {
         "type": "talent_has_deal_with_strong_kpi",
         "config": {
           "min_reach": 100000,
           "preferred_industry_match": "same_or_competitor",
-          "prefer_kpi_source_order": ["platform_verified", "brand_reported", "third_party"]
+          "prefer_kpi_source_order": [
+            "platform_verified",
+            "brand_reported",
+            "third_party"
+          ]
         }
       },
-      "applicable_to_decision_roles": ["buyer", "influencer"],
-      "applicable_to_steps": [1, 2],
-      "authored_strength_score": 0.80,
-      "example_phrasing": "I drove {kpi_value} {kpi_unit} for {past_brand} in {past_campaign_period} — {kpi_source_verification}. Happy to walk through the full audit.",
-      "merge_fields_required": ["kpi_value", "kpi_unit", "past_brand", "past_campaign_period", "kpi_source_verification"],
-      "pair_well_with": ["past_brand_direct_competitor", "iab_demographic_overlap", "specific_creative_concept"],
-      "notes": "When the deal's brand is a direct competitor of the target (via brand_competitors.json), this angle pairs powerfully with past_brand_direct_competitor — combined they form the strongest first-touch hook."
+      "applicable_to_decision_roles": [
+        "buyer",
+        "influencer"
+      ],
+      "applicable_to_steps": [
+        1,
+        2
+      ],
+      "authored_strength_score": 0.8,
+      "example_phrasing": "{talent_name} drove {kpi_value} {kpi_unit} for {past_brand} in {past_campaign_period} \u2014 {kpi_source_verification}. Happy to walk through the full audit.",
+      "merge_fields_required": [
+        "talent_name",
+        "kpi_value",
+        "kpi_unit",
+        "past_brand",
+        "past_campaign_period",
+        "kpi_source_verification"
+      ],
+      "pair_well_with": [
+        "past_brand_direct_competitor",
+        "iab_demographic_overlap",
+        "specific_creative_concept"
+      ],
+      "notes": "When the deal's brand is a direct competitor of the target (via brand_competitors.json), this angle pairs powerfully with past_brand_direct_competitor \u2014 combined they form the strongest first-touch hook."
     },
-
     {
       "angle_id": "past_campaign_brand_renewed",
       "category": "performance_proof",
       "name": "Past brand renewed",
-      "description": "Talent has a past deal with outcome=successful_renewed — the brand chose to do a follow-on campaign. Strong social proof: 'brand X liked working with me enough to come back'. Particularly powerful when the renewing brand is in the same vertical as the target.",
+      "description": "Talent has a past deal with outcome=successful_renewed \u2014 the brand chose to do a follow-on campaign. Strong social proof: 'brand X liked working with me enough to come back'. Particularly powerful when the renewing brand is in the same vertical as the target.",
       "trigger": {
         "type": "talent_has_renewed_deal",
-        "config": { "preferred_industry_match": "same_or_competitor" }
+        "config": {
+          "preferred_industry_match": "same_or_competitor"
+        }
       },
-      "applicable_to_decision_roles": ["buyer", "influencer"],
-      "applicable_to_steps": [1, 2],
+      "applicable_to_decision_roles": [
+        "buyer",
+        "influencer"
+      ],
+      "applicable_to_steps": [
+        1,
+        2
+      ],
       "authored_strength_score": 0.85,
-      "example_phrasing": "{past_brand} renewed me for {follow_on_period} after the launch campaign — happy to walk through what worked and how it could apply to {target_brand}.",
-      "merge_fields_required": ["past_brand", "follow_on_period", "target_brand"],
-      "pair_well_with": ["past_campaign_specific_metric", "past_brand_direct_competitor"]
+      "example_phrasing": "{past_brand} renewed {talent_name} for {follow_on_period} after the launch campaign \u2014 happy to walk through what worked and how it could apply to {target_brand}.",
+      "merge_fields_required": [
+        "talent_name",
+        "past_brand",
+        "follow_on_period",
+        "target_brand"
+      ],
+      "pair_well_with": [
+        "past_campaign_specific_metric",
+        "past_brand_direct_competitor"
+      ]
     },
-
     {
       "angle_id": "past_campaign_high_conversion",
       "category": "performance_proof",
       "name": "Past campaign drove conversions / sales",
-      "description": "Talent has a past deal with strong bottom-funnel KPIs — conversions, link clicks, sales_attributed_usd, promo code redemptions. The headline number that buyers (especially performance-focused brands) most care about. Email generator picks the most impressive of {conversions, sales_attributed_usd, link_clicks, promo_code_redemptions} based on source confidence.",
+      "description": "Talent has a past deal with strong bottom-funnel KPIs \u2014 conversions, link clicks, sales_attributed_usd, promo code redemptions. The headline number that buyers (especially performance-focused brands) most care about. Email generator picks the most impressive of {conversions, sales_attributed_usd, link_clicks, promo_code_redemptions} based on source confidence.",
       "trigger": {
         "type": "talent_has_deal_with_conversion_kpis",
         "config": {
           "min_conversions": 100,
           "min_sales_attributed_usd": 5000,
-          "prefer_kpi_source_order": ["brand_reported", "platform_verified", "third_party"]
+          "prefer_kpi_source_order": [
+            "brand_reported",
+            "platform_verified",
+            "third_party"
+          ]
         }
       },
-      "applicable_to_decision_roles": ["buyer"],
-      "applicable_to_steps": [1, 2, 3],
+      "applicable_to_decision_roles": [
+        "buyer"
+      ],
+      "applicable_to_steps": [
+        1,
+        2,
+        3
+      ],
       "authored_strength_score": 0.85,
-      "example_phrasing": "Last campaign drove {conversion_metric_value} {conversion_metric_unit} for {past_brand} — performance audit available. Confident a similar approach lands for {target_brand}.",
-      "merge_fields_required": ["conversion_metric_value", "conversion_metric_unit", "past_brand", "target_brand"],
-      "pair_well_with": ["specific_creative_concept", "past_brand_direct_competitor"],
-      "notes": "Sales/conversion numbers from brand_reported sources are the highest-trust pitch material — buyers prioritise these over engagement metrics. Email generator should flag if the only available conversion figures are self_reported (low confidence)."
+      "example_phrasing": "{talent_name}'s last campaign drove {conversion_metric_value} {conversion_metric_unit} for {past_brand} \u2014 performance audit available. Confident a similar approach lands for {target_brand}.",
+      "merge_fields_required": [
+        "talent_name",
+        "conversion_metric_value",
+        "conversion_metric_unit",
+        "past_brand",
+        "target_brand"
+      ],
+      "pair_well_with": [
+        "specific_creative_concept",
+        "past_brand_direct_competitor"
+      ],
+      "notes": "Sales/conversion numbers from brand_reported sources are the highest-trust pitch material \u2014 buyers prioritise these over engagement metrics. Email generator should flag if the only available conversion figures are self_reported (low confidence)."
     },
-
     {
       "angle_id": "past_campaign_audience_overlap_proof",
       "category": "performance_proof",
@@ -681,32 +1142,66 @@
       "description": "Talent has a documented past campaign where `audience_overlap_with_brand_target_pct` was high (e.g. 70%+). Quantitative proof of audience-fit accuracy. Pairs with current-brand demographic angles to extend the story.",
       "trigger": {
         "type": "talent_has_high_audience_match_past_campaign",
-        "config": { "min_overlap_pct": 65, "preferred_industry_match": "same_or_competitor" }
+        "config": {
+          "min_overlap_pct": 65,
+          "preferred_industry_match": "same_or_competitor"
+        }
       },
-      "applicable_to_decision_roles": ["buyer", "influencer"],
-      "applicable_to_steps": [1, 2],
-      "authored_strength_score": 0.80,
-      "example_phrasing": "Past audience overlap with {past_brand}'s buyer profile was {overlap_pct}% — likely even higher with {target_brand} given the demographic match.",
-      "merge_fields_required": ["past_brand", "overlap_pct", "target_brand"],
-      "pair_well_with": ["iab_demographic_overlap"]
+      "applicable_to_decision_roles": [
+        "buyer",
+        "influencer"
+      ],
+      "applicable_to_steps": [
+        1,
+        2
+      ],
+      "authored_strength_score": 0.8,
+      "example_phrasing": "{talent_name}'s past audience overlap with {past_brand}'s buyer profile was {overlap_pct}% \u2014 likely even higher with {target_brand} given the demographic match.",
+      "merge_fields_required": [
+        "talent_name",
+        "past_brand",
+        "overlap_pct",
+        "target_brand"
+      ],
+      "pair_well_with": [
+        "iab_demographic_overlap"
+      ]
     },
-
     {
       "angle_id": "past_campaign_beat_benchmark",
       "category": "performance_proof",
       "name": "Past campaign beat industry benchmark",
-      "description": "Talent has a past campaign where `vs_industry_benchmark` shows positive (e.g. ER 2.3x category average). Strongest quantitative proof — directly contextualizes the talent's performance vs the rest of the space. NOTE: schema is in place for v0.1 but this angle fires zero times until `data/industry_kpi_benchmarks.json` ships in v2. Captured here so the trigger logic is ready to go live the moment benchmarks are added.",
+      "description": "Talent has a past campaign where `vs_industry_benchmark` shows positive (e.g. ER 2.3x category average). Strongest quantitative proof \u2014 directly contextualizes the talent's performance vs the rest of the space. NOTE: schema is in place for v0.1 but this angle fires zero times until `data/industry_kpi_benchmarks.json` ships in v2. Captured here so the trigger logic is ready to go live the moment benchmarks are added.",
       "trigger": {
         "type": "talent_has_deal_beating_benchmark",
-        "config": { "min_outperformance_pct": 25, "preferred_industry_match": "same_or_competitor" }
+        "config": {
+          "min_outperformance_pct": 25,
+          "preferred_industry_match": "same_or_competitor"
+        }
       },
-      "applicable_to_decision_roles": ["buyer", "influencer"],
-      "applicable_to_steps": [1, 2],
-      "authored_strength_score": 0.90,
-      "example_phrasing": "On the {past_brand} campaign, {kpi_name} was {outperformance_multiplier} the {industry} category average ({past_kpi_value} vs {benchmark_value}). Full audit shows why.",
-      "merge_fields_required": ["past_brand", "kpi_name", "outperformance_multiplier", "industry", "past_kpi_value", "benchmark_value"],
-      "pair_well_with": ["past_campaign_specific_metric"],
-      "notes": "Dormant until v2 benchmarks ship. When live, this is the top-strength angle (0.90) — quantitative + comparative + verifiable."
+      "applicable_to_decision_roles": [
+        "buyer",
+        "influencer"
+      ],
+      "applicable_to_steps": [
+        1,
+        2
+      ],
+      "authored_strength_score": 0.9,
+      "example_phrasing": "On the {past_brand} campaign, {talent_name}'s {kpi_name} was {outperformance_multiplier} the {industry} category average ({past_kpi_value} vs {benchmark_value}). Full audit shows why.",
+      "merge_fields_required": [
+        "talent_name",
+        "past_brand",
+        "kpi_name",
+        "outperformance_multiplier",
+        "industry",
+        "past_kpi_value",
+        "benchmark_value"
+      ],
+      "pair_well_with": [
+        "past_campaign_specific_metric"
+      ],
+      "notes": "Dormant until v2 benchmarks ship. When live, this is the top-strength angle (0.90) \u2014 quantitative + comparative + verifiable."
     }
   ]
 }

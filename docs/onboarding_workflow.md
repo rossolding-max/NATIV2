@@ -93,24 +93,13 @@ For each social platform, present a card:
 - **Production / multi-tenant:** `vault:nativ2/instagram/<talent_id>` — the orchestrator dereferences via the configured secret manager (HashiCorp Vault, AWS Secrets Manager, GCP Secret Manager, or equivalent).
 - Never write the raw token to JSON. The `talents/{id}.json` file only ever stores the reference string.
 
-### Outbound sender domain setup (for Phase 3b outreach)
+### Outbound sender — handled by the agency, not per talent
 
-Each talent gets their **own sending domain** for cold outreach — best deliverability under Gmail/Yahoo's Feb 2024 bulk-sender rules, plus brands see emails from the talent's own identity rather than a marketing platform. Done once during onboarding, then the warmup ramp runs in the background.
+Per the v0.1 architecture, outreach emails are sent by the talent's **agency** in the agent's name (e.g. `sarah@nativeagency.com`), not from per-talent mailboxes. The agency's sending mailbox + DNS records + 2-4 week warmup are a **one-time setup performed in Phase 0** — see `docs/agency_setup_workflow.md`. Talent onboarding does **not** require any DNS configuration or domain ownership.
 
-**Required from the talent:** a domain they own (e.g. `janedoetalent.com`). If they don't have one, we suggest registering during onboarding — ~$12/year via any registrar.
+What this means at this step: nothing. The talent's onboarding plugs into the agency's pre-warmed mailbox automatically. Outreach for this talent uses the agency's existing sender identity; no DNS records to add; no warmup wait per talent.
 
-**3 DNS records to add** (we generate the exact values via Smartlead and surface them in the UI for the talent to paste into their DNS dashboard):
-- **SPF** — `v=spf1 include:smartlead.io ~all`
-- **DKIM** — TXT record provided per-domain by Smartlead (signs outgoing mail; required for DMARC alignment)
-- **DMARC** — `v=DMARC1; p=quarantine; rua=mailto:dmarc-reports@{talent_domain}`
-
-**What we do behind the scenes:**
-1. Provision a mailbox: `pitches@{talent_domain}` (or custom prefix the talent prefers)
-2. Verify DNS records via Smartlead's verification endpoint
-3. Start the **2-4 week warmup ramp** — Smartlead's peer-to-peer warmup network gradually builds sender reputation via real conversations with other warmed inboxes
-4. Outreach is **held** until `sender_warmup_complete: true` — UI shows "Warming up — N days remaining"
-
-See `docs/outreach_workflow.md` § Per-talent sender domain setup for the full lifecycle.
+(In v2, when multi-agent rosters are supported, this step will gain an optional sub-step for routing the talent to a specific agent within the agency.)
 
 **After each connection:**
 1. Pull live stats → populate `platforms[N].stats` (followers, ER, avg views/likes/comments, `last_updated`).

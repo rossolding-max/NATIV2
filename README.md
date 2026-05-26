@@ -8,6 +8,7 @@ Build an AI-powered assistant that helps an influencer (or a roster of influence
 
 | # | Phase | Status | Purpose |
 |---|-------|--------|---------|
+| 0 | **Agency Setup** | v0.1 spec + schema shipped | One-time agency identity + sender mailbox + DNS + 2-4 week warmup setup. Prerequisite to talent onboarding. v0.1 = single agent / single agency; v2 = multi-agent. |
 | 1 | **Talent Profile** | v0.1 spec + data shipped | Capture everything the system needs about the creator(s) — identity, audience, history, rates, similar talents. The foundation every later phase reads from. |
 | 1.5 | **Brand Deals (historical campaigns)** | v0.1 spec + schema shipped | Rich per-talent record of every past campaign — campaign type, deliverables, structured KPIs (reach / engagement / conversions / sales) with source provenance, outcome, re-engagement metadata. Powers citation material in outreach pitches and re-engagement timing in Brand Discovery. |
 | 2 | **Brand Discovery & Targeting** | v0.1 spec + data shipped | For a given talent, produce a ranked list of industries to pitch and a ranked long-list of specific brands within them — with qualification filtering, sensitive-vertical warnings, and re-engagement on a monthly cron. |
@@ -18,6 +19,18 @@ Build an AI-powered assistant that helps an influencer (or a roster of influence
 ## End-to-end data flow
 
 ```
+┌────────────────────────────────────────────────────────────────────┐
+│ Phase 0  AGENCY SETUP (one-time, prerequisite to Phase 1)          │
+│   docs/agency_setup_workflow.md                                    │
+│   schemas/agency_profile.schema.json                               │
+│     7-step setup: agency identity → primary agent → DNS records → │
+│     sending mailbox provisioning → signature template → 2-4 week  │
+│     warmup → validation                                            │
+│     output: data/agency_profile.json (gitignored)                  │
+│   v0.1: single agent / single agency. v2: multi-agent within agency│
+└────────────────────────────┬───────────────────────────────────────┘
+                             │
+                             ▼
 ┌────────────────────────────────────────────────────────────────────┐
 │ Phase 1  TALENT PROFILE                                            │
 │   docs/onboarding_workflow.md     ← how a talent gets in           │
@@ -130,6 +143,7 @@ The fields below were not in the original request but were added because later p
 - Free-form `other_stats` bag for anything bespoke.
 
 ### Files
+- `schemas/agency_profile.schema.json` — JSON Schema for the Phase 0 agency identity. Captures agency name/domain, the primary agent's identity, sending mailbox + warmup state, default signature template, CAN-SPAM-required company address. v0.1 enforces single-agent constraint via `agents` `maxItems: 1`. Validates `data/agency_profile.json` (gitignored).
 - `schemas/talent.schema.json` — JSON Schema (Draft 2020-12) describing the talent profile.
 - `schemas/brand_candidates.schema.json` — JSON Schema for the per-talent Brand Discovery output. Validates every file written by the orchestrator under `data/brand_candidates/` (the folder itself is gitignored — generated artifact, not source).
 - `schemas/brand_contact.schema.json` — JSON Schema for per-brand contact records (Phase 3a). Validates every file under `data/brand_contacts/` (gitignored — contacts are PII and vendor data is licensed).
@@ -150,7 +164,8 @@ The fields below were not in the original request but were added because later p
 - `scripts/build_affinity.py` — builder script with all authored data and inline validation. Single source of truth for the three affinity files; re-run to regenerate them.
 - `scripts/enrich_brand_map.py` — adds the 5 metadata fields per brand to `brand_industry_map.json`. Re-runnable; honest-gaps policy (omit fields where the curated value is unknown).
 - `docs/recommendation_algorithm.md` — draft spec for how the app combines all of the above into a ranked list of industries to target for a given talent. Forward-looking contract for when the app is built.
-- `docs/onboarding_workflow.md` — draft spec for how a user adds a new talent: web wizard with OAuth platform connections (paste-fallback), media-pack extraction by LLM, adaptive questionnaire for gaps, hybrid similar-talent seeding (user + AI suggestions), and a background AI research pass that populates similar-talent records.
+- `docs/agency_setup_workflow.md` — Phase 0 one-time setup before any talent onboards. 7-step process: agency identity, primary agent, DNS records (SPF/DKIM/DMARC), sending mailbox provisioning via Smartlead, signature template (CAN-SPAM-compliant), 2-4 week warmup, final validation. v0.1 single-agent constraint documented; v2 expansion plan for multi-agent rosters.
+- `docs/onboarding_workflow.md` — draft spec for how a user adds a new talent: web wizard with OAuth platform connections (paste-fallback), media-pack extraction by LLM, adaptive questionnaire for gaps, hybrid similar-talent seeding (user + AI suggestions), and a background AI research pass that populates similar-talent records. The per-talent sender-domain section was removed: outreach now uses the agency's pre-warmed mailbox from Phase 0.
 - `docs/brand_discovery.md` — draft spec for the long-list generator. **16 independent searches** runnable today (re-engagement, network expansion, affinity expansion, geo, life-stage, constraint-aware, graph, recently-funded via web search, **trending/rising brands via the [`last30days` skill](https://github.com/mvanhorn/last30days-skill) — multi-source social momentum signal across Reddit/X/TikTok/YouTube/HN/etc., run as a monthly cron**) merged with multi-source scoring. Monthly cron drives re-engagement with per-brand cool-downs. Future-versions section lists 12 more searches that need external data (Crunchbase API as a structured upgrade to Search 15, live `#ad` scraping, affiliate networks, creator marketplaces, EMV reports, etc.). Both structural enrichments (`brand_industry_map` metadata + `brand_competitors` graph) are now shipped and used by Searches 3, 4, 10, 14.
 - `docs/vendor_roadmap.md` — single source of truth for external-service decisions. Confirms **Exa** as the v0.1 web-search provider (Search 15). Catalogues deferred vendors with criteria for when to add each: ScrapeCreators (Search 16 visual platforms), Owler (competitor maintenance), Modash/HypeAuditor (brand DB bulk import), Exploding Topics (pre-trend detection), Product Hunt API (day-of launches), Tribe Dynamics EMV (top-spending brands per category), SimilarWeb (audience-overlap competitors), Crunchbase (structured funding data), Apollo (Phase 3 outreach contact discovery), plus alternatives for each. Includes the env-var inventory for all current + deferred services.
 - `docs/brand_enrichment_workflow.md` — draft spec for the 9-step pipeline that takes a brand from name-only to fully-populated record in `brand_industry_map.json`. Covers identity resolution, domain resolution, industry classification, HQ/markets, company stage, campaign tier, creator-program presence, revenue + headcount, social follower counts. Three triggers (seed expansion / in-flight discovery writeback / annual refresh), tool-per-step mapping, honesty-floor policy, validation gates, and a state machine. Pairs with brand_discovery.md (consumer) and vendor_roadmap.md (external services).
@@ -441,8 +456,8 @@ Smartlead fires a webhook on every reply. Our app:
 ### Headline metric: reply rate
 Per the v0.1 user decision, **reply rate (replied ÷ delivered) is the headline UI metric** — most reliable signal in 2026. Apple Mail Privacy Protection has made open rates noisy (auto-loads tracking pixels), so `engagement_summary.human_opens` filters out likely-MPP events. Raw open rate is captured but flagged noisy.
 
-### Per-talent sender domain (deliverability + authenticity)
-Each talent has their own sending domain (e.g. `pitches@janedoetalent.com`). Set up during onboarding via 3 DNS records (SPF, DKIM, DMARC). 2-4 week warmup via Smartlead's peer-to-peer network before first cold send. Per-talent reputation = no cross-contamination, brand recognises the talent's identity, fully Gmail/Yahoo 2024 compliant.
+### Agency-level sender (not per-talent)
+Outreach emails are sent by the talent's **agency** in the agent's name (e.g. `sarah@nativeagency.com`), not from per-talent mailboxes. Voice: **agent-led on-behalf-of talent** — "I'm Sarah from Native Agency — I represent Jane Doe, who drove 1.24M reach for Gymshark." The agency's sender mailbox + DNS records + 2-4 week warmup are a one-time Phase 0 setup (`docs/agency_setup_workflow.md`); all subsequent talent onboarding plugs into the pre-warmed mailbox. v0.1 = single agent / single agency; v2 = multi-agent within agency. All 42 pitch angles use agent-led on-behalf-of voice with `{talent_name}` as a required merge field.
 
 ### Email-only in v0.1
 Phase 3b v0.1 sends **email only**. LinkedIn outreach (DMs / InMails / connection requests as part of a sequence) is deferred to v2. The pitch_template schema restricts `channel` to `email`; the orchestrator rejects any non-email step. LinkedIn API is still in v0.1 — but for **contact enrichment** (verifying Apollo data freshness, finding contacts Apollo misses), not for sending. When v2 adds LinkedIn-channel sending we'll evaluate vendors (Sales Nav API vs Closely / Expandi / La Growth Machine), automation-policy compliance, and per-talent LinkedIn account warmup.

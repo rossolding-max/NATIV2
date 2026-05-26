@@ -1,0 +1,155 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://nativ2/schemas/agency_profile.schema.json",
+  "title": "Agency Profile",
+  "description": "Single source of truth for the agency operating the system. Captures the agency identity, the named agent(s) who send outreach, the sending mailbox(es) + warmup state, and the signature template baked into every email. v0.1 = single agency, single agent (`agents` and `sending_mailboxes` arrays both length 1). v2 will lift the single-agent constraint to multi-agent (e.g. Sarah handles 5 talents, Tom handles 3) without breaking the v0.1 shape — the array structure is already in place. Lives at `data/agency_profile.json` (gitignored — contains real agent contact details).",
+  "type": "object",
+  "required": ["agency_id", "name", "domain", "agents", "sending_mailboxes", "company_address", "default_signature_template"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+    "agency_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]*$",
+      "description": "Stable slug identifier for the agency. Used as the root identifier when v2 introduces multi-agency."
+    },
+    "name": { "type": "string", "description": "Display name of the agency, used in email signatures + intros." },
+    "domain": {
+      "type": "string",
+      "description": "The agency's primary domain (e.g. `nativeagency.com`). All sending mailboxes are subdomains/addresses of this domain. SPF/DKIM/DMARC records live here."
+    },
+    "website_url": { "type": "string", "format": "uri" },
+    "logo_url": { "type": "string", "format": "uri", "description": "Optional. Used in signature blocks when the template supports HTML." },
+
+    "agents": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 1,
+      "description": "v0.1: exactly one agent (constraint enforced via maxItems: 1). v2: maxItems lifted; multi-agent rosters supported with per-agent talent assignment.",
+      "items": { "$ref": "#/$defs/agent" }
+    },
+
+    "sending_mailboxes": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Mailboxes the agency sends outreach from. v0.1 typically = 1 (the primary agent's mailbox). Each mailbox is independently warmed up in Smartlead.",
+      "items": { "$ref": "#/$defs/sendingMailbox" }
+    },
+
+    "company_address": {
+      "type": "string",
+      "description": "Physical mailing address. REQUIRED for CAN-SPAM compliance — every cold email must include the sender's physical address in the footer. Composed into the email signature."
+    },
+    "unsubscribe_email": {
+      "type": "string",
+      "format": "email",
+      "description": "Address that handles List-Unsubscribe responses. Typically `unsubscribe@{domain}` or a dedicated inbox. Drives the one-click unsubscribe required by Gmail/Yahoo Feb 2024 rules."
+    },
+
+    "default_signature_template": {
+      "type": "string",
+      "description": "Email signature block. Supports merge fields: `{agent_name}`, `{agent_title}`, `{agent_email}`, `{agent_phone}`, `{agency_name}`, `{agency_website}`, `{agency_address}`, `{unsubscribe_link}`. Required to end every outreach email; the orchestrator validates presence at send-time."
+    },
+    "default_voice_mode": {
+      "type": "string",
+      "enum": ["agent_led_on_behalf_of_talent", "talent_led_via_agency", "agency_led_talent_featured"],
+      "default": "agent_led_on_behalf_of_talent",
+      "description": "How the LLM positions agent vs talent in generated emails. v0.1 default per user decision: agent-led on-behalf-of. v2 may add per-talent overrides."
+    },
+
+    "billing_entity": { "$ref": "#/$defs/billingEntity" },
+
+    "created_at": { "type": "string", "format": "date-time" },
+    "updated_at": { "type": "string", "format": "date-time" }
+  },
+
+  "$defs": {
+    "agent": {
+      "type": "object",
+      "required": ["agent_id", "name", "email", "is_primary"],
+      "additionalProperties": false,
+      "properties": {
+        "agent_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]*$",
+          "description": "Stable slug identifier for the agent."
+        },
+        "name": { "type": "string", "description": "Agent's full name as it appears in the FROM line + signature." },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "Agent's primary inbox. Replies route here. May or may not equal the sending mailbox (agencies sometimes send from `sarah@` and receive at `partnerships@`)."
+        },
+        "phone": { "type": "string", "description": "E.164 preferred; appears in signature." },
+        "title": {
+          "type": "string",
+          "description": "Job title for the signature (e.g. 'Director of Brand Partnerships')."
+        },
+        "linkedin_url": { "type": "string", "format": "uri" },
+        "is_primary": {
+          "type": "boolean",
+          "description": "True for the agent who acts as the default sender when an explicit per-talent agent isn't assigned. v0.1: must be true (only one agent). v2: exactly one agent must be primary."
+        },
+        "represents_talent_ids": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+          "description": "v0.1: agent represents all talents (this array may be empty as a 'represents everyone' signal, or contain all talent_ids). v2: explicit assignment enables agent-to-talent routing — each talent's outreach uses their assigned agent's mailbox + signature."
+        }
+      }
+    },
+
+    "sendingMailbox": {
+      "type": "object",
+      "required": ["email", "agent_id", "purpose", "warmup_status"],
+      "additionalProperties": false,
+      "properties": {
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "The address emails are sent FROM. Must be on the agency's domain."
+        },
+        "agent_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]*$",
+          "description": "FK to `agents[].agent_id`. The agent this mailbox represents."
+        },
+        "purpose": {
+          "type": "string",
+          "enum": ["named_agent_outreach", "generic_agency_outreach", "transactional"],
+          "description": "named_agent_outreach: `sarah@agency.com` style, brand sees the agent's name on the FROM line — v0.1 default per user decision. generic_agency_outreach: `partnerships@agency.com` — used in v2 as fallback. transactional: agency's reply-handling inbox, not for outbound."
+        },
+        "warmup_status": {
+          "type": "string",
+          "enum": ["pending", "in_progress", "complete", "paused"],
+          "description": "Lifecycle: pending = DNS not yet verified; in_progress = Smartlead warmup running (typically 2-4 weeks); complete = ready for cold outreach; paused = manually held."
+        },
+        "started_warmup_at": { "type": "string", "format": "date-time" },
+        "completed_warmup_at": { "type": "string", "format": "date-time" },
+        "dns_records_verified": {
+          "type": "boolean",
+          "description": "True when SPF + DKIM + DMARC records are all confirmed for the agency's domain. Gating condition before warmup can start."
+        },
+        "smartlead_mailbox_id": {
+          "type": "string",
+          "description": "Identifier in Smartlead's mailbox registry. Set after Smartlead onboards the mailbox."
+        },
+        "daily_send_cap": {
+          "type": "integer",
+          "minimum": 10,
+          "maximum": 500,
+          "description": "Maximum cold emails this mailbox sends per day. Ramps up during warmup; typically caps at 100-200/day for sustainable deliverability."
+        }
+      }
+    },
+
+    "billingEntity": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "legal_name": { "type": "string" },
+        "country": { "type": "string", "pattern": "^[A-Z]{2}$" },
+        "tax_id": { "type": "string" }
+      }
+    }
+  }
+}
