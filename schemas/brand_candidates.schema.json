@@ -249,6 +249,52 @@
             "type": "string",
             "enum": ["direct", "aspire", "grin", "ltk", "shopmy", "agency_of_record"]
           }
+        },
+        "revenue": {
+          "type": "object",
+          "description": "Annual revenue in USD, with year reported and source.",
+          "required": ["amount_usd", "as_of_year", "source"],
+          "additionalProperties": false,
+          "properties": {
+            "amount_usd": { "type": "integer", "minimum": 0 },
+            "as_of_year": { "type": "integer", "minimum": 1900, "maximum": 2100 },
+            "source": {
+              "type": "string",
+              "enum": ["public_filing", "press_release", "reported_estimate"]
+            }
+          }
+        },
+        "headcount": {
+          "type": "object",
+          "description": "Employee count as a LinkedIn-standard band, with source.",
+          "required": ["band", "source"],
+          "additionalProperties": false,
+          "properties": {
+            "band": {
+              "type": "string",
+              "enum": ["1_10", "11_50", "51_200", "201_500", "501_1000", "1001_5000", "5001_10000", "10000_plus"]
+            },
+            "source": {
+              "type": "string",
+              "enum": ["linkedin", "public_filing", "press_release", "reported_estimate"]
+            }
+          }
+        },
+        "social_followers": {
+          "type": "object",
+          "description": "Brand's own social-media follower counts per platform, integer counts, with as_of_year. Platforms with minimal/uncertain presence are omitted.",
+          "required": ["as_of_year"],
+          "additionalProperties": false,
+          "properties": {
+            "instagram": { "type": "integer", "minimum": 0 },
+            "tiktok": { "type": "integer", "minimum": 0 },
+            "youtube": { "type": "integer", "minimum": 0 },
+            "twitter_x": { "type": "integer", "minimum": 0 },
+            "facebook": { "type": "integer", "minimum": 0 },
+            "linkedin": { "type": "integer", "minimum": 0 },
+            "pinterest": { "type": "integer", "minimum": 0 },
+            "as_of_year": { "type": "integer", "minimum": 2000, "maximum": 2100 }
+          }
         }
       }
     },
@@ -301,7 +347,14 @@
             "subsidiary_of_major_parent",
             "active_paid_partnerships_observed",
             "recent_funding_round",
+            "enterprise_revenue",
+            "significant_revenue",
+            "minimal_revenue",
+            "large_headcount",
+            "mid_headcount",
+            "small_headcount",
             "high_own_brand_follower_count",
+            "moderate_own_brand_follower_count",
             "low_own_brand_follower_count",
             "b2b_vertical",
             "no_creator_partnerships_observed",

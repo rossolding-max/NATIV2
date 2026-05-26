@@ -1,5 +1,5 @@
 {
-  "$comment": "Seed lookup table for auto-completing the `industry_id` field on previous_brands when a user types a brand name. Resolution order at runtime: 1) exact name match (case-insensitive), 2) alias match, 3) domain match, 4) AI inference fallback (later phase). New successful AI inferences should be appended here so the seed grows over time. Each record may also carry enrichment fields (hq_country, sells_in_countries, company_stage, typical_campaign_tier, creator_program_presence) used by Brand Discovery searches (see docs/brand_discovery.md). Fields are present only when we have confident values; absence means 'not yet enriched' - the app should treat missing as unknown.",
+  "$comment": "Seed lookup table for auto-completing the `industry_id` field on previous_brands when a user types a brand name. Resolution order at runtime: 1) exact name match (case-insensitive), 2) alias match, 3) domain match, 4) AI inference fallback (later phase). New successful AI inferences should be appended here so the seed grows over time. Each record may also carry enrichment fields (hq_country, sells_in_countries, company_stage, typical_campaign_tier, creator_program_presence, revenue, headcount, social_followers) used by Brand Discovery searches (see docs/brand_discovery.md) and qualification scoring. Fields are present only when we have confident values; absence means 'not yet enriched' - the app treats missing as unknown rather than assuming a default. See docs/brand_enrichment_workflow.md for the end-to-end process that takes a brand from name-only to fully enriched.",
   "version": "1.0.0",
   "updated": "2026-05-26",
   "brands": [
@@ -14,7 +14,23 @@
       "creator_program_presence": [
         "direct",
         "agency_of_record"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 51400000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 310000000,
+        "tiktok": 6000000,
+        "youtube": 2100000,
+        "twitter_x": 10000000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Adidas",
@@ -27,7 +43,23 @@
       "creator_program_presence": [
         "direct",
         "agency_of_record"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 23700000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 29000000,
+        "tiktok": 5000000,
+        "youtube": 1500000,
+        "twitter_x": 4500000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Puma",
@@ -40,7 +72,22 @@
       "creator_program_presence": [
         "direct",
         "agency_of_record"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 9300000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 14000000,
+        "tiktok": 2500000,
+        "youtube": 600000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Under Armour",
@@ -52,7 +99,22 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 5700000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "5001_10000",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 7500000,
+        "tiktok": 800000,
+        "youtube": 400000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Reebok",
@@ -64,7 +126,12 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "social_followers": {
+        "instagram": 4500000,
+        "tiktok": 600000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "ASICS",
@@ -76,7 +143,20 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 4500000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "5001_10000",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 2500000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "New Balance",
@@ -88,7 +168,21 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 7800000000,
+        "as_of_year": 2024,
+        "source": "press_release"
+      },
+      "headcount": {
+        "band": "5001_10000",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 3500000,
+        "tiktok": 700000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Hoka",
@@ -103,7 +197,21 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 2200000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "501_1000",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 1500000,
+        "tiktok": 400000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "On Running",
@@ -118,7 +226,21 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 2500000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "1001_5000",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 1400000,
+        "tiktok": 300000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Gymshark",
@@ -137,7 +259,22 @@
       "typical_campaign_tier": "mid",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 700000000,
+        "as_of_year": 2024,
+        "source": "press_release"
+      },
+      "headcount": {
+        "band": "501_1000",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 7000000,
+        "tiktok": 5500000,
+        "youtube": 1000000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Lululemon",
@@ -149,7 +286,22 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 10500000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 5500000,
+        "tiktok": 1500000,
+        "youtube": 200000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Alo Yoga",
@@ -170,7 +322,12 @@
       "creator_program_presence": [
         "direct",
         "ltk"
-      ]
+      ],
+      "social_followers": {
+        "instagram": 3500000,
+        "tiktok": 1500000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Vuori",
@@ -186,7 +343,11 @@
       "typical_campaign_tier": "mid",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "social_followers": {
+        "instagram": 600000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Outdoor Voices",
@@ -200,7 +361,11 @@
       "typical_campaign_tier": "mid",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "headcount": {
+        "band": "51_200",
+        "source": "linkedin"
+      }
     },
     {
       "name": "Patagonia",
@@ -212,7 +377,21 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 1500000000,
+        "as_of_year": 2024,
+        "source": "reported_estimate"
+      },
+      "headcount": {
+        "band": "1001_5000",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 5500000,
+        "youtube": 350000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "The North Face",
@@ -224,7 +403,21 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 3200000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "1001_5000",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 6000000,
+        "tiktok": 800000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Columbia",
@@ -236,7 +429,16 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 3400000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "5001_10000",
+        "source": "linkedin"
+      }
     },
     {
       "name": "Arc'teryx",
@@ -248,7 +450,16 @@
       "typical_campaign_tier": "mid",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 2000000000,
+        "as_of_year": 2024,
+        "source": "press_release"
+      },
+      "headcount": {
+        "band": "501_1000",
+        "source": "linkedin"
+      }
     },
     {
       "name": "REI",
@@ -262,7 +473,20 @@
       "typical_campaign_tier": "mid",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 3800000000,
+        "as_of_year": 2024,
+        "source": "press_release"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 2500000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Peloton",
@@ -280,7 +504,21 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 2700000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "1001_5000",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 1300000,
+        "tiktok": 350000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Tonal",
@@ -321,7 +559,15 @@
       "typical_campaign_tier": "mid",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "headcount": {
+        "band": "201_500",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 500000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Oura",
@@ -336,7 +582,15 @@
       "typical_campaign_tier": "mid",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "headcount": {
+        "band": "201_500",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 350000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Garmin",
@@ -348,7 +602,20 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 5500000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 1500000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Fitbit",
@@ -360,7 +627,15 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "headcount": {
+        "band": "1001_5000",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 700000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Myprotein",
@@ -372,7 +647,20 @@
       "typical_campaign_tier": "mid",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 500000000,
+        "as_of_year": 2024,
+        "source": "reported_estimate"
+      },
+      "headcount": {
+        "band": "501_1000",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 1500000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Optimum Nutrition",
@@ -405,7 +693,20 @@
       "typical_campaign_tier": "mid",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 200000000,
+        "as_of_year": 2024,
+        "source": "press_release"
+      },
+      "headcount": {
+        "band": "201_500",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 400000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "AG1",
@@ -420,7 +721,15 @@
       "typical_campaign_tier": "mid",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "headcount": {
+        "band": "201_500",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 500000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Ritual",
@@ -436,7 +745,11 @@
       "typical_campaign_tier": "mid",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "headcount": {
+        "band": "51_200",
+        "source": "linkedin"
+      }
     },
     {
       "name": "Sephora",
@@ -448,7 +761,22 @@
       "typical_campaign_tier": "premium",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 18000000000,
+        "as_of_year": 2024,
+        "source": "reported_estimate"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 23000000,
+        "tiktok": 6000000,
+        "youtube": 1500000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Ulta",
@@ -465,7 +793,21 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 11200000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 8000000,
+        "tiktok": 2500000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Boots",
@@ -480,7 +822,20 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 9000000000,
+        "as_of_year": 2024,
+        "source": "reported_estimate"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 1300000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Glossier",
@@ -497,7 +852,21 @@
       "typical_campaign_tier": "mid",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 275000000,
+        "as_of_year": 2024,
+        "source": "reported_estimate"
+      },
+      "headcount": {
+        "band": "201_500",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 3000000,
+        "tiktok": 400000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Charlotte Tilbury",
@@ -509,7 +878,21 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 700000000,
+        "as_of_year": 2024,
+        "source": "reported_estimate"
+      },
+      "headcount": {
+        "band": "501_1000",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 5500000,
+        "tiktok": 1500000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Rare Beauty",
@@ -521,7 +904,12 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "social_followers": {
+        "instagram": 4500000,
+        "tiktok": 2500000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Fenty Beauty",
@@ -536,7 +924,12 @@
       "typical_campaign_tier": "premium",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "social_followers": {
+        "instagram": 12500000,
+        "tiktok": 3500000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "MAC Cosmetics",
@@ -551,7 +944,12 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "social_followers": {
+        "instagram": 27000000,
+        "tiktok": 4000000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "NARS",
@@ -563,7 +961,11 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "social_followers": {
+        "instagram": 3500000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Estée Lauder",
@@ -578,7 +980,20 @@
       "typical_campaign_tier": "premium",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 15600000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 6500000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "L'Oréal",
@@ -594,7 +1009,20 @@
       "creator_program_presence": [
         "direct",
         "agency_of_record"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 45000000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 11000000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Maybelline",
@@ -606,7 +1034,11 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "social_followers": {
+        "instagram": 12500000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "CeraVe",
@@ -618,7 +1050,12 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "social_followers": {
+        "instagram": 1500000,
+        "tiktok": 2500000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "The Ordinary",
@@ -630,7 +1067,11 @@
       "typical_campaign_tier": "mid",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "social_followers": {
+        "instagram": 2500000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Drunk Elephant",
@@ -642,7 +1083,11 @@
       "typical_campaign_tier": "mid",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "social_followers": {
+        "instagram": 1500000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Olaplex",
@@ -654,7 +1099,21 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 425000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "201_500",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 2500000,
+        "tiktok": 600000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Dyson",
@@ -666,7 +1125,20 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 8000000000,
+        "as_of_year": 2024,
+        "source": "press_release"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 1800000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Manscaped",
@@ -678,7 +1150,11 @@
       "typical_campaign_tier": "mid",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "social_followers": {
+        "instagram": 600000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Dollar Shave Club",
@@ -715,7 +1191,20 @@
       "typical_campaign_tier": "mid",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 400000000,
+        "as_of_year": 2024,
+        "source": "reported_estimate"
+      },
+      "headcount": {
+        "band": "201_500",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 200000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Gillette",
@@ -727,7 +1216,11 @@
       "typical_campaign_tier": "premium",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "social_followers": {
+        "instagram": 1700000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Zara",
@@ -739,7 +1232,21 @@
       "typical_campaign_tier": "premium",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 38000000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 60000000,
+        "tiktok": 4500000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "H&M",
@@ -755,7 +1262,21 @@
       "typical_campaign_tier": "premium",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 22000000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 41000000,
+        "tiktok": 6500000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Shein",
@@ -767,7 +1288,21 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 38000000000,
+        "as_of_year": 2024,
+        "source": "reported_estimate"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 32000000,
+        "tiktok": 14000000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Uniqlo",
@@ -779,7 +1314,20 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 21000000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 5000000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "ASOS",
@@ -791,7 +1339,21 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 4400000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "1001_5000",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 13000000,
+        "tiktok": 1500000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Boohoo",
@@ -803,7 +1365,20 @@
       "typical_campaign_tier": "mid",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 1700000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "1001_5000",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 8500000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "PrettyLittleThing",
@@ -818,7 +1393,11 @@
       "typical_campaign_tier": "mid",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "social_followers": {
+        "instagram": 17000000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Gucci",
@@ -830,7 +1409,13 @@
       "typical_campaign_tier": "premium",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "social_followers": {
+        "instagram": 53000000,
+        "tiktok": 4000000,
+        "youtube": 1500000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Louis Vuitton",
@@ -845,7 +1430,22 @@
       "typical_campaign_tier": "premium",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 22000000000,
+        "as_of_year": 2024,
+        "source": "reported_estimate"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 56000000,
+        "tiktok": 6000000,
+        "youtube": 2000000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Chanel",
@@ -857,7 +1457,22 @@
       "typical_campaign_tier": "premium",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 19700000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 61000000,
+        "tiktok": 3000000,
+        "youtube": 2500000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Hermès",
@@ -872,7 +1487,20 @@
       "typical_campaign_tier": "premium",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 16300000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 16000000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Prada",
@@ -884,7 +1512,20 @@
       "typical_campaign_tier": "premium",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 5400000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 32000000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Dior",
@@ -896,7 +1537,12 @@
       "typical_campaign_tier": "premium",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "social_followers": {
+        "instagram": 51000000,
+        "tiktok": 8500000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Burberry",
@@ -908,7 +1554,20 @@
       "typical_campaign_tier": "premium",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 3300000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "5001_10000",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 22000000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Rolex",
@@ -920,7 +1579,20 @@
       "typical_campaign_tier": "premium",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 11500000000,
+        "as_of_year": 2024,
+        "source": "reported_estimate"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 17000000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Tag Heuer",
@@ -932,7 +1604,11 @@
       "typical_campaign_tier": "premium",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "social_followers": {
+        "instagram": 1700000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Cartier",
@@ -944,7 +1620,11 @@
       "typical_campaign_tier": "premium",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "social_followers": {
+        "instagram": 17000000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Tiffany & Co",
@@ -959,7 +1639,11 @@
       "typical_campaign_tier": "premium",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "social_followers": {
+        "instagram": 14500000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Pandora",
@@ -971,7 +1655,20 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 4300000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 11000000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Ray-Ban",
@@ -986,7 +1683,11 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "social_followers": {
+        "instagram": 5500000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Warby Parker",
@@ -1001,7 +1702,11 @@
       "typical_campaign_tier": "mid",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "social_followers": {
+        "instagram": 600000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Oakley",
@@ -1013,7 +1718,11 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "social_followers": {
+        "instagram": 3500000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Allbirds",
@@ -1032,7 +1741,20 @@
       "typical_campaign_tier": "mid",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 190000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "501_1000",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 400000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Crocs",
@@ -1044,7 +1766,21 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 4100000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "5001_10000",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 2500000,
+        "tiktok": 1200000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Dr. Martens",
@@ -1059,7 +1795,20 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 980000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "1001_5000",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 2500000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Coca-Cola",
@@ -1076,7 +1825,23 @@
       "creator_program_presence": [
         "direct",
         "agency_of_record"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 47000000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 3000000,
+        "tiktok": 2000000,
+        "youtube": 4000000,
+        "facebook": 110000000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Pepsi",
@@ -1089,7 +1854,21 @@
       "creator_program_presence": [
         "direct",
         "agency_of_record"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 92000000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 3500000,
+        "youtube": 2500000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Red Bull",
@@ -1101,7 +1880,22 @@
       "typical_campaign_tier": "premium",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 12000000000,
+        "as_of_year": 2024,
+        "source": "press_release"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 19000000,
+        "tiktok": 8000000,
+        "youtube": 13000000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Monster Energy",
@@ -1116,7 +1910,20 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 7500000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "1001_5000",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 9500000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Celsius",
@@ -1132,7 +1939,21 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 1400000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "201_500",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 1300000,
+        "tiktok": 1000000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Liquid Death",
@@ -1148,7 +1969,21 @@
       "typical_campaign_tier": "mid",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 350000000,
+        "as_of_year": 2024,
+        "source": "press_release"
+      },
+      "headcount": {
+        "band": "51_200",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 3000000,
+        "tiktok": 5500000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Heineken",
@@ -1160,7 +1995,20 @@
       "typical_campaign_tier": "premium",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 33000000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 1500000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Guinness",
@@ -1172,7 +2020,11 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "social_followers": {
+        "instagram": 600000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Stella Artois",
@@ -1196,7 +2048,20 @@
       "typical_campaign_tier": "mid",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 400000000,
+        "as_of_year": 2024,
+        "source": "press_release"
+      },
+      "headcount": {
+        "band": "1001_5000",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 500000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Don Julio",
@@ -1293,7 +2158,22 @@
       "creator_program_presence": [
         "direct",
         "agency_of_record"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 26000000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 5500000,
+        "tiktok": 4500000,
+        "youtube": 6000000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Burger King",
@@ -1305,7 +2185,20 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 10900000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 3000000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "KFC",
@@ -1317,7 +2210,11 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "social_followers": {
+        "instagram": 2500000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Subway",
@@ -1347,7 +2244,21 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 11300000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 2500000,
+        "tiktok": 2500000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Domino's",
@@ -1362,7 +2273,20 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 4700000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 1500000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Starbucks",
@@ -1374,7 +2298,22 @@
       "typical_campaign_tier": "premium",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 36200000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 18000000,
+        "tiktok": 2500000,
+        "youtube": 350000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Dunkin'",
@@ -1411,7 +2350,21 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 10700000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "5001_10000",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 700000,
+        "tiktok": 800000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Uber Eats",
@@ -1423,7 +2376,15 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 700000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Deliveroo",
@@ -1444,7 +2405,20 @@
       "typical_campaign_tier": "mid",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 2500000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "1001_5000",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 600000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Just Eat",
@@ -1466,7 +2440,16 @@
       "typical_campaign_tier": "mid",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 5400000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "1001_5000",
+        "source": "linkedin"
+      }
     },
     {
       "name": "HelloFresh",
@@ -1488,7 +2471,20 @@
       "typical_campaign_tier": "mid",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 8200000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 1500000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Gousto",
@@ -1502,7 +2498,16 @@
       "typical_campaign_tier": "mid",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 400000000,
+        "as_of_year": 2024,
+        "source": "press_release"
+      },
+      "headcount": {
+        "band": "501_1000",
+        "source": "linkedin"
+      }
     },
     {
       "name": "Blue Apron",
@@ -1528,7 +2533,20 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 320000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "501_1000",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 700000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Impossible Foods",
@@ -1552,7 +2570,20 @@
       "typical_campaign_tier": "mid",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 825000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "1001_5000",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 500000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Tesco",
@@ -1567,7 +2598,20 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 87000000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 800000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Sainsbury's",
@@ -1584,7 +2628,16 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 41000000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      }
     },
     {
       "name": "Whole Foods",
@@ -1600,7 +2653,20 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 22000000000,
+        "as_of_year": 2024,
+        "source": "reported_estimate"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 4000000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Trader Joe's",
@@ -1617,7 +2683,11 @@
       "typical_campaign_tier": "micro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "social_followers": {
+        "instagram": 4000000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Aldi",
@@ -1642,7 +2712,22 @@
       "creator_program_presence": [
         "direct",
         "agency_of_record"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 391000000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 33000000,
+        "tiktok": 5500000,
+        "youtube": 21000000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Samsung",
@@ -1655,7 +2740,21 @@
       "creator_program_presence": [
         "direct",
         "agency_of_record"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 234000000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 8000000,
+        "youtube": 6000000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Sony",
@@ -1667,7 +2766,20 @@
       "typical_campaign_tier": "premium",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 89000000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 5500000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Google",
@@ -1680,7 +2792,21 @@
       "creator_program_presence": [
         "direct",
         "agency_of_record"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 350000000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 16500000,
+        "youtube": 12500000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Microsoft",
@@ -1693,7 +2819,20 @@
       "creator_program_presence": [
         "direct",
         "agency_of_record"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 245000000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 5000000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Bose",
@@ -1705,7 +2844,20 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 4000000000,
+        "as_of_year": 2024,
+        "source": "reported_estimate"
+      },
+      "headcount": {
+        "band": "5001_10000",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 600000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Sonos",
@@ -1717,7 +2869,20 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 1500000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "1001_5000",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 250000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Beats",
@@ -1732,7 +2897,11 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "social_followers": {
+        "instagram": 3500000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "JBL",
@@ -1756,7 +2925,22 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 800000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "501_1000",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 18000000,
+        "tiktok": 3500000,
+        "youtube": 11000000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "DJI",
@@ -1768,7 +2952,20 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 9000000000,
+        "as_of_year": 2024,
+        "source": "reported_estimate"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 4500000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Razer",
@@ -1780,7 +2977,11 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "social_followers": {
+        "instagram": 3500000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Logitech",
@@ -1792,7 +2993,20 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 4500000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "5001_10000",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 600000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "HyperX",
@@ -1816,7 +3030,20 @@
       "typical_campaign_tier": "premium",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 130000000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 2500000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Intel",
@@ -1828,7 +3055,20 @@
       "typical_campaign_tier": "premium",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 53000000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 1500000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "AMD",
@@ -1840,7 +3080,16 @@
       "typical_campaign_tier": "premium",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 25800000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      }
     },
     {
       "name": "OpenAI",
@@ -1855,7 +3104,20 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 4000000000,
+        "as_of_year": 2024,
+        "source": "press_release"
+      },
+      "headcount": {
+        "band": "1001_5000",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "twitter_x": 5000000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Anthropic",
@@ -1870,7 +3132,20 @@
       "typical_campaign_tier": "mid",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 1000000000,
+        "as_of_year": 2024,
+        "source": "press_release"
+      },
+      "headcount": {
+        "band": "501_1000",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "twitter_x": 350000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Midjourney",
@@ -1882,7 +3157,11 @@
       "typical_campaign_tier": "micro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "social_followers": {
+        "twitter_x": 1500000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Adobe",
@@ -1894,7 +3173,20 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 21500000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 4000000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Canva",
@@ -1906,7 +3198,20 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 2500000000,
+        "as_of_year": 2024,
+        "source": "press_release"
+      },
+      "headcount": {
+        "band": "1001_5000",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 1500000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Figma",
@@ -1918,7 +3223,20 @@
       "typical_campaign_tier": "mid",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 750000000,
+        "as_of_year": 2024,
+        "source": "press_release"
+      },
+      "headcount": {
+        "band": "1001_5000",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "twitter_x": 400000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Notion",
@@ -1930,7 +3248,15 @@
       "typical_campaign_tier": "mid",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "headcount": {
+        "band": "501_1000",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "twitter_x": 350000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Grammarly",
@@ -1942,7 +3268,11 @@
       "typical_campaign_tier": "mid",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "social_followers": {
+        "instagram": 250000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Slack",
@@ -1954,7 +3284,11 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "headcount": {
+        "band": "1001_5000",
+        "source": "linkedin"
+      }
     },
     {
       "name": "Zoom",
@@ -1966,7 +3300,16 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 4700000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "5001_10000",
+        "source": "linkedin"
+      }
     },
     {
       "name": "NordVPN",
@@ -2014,7 +3357,22 @@
       "typical_campaign_tier": "premium",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 10500000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "5001_10000",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 1500000,
+        "youtube": 11500000,
+        "twitter_x": 10500000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "PlayStation",
@@ -2029,7 +3387,12 @@
       "typical_campaign_tier": "premium",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "social_followers": {
+        "instagram": 35000000,
+        "youtube": 16500000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Xbox",
@@ -2044,7 +3407,12 @@
       "typical_campaign_tier": "premium",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "social_followers": {
+        "instagram": 19000000,
+        "youtube": 8500000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Activision Blizzard",
@@ -2060,7 +3428,16 @@
       "typical_campaign_tier": "premium",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 12000000000,
+        "as_of_year": 2023,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      }
     },
     {
       "name": "Electronic Arts",
@@ -2075,7 +3452,20 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 7600000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 5500000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Ubisoft",
@@ -2087,7 +3477,16 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 2500000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      }
     },
     {
       "name": "Epic Games",
@@ -2099,7 +3498,21 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 5700000000,
+        "as_of_year": 2024,
+        "source": "reported_estimate"
+      },
+      "headcount": {
+        "band": "1001_5000",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 800000,
+        "youtube": 3500000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Riot Games",
@@ -2111,7 +3524,11 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "social_followers": {
+        "instagram": 5500000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Netflix",
@@ -2124,7 +3541,22 @@
       "creator_program_presence": [
         "direct",
         "agency_of_record"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 39000000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 33000000,
+        "tiktok": 41000000,
+        "youtube": 32000000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Disney+",
@@ -2139,7 +3571,11 @@
       "typical_campaign_tier": "premium",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "social_followers": {
+        "instagram": 11000000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "HBO Max",
@@ -2211,7 +3647,21 @@
       "typical_campaign_tier": "premium",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 16700000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "5001_10000",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 5500000,
+        "tiktok": 2500000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Apple Music",
@@ -2223,7 +3673,11 @@
       "typical_campaign_tier": "premium",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "social_followers": {
+        "instagram": 2500000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "YouTube Music",
@@ -2274,7 +3728,20 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 11100000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "5001_10000",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 5500000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Vrbo",
@@ -2301,7 +3768,20 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 23700000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 400000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Expedia",
@@ -2313,7 +3793,16 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 13700000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      }
     },
     {
       "name": "Kayak",
@@ -2337,7 +3826,20 @@
       "typical_campaign_tier": "premium",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 25100000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 2500000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Hilton",
@@ -2349,7 +3851,20 @@
       "typical_campaign_tier": "premium",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 11200000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 1500000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Hyatt",
@@ -2361,7 +3876,16 @@
       "typical_campaign_tier": "premium",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 6800000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      }
     },
     {
       "name": "Delta Air Lines",
@@ -2376,7 +3900,16 @@
       "typical_campaign_tier": "premium",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 61600000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      }
     },
     {
       "name": "United Airlines",
@@ -2391,7 +3924,16 @@
       "typical_campaign_tier": "premium",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 57000000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      }
     },
     {
       "name": "American Airlines",
@@ -2403,7 +3945,16 @@
       "typical_campaign_tier": "premium",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 54200000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      }
     },
     {
       "name": "British Airways",
@@ -2418,7 +3969,16 @@
       "typical_campaign_tier": "premium",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 18300000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      }
     },
     {
       "name": "Emirates",
@@ -2430,7 +3990,11 @@
       "typical_campaign_tier": "premium",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "social_followers": {
+        "instagram": 11000000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Ryanair",
@@ -2449,7 +4013,21 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 14500000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 2500000,
+        "tiktok": 2500000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "easyJet",
@@ -2464,7 +4042,16 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 11700000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      }
     },
     {
       "name": "Uber",
@@ -2476,7 +4063,20 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 43900000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 1500000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Lyft",
@@ -2491,7 +4091,20 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 5800000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "1001_5000",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 250000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Tesla",
@@ -2503,7 +4116,21 @@
       "typical_campaign_tier": "premium",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 97700000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 10500000,
+        "youtube": 3500000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Rivian",
@@ -2518,7 +4145,20 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 4400000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 1500000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Polestar",
@@ -2530,7 +4170,20 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 2400000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "1001_5000",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 600000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Lucid Motors",
@@ -2549,7 +4202,16 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 800000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "5001_10000",
+        "source": "linkedin"
+      }
     },
     {
       "name": "BYD",
@@ -2561,7 +4223,16 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 107000000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      }
     },
     {
       "name": "Toyota",
@@ -2574,7 +4245,20 @@
       "creator_program_presence": [
         "direct",
         "agency_of_record"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 310000000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 1500000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Honda",
@@ -2586,7 +4270,20 @@
       "typical_campaign_tier": "premium",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 145000000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 1500000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Ford",
@@ -2599,7 +4296,20 @@
       "creator_program_presence": [
         "direct",
         "agency_of_record"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 185000000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 1700000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "BMW",
@@ -2611,7 +4321,21 @@
       "typical_campaign_tier": "premium",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 162000000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 39000000,
+        "youtube": 3000000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Mercedes-Benz",
@@ -2626,7 +4350,21 @@
       "typical_campaign_tier": "premium",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 162000000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 32000000,
+        "youtube": 2500000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Audi",
@@ -2638,7 +4376,20 @@
       "typical_campaign_tier": "premium",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 70000000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 16000000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Porsche",
@@ -2650,7 +4401,21 @@
       "typical_campaign_tier": "premium",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 44000000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 39000000,
+        "youtube": 1500000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Volkswagen",
@@ -2665,7 +4430,16 @@
       "typical_campaign_tier": "premium",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 348000000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      }
     },
     {
       "name": "Hyundai",
@@ -2677,7 +4451,20 @@
       "typical_campaign_tier": "premium",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 130000000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 1500000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Kia",
@@ -2689,7 +4476,16 @@
       "typical_campaign_tier": "premium",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 78000000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      }
     },
     {
       "name": "Harley-Davidson",
@@ -2704,7 +4500,20 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 5400000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "5001_10000",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 7500000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Ducati",
@@ -2716,7 +4525,20 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 1100000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "1001_5000",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 3500000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Triumph Motorcycles",
@@ -2748,7 +4570,11 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      }
     },
     {
       "name": "Bank of America",
@@ -2765,7 +4591,16 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 100000000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      }
     },
     {
       "name": "HSBC",
@@ -2777,7 +4612,16 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 67000000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      }
     },
     {
       "name": "Barclays",
@@ -2789,7 +4633,16 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 32000000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      }
     },
     {
       "name": "Lloyds",
@@ -2806,7 +4659,16 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 22000000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      }
     },
     {
       "name": "Revolut",
@@ -2818,7 +4680,20 @@
       "typical_campaign_tier": "mid",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 2200000000,
+        "as_of_year": 2023,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "5001_10000",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 800000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Monzo",
@@ -2833,7 +4708,20 @@
       "typical_campaign_tier": "mid",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 1100000000,
+        "as_of_year": 2024,
+        "source": "press_release"
+      },
+      "headcount": {
+        "band": "1001_5000",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 250000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Starling Bank",
@@ -2850,7 +4738,16 @@
       "typical_campaign_tier": "mid",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 880000000,
+        "as_of_year": 2024,
+        "source": "press_release"
+      },
+      "headcount": {
+        "band": "1001_5000",
+        "source": "linkedin"
+      }
     },
     {
       "name": "Chime",
@@ -2864,7 +4761,11 @@
       "typical_campaign_tier": "mid",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "headcount": {
+        "band": "1001_5000",
+        "source": "linkedin"
+      }
     },
     {
       "name": "Wise",
@@ -2879,7 +4780,16 @@
       "typical_campaign_tier": "mid",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 1500000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "1001_5000",
+        "source": "linkedin"
+      }
     },
     {
       "name": "PayPal",
@@ -2891,7 +4801,20 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 31800000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 1500000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Cash App",
@@ -2906,7 +4829,11 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "social_followers": {
+        "instagram": 1500000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Visa",
@@ -2918,7 +4845,16 @@
       "typical_campaign_tier": "premium",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 35900000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      }
     },
     {
       "name": "Mastercard",
@@ -2930,7 +4866,16 @@
       "typical_campaign_tier": "premium",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 28200000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      }
     },
     {
       "name": "American Express",
@@ -2945,7 +4890,20 @@
       "typical_campaign_tier": "premium",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 65900000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 2000000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Klarna",
@@ -2957,7 +4915,20 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 2800000000,
+        "as_of_year": 2024,
+        "source": "press_release"
+      },
+      "headcount": {
+        "band": "1001_5000",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 600000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Afterpay",
@@ -2969,7 +4940,11 @@
       "typical_campaign_tier": "mid",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "headcount": {
+        "band": "1001_5000",
+        "source": "linkedin"
+      }
     },
     {
       "name": "Affirm",
@@ -2984,7 +4959,16 @@
       "typical_campaign_tier": "mid",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 2300000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "1001_5000",
+        "source": "linkedin"
+      }
     },
     {
       "name": "Robinhood",
@@ -2998,7 +4982,20 @@
       "typical_campaign_tier": "mid",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 2900000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "1001_5000",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 1000000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "eToro",
@@ -3010,7 +5007,16 @@
       "typical_campaign_tier": "mid",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 900000000,
+        "as_of_year": 2024,
+        "source": "press_release"
+      },
+      "headcount": {
+        "band": "1001_5000",
+        "source": "linkedin"
+      }
     },
     {
       "name": "Trading 212",
@@ -3037,7 +5043,20 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 6600000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "1001_5000",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 1300000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Binance",
@@ -3049,7 +5068,21 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 16800000000,
+        "as_of_year": 2024,
+        "source": "reported_estimate"
+      },
+      "headcount": {
+        "band": "5001_10000",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 3000000,
+        "twitter_x": 11000000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Kraken",
@@ -3061,7 +5094,11 @@
       "typical_campaign_tier": "mid",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "headcount": {
+        "band": "1001_5000",
+        "source": "linkedin"
+      }
     },
     {
       "name": "Bumble",
@@ -3073,7 +5110,20 @@
       "typical_campaign_tier": "mid",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 1100000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "501_1000",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 600000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Hinge",
@@ -3085,7 +5135,16 @@
       "typical_campaign_tier": "mid",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "headcount": {
+        "band": "201_500",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 700000,
+        "tiktok": 1300000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Tinder",
@@ -3097,7 +5156,16 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "headcount": {
+        "band": "501_1000",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 4000000,
+        "tiktok": 1500000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Match.com",
@@ -3124,7 +5192,21 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 750000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "501_1000",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 7500000,
+        "tiktok": 14000000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Babbel",
@@ -3136,7 +5218,20 @@
       "typical_campaign_tier": "mid",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 270000000,
+        "as_of_year": 2024,
+        "source": "press_release"
+      },
+      "headcount": {
+        "band": "501_1000",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 400000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "MasterClass",
@@ -3148,7 +5243,15 @@
       "typical_campaign_tier": "mid",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "headcount": {
+        "band": "501_1000",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 700000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Coursera",
@@ -3160,7 +5263,16 @@
       "typical_campaign_tier": "mid",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 695000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "1001_5000",
+        "source": "linkedin"
+      }
     },
     {
       "name": "Udemy",
@@ -3172,7 +5284,16 @@
       "typical_campaign_tier": "mid",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 785000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "1001_5000",
+        "source": "linkedin"
+      }
     },
     {
       "name": "Skillshare",
@@ -3184,7 +5305,11 @@
       "typical_campaign_tier": "mid",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "headcount": {
+        "band": "201_500",
+        "source": "linkedin"
+      }
     },
     {
       "name": "Headspace",
@@ -3196,7 +5321,15 @@
       "typical_campaign_tier": "mid",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "headcount": {
+        "band": "501_1000",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 600000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Calm",
@@ -3208,7 +5341,15 @@
       "typical_campaign_tier": "mid",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "headcount": {
+        "band": "201_500",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 1100000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "BetterHelp",
@@ -3220,7 +5361,11 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "headcount": {
+        "band": "501_1000",
+        "source": "linkedin"
+      }
     },
     {
       "name": "Amazon",
@@ -3233,7 +5378,20 @@
       "creator_program_presence": [
         "direct",
         "agency_of_record"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 638000000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 6500000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "eBay",
@@ -3245,7 +5403,20 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 10300000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 1500000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Etsy",
@@ -3257,7 +5428,20 @@
       "typical_campaign_tier": "mid",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 2800000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "1001_5000",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 3500000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Shopify",
@@ -3269,7 +5453,20 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 8900000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "5001_10000",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 1500000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Walmart",
@@ -3285,7 +5482,21 @@
       "typical_campaign_tier": "premium",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 681000000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 3500000,
+        "tiktok": 7500000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Target",
@@ -3299,7 +5510,21 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 107000000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 5000000,
+        "tiktok": 2000000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Costco",
@@ -3319,7 +5544,20 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 254000000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 1500000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "John Lewis",
@@ -3333,7 +5571,16 @@
       "typical_campaign_tier": "mid",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 12400000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      }
     },
     {
       "name": "Marks & Spencer",
@@ -3351,7 +5598,16 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 16000000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      }
     },
     {
       "name": "IKEA",
@@ -3363,7 +5619,20 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 50000000000,
+        "as_of_year": 2024,
+        "source": "press_release"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 7000000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "West Elm",
@@ -3380,7 +5649,11 @@
       "typical_campaign_tier": "mid",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "social_followers": {
+        "instagram": 2500000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Wayfair",
@@ -3397,7 +5670,20 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 11900000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 4500000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Casper",
@@ -3412,7 +5698,20 @@
       "typical_campaign_tier": "mid",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 500000000,
+        "as_of_year": 2024,
+        "source": "reported_estimate"
+      },
+      "headcount": {
+        "band": "201_500",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 350000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Simba",
@@ -3444,7 +5743,11 @@
       "typical_campaign_tier": "mid",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "headcount": {
+        "band": "201_500",
+        "source": "linkedin"
+      }
     },
     {
       "name": "Le Creuset",
@@ -3456,7 +5759,11 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "headcount": {
+        "band": "1001_5000",
+        "source": "linkedin"
+      }
     },
     {
       "name": "Ninja",
@@ -3498,7 +5805,16 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 4800000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      }
     },
     {
       "name": "Home Depot",
@@ -3514,7 +5830,16 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 159500000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      }
     },
     {
       "name": "Lowe's",
@@ -3532,7 +5857,16 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 83700000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      }
     },
     {
       "name": "Lego",
@@ -3544,7 +5878,21 @@
       "typical_campaign_tier": "premium",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 10100000000,
+        "as_of_year": 2024,
+        "source": "press_release"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 8500000,
+        "youtube": 16500000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Mattel",
@@ -3556,7 +5904,20 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 5400000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 1500000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Hasbro",
@@ -3568,7 +5929,16 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 4100000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "5001_10000",
+        "source": "linkedin"
+      }
     },
     {
       "name": "Pampers",
@@ -3643,7 +6013,21 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 11900000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 1500000,
+        "tiktok": 800000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "BarkBox",
@@ -3661,7 +6045,20 @@
       "typical_campaign_tier": "mid",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 490000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "501_1000",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 1500000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "DraftKings",
@@ -3675,7 +6072,20 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 4800000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "1001_5000",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 1500000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "FanDuel",
@@ -3689,7 +6099,20 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 6000000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "1001_5000",
+        "source": "linkedin"
+      },
+      "social_followers": {
+        "instagram": 600000,
+        "as_of_year": 2025
+      }
     },
     {
       "name": "Bet365",
@@ -3701,7 +6124,16 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 4400000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "1001_5000",
+        "source": "linkedin"
+      }
     },
     {
       "name": "Paddy Power",
@@ -3744,7 +6176,16 @@
       "typical_campaign_tier": "premium",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 134800000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      }
     },
     {
       "name": "AT&T",
@@ -3758,7 +6199,16 @@
       "typical_campaign_tier": "premium",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 122300000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      }
     },
     {
       "name": "T-Mobile",
@@ -3772,7 +6222,16 @@
       "typical_campaign_tier": "premium",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 81400000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      }
     },
     {
       "name": "Vodafone",
@@ -3784,7 +6243,16 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 40000000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      }
     },
     {
       "name": "EE",
@@ -3844,7 +6312,16 @@
       "typical_campaign_tier": "mid",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 16000000000,
+        "as_of_year": 2024,
+        "source": "press_release"
+      },
+      "headcount": {
+        "band": "5001_10000",
+        "source": "linkedin"
+      }
     },
     {
       "name": "British Gas",
@@ -3900,7 +6377,16 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 75300000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      }
     },
     {
       "name": "Lemonade",
@@ -3918,7 +6404,16 @@
       "typical_campaign_tier": "mid",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 530000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "1001_5000",
+        "source": "linkedin"
+      }
     },
     {
       "name": "Aviva",
@@ -3934,7 +6429,16 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 65000000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "10000_plus",
+        "source": "linkedin"
+      }
     },
     {
       "name": "Squarespace",
@@ -3946,7 +6450,16 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 1200000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "1001_5000",
+        "source": "linkedin"
+      }
     },
     {
       "name": "Wix",
@@ -3958,7 +6471,16 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "revenue": {
+        "amount_usd": 1800000000,
+        "as_of_year": 2024,
+        "source": "public_filing"
+      },
+      "headcount": {
+        "band": "1001_5000",
+        "source": "linkedin"
+      }
     },
     {
       "name": "Webflow",
@@ -3978,6 +6500,9 @@
     "sells_in_countries": "Either the literal string 'global' or an array of ISO 3166-1 alpha-2 codes for primary markets.",
     "company_stage": "One of: bootstrapped | seed | series_a | series_b | series_c | series_d | private_growth | public | subsidiary | state_owned | unknown.",
     "typical_campaign_tier": "One of: nano | micro | mid | macro | premium | unknown. Indicates the creator follower-tier band this brand typically works with.",
-    "creator_program_presence": "Array of observed channels: direct | aspire | grin | ltk | shopmy | agency_of_record."
+    "creator_program_presence": "Array of observed channels: direct | aspire | grin | ltk | shopmy | agency_of_record.",
+    "revenue": "Object: { amount_usd: int (annual revenue, USD), as_of_year: int (fiscal year reported), source: 'public_filing' | 'press_release' | 'reported_estimate' }. Foreign currencies converted to USD, rounded to nearest $100M (or $1B for >$10B brands).",
+    "headcount": "Object: { band: '1_10' | '11_50' | '51_200' | '201_500' | '501_1000' | '1001_5000' | '5001_10000' | '10000_plus', source: 'linkedin' | 'public_filing' | 'press_release' | 'reported_estimate' }. LinkedIn-standard bands.",
+    "social_followers": "Object: { instagram?: int, tiktok?: int, youtube?: int, twitter_x?: int, facebook?: int, linkedin?: int, pinterest?: int, as_of_year: int }. Counts rounded based on scale (<1M: 100k; 1M-10M: 100k-500k; 10M-100M: 1M; 100M+: 10M). Platforms with minimal/uncertain presence are omitted."
   }
 }
