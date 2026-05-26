@@ -1,0 +1,393 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://nativ2/schemas/discovery_prep_pack.schema.json",
+  "title": "Discovery Call Prep Pack",
+  "description": "Phase 4.5 — a versioned prep pack the agent walks into a discovery call with. Generated when a Phase 4 LEAD-stage deal transitions to substage `initial_call_scheduled`. Bundles agenda + briefing notes (internal, agent-only) + slide deck (live + leave-behind variants + speaker notes) — all auto-drafted end-to-end by Claude Sonnet, with optional pre-generation guidance from the agent and an iterative natural-language feedback loop for regeneration. Stored at `data/deals/{deal_id}/prep_packs/v{N}.json` (gitignored). See `docs/discovery_prep_workflow.md`.",
+  "type": "object",
+  "required": ["prep_pack_id", "deal_id", "version", "is_latest", "generation", "context_snapshot", "briefing_notes", "agenda", "slides", "created_at"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+
+    "prep_pack_id": {
+      "type": "string",
+      "pattern": "^prep_[a-z0-9_-]+_v[0-9]+$",
+      "description": "Globally unique identifier. Format: `prep_{deal_id_short}_v{N}` (e.g. `prep_2026_q2_alo-yoga_jane-doe_v3`). Encodes the deal + version for easy human reading."
+    },
+    "deal_id": {
+      "type": "string",
+      "pattern": "^deal_pipeline_[a-z0-9_-]+$",
+      "description": "FK to the Phase 4 deal this prep pack belongs to. The deal's `lead.discovery_prep_pack_ids[]` array references all versions; its `lead.latest_prep_pack_id` points to the current `is_latest: true` version."
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Monotonically increasing. v1 = initial auto-generation triggered by `substage = initial_call_scheduled`. v2+ = agent-requested regenerations (whole-pack or section-targeted)."
+    },
+    "parent_version": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Which version this one was regenerated from. Null/absent for v1. Forms a linear history — every regen is from the most recent version."
+    },
+    "is_latest": {
+      "type": "boolean",
+      "description": "True for exactly one version per deal_id at any time. When v3 generates, v2's is_latest flips to false. The deal's `latest_prep_pack_id` always points to the is_latest=true version."
+    },
+
+    "generation": {
+      "type": "object",
+      "description": "Provenance + parameters for this version's generation. Captures what the agent asked for and what the LLM produced.",
+      "required": ["trigger", "generated_at", "llm_model"],
+      "additionalProperties": false,
+      "properties": {
+        "trigger": {
+          "type": "string",
+          "enum": ["auto_on_initial_call_scheduled", "agent_full_regenerate", "agent_section_regenerate", "agent_per_slide_regenerate"],
+          "description": "auto_*: fired by the orchestrator when the deal transitioned to initial_call_scheduled. agent_full_regenerate: agent asked for a full rebuild with new feedback. agent_section_regenerate: targeted just briefing OR agenda OR a subset of slides. agent_per_slide_regenerate: targeted specific slide(s) only."
+        },
+        "pre_generation_guidance": {
+          "type": "string",
+          "description": "Free-text guidance the agent provided BEFORE generation fired. Example: 'Brand specifically mentioned wanting activewear with established performance credibility — lead with our Lululemon case study; downplay the lifestyle/fashion angle.' Captured for the LLM prompt and for audit (so future versions can see what each round was steered toward)."
+        },
+        "regeneration_feedback": {
+          "type": "string",
+          "description": "Natural-language feedback the agent gave on the parent version. Populated when version > 1. Example: 'Slide 4 audience claim feels overstated — tone it down and add the as-of date. Drop the sustainability angle entirely, brand told me on the intro email they're focused on performance, not values.' The LLM consumes this PLUS the parent version PLUS the original context to produce the new version."
+        },
+        "target_sections": {
+          "type": "array",
+          "description": "For agent_section_regenerate / agent_per_slide_regenerate: which sections were rebuilt. e.g. ['briefing.likely_objections', 'slides[3]', 'slides[7]']. Sections not listed are carried forward unchanged from parent_version.",
+          "items": { "type": "string" }
+        },
+        "generated_at": { "type": "string", "format": "date-time" },
+        "generated_by_agent_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]*$",
+          "description": "Which agent triggered this generation. Same as `deal.assigned_agent_id` for v1; can differ for later versions if the deal was reassigned mid-prep."
+        },
+        "llm_model": {
+          "type": "string",
+          "description": "Model identifier used. Recorded for reproducibility — if generation quality changes after a model upgrade, we can see which version used which model."
+        },
+        "llm_passes": {
+          "type": "array",
+          "description": "Multi-pass generation log. v0.1 = 3 passes (briefing, agenda, slides). Each pass shares context via prompt-caching where supported.",
+          "items": {
+            "type": "object",
+            "required": ["pass_name", "input_tokens", "output_tokens"],
+            "additionalProperties": false,
+            "properties": {
+              "pass_name": { "type": "string", "enum": ["briefing", "agenda", "slides", "external_research", "section_regen", "slide_regen"] },
+              "model": { "type": "string" },
+              "input_tokens": { "type": "integer", "minimum": 0 },
+              "output_tokens": { "type": "integer", "minimum": 0 },
+              "cached_tokens": { "type": "integer", "minimum": 0, "description": "Tokens served from prompt cache." },
+              "cost_usd": { "type": "number", "minimum": 0 },
+              "duration_ms": { "type": "integer", "minimum": 0 }
+            }
+          }
+        }
+      }
+    },
+
+    "context_snapshot": {
+      "type": "object",
+      "description": "Frozen snapshot of the upstream context this version was generated from. If the deal/talent/brand data evolves later, this version stays anchored to the data it actually consumed. Drives the 'V1 stays locked unless agent asks' decision: we can detect upstream drift but don't auto-regenerate.",
+      "required": ["captured_at"],
+      "additionalProperties": false,
+      "properties": {
+        "captured_at": { "type": "string", "format": "date-time" },
+        "deal_stage_at_gen": { "type": "string" },
+        "deal_substage_at_gen": { "type": "string" },
+        "talent_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+        "talent_profile_updated_at": { "type": "string", "format": "date-time", "description": "Timestamp of the talent profile we read. If the profile updates after generation, the orchestrator can detect drift and surface 'Regenerate prep pack?' but doesn't force it." },
+        "brand_candidate_id": { "type": "string" },
+        "brand_candidate_updated_at": { "type": "string", "format": "date-time" },
+        "primary_contact_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+        "originating_enrollment_id": { "type": "string", "pattern": "^enr_[a-z0-9]+$" },
+        "originating_reply_text": { "type": "string", "description": "Verbatim text of the brand's `interested` reply that created this deal. Anchor citation throughout the briefing." },
+        "comparable_brand_deal_ids": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^deal_[a-z0-9_-]+$" },
+          "description": "FK list to past `data/brand_deals` entries the LLM cited as comparables for the case-study slides + commercial range."
+        },
+        "top_scoring_angle_ids": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^pa_[a-z0-9_-]+$" },
+          "description": "FK list to `data/pitch_angles.json` entries scored highest for this brand × niche pair."
+        },
+        "external_research": {
+          "type": "object",
+          "description": "Web research pulled via Exa during generation. Captures queries + summarised results + as-of timestamp so claims sourced from external research can be cited.",
+          "additionalProperties": false,
+          "properties": {
+            "provider": { "type": "string", "enum": ["exa", "none"], "default": "exa" },
+            "queries": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["query", "executed_at"],
+                "additionalProperties": false,
+                "properties": {
+                  "query": { "type": "string" },
+                  "purpose": { "type": "string", "enum": ["brand_recent_campaigns", "brand_news", "brand_social_signals", "contact_background", "competitor_landscape", "other"] },
+                  "executed_at": { "type": "string", "format": "date-time" },
+                  "results_summary": { "type": "string", "description": "LLM-summarised digest of the top results. The raw Exa response is NOT stored long-term — only the summary." },
+                  "result_urls": { "type": "array", "items": { "type": "string", "format": "uri" }, "description": "URLs of the top results, kept for citation provenance." }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "briefing_notes": {
+      "type": "object",
+      "description": "Internal, agent-only briefing document. Markdown rendered from these structured fields. Talent does not see this (per the agent-solo-on-call decision).",
+      "additionalProperties": false,
+      "properties": {
+        "deal_summary": {
+          "type": "string",
+          "description": "What won this meeting — the pitch we sent + the brand's reply, summarised. Cites originating_reply_text verbatim."
+        },
+        "about_brand": {
+          "type": "string",
+          "description": "Brand context: who they are, recent campaigns, recent news, current priorities. Sourced from Phase 2 brand_candidates + Exa external_research. Each non-obvious claim should have a source citation."
+        },
+        "about_contact": {
+          "type": "string",
+          "description": "Buyer's role, decision_role classification, signals from prior Phase 3a `pitch_history`, what they've previously engaged with."
+        },
+        "about_talent_for_call": {
+          "type": "string",
+          "description": "Talent positioning for THIS conversation: relevant past work, KPIs to lead with (with provenance per honesty-floor), values-fit check against brand."
+        },
+        "fit_hypothesis": {
+          "type": "string",
+          "description": "Why these two together. Synthesises the top-scoring angles into a 1-paragraph thesis."
+        },
+        "likely_objections": {
+          "type": "array",
+          "description": "Anticipated brand objections + prepared responses. Mined from past `objection`-classified outcomes in the outreach analyzer when available.",
+          "items": {
+            "type": "object",
+            "required": ["objection", "response"],
+            "additionalProperties": false,
+            "properties": {
+              "objection": { "type": "string" },
+              "response": { "type": "string" },
+              "source": { "type": "string", "description": "Why we expect this objection — e.g. 'Brand previously raised exclusivity concern in pitch reply.'" }
+            }
+          }
+        },
+        "red_flags": {
+          "type": "string",
+          "description": "Anything in brand data conflicting with talent's `red_lines` / values. Agent must steer the conversation away from these (or surface early if a blocker)."
+        },
+        "questions_to_ask": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Discovery questions the agent should ask to qualify scope + budget + timing + decision process."
+        },
+        "questions_they_might_ask": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["question", "prepared_answer"],
+            "additionalProperties": false,
+            "properties": {
+              "question": { "type": "string" },
+              "prepared_answer": { "type": "string" }
+            }
+          }
+        },
+        "commercial_range": {
+          "type": "object",
+          "description": "Suggested fee range for this scope. Computed from comparable past `brand_deals` fees in similar industries × similar deliverable scope. Surface in briefing only — NOT shown to brand on the call unless they ask.",
+          "additionalProperties": false,
+          "properties": {
+            "low_usd": { "type": "number", "minimum": 0 },
+            "high_usd": { "type": "number", "minimum": 0 },
+            "currency": { "type": "string", "pattern": "^[A-Z]{3}$", "default": "USD" },
+            "comparable_deal_ids": { "type": "array", "items": { "type": "string", "pattern": "^deal_[a-z0-9_-]+$" } },
+            "rationale": { "type": "string", "description": "How the range was derived. e.g. '3 comparable activewear deals in the last 12 months: $8k, $12k, $14k. Brand size + scope suggests upper-mid of this range.'" }
+          }
+        }
+      }
+    },
+
+    "agenda": {
+      "type": "object",
+      "description": "The discovery-call agenda. Customised per deal — if brief already received, the 'brand context check' section is dropped and 'open exploration' is expanded.",
+      "required": ["duration_total_min", "sections"],
+      "additionalProperties": false,
+      "properties": {
+        "duration_total_min": { "type": "integer", "minimum": 15, "maximum": 120 },
+        "sections": {
+          "type": "array",
+          "minItems": 3,
+          "items": {
+            "type": "object",
+            "required": ["title", "duration_min"],
+            "additionalProperties": false,
+            "properties": {
+              "title": { "type": "string" },
+              "duration_min": { "type": "integer", "minimum": 1 },
+              "purpose": { "type": "string", "description": "One-line description of what this section achieves." },
+              "talking_points": { "type": "array", "items": { "type": "string" } }
+            }
+          }
+        }
+      }
+    },
+
+    "slides": {
+      "type": "array",
+      "description": "The deck — structured JSON, ordered by `position`. Renderer produces three artefacts from this array: live HTML (live_body only), leave-behind HTML (live_body + leave_behind_extension), and speaker notes markdown (speaker_notes paired with titles).",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/slide" }
+    },
+
+    "export_artifacts": {
+      "type": "array",
+      "description": "Paths to rendered output files. Populated by the renderer post-generation. Status field tracks whether each artefact rendered successfully or is pending (e.g. PPT is pending until the slide skill is wired).",
+      "items": {
+        "type": "object",
+        "required": ["type", "status"],
+        "additionalProperties": false,
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["html_live", "html_leave_behind", "pdf_live", "pdf_leave_behind", "speaker_notes_md", "pptx", "briefing_notes_md", "agenda_md"]
+          },
+          "status": { "type": "string", "enum": ["rendered", "pending", "failed"] },
+          "path": { "type": "string", "description": "Local filesystem path (v0.1) or S3 key (production). Relative to `data/deals/{deal_id}/prep_packs/v{N}_artifacts/`." },
+          "size_bytes": { "type": "integer", "minimum": 0 },
+          "rendered_at": { "type": "string", "format": "date-time" },
+          "rendered_by": { "type": "string", "enum": ["jinja2_html", "puppeteer_pdf", "slide_skill", "markdown_writer"], "description": "Which renderer produced this artefact." },
+          "error": { "type": "string", "description": "If status=failed, what went wrong." }
+        }
+      }
+    },
+
+    "agent_edits": {
+      "type": "array",
+      "description": "Append-only audit log of agent edits to this version. Direct edits to slide HTML (via the slide skill's editor) are logged here so we can see what changed vs the LLM-generated draft. Natural-language feedback that triggered a NEW version (regeneration) is captured in that next version's `generation.regeneration_feedback`, not here.",
+      "items": {
+        "type": "object",
+        "required": ["edit_id", "edited_at", "edit_type", "target"],
+        "additionalProperties": false,
+        "properties": {
+          "edit_id": { "type": "string", "pattern": "^edit_[a-z0-9]+$" },
+          "edited_at": { "type": "string", "format": "date-time" },
+          "edited_by_agent_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+          "edit_type": {
+            "type": "string",
+            "enum": ["slide_html_direct", "briefing_text_direct", "agenda_text_direct", "slide_reorder", "slide_delete", "slide_insert"],
+            "description": "Direct edit (no LLM regen). For LLM-regen of a slide/section, see `generation.target_sections` on the NEXT version."
+          },
+          "target": { "type": "string", "description": "What was edited. e.g. 'slides[3].live_body', 'briefing.about_brand'." },
+          "before_excerpt": { "type": "string", "description": "Short excerpt of the prior content (for audit; not a full snapshot — full history is reconstructable from version history)." },
+          "after_excerpt": { "type": "string" }
+        }
+      }
+    },
+
+    "created_at": { "type": "string", "format": "date-time" },
+    "updated_at": { "type": "string", "format": "date-time" }
+  },
+
+  "$defs": {
+
+    "slide": {
+      "type": "object",
+      "required": ["slide_id", "position", "title", "type", "live_body"],
+      "additionalProperties": false,
+      "properties": {
+        "slide_id": { "type": "string", "pattern": "^slide_[a-z0-9_-]+$" },
+        "position": { "type": "integer", "minimum": 1 },
+        "title": { "type": "string" },
+        "type": {
+          "type": "string",
+          "enum": ["title", "context", "talent_overview", "audience_snapshot", "recent_work", "brand_observation", "fit_angle", "case_study", "proof_point", "process", "next_steps", "custom"],
+          "description": "Drives the renderer's layout template. The slide skill picks a layout per type — e.g. `audience_snapshot` lays out KPI tiles in a grid; `case_study` uses a quote+image layout."
+        },
+        "live_body": {
+          "type": "object",
+          "description": "Sparse content for the live screen-share variant. Big visuals, short text. The agent talks; the slide is wallpaper.",
+          "additionalProperties": false,
+          "properties": {
+            "headline": { "type": "string", "description": "Big top-line — typically 3-8 words." },
+            "subheadline": { "type": "string" },
+            "body_text": { "type": "string", "description": "Short, scannable. Bullets fine. Avoid paragraphs in live mode." },
+            "bullets": { "type": "array", "items": { "type": "string" } },
+            "kpi_tiles": {
+              "type": "array",
+              "description": "For audience_snapshot / proof_point slides. Each tile renders as a big-number-with-label.",
+              "items": {
+                "type": "object",
+                "required": ["value", "label"],
+                "additionalProperties": false,
+                "properties": {
+                  "value": { "type": "string", "description": "The number/figure to display (string so we can include `M`, `%`, `k`, etc.)." },
+                  "label": { "type": "string" },
+                  "source": { "type": "string", "description": "Citation for the figure (per honesty-floor)." },
+                  "as_of": { "type": "string", "format": "date" }
+                }
+              }
+            },
+            "image_refs": {
+              "type": "array",
+              "description": "Image URLs/paths the renderer should compose into the slide. For case_study + recent_work slides.",
+              "items": {
+                "type": "object",
+                "required": ["url"],
+                "additionalProperties": false,
+                "properties": {
+                  "url": { "type": "string" },
+                  "alt": { "type": "string" },
+                  "caption": { "type": "string" }
+                }
+              }
+            },
+            "callout": { "type": "string", "description": "Highlighted quote or stat in accent color." }
+          }
+        },
+        "leave_behind_extension": {
+          "type": "object",
+          "description": "Additional written context that appears ONLY in the leave-behind variant (post-call read by buyer to share internally). Empty in live mode.",
+          "additionalProperties": false,
+          "properties": {
+            "expanded_body": { "type": "string", "description": "Paragraph-form context. The 'why this matters' written out for someone reading without the agent's voiceover." },
+            "supporting_data": { "type": "string" },
+            "footnotes": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "speaker_notes": {
+          "type": "string",
+          "description": "What the agent says when this slide is up. Talking points, transitions to the next slide, anticipated questions. Rendered into the separate speaker_notes.md artefact (second-screen reference)."
+        },
+        "sources": {
+          "type": "array",
+          "description": "Citations for any factual claim on the slide. Honesty-floor: every KPI / market stat / brand claim has a source + as_of date.",
+          "items": {
+            "type": "object",
+            "required": ["claim", "source"],
+            "additionalProperties": false,
+            "properties": {
+              "claim": { "type": "string", "description": "The claim being sourced (excerpt of slide text)." },
+              "source": { "type": "string", "description": "Where it came from — 'Phase 1.5 brand_deal deal_2025_lululemon', 'Exa search 2026-05-26: nytimes.com/...', 'IG Insights API'." },
+              "as_of": { "type": "string", "format": "date" }
+            }
+          }
+        },
+        "agent_edited": {
+          "type": "boolean",
+          "default": false,
+          "description": "True if the agent has directly edited this slide post-generation (via the slide skill's editor). Edits to LLM-regenerated slides reset this to false (a fresh draft). Used by the UI to badge edited slides."
+        },
+        "agent_edited_at": { "type": "string", "format": "date-time" }
+      }
+    }
+  }
+}

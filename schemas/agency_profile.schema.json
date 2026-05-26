@@ -19,7 +19,72 @@
       "description": "The agency's primary domain (e.g. `nativeagency.com`). All sending mailboxes are subdomains/addresses of this domain. SPF/DKIM/DMARC records live here."
     },
     "website_url": { "type": "string", "format": "uri" },
-    "logo_url": { "type": "string", "format": "uri", "description": "Optional. Used in signature blocks when the template supports HTML." },
+    "branding": {
+      "type": "object",
+      "description": "Visual brand identity captured at agency-setup time (Phase 0 Step 1.5). Used by downstream artefact generators — discovery-call prep decks (Phase 4.5), proposal decks (Phase 4 PROPOSAL), case-study leave-behinds, and any other agency-branded output. Single source of truth: every generated document picks up these values, so a rebrand in this block propagates everywhere on next render.",
+      "additionalProperties": false,
+      "properties": {
+        "logo_url": {
+          "type": "string",
+          "format": "uri",
+          "description": "Primary logo. Web-accessible URL or local path. Used in HTML signatures + on cover slides + footers. Recommend 500-1000px wide PNG with transparent background."
+        },
+        "logo_dark_url": {
+          "type": "string",
+          "format": "uri",
+          "description": "Optional. Logo variant for dark backgrounds. If absent, the renderer falls back to logo_url."
+        },
+        "primary_color": {
+          "type": "string",
+          "pattern": "^#[0-9A-Fa-f]{6}$",
+          "description": "Hex color for primary brand surfaces — slide titles, headings, accent shapes. Format `#RRGGBB`."
+        },
+        "secondary_color": {
+          "type": "string",
+          "pattern": "^#[0-9A-Fa-f]{6}$",
+          "description": "Hex color for secondary surfaces — subtitles, dividers, secondary buttons."
+        },
+        "accent_color": {
+          "type": "string",
+          "pattern": "^#[0-9A-Fa-f]{6}$",
+          "description": "Optional accent for callouts, highlighted KPI numbers, etc."
+        },
+        "background_color": {
+          "type": "string",
+          "pattern": "^#[0-9A-Fa-f]{6}$",
+          "default": "#FFFFFF",
+          "description": "Default slide background. Most decks stay white but agencies with darker brand identities may override."
+        },
+        "text_color": {
+          "type": "string",
+          "pattern": "^#[0-9A-Fa-f]{6}$",
+          "default": "#1A1A1A",
+          "description": "Default body text color. Must have sufficient contrast against background_color."
+        },
+        "font_family_heading": {
+          "type": "string",
+          "description": "CSS font-family stack for headings (e.g. `\"Inter\", sans-serif`). Renderer must ensure the font is web-loadable or fall back to safe defaults."
+        },
+        "font_family_body": {
+          "type": "string",
+          "description": "CSS font-family stack for body text."
+        },
+        "google_fonts": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Optional list of Google Font family names to load (e.g. [\"Inter\", \"Playfair Display\"]). Renderer injects the corresponding <link> tags."
+        },
+        "tagline": {
+          "type": "string",
+          "description": "Short positioning line used on title slides + signature footers (e.g. `Talent representation that works.`)."
+        },
+        "deck_template_id": {
+          "type": "string",
+          "default": "default",
+          "description": "Identifier for the deck visual template the renderer should use. v0.1: `default`. v2: agencies can register custom templates and select per-context (e.g. `editorial`, `bold`, `minimal`)."
+        }
+      }
+    },
 
     "agents": {
       "type": "array",

@@ -5,7 +5,7 @@
 ## Confirmed for v0.1
 
 ### Exa — semantic web search
-**Role:** powers Search 15 (recently-funded / newly-visible brands) and any other AI-grounding search the orchestrator needs. Also used by the Brand Enrichment pipeline (Step 4 fallback in `docs/brand_enrichment_workflow.md`) and the Contact Enrichment pipeline (Step 4 in `docs/contact_enrichment_workflow.md`).
+**Role:** powers Search 15 (recently-funded / newly-visible brands) and any other AI-grounding search the orchestrator needs. Also used by the Brand Enrichment pipeline (Step 4 fallback in `docs/brand_enrichment_workflow.md`), the Contact Enrichment pipeline (Step 4 in `docs/contact_enrichment_workflow.md`), and the **Phase 4.5 Discovery Call Prep pipeline** (external research pass — recent brand campaigns, news, contact background, competitor landscape; see `docs/discovery_prep_workflow.md`).
 **Why Exa:** purpose-built for AI-agent workflows. Neural + keyword hybrid; clean structured outputs; content extraction endpoint; "find similar URL" lets you seed with one trending brand page and pull lookalikes; better signal-per-query than general search APIs for discovery use cases.
 **Endpoints we'll use:**
 - `/search` — neural search with `category` + `livecrawl` + `text` content extraction
@@ -183,7 +183,7 @@ This is what the orchestrator will need configured by v0.1:
 
 | Env var | Service | Required? |
 |---|---|---|
-| `EXA_API_KEY` | Exa search (Search 15 + enrichment fallbacks) | **Yes** |
+| `EXA_API_KEY` | Exa search (Search 15 + enrichment fallbacks + Phase 4.5 discovery prep external research) | **Yes** |
 | `ANTHROPIC_API_KEY` | Claude calls (classification, extraction, decision-role tagging, outreach generation, reply classification) | **Yes** |
 | `APOLLO_API_KEY` | Apollo contact discovery (Phase 3a v0.1) | **Yes** (when Phase 3a enrichment runs) |
 | `LINKEDIN_API_KEY` | LinkedIn enrichment + search (Phase 3a v0.1; specific API tier per user-provided access) | **Yes** (when Phase 3a enrichment runs) |

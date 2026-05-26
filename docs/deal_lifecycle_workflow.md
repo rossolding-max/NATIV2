@@ -102,6 +102,20 @@ Turn the pipeline from "we sent a pitch" into "we got paid" with a clear, audita
 - `discovery_call_*` timestamps + free-text notes
 - `brief_text` / `brief_attachment_id` + `brief_received_at`
 - `qualification_decision` + `qualification_rationale` (the WHY — used by analytics to understand what we accept/reject)
+- `discovery_prep_pack_ids[]` + `latest_prep_pack_id` — FK references to the Phase 4.5 prep packs generated for this deal's discovery call (see below)
+
+**Discovery call prep (Phase 4.5):**
+
+On transition to `initial_call_scheduled`, the orchestrator auto-fires the Phase 4.5 prep generation pipeline (`docs/discovery_prep_workflow.md`):
+1. Gather context from the deal + talent profile + brand_candidate + brand_contact + originating enrollment + comparable brand_deals + top-scoring pitch_angles
+2. Run Exa external research on the brand (recent campaigns, news, contact background, competitor landscape)
+3. Three Claude Sonnet passes (prompt-cached): briefing notes → agenda → slides[]
+4. Render artefacts: live HTML deck, leave-behind HTML deck, PDF variants, speaker notes md, briefing notes md, agenda md, editable PPT (via slide skill)
+5. Write to `data/deals/{deal_id}/prep_packs/v{N}.json` + artefact files
+6. Append to `deal.lead.discovery_prep_pack_ids[]`, set `deal.lead.latest_prep_pack_id`
+7. Surface in agent's morning summary 24h before the call
+
+Agent can iterate before the call via natural-language feedback ("tone down slide 4, drop sustainability angle, beef up commercial range") → produces v(N+1). Old versions retained. **V1 stays locked unless agent asks** — upstream data refresh does NOT auto-regen.
 
 **Exits:**
 - Transition to PROPOSAL on `qualified`

@@ -24,14 +24,30 @@ The agency setup is fundamentally different from talent onboarding:
 
 Doing this as Phase 0 rather than embedding it in talent onboarding means: (a) the first talent doesn't wait 2-4 weeks for warmup before any outreach can go out; (b) the DNS records are the agency's concern, not each talent's.
 
-## The 7-step setup
+## The 8-step setup
 
 ### Step 1 — Agency identity
 Collect:
 - `name` — display name used in signatures + email intros
 - `domain` — the agency's primary domain (e.g. `nativeagency.com`). Must be a domain the agency controls (DNS access required in Step 3).
-- `website_url`, optional `logo_url`
+- `website_url`
 - `company_address` — physical mailing address. **REQUIRED for CAN-SPAM compliance** (every cold email must include the sender's physical address in the footer)
+
+### Step 1.5 — Visual branding
+Collect the visual identity that every downstream agency-branded artefact will use — discovery-call prep decks (Phase 4.5), proposal decks (Phase 4 PROPOSAL), case-study leave-behinds, signature blocks. Stored under `agency_profile.branding`:
+
+- `logo_url` — primary logo (transparent PNG recommended, 500-1000px wide). Web-accessible URL or local path.
+- `logo_dark_url` (optional) — variant for dark backgrounds
+- `primary_color`, `secondary_color`, optional `accent_color` — hex format `#RRGGBB`. Used for slide titles, headings, accent shapes, KPI callouts.
+- `background_color` (default `#FFFFFF`), `text_color` (default `#1A1A1A`)
+- `font_family_heading`, `font_family_body` — CSS font-family stacks
+- `google_fonts` (optional) — array of Google Font family names to auto-load
+- `tagline` (optional) — positioning line for title slides + signature footers
+- `deck_template_id` — defaults to `default`; v2 supports custom templates
+
+**Why capture here, not later:** branding is required input to every generated agency artefact. Capturing it once at agency setup means the discovery-prep generator, proposal-deck generator, and signature renderer all pick up the same values automatically. A rebrand later updates the block once and propagates to all future generations.
+
+**v0.1 minimum:** logo_url + primary_color + font_family_heading + font_family_body. Everything else has sensible defaults.
 
 ### Step 2 — Primary agent
 Collect for the single v0.1 agent:

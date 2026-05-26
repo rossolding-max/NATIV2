@@ -156,7 +156,7 @@
 
     "leadStage": {
       "type": "object",
-      "description": "Captured during LEAD stage. Discovery call notes, brand brief, qualification decision.",
+      "description": "Captured during LEAD stage. Discovery call notes, brand brief, qualification decision, discovery prep pack references (Phase 4.5).",
       "additionalProperties": false,
       "properties": {
         "discovery_call_scheduled_at": { "type": "string", "format": "date-time" },
@@ -167,7 +167,17 @@
         "brief_received_at": { "type": "string", "format": "date-time" },
         "qualification_decision": { "type": "string", "enum": ["qualified", "disqualified", "pending"] },
         "qualification_decision_at": { "type": "string", "format": "date-time" },
-        "qualification_rationale": { "type": "string", "description": "Why qualified or disqualified — used by analytics to learn what we say yes/no to." }
+        "qualification_rationale": { "type": "string", "description": "Why qualified or disqualified — used by analytics to learn what we say yes/no to." },
+        "discovery_prep_pack_ids": {
+          "type": "array",
+          "description": "FK list to all versions of the discovery-call prep pack generated for this deal (Phase 4.5). Each version is a file at `data/deals/{deal_id}/prep_packs/v{N}.json`. Append-only — v1, v2, v3... all retained as history. See `docs/discovery_prep_workflow.md`.",
+          "items": { "type": "string", "pattern": "^prep_[a-z0-9_-]+_v[0-9]+$" }
+        },
+        "latest_prep_pack_id": {
+          "type": "string",
+          "pattern": "^prep_[a-z0-9_-]+_v[0-9]+$",
+          "description": "Pointer to the current `is_latest: true` prep pack version. Updates whenever a new version is generated. The agent's UI surfaces this version; older versions are accessed via the audit log."
+        }
       }
     },
 

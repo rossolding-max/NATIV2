@@ -15,6 +15,7 @@ Build an AI-powered assistant that helps an influencer (or a roster of influence
 | 3a | **Contact CRM** | v0.1 spec + schema shipped | For every primary-tier brand candidate, find the right named contacts (Apollo + LinkedIn API + web search) with verified emails, LinkedIn URLs, location, tenure, and a `decision_role` classification (CMO of a $50B brand is *not* the buyer for a £5k Reel — the IM Manager 2 levels down is). |
 | 3b | **Outreach** | v0.1 spec + schemas + angles library shipped | AI-generated personalised email sequences per contact + decision_role, sent via Smartlead from per-talent domains, with reply detection, kill-on-reply, and full per-email analytics provenance. |
 | 4 | **Deal Lifecycle** | v0.1 spec + schema shipped | Moves a deal through 5 stages — LEAD → PROPOSAL → CONTRACT → DELIVERY → CLOSE — from a Phase 3b `interested` reply through to a paid + archived deal. Auto-archives won deals into Phase 1.5 brand_deals. Structured loss-reason enum + funnel analytics. v0.1 tracks contracts/invoices manually; v2 adds DocuSign + Stripe + Xero API integrations. |
+| 4.5 | **Discovery Call Prep** | v0.1 spec + schema shipped | Auto-drafts agenda + briefing notes + slide deck (live + leave-behind variants + speaker notes) when a LEAD-stage deal hits `initial_call_scheduled`. 3-pass Claude Sonnet pipeline + Exa external research. Pre-generation guidance + natural-language feedback loop creates versioned regenerations. Slide skill (provided separately) handles HTML/PDF/PPT export with direct user editing + NL feedback per slide. Agency branding from Phase 0. |
 
 ## End-to-end data flow
 
@@ -23,7 +24,8 @@ Build an AI-powered assistant that helps an influencer (or a roster of influence
 │ Phase 0  AGENCY SETUP (one-time, prerequisite to Phase 1)          │
 │   docs/agency_setup_workflow.md                                    │
 │   schemas/agency_profile.schema.json                               │
-│     7-step setup: agency identity → primary agent → DNS records → │
+│     8-step setup: agency identity → visual branding → primary    │
+│     agent → DNS records →                                          │
 │     sending mailbox provisioning → signature template → 2-4 week  │
 │     warmup → validation                                            │
 │     output: data/agency_profile.json (gitignored)                  │
@@ -119,13 +121,30 @@ Build an AI-powered assistant that helps an influencer (or a roster of influence
 │   schemas/deal.schema.json                                          │
 │   output: data/deals/{deal_id}.json (gitignored)                    │
 └────────────────────────────┬───────────────────────────────────────┘
-                             │ on close + payment + KPIs:
-                             │ auto-archive
-                             ▼
-                  ┌─────────────────────────┐
-                  │  Phase 1.5 brand_deals  │
-                  │  (closes the loop)      │
-                  └─────────────────────────┘
+              │                                  │
+   substage = initial_call_scheduled             │ on close + payment + KPIs:
+              ▼                                  │ auto-archive
+┌────────────────────────────────────────────┐   │
+│ Phase 4.5  DISCOVERY CALL PREP             │   │
+│   docs/discovery_prep_workflow.md          │   │
+│     3-pass Sonnet: briefing → agenda →     │   │
+│     slides[]; + Exa external research.     │   │
+│     Outputs: live deck + leave-behind      │   │
+│     deck + speaker notes (PDF/HTML/PPT).   │   │
+│     Pre-generation guidance + NL feedback  │   │
+│     loop → versioned regenerations.        │   │
+│     Slide skill (user-provided) handles    │   │
+│     direct edit + per-slide NL feedback.   │   │
+│     Agency branding from Phase 0.          │   │
+│   schemas/discovery_prep_pack.schema.json  │   │
+│   output: data/deals/{deal_id}/prep_packs/ │   │
+│   v{N}.json (gitignored)                   │   │
+└────────────────────────────────────────────┘   │
+                                                 ▼
+                                  ┌─────────────────────────┐
+                                  │  Phase 1.5 brand_deals  │
+                                  │  (closes the loop)      │
+                                  └─────────────────────────┘
 
    Cross-cutting:  docs/vendor_roadmap.md  ← external services + env vars
 ```
@@ -164,7 +183,8 @@ The fields below were not in the original request but were added because later p
 
 ### Files
 - `schemas/agency_profile.schema.json` — JSON Schema for the Phase 0 agency identity. Captures agency name/domain, the primary agent's identity, sending mailbox + warmup state, default signature template, CAN-SPAM-required company address. v0.1 enforces single-agent constraint via `agents` `maxItems: 1`. Validates `data/agency_profile.json` (gitignored).
-- `schemas/deal.schema.json` — JSON Schema for Phase 4 deal pipeline records. 5-stage lifecycle (LEAD → PROPOSAL → CONTRACT → DELIVERY → CLOSE) + substages + state machine + per-stage data blocks + attachments + notes + audit trail. Structured loss-reason enum. v0.1 = manual contracts/invoices; v2 fields ready for DocuSign / Stripe / Xero / QuickBooks API integration. Validates files under `data/deals/` (gitignored — commercial data + contracts + invoice amounts).
+- `schemas/deal.schema.json` — JSON Schema for Phase 4 deal pipeline records. 5-stage lifecycle (LEAD → PROPOSAL → CONTRACT → DELIVERY → CLOSE) + substages + state machine + per-stage data blocks + attachments + notes + audit trail. Structured loss-reason enum. `lead.discovery_prep_pack_ids[]` + `lead.latest_prep_pack_id` link to Phase 4.5 prep packs. v0.1 = manual contracts/invoices; v2 fields ready for DocuSign / Stripe / Xero / QuickBooks API integration. Validates files under `data/deals/` (gitignored — commercial data + contracts + invoice amounts).
+- `schemas/discovery_prep_pack.schema.json` — JSON Schema for Phase 4.5 discovery-call prep packs. Versioned (v1, v2, v3…) bundles of briefing notes (multi-section markdown, agent-only, includes commercial range), agenda (sections + durations + talking points), and slides[] (structured JSON: live_body + leave_behind_extension + speaker_notes + sources per slide). Generation block captures pre-generation guidance + regeneration feedback + LLM provenance (model + token usage + cached tokens + cost). Context snapshot freezes upstream data including Exa external research (queries + summaries + URLs). agent_edits[] audit log for direct edits. export_artifacts[] tracks rendered HTML/PDF/PPT files. Validates files under `data/deals/{deal_id}/prep_packs/` (gitignored).
 - `schemas/talent.schema.json` — JSON Schema (Draft 2020-12) describing the talent profile.
 - `schemas/brand_candidates.schema.json` — JSON Schema for the per-talent Brand Discovery output. Validates every file written by the orchestrator under `data/brand_candidates/` (the folder itself is gitignored — generated artifact, not source).
 - `schemas/brand_contact.schema.json` — JSON Schema for per-brand contact records (Phase 3a). Validates every file under `data/brand_contacts/` (gitignored — contacts are PII and vendor data is licensed).
@@ -185,8 +205,9 @@ The fields below were not in the original request but were added because later p
 - `scripts/build_affinity.py` — builder script with all authored data and inline validation. Single source of truth for the three affinity files; re-run to regenerate them.
 - `scripts/enrich_brand_map.py` — adds the 5 metadata fields per brand to `brand_industry_map.json`. Re-runnable; honest-gaps policy (omit fields where the curated value is unknown).
 - `docs/recommendation_algorithm.md` — draft spec for how the app combines all of the above into a ranked list of industries to target for a given talent. Forward-looking contract for when the app is built.
-- `docs/agency_setup_workflow.md` — Phase 0 one-time setup before any talent onboards. 7-step process: agency identity, primary agent, DNS records (SPF/DKIM/DMARC), sending mailbox provisioning via Smartlead, signature template (CAN-SPAM-compliant), 2-4 week warmup, final validation. v0.1 single-agent constraint documented; v2 expansion plan for multi-agent rosters.
+- `docs/agency_setup_workflow.md` — Phase 0 one-time setup before any talent onboards. 8-step process: agency identity, visual branding (logo + colors + fonts — feeds every downstream agency artefact), primary agent, DNS records (SPF/DKIM/DMARC), sending mailbox provisioning via Smartlead, signature template (CAN-SPAM-compliant), 2-4 week warmup, final validation. v0.1 single-agent constraint documented; v2 expansion plan for multi-agent rosters.
 - `docs/deal_lifecycle_workflow.md` — Phase 4 spec for the deal pipeline. Defines the 5-stage lifecycle (LEAD → PROPOSAL → CONTRACT → DELIVERY → CLOSE), per-stage substages and data blocks, full state machine with valid transitions, structured loss reasons (budget / timing / competitor_won / internal_pivot / talent_no_fit / terms_disagreed / unresponsive / compliance_block / other), auto-archive on close into Phase 1.5 brand_deals, integration touchpoints with Phase 3b outreach (interested reply triggers deal creation) and Phase 1.5 (close triggers archive), notifications + reminders driven by `next_action_due_at`, failure handling, and the v2 vendor-integration roadmap (DocuSign / PandaDoc / HelloSign for e-sign; Stripe / Xero / QuickBooks for invoicing).
+- `docs/discovery_prep_workflow.md` — Phase 4.5 spec for the discovery-call prep generator. Defines the trigger (`substage = initial_call_scheduled`), 3-pass Sonnet generation pipeline with prompt-caching across briefing/agenda/slides passes, Exa external research integration, default 10-slide deck structure mapped to slide-type layouts, three rendered output variants from one source (live deck + leave-behind deck + speaker notes), versioning model with pre-generation guidance + natural-language feedback regeneration loop (v1 stays locked unless agent asks; agent can target whole-pack / section / per-slide regen), direct slide editing via the slide skill, slide-skill integration contract (input/output shape + on_edit/on_feedback callbacks), failure handling, storage layout, v0.1 explicit non-goals, and 7 open questions for v0.2.
 - `docs/onboarding_workflow.md` — draft spec for how a user adds a new talent: web wizard with OAuth platform connections (paste-fallback), media-pack extraction by LLM, adaptive questionnaire for gaps, hybrid similar-talent seeding (user + AI suggestions), and a background AI research pass that populates similar-talent records. The per-talent sender-domain section was removed: outreach now uses the agency's pre-warmed mailbox from Phase 0.
 - `docs/brand_discovery.md` — draft spec for the long-list generator. **16 independent searches** runnable today (re-engagement, network expansion, affinity expansion, geo, life-stage, constraint-aware, graph, recently-funded via web search, **trending/rising brands via the [`last30days` skill](https://github.com/mvanhorn/last30days-skill) — multi-source social momentum signal across Reddit/X/TikTok/YouTube/HN/etc., run as a monthly cron**) merged with multi-source scoring. Monthly cron drives re-engagement with per-brand cool-downs. Future-versions section lists 12 more searches that need external data (Crunchbase API as a structured upgrade to Search 15, live `#ad` scraping, affiliate networks, creator marketplaces, EMV reports, etc.). Both structural enrichments (`brand_industry_map` metadata + `brand_competitors` graph) are now shipped and used by Searches 3, 4, 10, 14.
 - `docs/vendor_roadmap.md` — single source of truth for external-service decisions. Confirms **Exa** as the v0.1 web-search provider (Search 15). Catalogues deferred vendors with criteria for when to add each: ScrapeCreators (Search 16 visual platforms), Owler (competitor maintenance), Modash/HypeAuditor (brand DB bulk import), Exploding Topics (pre-trend detection), Product Hunt API (day-of launches), Tribe Dynamics EMV (top-spending brands per category), SimilarWeb (audience-overlap competitors), Crunchbase (structured funding data), Apollo (Phase 3 outreach contact discovery), plus alternatives for each. Includes the env-var inventory for all current + deferred services.
@@ -573,3 +594,86 @@ Every deal carries `next_action` (free-text) + `next_action_due_at` (timestamp).
 
 ### Storage
 `data/deals/{deal_id}.json` per deal. Gitignored. Filesystem JSON for v0.1; production should move to Postgres (workflow state) + S3 (attachments) at build time.
+
+---
+
+## Phase 4.5 — Discovery Call Prep
+
+### Output
+A versioned prep pack per deal at `data/deals/{deal_id}/prep_packs/v{N}.json` (gitignored). Each version bundles three deliverables — **agenda**, **briefing notes** (agent-only), **slide deck** — auto-drafted by a 3-pass Claude Sonnet pipeline + Exa external research, then iteratively refinable via natural-language feedback. Validated against `schemas/discovery_prep_pack.schema.json`.
+
+### Trigger + locked-in decisions
+- **Fires on:** `deal.substage = initial_call_scheduled` (transitioned within Phase 4 LEAD stage)
+- **Agent solo on call:** talent doesn't attend discovery calls. Briefing = internal cheat-sheet; slides position talent to brand.
+- **One deck source, two output variants:** single `slides[]` JSON renders `deck-live.html` (sparse, big visuals — screen-shared on call) + `deck-leave-behind.html` (denser, written rationale — sent post-call). Plus a separate `speaker-notes.md` for the agent's second-screen reference.
+- **LLM auto-drafts everything end-to-end:** the agent owns review + iteration, not the blank-page draft.
+- **V1 stays locked unless agent asks:** upstream data drift (talent KPIs, brand context) is detected and surfaced as informational, but never triggers auto-regen.
+- **Old versions retained:** v1, v2, v3… all queryable from `deal.lead.discovery_prep_pack_ids[]`. `latest_prep_pack_id` points to current.
+
+### Generation pipeline
+```
+Trigger: substage → initial_call_scheduled
+  │
+  ▼ Agent (optional) provides pre_generation_guidance text
+  ▼ Gather context (Phase 1 talent + 1.5 brand_deals + Phase 2 candidate + 3a contact + 3b enrollment + pitch_angles + agency branding)
+  ▼ Exa external research (3-5 queries: brand campaigns, news, contact background, competitor landscape)
+  ▼ Sonnet Pass 1: briefing_notes  (cached: context reused downstream)
+  ▼ Sonnet Pass 2: agenda
+  ▼ Sonnet Pass 3: slides[]
+  ▼ Validate against schema
+  ▼ Render artefacts (Jinja2 HTML + Puppeteer PDF + slide skill PPT + markdown writers)
+  ▼ Write v{N}.json + v{N}_artifacts/
+  ▼ Surface in agent's morning summary 24h before call
+```
+
+### The 3 outputs
+
+**Agenda** (`agenda.md` artefact) — single-page, default 45-min structure, LLM-customised per deal (drops "brand context check" if formal brief already received; adds "questions you raised" section if reply contained specific questions).
+
+**Briefing notes** (`briefing-notes.md` artefact, agent-only) — multi-section markdown:
+- Deal summary (citing originating reply verbatim)
+- About brand (Phase 2 + Exa research, with provenance per claim)
+- About contact (Phase 3a + pitch_history signals)
+- About talent for this call (relevant past work, KPIs to lead with)
+- Fit hypothesis (synthesised from top-scoring pitch_angles)
+- Likely objections + responses (patterns from past `objection` outcomes)
+- Red flags (talent red_lines vs brand)
+- Questions to ask + likely questions from them with prepared answers
+- **Commercial range** computed from comparable past brand_deals (low/high USD + rationale + comparable deal IDs — internal only, not shown to brand on call)
+
+**Slide deck** — structured `slides[]` JSON. Default 10 slides with `type` enum driving layout: title / context / talent_overview / audience_snapshot / recent_work / brand_observation / fit_angle / case_study / proof_point / process / next_steps. Each slide has `live_body` (sparse, big-visual), `leave_behind_extension` (denser, written), `speaker_notes` (agent voiceover), `sources[]` (citations for every factual claim per honesty-floor).
+
+Three rendered artefacts from one source: `deck-live.html|pdf`, `deck-leave-behind.html|pdf`, `speaker-notes.md`. PPT via the slide skill.
+
+### Natural-language feedback regeneration loop
+After v1 is generated, the agent iterates:
+
+> "Slide 4 audience claim feels overstated — tone it down and add the as-of date. Drop the sustainability angle entirely, brand told me on the intro email they're focused on performance not values. Beef up the commercial range — I think we're underselling for this scope."
+
+Captured as `generation.regeneration_feedback`. LLM consumes: original context + v1 full pack + feedback → v2 with `parent_version: 1`. v1.is_latest flips to false; v2.is_latest = true. Old versions stay queryable.
+
+**Section-targeted regen:** "Regenerate just the objections" → `target_sections: ["briefing.likely_objections"]`. "Redo slides 4 and 7" → `target_sections: ["slides[3]", "slides[6]"]`. Untargeted sections carry forward unchanged from parent — faster + cheaper.
+
+### Slide skill integration
+The slide skill (provided separately) produces editable HTML output with two interaction modes:
+1. **Direct edit** — agent types into slide HTML in-place; saves update `slides[N]` and append to `agent_edits[]`. No new version.
+2. **Natural-language feedback per slide** — "make this punchier"; triggers per-slide LLM regen → produces v(N+1) with `trigger: agent_per_slide_regenerate`.
+
+Orchestrator-side contract: `{slides, branding, mode}` in → `{html_path, pdf_path, pptx_path, on_edit, on_feedback}` out. v0.1 fallback before skill is wired: Jinja2 HTML + Puppeteer PDF; PPT marked `status: pending`.
+
+### Branding from Phase 0
+Logo, primary/secondary/accent colors, font families, tagline — all pulled from `agency_profile.branding` (captured at Phase 0 Step 1.5). Rebrand once → propagates to all future prep packs on next render. Single source of truth.
+
+### Cost profile
+Per-pack: ~3 Sonnet passes × ~15k input tokens (heavily cached) + ~7k output tokens + 3-5 Exa queries. Estimated $0.10-0.30 per generation. At 50 active deals × 3 regens each = ~$15-45/mo per agency. Manageable. Per-deal cost cap considered for v0.2.
+
+### Storage
+```
+data/deals/{deal_id}/
+  prep_packs/
+    v1.json
+    v1_artifacts/{deck-live.html, deck-leave-behind.html, deck-live.pdf, deck-leave-behind.pdf, speaker-notes.md, briefing-notes.md, agenda.md, deck.pptx}
+    v2.json
+    v2_artifacts/...
+```
+All gitignored.
