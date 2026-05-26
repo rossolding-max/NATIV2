@@ -47,4 +47,18 @@ The fields below were not in the original request but were added because later p
 ### Files
 - `schemas/talent.schema.json` — JSON Schema (Draft 2020-12) describing the profile.
 - `talents/example-talent.json` — template instance, partially filled.
+- `data/niches.json` — canonical creator content-niche taxonomy. Use the `id` values when populating `content_niches`.
+- `data/industries.json` — canonical brand-industry taxonomy. Use the `id` values when populating `previous_brands[].industry`, `brand_preferences.preferred_industries`, and `brand_preferences.blocked_industries`.
 - `.gitignore` — ensures any `*.local.json` or `.env` files containing real keys are never committed.
+
+### Reference taxonomies
+Both taxonomy files follow the same shape:
+```jsonc
+{
+  "version": "1.0.0",
+  "items": [
+    { "id": "kebab-case-slug", "name": "Display Name", "parent": "parent-id-or-null", "aliases": ["search", "terms"] }
+  ]
+}
+```
+Top-level entries have `parent: null`; sub-entries reference their parent's `id`. `industries.json` additionally flags `sensitive: true` for categories that are commonly restricted on social platforms or require explicit creator opt-in (alcohol, gambling, tobacco, crypto, etc.).
