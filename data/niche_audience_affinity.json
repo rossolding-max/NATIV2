@@ -12,6 +12,13 @@
         676,
         684
       ],
+      "purchase_intent_segments": [
+        865,
+        1466,
+        866,
+        867,
+        1453
+      ],
       "demographic_segments": [
         49,
         3,
@@ -29,6 +36,10 @@
         681,
         684
       ],
+      "purchase_intent_segments": [
+        865,
+        866
+      ],
       "demographic_segments": [
         49,
         3,
@@ -45,6 +56,12 @@
         406,
         415
       ],
+      "purchase_intent_segments": [
+        1466,
+        1453,
+        865,
+        1455
+      ],
       "demographic_segments": [
         49,
         4,
@@ -59,6 +76,11 @@
       "interest_segments": [
         677,
         684
+      ],
+      "purchase_intent_segments": [
+        867,
+        1458,
+        865
       ],
       "demographic_segments": [
         49,
@@ -76,6 +98,10 @@
         684,
         678
       ],
+      "purchase_intent_segments": [
+        868,
+        865
+      ],
       "demographic_segments": [
         49,
         3,
@@ -90,6 +116,10 @@
         677,
         682,
         680
+      ],
+      "purchase_intent_segments": [
+        865,
+        866
       ],
       "demographic_segments": [
         4,
@@ -108,6 +138,13 @@
         683,
         606
       ],
+      "purchase_intent_segments": [
+        920,
+        930,
+        919,
+        933,
+        932
+      ],
       "demographic_segments": [
         3,
         4,
@@ -124,6 +161,11 @@
         685,
         681
       ],
+      "purchase_intent_segments": [
+        920,
+        930,
+        919
+      ],
       "demographic_segments": [
         50,
         3,
@@ -138,6 +180,11 @@
         682,
         680,
         681
+      ],
+      "purchase_intent_segments": [
+        920,
+        933,
+        932
       ],
       "demographic_segments": [
         5,
@@ -155,6 +202,10 @@
         681,
         406
       ],
+      "purchase_intent_segments": [
+        920,
+        930
+      ],
       "demographic_segments": [
         49,
         4,
@@ -170,6 +221,9 @@
         676,
         686
       ],
+      "purchase_intent_segments": [
+        920
+      ],
       "demographic_segments": [
         49,
         3,
@@ -184,6 +238,9 @@
       "interest_segments": [
         676,
         686
+      ],
+      "purchase_intent_segments": [
+        920
       ],
       "demographic_segments": [
         49,
@@ -201,6 +258,10 @@
         685,
         607
       ],
+      "purchase_intent_segments": [
+        930,
+        920
+      ],
       "demographic_segments": [
         50,
         3,
@@ -217,6 +278,12 @@
         682,
         680
       ],
+      "purchase_intent_segments": [
+        933,
+        932,
+        934,
+        919
+      ],
       "demographic_segments": [
         5,
         6,
@@ -231,6 +298,12 @@
         683,
         676,
         680
+      ],
+      "purchase_intent_segments": [
+        920,
+        930,
+        933,
+        865
       ],
       "demographic_segments": [
         50,
@@ -250,6 +323,13 @@
         412,
         607
       ],
+      "purchase_intent_segments": [
+        1633,
+        762,
+        1593,
+        1595,
+        1619
+      ],
       "demographic_segments": [
         3,
         4,
@@ -268,6 +348,12 @@
         412,
         411
       ],
+      "purchase_intent_segments": [
+        1633,
+        1593,
+        762,
+        1619
+      ],
       "demographic_segments": [
         50,
         4,
@@ -285,6 +371,11 @@
         616,
         412
       ],
+      "purchase_intent_segments": [
+        1633,
+        1593,
+        1619
+      ],
       "demographic_segments": [
         4,
         5,
@@ -300,6 +391,12 @@
         408,
         406,
         415
+      ],
+      "purchase_intent_segments": [
+        930,
+        1619,
+        762,
+        920
       ],
       "demographic_segments": [
         4,
@@ -321,6 +418,12 @@
         406,
         421
       ],
+      "purchase_intent_segments": [
+        1598,
+        1593,
+        920,
+        762
+      ],
       "demographic_segments": [
         49,
         5,
@@ -336,6 +439,11 @@
         408,
         415,
         421
+      ],
+      "purchase_intent_segments": [
+        1593,
+        1595,
+        920
       ],
       "demographic_segments": [
         49,
@@ -353,6 +461,11 @@
         412,
         674
       ],
+      "purchase_intent_segments": [
+        1593,
+        1633,
+        1619
+      ],
       "demographic_segments": [
         5,
         6,
@@ -367,6 +480,11 @@
         406,
         412
       ],
+      "purchase_intent_segments": [
+        762,
+        1633,
+        1593
+      ],
       "demographic_segments": [
         5,
         6,
@@ -379,6 +497,10 @@
       "interest_segments": [
         408,
         616
+      ],
+      "purchase_intent_segments": [
+        762,
+        920
       ],
       "demographic_segments": [
         50,
@@ -395,6 +517,11 @@
         408,
         406,
         607
+      ],
+      "purchase_intent_segments": [
+        1618,
+        1619,
+        1635
       ],
       "demographic_segments": [
         5,
@@ -416,6 +543,12 @@
         412,
         381
       ],
+      "purchase_intent_segments": [
+        1448,
+        1449,
+        1455,
+        762
+      ],
       "demographic_segments": [
         5,
         6,
@@ -432,6 +565,11 @@
         376,
         375
       ],
+      "purchase_intent_segments": [
+        1448,
+        1455,
+        1449
+      ],
       "demographic_segments": [
         5,
         6,
@@ -446,6 +584,11 @@
         406,
         415,
         381
+      ],
+      "purchase_intent_segments": [
+        1455,
+        1448,
+        1449
       ],
       "demographic_segments": [
         4,
@@ -463,6 +606,11 @@
         687,
         412
       ],
+      "purchase_intent_segments": [
+        942,
+        762,
+        1448
+      ],
       "demographic_segments": [
         50,
         6,
@@ -478,6 +626,11 @@
       "interest_segments": [
         406,
         415
+      ],
+      "purchase_intent_segments": [
+        1410,
+        1448,
+        762
       ],
       "demographic_segments": [
         5,
@@ -495,6 +648,11 @@
         406,
         415
       ],
+      "purchase_intent_segments": [
+        1459,
+        765,
+        1448
+      ],
       "demographic_segments": [
         3,
         4,
@@ -508,6 +666,11 @@
       "interest_segments": [
         415,
         406
+      ],
+      "purchase_intent_segments": [
+        762,
+        765,
+        763
       ],
       "demographic_segments": [
         5,
@@ -524,6 +687,13 @@
         371,
         373,
         380
+      ],
+      "purchase_intent_segments": [
+        972,
+        973,
+        1406,
+        1404,
+        1405
       ],
       "demographic_segments": [
         4,
@@ -542,6 +712,11 @@
         376,
         380
       ],
+      "purchase_intent_segments": [
+        972,
+        973,
+        1407
+      ],
       "demographic_segments": [
         5,
         6,
@@ -556,6 +731,11 @@
         372,
         371,
         368
+      ],
+      "purchase_intent_segments": [
+        972,
+        973,
+        1401
       ],
       "demographic_segments": [
         49,
@@ -573,6 +753,12 @@
         368,
         380
       ],
+      "purchase_intent_segments": [
+        1406,
+        1404,
+        1405,
+        1400
+      ],
       "demographic_segments": [
         5,
         6,
@@ -587,6 +773,11 @@
         375,
         376,
         406
+      ],
+      "purchase_intent_segments": [
+        972,
+        973,
+        1448
       ],
       "demographic_segments": [
         49,
@@ -604,6 +795,11 @@
         412,
         414
       ],
+      "purchase_intent_segments": [
+        972,
+        973,
+        1448
+      ],
       "demographic_segments": [
         5,
         6,
@@ -617,6 +813,12 @@
       "interest_segments": [
         377,
         368
+      ],
+      "purchase_intent_segments": [
+        972,
+        973,
+        1401,
+        1406
       ],
       "demographic_segments": [
         4,
@@ -632,6 +834,11 @@
         369,
         368
       ],
+      "purchase_intent_segments": [
+        1402,
+        972,
+        1406
+      ],
       "demographic_segments": [
         5,
         6,
@@ -645,6 +852,11 @@
       "interest_segments": [
         369,
         373
+      ],
+      "purchase_intent_segments": [
+        1402,
+        972,
+        1406
       ],
       "demographic_segments": [
         5,
@@ -667,6 +879,13 @@
         724,
         728
       ],
+      "purchase_intent_segments": [
+        1649,
+        1666,
+        1651,
+        1674,
+        776
+      ],
       "demographic_segments": [
         5,
         6,
@@ -682,6 +901,12 @@
         719,
         682,
         680
+      ],
+      "purchase_intent_segments": [
+        1666,
+        1651,
+        1661,
+        1649
       ],
       "demographic_segments": [
         7,
@@ -699,6 +924,12 @@
         720,
         535
       ],
+      "purchase_intent_segments": [
+        1655,
+        1651,
+        1674,
+        1654
+      ],
       "demographic_segments": [
         3,
         4,
@@ -712,6 +943,12 @@
       "interest_segments": [
         719,
         720
+      ],
+      "purchase_intent_segments": [
+        1649,
+        1666,
+        1651,
+        1674
       ],
       "demographic_segments": [
         4,
@@ -729,6 +966,12 @@
         719,
         348
       ],
+      "purchase_intent_segments": [
+        1663,
+        1666,
+        1661,
+        1649
+      ],
       "demographic_segments": [
         6,
         7,
@@ -745,6 +988,11 @@
         719,
         631
       ],
+      "purchase_intent_segments": [
+        1650,
+        1649,
+        1635
+      ],
       "demographic_segments": [
         4,
         5,
@@ -760,6 +1008,12 @@
         342,
         338
       ],
+      "purchase_intent_segments": [
+        1649,
+        1654,
+        1600,
+        1679
+      ],
       "demographic_segments": [
         5,
         6,
@@ -774,6 +1028,12 @@
         368,
         719,
         457
+      ],
+      "purchase_intent_segments": [
+        763,
+        972,
+        920,
+        1405
       ],
       "demographic_segments": [
         4,
@@ -791,6 +1051,11 @@
         268,
         342
       ],
+      "purchase_intent_segments": [
+        770,
+        1600,
+        756
+      ],
       "demographic_segments": [
         4,
         5,
@@ -806,6 +1071,11 @@
         461,
         535
       ],
+      "purchase_intent_segments": [
+        1407,
+        920,
+        1484
+      ],
       "demographic_segments": [
         5,
         6,
@@ -819,6 +1089,11 @@
         676,
         368,
         457
+      ],
+      "purchase_intent_segments": [
+        763,
+        1405,
+        920
       ],
       "demographic_segments": [
         3,
@@ -834,6 +1109,13 @@
         348,
         407,
         728
+      ],
+      "purchase_intent_segments": [
+        1377,
+        1382,
+        1378,
+        1408,
+        972
       ],
       "demographic_segments": [
         5,
@@ -852,6 +1134,12 @@
         421,
         406
       ],
+      "purchase_intent_segments": [
+        1377,
+        1408,
+        1448,
+        1498
+      ],
       "demographic_segments": [
         49,
         5,
@@ -866,6 +1154,12 @@
         350,
         407,
         348
+      ],
+      "purchase_intent_segments": [
+        1377,
+        1408,
+        972,
+        1378
       ],
       "demographic_segments": [
         5,
@@ -882,6 +1176,11 @@
         407,
         348
       ],
+      "purchase_intent_segments": [
+        1382,
+        1377,
+        1408
+      ],
       "demographic_segments": [
         5,
         6,
@@ -897,6 +1196,13 @@
         348,
         421,
         376
+      ],
+      "purchase_intent_segments": [
+        1377,
+        1382,
+        972,
+        1378,
+        865
       ],
       "demographic_segments": [
         49,
@@ -918,6 +1224,13 @@
         370,
         460
       ],
+      "purchase_intent_segments": [
+        1377,
+        1483,
+        805,
+        1409,
+        1389
+      ],
       "demographic_segments": [
         50,
         5,
@@ -938,6 +1251,12 @@
         460,
         464
       ],
+      "purchase_intent_segments": [
+        1407,
+        1483,
+        1476,
+        1428
+      ],
       "demographic_segments": [
         5,
         6,
@@ -954,6 +1273,10 @@
         457,
         459
       ],
+      "purchase_intent_segments": [
+        1407,
+        1476
+      ],
       "demographic_segments": [
         49,
         5,
@@ -968,6 +1291,11 @@
         460,
         464,
         457
+      ],
+      "purchase_intent_segments": [
+        1483,
+        1428,
+        1446
       ],
       "demographic_segments": [
         6,
@@ -986,6 +1314,11 @@
         462,
         463
       ],
+      "purchase_intent_segments": [
+        1486,
+        1485,
+        1476
+      ],
       "demographic_segments": [
         7,
         8,
@@ -1001,6 +1334,10 @@
       "interest_segments": [
         457,
         461
+      ],
+      "purchase_intent_segments": [
+        1407,
+        1484
       ],
       "demographic_segments": [
         49,
@@ -1018,6 +1355,13 @@
         690,
         688
       ],
+      "purchase_intent_segments": [
+        942,
+        953,
+        961,
+        1599,
+        944
+      ],
       "demographic_segments": [
         50,
         3,
@@ -1033,6 +1377,12 @@
       "interest_segments": [
         703,
         687
+      ],
+      "purchase_intent_segments": [
+        942,
+        944,
+        966,
+        947
       ],
       "demographic_segments": [
         3,
@@ -1050,6 +1400,10 @@
         687,
         690
       ],
+      "purchase_intent_segments": [
+        1600,
+        770
+      ],
       "demographic_segments": [
         4,
         5,
@@ -1064,6 +1418,11 @@
       "interest_segments": [
         687,
         690
+      ],
+      "purchase_intent_segments": [
+        1600,
+        770,
+        756
       ],
       "demographic_segments": [
         4,
@@ -1080,6 +1439,11 @@
         703,
         733
       ],
+      "purchase_intent_segments": [
+        953,
+        970,
+        942
+      ],
       "demographic_segments": [
         50,
         3,
@@ -1094,6 +1458,11 @@
       "interest_segments": [
         703,
         687
+      ],
+      "purchase_intent_segments": [
+        961,
+        960,
+        942
       ],
       "demographic_segments": [
         3,
@@ -1112,6 +1481,12 @@
         736,
         735
       ],
+      "purchase_intent_segments": [
+        971,
+        970,
+        761,
+        1617
+      ],
       "demographic_segments": [
         3,
         4,
@@ -1127,6 +1502,11 @@
         733,
         690
       ],
+      "purchase_intent_segments": [
+        953,
+        970,
+        971
+      ],
       "demographic_segments": [
         50,
         3,
@@ -1141,6 +1521,10 @@
         734,
         733
       ],
+      "purchase_intent_segments": [
+        971,
+        970
+      ],
       "demographic_segments": [
         3,
         4,
@@ -1154,6 +1538,11 @@
       "interest_segments": [
         736,
         733
+      ],
+      "purchase_intent_segments": [
+        761,
+        1617,
+        961
       ],
       "demographic_segments": [
         3,
@@ -1172,6 +1561,11 @@
         733,
         737
       ],
+      "purchase_intent_segments": [
+        971,
+        970,
+        803
+      ],
       "demographic_segments": [
         50,
         3,
@@ -1185,6 +1579,11 @@
       "interest_segments": [
         733,
         440
+      ],
+      "purchase_intent_segments": [
+        970,
+        944,
+        1600
       ],
       "demographic_segments": [
         3,
@@ -1202,6 +1601,12 @@
         467,
         582
       ],
+      "purchase_intent_segments": [
+        800,
+        804,
+        803,
+        758
+      ],
       "demographic_segments": [
         3,
         4,
@@ -1217,6 +1622,12 @@
         470,
         709
       ],
+      "purchase_intent_segments": [
+        804,
+        800,
+        1404,
+        763
+      ],
       "demographic_segments": [
         3,
         4,
@@ -1230,6 +1641,10 @@
         582,
         581
       ],
+      "purchase_intent_segments": [
+        800,
+        804
+      ],
       "demographic_segments": [
         3,
         4,
@@ -1242,6 +1657,11 @@
       "interest_segments": [
         582,
         581
+      ],
+      "purchase_intent_segments": [
+        763,
+        761,
+        920
       ],
       "demographic_segments": [
         3,
@@ -1258,6 +1678,11 @@
         467,
         733
       ],
+      "purchase_intent_segments": [
+        800,
+        971,
+        804
+      ],
       "demographic_segments": [
         3,
         4,
@@ -1270,6 +1695,11 @@
       "interest_segments": [
         581,
         258
+      ],
+      "purchase_intent_segments": [
+        800,
+        755,
+        765
       ],
       "demographic_segments": [
         49,
@@ -1286,6 +1716,11 @@
         415,
         581
       ],
+      "purchase_intent_segments": [
+        1466,
+        1410,
+        944
+      ],
       "demographic_segments": [
         3,
         4,
@@ -1299,6 +1734,12 @@
       "interest_segments": [
         481,
         581
+      ],
+      "purchase_intent_segments": [
+        800,
+        766,
+        803,
+        944
       ],
       "demographic_segments": [
         3,
@@ -1315,6 +1756,12 @@
         581,
         681
       ],
+      "purchase_intent_segments": [
+        800,
+        803,
+        920,
+        930
+      ],
       "demographic_segments": [
         3,
         4,
@@ -1327,6 +1774,11 @@
       "interest_segments": [
         481,
         687
+      ],
+      "purchase_intent_segments": [
+        944,
+        1600,
+        803
       ],
       "demographic_segments": [
         50,
@@ -1342,6 +1794,11 @@
       "interest_segments": [
         481,
         581
+      ],
+      "purchase_intent_segments": [
+        800,
+        766,
+        944
       ],
       "demographic_segments": [
         3,
@@ -1359,6 +1816,10 @@
         363,
         424
       ],
+      "purchase_intent_segments": [
+        1472,
+        1600
+      ],
       "demographic_segments": [
         3,
         4,
@@ -1374,6 +1835,10 @@
         363,
         359
       ],
+      "purchase_intent_segments": [
+        1600,
+        1472
+      ],
       "demographic_segments": [
         3,
         4,
@@ -1387,6 +1852,10 @@
         362,
         687,
         363
+      ],
+      "purchase_intent_segments": [
+        1600,
+        770
       ],
       "demographic_segments": [
         4,
@@ -1402,6 +1871,10 @@
         362,
         688
       ],
+      "purchase_intent_segments": [
+        1600,
+        953
+      ],
       "demographic_segments": [
         3,
         4,
@@ -1414,6 +1887,10 @@
       "interest_segments": [
         359,
         424
+      ],
+      "purchase_intent_segments": [
+        1472,
+        1475
       ],
       "demographic_segments": [
         5,
@@ -1435,6 +1912,11 @@
         359,
         719
       ],
+      "purchase_intent_segments": [
+        947,
+        942,
+        1600
+      ],
       "demographic_segments": [
         4,
         5,
@@ -1450,6 +1932,12 @@
         347,
         207
       ],
+      "purchase_intent_segments": [
+        1374,
+        757,
+        1368,
+        1371
+      ],
       "demographic_segments": [
         3,
         4,
@@ -1463,6 +1951,11 @@
       "interest_segments": [
         207,
         344
+      ],
+      "purchase_intent_segments": [
+        1374,
+        757,
+        755
       ],
       "demographic_segments": [
         3,
@@ -1479,6 +1972,11 @@
         258,
         344,
         472
+      ],
+      "purchase_intent_segments": [
+        755,
+        800,
+        1374
       ],
       "demographic_segments": [
         5,
@@ -1500,6 +1998,11 @@
         344,
         719
       ],
+      "purchase_intent_segments": [
+        1373,
+        757,
+        1374
+      ],
       "demographic_segments": [
         3,
         4,
@@ -1515,6 +2018,12 @@
         347,
         338
       ],
+      "purchase_intent_segments": [
+        757,
+        1374,
+        770,
+        755
+      ],
       "demographic_segments": [
         3,
         4,
@@ -1528,6 +2037,12 @@
         268,
         534,
         538
+      ],
+      "purchase_intent_segments": [
+        1383,
+        1385,
+        1397,
+        759
       ],
       "demographic_segments": [
         5,
@@ -1544,6 +2059,11 @@
         268,
         338
       ],
+      "purchase_intent_segments": [
+        756,
+        770,
+        1385
+      ],
       "demographic_segments": [
         4,
         5,
@@ -1559,6 +2079,12 @@
         535,
         538
       ],
+      "purchase_intent_segments": [
+        1385,
+        759,
+        1388,
+        1397
+      ],
       "demographic_segments": [
         4,
         5,
@@ -1572,6 +2098,11 @@
       "interest_segments": [
         538,
         534
+      ],
+      "purchase_intent_segments": [
+        1397,
+        759,
+        1396
       ],
       "demographic_segments": [
         50,
@@ -1588,6 +2119,11 @@
         538,
         687
       ],
+      "purchase_intent_segments": [
+        1617,
+        1397,
+        759
+      ],
       "demographic_segments": [
         50,
         4,
@@ -1603,6 +2139,11 @@
         340,
         342
       ],
+      "purchase_intent_segments": [
+        1372,
+        1370,
+        1374
+      ],
       "demographic_segments": [
         4,
         5,
@@ -1617,6 +2158,13 @@
         607,
         718,
         640
+      ],
+      "purchase_intent_segments": [
+        1618,
+        1619,
+        803,
+        799,
+        775
       ],
       "demographic_segments": [
         50,
@@ -1635,6 +2183,11 @@
         663,
         607,
         718
+      ],
+      "purchase_intent_segments": [
+        1618,
+        1619,
+        803
       ],
       "demographic_segments": [
         3,
@@ -1657,6 +2210,11 @@
         718,
         640
       ],
+      "purchase_intent_segments": [
+        799,
+        803,
+        775
+      ],
       "demographic_segments": [
         4,
         5,
@@ -1676,6 +2234,11 @@
         607,
         718
       ],
+      "purchase_intent_segments": [
+        930,
+        1619,
+        803
+      ],
       "demographic_segments": [
         3,
         4,
@@ -1693,6 +2256,11 @@
         669,
         607,
         718
+      ],
+      "purchase_intent_segments": [
+        1619,
+        1618,
+        803
       ],
       "demographic_segments": [
         5,
@@ -1714,6 +2282,10 @@
         607,
         718
       ],
+      "purchase_intent_segments": [
+        1618,
+        1619
+      ],
       "demographic_segments": [
         50,
         7,
@@ -1733,6 +2305,11 @@
         607,
         718
       ],
+      "purchase_intent_segments": [
+        803,
+        854,
+        805
+      ],
       "demographic_segments": [
         50,
         4,
@@ -1751,6 +2328,12 @@
         675,
         718
       ],
+      "purchase_intent_segments": [
+        1619,
+        1593,
+        803,
+        1596
+      ],
       "demographic_segments": [
         50,
         3,
@@ -1767,6 +2350,11 @@
         725,
         631
       ],
+      "purchase_intent_segments": [
+        1635,
+        1618,
+        1659
+      ],
       "demographic_segments": [
         5,
         6,
@@ -1781,6 +2369,11 @@
         720,
         725,
         672
+      ],
+      "purchase_intent_segments": [
+        1635,
+        930,
+        920
       ],
       "demographic_segments": [
         4,
@@ -1801,6 +2394,11 @@
         720,
         728
       ],
+      "purchase_intent_segments": [
+        1635,
+        1659,
+        805
+      ],
       "demographic_segments": [
         5,
         6,
@@ -1816,6 +2414,10 @@
         631,
         720
       ],
+      "purchase_intent_segments": [
+        1635,
+        930
+      ],
       "demographic_segments": [
         4,
         5,
@@ -1828,6 +2430,11 @@
       "interest_segments": [
         631,
         724
+      ],
+      "purchase_intent_segments": [
+        1635,
+        920,
+        1653
       ],
       "demographic_segments": [
         3,
@@ -1844,6 +2451,11 @@
         631,
         720
       ],
+      "purchase_intent_segments": [
+        1635,
+        920,
+        1649
+      ],
       "demographic_segments": [
         5,
         6,
@@ -1859,6 +2471,10 @@
         643,
         607,
         720
+      ],
+      "purchase_intent_segments": [
+        1635,
+        1618
       ],
       "demographic_segments": [
         50,
@@ -1879,6 +2495,12 @@
         246,
         248
       ],
+      "purchase_intent_segments": [
+        805,
+        806,
+        854,
+        861
+      ],
       "demographic_segments": [
         50,
         5,
@@ -1895,6 +2517,11 @@
         244,
         243,
         246
+      ],
+      "purchase_intent_segments": [
+        806,
+        805,
+        854
       ],
       "demographic_segments": [
         50,
@@ -1913,6 +2540,10 @@
         243,
         687
       ],
+      "purchase_intent_segments": [
+        806,
+        805
+      ],
       "demographic_segments": [
         6,
         7,
@@ -1927,6 +2558,10 @@
       "interest_segments": [
         255,
         243
+      ],
+      "purchase_intent_segments": [
+        805,
+        806
       ],
       "demographic_segments": [
         50,
@@ -1945,6 +2580,10 @@
         243,
         248
       ],
+      "purchase_intent_segments": [
+        854,
+        805
+      ],
       "demographic_segments": [
         50,
         8,
@@ -1962,6 +2601,11 @@
         248,
         246
       ],
+      "purchase_intent_segments": [
+        854,
+        852,
+        1446
+      ],
       "demographic_segments": [
         50,
         3,
@@ -1975,6 +2619,12 @@
       "niche_id": "pets",
       "interest_segments": [
         541
+      ],
+      "purchase_intent_segments": [
+        1553,
+        1549,
+        1554,
+        1551
       ],
       "demographic_segments": [
         5,
@@ -1990,6 +2640,12 @@
         544,
         541
       ],
+      "purchase_intent_segments": [
+        1553,
+        1554,
+        1551,
+        1552
+      ],
       "demographic_segments": [
         5,
         6,
@@ -2003,6 +2659,11 @@
       "interest_segments": [
         543,
         541
+      ],
+      "purchase_intent_segments": [
+        1553,
+        1554,
+        1549
       ],
       "demographic_segments": [
         4,
@@ -2019,6 +2680,10 @@
         541,
         542
       ],
+      "purchase_intent_segments": [
+        1553,
+        1554
+      ],
       "demographic_segments": [
         4,
         5,
@@ -2032,6 +2697,12 @@
         375,
         406,
         253
+      ],
+      "purchase_intent_segments": [
+        972,
+        973,
+        806,
+        1539
       ],
       "demographic_segments": [
         4,
@@ -2047,6 +2718,11 @@
         406,
         375
       ],
+      "purchase_intent_segments": [
+        972,
+        1179,
+        1484
+      ],
       "demographic_segments": [
         49,
         4,
@@ -2060,6 +2736,11 @@
       "interest_segments": [
         406,
         375
+      ],
+      "purchase_intent_segments": [
+        972,
+        920,
+        1539
       ],
       "demographic_segments": [
         49,
@@ -2075,6 +2756,11 @@
         415,
         581
       ],
+      "purchase_intent_segments": [
+        1474,
+        763,
+        765
+      ],
       "demographic_segments": [
         49,
         4,
@@ -2088,6 +2774,11 @@
       "interest_segments": [
         415,
         581
+      ],
+      "purchase_intent_segments": [
+        1474,
+        763,
+        771
       ],
       "demographic_segments": [
         49,
@@ -2103,6 +2794,10 @@
         415,
         581
       ],
+      "purchase_intent_segments": [
+        1474,
+        763
+      ],
       "demographic_segments": [
         49,
         3,
@@ -2115,6 +2810,11 @@
       "niche_id": "news-politics",
       "interest_segments": [
         522
+      ],
+      "purchase_intent_segments": [
+        755,
+        768,
+        800
       ],
       "demographic_segments": [
         4,
@@ -2136,6 +2836,11 @@
         522,
         581
       ],
+      "purchase_intent_segments": [
+        755,
+        1374,
+        800
+      ],
       "demographic_segments": [
         4,
         5,
@@ -2149,6 +2854,12 @@
         361,
         408,
         481
+      ],
+      "purchase_intent_segments": [
+        1592,
+        920,
+        930,
+        766
       ],
       "demographic_segments": [
         49,
@@ -2165,6 +2876,11 @@
         706,
         581
       ],
+      "purchase_intent_segments": [
+        800,
+        804,
+        803
+      ],
       "demographic_segments": [
         4,
         5,
@@ -2178,6 +2894,10 @@
       "interest_segments": [
         258,
         581
+      ],
+      "purchase_intent_segments": [
+        755,
+        800
       ],
       "demographic_segments": [
         49,
@@ -2194,6 +2914,12 @@
         424,
         422,
         457
+      ],
+      "purchase_intent_segments": [
+        1472,
+        1446,
+        1428,
+        1475
       ],
       "demographic_segments": [
         49,
@@ -2212,6 +2938,12 @@
         680,
         719
       ],
+      "purchase_intent_segments": [
+        1505,
+        933,
+        1666,
+        1649
+      ],
       "demographic_segments": [
         5,
         6,
@@ -2224,6 +2956,11 @@
       "interest_segments": [
         581,
         676
+      ],
+      "purchase_intent_segments": [
+        920,
+        865,
+        763
       ],
       "demographic_segments": [
         3,
@@ -2240,6 +2977,11 @@
         406,
         676
       ],
+      "purchase_intent_segments": [
+        920,
+        865,
+        1448
+      ],
       "demographic_segments": [
         49,
         3,
@@ -2255,6 +2997,11 @@
         406,
         522
       ],
+      "purchase_intent_segments": [
+        1448,
+        1459,
+        920
+      ],
       "demographic_segments": [
         4,
         5,
@@ -2268,6 +3015,11 @@
       "interest_segments": [
         522,
         607
+      ],
+      "purchase_intent_segments": [
+        805,
+        1389,
+        920
       ],
       "demographic_segments": [
         50,

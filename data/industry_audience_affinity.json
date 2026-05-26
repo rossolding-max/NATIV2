@@ -7,6 +7,11 @@
   "groups": [
     {
       "industry_id": "beauty-personal-care",
+      "interest_segments": [
+        677,
+        684,
+        676
+      ],
       "purchase_intent_segments": [
         865,
         1453,
@@ -19,6 +24,12 @@
     },
     {
       "industry_id": "cosmetics",
+      "interest_segments": [
+        677,
+        681,
+        684,
+        676
+      ],
       "purchase_intent_segments": [
         865,
         866
@@ -34,6 +45,12 @@
     },
     {
       "industry_id": "skincare-brands",
+      "interest_segments": [
+        677,
+        684,
+        406,
+        415
+      ],
       "purchase_intent_segments": [
         1466,
         1453,
@@ -50,6 +67,11 @@
     },
     {
       "industry_id": "haircare-brands",
+      "interest_segments": [
+        677,
+        684,
+        676
+      ],
       "purchase_intent_segments": [
         867,
         1458,
@@ -65,6 +87,11 @@
     },
     {
       "industry_id": "fragrance-brands",
+      "interest_segments": [
+        677,
+        682,
+        680
+      ],
       "purchase_intent_segments": [
         865,
         866
@@ -79,6 +106,10 @@
     },
     {
       "industry_id": "oral-care",
+      "interest_segments": [
+        406,
+        684
+      ],
       "purchase_intent_segments": [
         1454,
         1455
@@ -99,6 +130,11 @@
     },
     {
       "industry_id": "mens-grooming",
+      "interest_segments": [
+        684,
+        683,
+        411
+      ],
       "purchase_intent_segments": [
         865,
         867,
@@ -116,6 +152,10 @@
     },
     {
       "industry_id": "personal-hygiene",
+      "interest_segments": [
+        684,
+        406
+      ],
       "purchase_intent_segments": [
         1455,
         865
@@ -135,6 +175,12 @@
     },
     {
       "industry_id": "fashion-apparel",
+      "interest_segments": [
+        676,
+        681,
+        686,
+        683
+      ],
       "purchase_intent_segments": [
         920,
         919,
@@ -150,6 +196,11 @@
     },
     {
       "industry_id": "womenswear",
+      "interest_segments": [
+        676,
+        686,
+        681
+      ],
       "purchase_intent_segments": [
         920,
         919
@@ -165,6 +216,11 @@
     },
     {
       "industry_id": "menswear-brands",
+      "interest_segments": [
+        683,
+        676,
+        680
+      ],
       "purchase_intent_segments": [
         920,
         919
@@ -180,6 +236,11 @@
     },
     {
       "industry_id": "kidswear",
+      "interest_segments": [
+        679,
+        350,
+        348
+      ],
       "purchase_intent_segments": [
         920,
         1382
@@ -194,6 +255,11 @@
     },
     {
       "industry_id": "footwear",
+      "interest_segments": [
+        676,
+        681,
+        685
+      ],
       "purchase_intent_segments": [
         930,
         919
@@ -208,6 +274,11 @@
     },
     {
       "industry_id": "luxury-goods",
+      "interest_segments": [
+        682,
+        680,
+        681
+      ],
       "purchase_intent_segments": [
         920,
         933,
@@ -224,6 +295,11 @@
     },
     {
       "industry_id": "fast-fashion",
+      "interest_segments": [
+        676,
+        681,
+        686
+      ],
       "purchase_intent_segments": [
         920
       ],
@@ -237,6 +313,11 @@
     },
     {
       "industry_id": "jewellery",
+      "interest_segments": [
+        682,
+        680,
+        676
+      ],
       "purchase_intent_segments": [
         933,
         932
@@ -252,6 +333,11 @@
     },
     {
       "industry_id": "watches",
+      "interest_segments": [
+        680,
+        683,
+        682
+      ],
       "purchase_intent_segments": [
         933
       ],
@@ -266,6 +352,10 @@
     },
     {
       "industry_id": "eyewear",
+      "interest_segments": [
+        676,
+        681
+      ],
       "purchase_intent_segments": [
         934,
         1470
@@ -284,6 +374,11 @@
     },
     {
       "industry_id": "bags-luggage",
+      "interest_segments": [
+        676,
+        682,
+        719
+      ],
       "purchase_intent_segments": [
         932,
         919
@@ -298,6 +393,12 @@
     },
     {
       "industry_id": "activewear",
+      "interest_segments": [
+        408,
+        406,
+        676,
+        607
+      ],
       "purchase_intent_segments": [
         920,
         930,
@@ -314,6 +415,11 @@
     },
     {
       "industry_id": "intimates",
+      "interest_segments": [
+        676,
+        686,
+        684
+      ],
       "purchase_intent_segments": [
         920
       ],
@@ -328,6 +434,11 @@
     },
     {
       "industry_id": "swimwear",
+      "interest_segments": [
+        676,
+        724,
+        686
+      ],
       "purchase_intent_segments": [
         920
       ],
@@ -341,6 +452,12 @@
     },
     {
       "industry_id": "sports-outdoor",
+      "interest_segments": [
+        607,
+        408,
+        406,
+        720
+      ],
       "purchase_intent_segments": [
         1618,
         1635,
@@ -361,6 +478,12 @@
     },
     {
       "industry_id": "sportswear",
+      "interest_segments": [
+        408,
+        607,
+        406,
+        676
+      ],
       "purchase_intent_segments": [
         920,
         930,
@@ -379,6 +502,11 @@
     },
     {
       "industry_id": "sporting-equipment",
+      "interest_segments": [
+        607,
+        408,
+        406
+      ],
       "purchase_intent_segments": [
         1619,
         1618
@@ -398,6 +526,12 @@
     },
     {
       "industry_id": "outdoor-gear",
+      "interest_segments": [
+        720,
+        725,
+        631,
+        607
+      ],
       "purchase_intent_segments": [
         1635,
         1618
@@ -413,6 +547,11 @@
     },
     {
       "industry_id": "bicycles",
+      "interest_segments": [
+        625,
+        408,
+        607
+      ],
       "purchase_intent_segments": [
         1618,
         1619,
@@ -432,6 +571,11 @@
     },
     {
       "industry_id": "fitness-equipment",
+      "interest_segments": [
+        408,
+        406,
+        412
+      ],
       "purchase_intent_segments": [
         1633,
         1618
@@ -446,6 +590,11 @@
     },
     {
       "industry_id": "gyms-studios",
+      "interest_segments": [
+        408,
+        406,
+        415
+      ],
       "purchase_intent_segments": [
         1593,
         1595,
@@ -462,6 +611,11 @@
     },
     {
       "industry_id": "sports-teams-leagues",
+      "interest_segments": [
+        607,
+        718,
+        608
+      ],
       "purchase_intent_segments": [
         803,
         799,
@@ -479,6 +633,11 @@
     },
     {
       "industry_id": "food-beverage",
+      "interest_segments": [
+        368,
+        371,
+        373
+      ],
       "purchase_intent_segments": [
         972,
         973
@@ -500,6 +659,10 @@
     },
     {
       "industry_id": "snacks",
+      "interest_segments": [
+        368,
+        581
+      ],
       "purchase_intent_segments": [
         972,
         973
@@ -517,6 +680,10 @@
     },
     {
       "industry_id": "frozen-food",
+      "interest_segments": [
+        368,
+        371
+      ],
       "purchase_intent_segments": [
         972,
         973
@@ -531,6 +698,10 @@
     },
     {
       "industry_id": "dairy",
+      "interest_segments": [
+        368,
+        406
+      ],
       "purchase_intent_segments": [
         972,
         973
@@ -549,6 +720,12 @@
     },
     {
       "industry_id": "plant-based-food",
+      "interest_segments": [
+        378,
+        375,
+        406,
+        376
+      ],
       "purchase_intent_segments": [
         972,
         973
@@ -563,6 +740,11 @@
     },
     {
       "industry_id": "meal-kits",
+      "interest_segments": [
+        371,
+        376,
+        368
+      ],
       "purchase_intent_segments": [
         972,
         973,
@@ -577,6 +759,10 @@
     },
     {
       "industry_id": "ready-meals",
+      "interest_segments": [
+        368,
+        371
+      ],
       "purchase_intent_segments": [
         972,
         973
@@ -590,6 +776,10 @@
     },
     {
       "industry_id": "condiments-sauces",
+      "interest_segments": [
+        371,
+        368
+      ],
       "purchase_intent_segments": [
         972,
         973
@@ -608,6 +798,10 @@
     },
     {
       "industry_id": "coffee-tea",
+      "interest_segments": [
+        377,
+        368
+      ],
       "purchase_intent_segments": [
         972,
         973,
@@ -628,6 +822,11 @@
     },
     {
       "industry_id": "soft-drinks",
+      "interest_segments": [
+        377,
+        368,
+        581
+      ],
       "purchase_intent_segments": [
         972,
         973
@@ -642,6 +841,10 @@
     },
     {
       "industry_id": "bottled-water",
+      "interest_segments": [
+        406,
+        377
+      ],
       "purchase_intent_segments": [
         972,
         973
@@ -659,6 +862,11 @@
     },
     {
       "industry_id": "alcohol-beer",
+      "interest_segments": [
+        369,
+        368,
+        718
+      ],
       "purchase_intent_segments": [
         1402,
         972,
@@ -675,6 +883,11 @@
     },
     {
       "industry_id": "alcohol-wine",
+      "interest_segments": [
+        369,
+        373,
+        368
+      ],
       "purchase_intent_segments": [
         1402,
         972,
@@ -695,6 +908,10 @@
     },
     {
       "industry_id": "alcohol-spirits",
+      "interest_segments": [
+        369,
+        368
+      ],
       "purchase_intent_segments": [
         1402,
         972
@@ -713,6 +930,11 @@
     },
     {
       "industry_id": "no-low-alcohol",
+      "interest_segments": [
+        406,
+        415,
+        368
+      ],
       "purchase_intent_segments": [
         972,
         973,
@@ -728,6 +950,10 @@
     },
     {
       "industry_id": "restaurants-qsr",
+      "interest_segments": [
+        373,
+        368
+      ],
       "purchase_intent_segments": [
         1404,
         1406,
@@ -748,6 +974,11 @@
     },
     {
       "industry_id": "grocery",
+      "interest_segments": [
+        368,
+        371,
+        376
+      ],
       "purchase_intent_segments": [
         972,
         973
@@ -768,6 +999,10 @@
     },
     {
       "industry_id": "food-delivery",
+      "interest_segments": [
+        373,
+        368
+      ],
       "purchase_intent_segments": [
         1405,
         760
@@ -784,6 +1019,11 @@
     },
     {
       "industry_id": "health-pharma",
+      "interest_segments": [
+        381,
+        406,
+        550
+      ],
       "purchase_intent_segments": [
         1448,
         1455,
@@ -805,6 +1045,12 @@
     },
     {
       "industry_id": "supplements-brands",
+      "interest_segments": [
+        412,
+        406,
+        408,
+        415
+      ],
       "purchase_intent_segments": [
         1448,
         1455,
@@ -821,6 +1067,12 @@
     },
     {
       "industry_id": "sports-nutrition",
+      "interest_segments": [
+        412,
+        616,
+        408,
+        406
+      ],
       "purchase_intent_segments": [
         1448,
         1633,
@@ -836,6 +1088,10 @@
     },
     {
       "industry_id": "otc-medicine",
+      "interest_segments": [
+        381,
+        550
+      ],
       "purchase_intent_segments": [
         1455,
         1555,
@@ -856,6 +1112,10 @@
     },
     {
       "industry_id": "prescription-pharma",
+      "interest_segments": [
+        550,
+        381
+      ],
       "purchase_intent_segments": [
         1555,
         1448,
@@ -875,6 +1135,10 @@
     },
     {
       "industry_id": "telehealth",
+      "interest_segments": [
+        381,
+        406
+      ],
       "purchase_intent_segments": [
         1448,
         1459,
@@ -891,6 +1155,11 @@
     },
     {
       "industry_id": "mental-health-services",
+      "interest_segments": [
+        550,
+        406,
+        415
+      ],
       "purchase_intent_segments": [
         1448,
         1459,
@@ -906,6 +1175,11 @@
     },
     {
       "industry_id": "weight-management",
+      "interest_segments": [
+        414,
+        406,
+        412
+      ],
       "purchase_intent_segments": [
         1448,
         1455,
@@ -922,6 +1196,10 @@
     },
     {
       "industry_id": "sexual-wellness",
+      "interest_segments": [
+        406,
+        415
+      ],
       "purchase_intent_segments": [
         1448,
         1455
@@ -936,6 +1214,11 @@
     },
     {
       "industry_id": "femtech",
+      "interest_segments": [
+        421,
+        406,
+        415
+      ],
       "purchase_intent_segments": [
         1448,
         765,
@@ -953,6 +1236,10 @@
     },
     {
       "industry_id": "dental-services",
+      "interest_segments": [
+        381,
+        684
+      ],
       "purchase_intent_segments": [
         1454,
         1448
@@ -974,6 +1261,9 @@
     },
     {
       "industry_id": "vision-care",
+      "interest_segments": [
+        381
+      ],
       "purchase_intent_segments": [
         1470,
         1448
@@ -994,6 +1284,11 @@
     },
     {
       "industry_id": "technology",
+      "interest_segments": [
+        687,
+        703,
+        690
+      ],
       "purchase_intent_segments": [
         942,
         953,
@@ -1011,6 +1306,10 @@
     },
     {
       "industry_id": "consumer-electronics-brands",
+      "interest_segments": [
+        703,
+        687
+      ],
       "purchase_intent_segments": [
         942,
         944,
@@ -1027,6 +1326,10 @@
     },
     {
       "industry_id": "mobile-devices",
+      "interest_segments": [
+        703,
+        687
+      ],
       "purchase_intent_segments": [
         961,
         960,
@@ -1047,6 +1350,12 @@
     },
     {
       "industry_id": "wearables",
+      "interest_segments": [
+        687,
+        408,
+        406,
+        703
+      ],
       "purchase_intent_segments": [
         942,
         762
@@ -1061,6 +1370,11 @@
     },
     {
       "industry_id": "audio-equipment",
+      "interest_segments": [
+        703,
+        481,
+        687
+      ],
       "purchase_intent_segments": [
         944,
         942
@@ -1075,6 +1389,11 @@
     },
     {
       "industry_id": "computing-hardware",
+      "interest_segments": [
+        690,
+        703,
+        733
+      ],
       "purchase_intent_segments": [
         953,
         942
@@ -1090,6 +1409,11 @@
     },
     {
       "industry_id": "saas",
+      "interest_segments": [
+        268,
+        338,
+        687
+      ],
       "purchase_intent_segments": [
         1600,
         756,
@@ -1105,6 +1429,10 @@
     },
     {
       "industry_id": "consumer-software",
+      "interest_segments": [
+        687,
+        690
+      ],
       "purchase_intent_segments": [
         1600,
         763
@@ -1119,6 +1447,11 @@
     },
     {
       "industry_id": "ai-products",
+      "interest_segments": [
+        688,
+        687,
+        690
+      ],
       "purchase_intent_segments": [
         1600,
         770
@@ -1134,6 +1467,10 @@
     },
     {
       "industry_id": "cybersecurity",
+      "interest_segments": [
+        687,
+        690
+      ],
       "purchase_intent_segments": [
         1600
       ],
@@ -1148,6 +1485,11 @@
     },
     {
       "industry_id": "smart-home",
+      "interest_segments": [
+        465,
+        687,
+        457
+      ],
       "purchase_intent_segments": [
         942,
         1478
@@ -1163,6 +1505,12 @@
     },
     {
       "industry_id": "gaming-industry",
+      "interest_segments": [
+        733,
+        734,
+        737,
+        736
+      ],
       "purchase_intent_segments": [
         971,
         970,
@@ -1178,6 +1526,11 @@
     },
     {
       "industry_id": "game-publishers",
+      "interest_segments": [
+        733,
+        734,
+        737
+      ],
       "purchase_intent_segments": [
         971,
         761
@@ -1192,6 +1545,11 @@
     },
     {
       "industry_id": "indie-games",
+      "interest_segments": [
+        733,
+        737,
+        738
+      ],
       "purchase_intent_segments": [
         971,
         761,
@@ -1207,6 +1565,10 @@
     },
     {
       "industry_id": "mobile-games-publishers",
+      "interest_segments": [
+        736,
+        733
+      ],
       "purchase_intent_segments": [
         761,
         1617
@@ -1224,6 +1586,12 @@
     },
     {
       "industry_id": "gaming-hardware",
+      "interest_segments": [
+        733,
+        737,
+        690,
+        703
+      ],
       "purchase_intent_segments": [
         970,
         971,
@@ -1241,6 +1609,11 @@
     },
     {
       "industry_id": "esports-orgs",
+      "interest_segments": [
+        735,
+        733,
+        607
+      ],
       "purchase_intent_segments": [
         971,
         803
@@ -1255,6 +1628,11 @@
     },
     {
       "industry_id": "creator-tools",
+      "interest_segments": [
+        440,
+        687,
+        733
+      ],
       "purchase_intent_segments": [
         1600,
         944,
@@ -1270,6 +1648,12 @@
     },
     {
       "industry_id": "media-entertainment",
+      "interest_segments": [
+        706,
+        467,
+        481,
+        581
+      ],
       "purchase_intent_segments": [
         804,
         800,
@@ -1290,6 +1674,11 @@
     },
     {
       "industry_id": "streaming-services",
+      "interest_segments": [
+        706,
+        467,
+        581
+      ],
       "purchase_intent_segments": [
         800,
         758,
@@ -1310,6 +1699,11 @@
     },
     {
       "industry_id": "film-tv-studios",
+      "interest_segments": [
+        467,
+        706,
+        581
+      ],
       "purchase_intent_segments": [
         804,
         803,
@@ -1330,6 +1724,10 @@
     },
     {
       "industry_id": "music-labels",
+      "interest_segments": [
+        481,
+        581
+      ],
       "purchase_intent_segments": [
         800,
         803
@@ -1344,6 +1742,10 @@
     },
     {
       "industry_id": "music-dsps",
+      "interest_segments": [
+        481,
+        581
+      ],
       "purchase_intent_segments": [
         800,
         766
@@ -1358,6 +1760,10 @@
     },
     {
       "industry_id": "podcasts-networks",
+      "interest_segments": [
+        581,
+        522
+      ],
       "purchase_intent_segments": [
         802,
         800
@@ -1376,6 +1782,10 @@
     },
     {
       "industry_id": "publishing",
+      "interest_segments": [
+        258,
+        581
+      ],
       "purchase_intent_segments": [
         755,
         801
@@ -1397,6 +1807,11 @@
     },
     {
       "industry_id": "live-events",
+      "interest_segments": [
+        481,
+        581,
+        607
+      ],
       "purchase_intent_segments": [
         803,
         782
@@ -1412,6 +1827,12 @@
     },
     {
       "industry_id": "ticketing",
+      "interest_segments": [
+        481,
+        607,
+        581,
+        467
+      ],
       "purchase_intent_segments": [
         803,
         782
@@ -1431,6 +1852,11 @@
     },
     {
       "industry_id": "travel-hospitality",
+      "interest_segments": [
+        719,
+        720,
+        724
+      ],
       "purchase_intent_segments": [
         1649,
         1666,
@@ -1447,6 +1873,10 @@
     },
     {
       "industry_id": "airlines",
+      "interest_segments": [
+        719,
+        720
+      ],
       "purchase_intent_segments": [
         1651,
         1649,
@@ -1468,6 +1898,11 @@
     },
     {
       "industry_id": "hotels",
+      "interest_segments": [
+        719,
+        724,
+        728
+      ],
       "purchase_intent_segments": [
         1666,
         1649
@@ -1487,6 +1922,11 @@
     },
     {
       "industry_id": "short-term-rentals",
+      "interest_segments": [
+        719,
+        728,
+        720
+      ],
       "purchase_intent_segments": [
         1666,
         1654,
@@ -1504,6 +1944,10 @@
     },
     {
       "industry_id": "otas",
+      "interest_segments": [
+        719,
+        720
+      ],
       "purchase_intent_segments": [
         1674,
         776,
@@ -1524,6 +1968,10 @@
     },
     {
       "industry_id": "cruises",
+      "interest_segments": [
+        719,
+        724
+      ],
       "purchase_intent_segments": [
         1661,
         1649
@@ -1539,6 +1987,11 @@
     },
     {
       "industry_id": "tourism-boards",
+      "interest_segments": [
+        719,
+        720,
+        728
+      ],
       "purchase_intent_segments": [
         1649,
         1671
@@ -1558,6 +2011,10 @@
     },
     {
       "industry_id": "luggage-travel-gear",
+      "interest_segments": [
+        719,
+        676
+      ],
       "purchase_intent_segments": [
         932,
         1649
@@ -1572,6 +2029,10 @@
     },
     {
       "industry_id": "car-rental",
+      "interest_segments": [
+        719,
+        731
+      ],
       "purchase_intent_segments": [
         1652,
         1649
@@ -1590,6 +2051,12 @@
     },
     {
       "industry_id": "automotive-industry",
+      "interest_segments": [
+        243,
+        244,
+        246,
+        248
+      ],
       "purchase_intent_segments": [
         805,
         806,
@@ -1607,6 +2074,10 @@
     },
     {
       "industry_id": "auto-oems",
+      "interest_segments": [
+        243,
+        244
+      ],
       "purchase_intent_segments": [
         806,
         805
@@ -1622,6 +2093,11 @@
     },
     {
       "industry_id": "ev-brands",
+      "interest_segments": [
+        253,
+        246,
+        243
+      ],
       "purchase_intent_segments": [
         806,
         805
@@ -1637,6 +2113,11 @@
     },
     {
       "industry_id": "auto-aftermarket",
+      "interest_segments": [
+        256,
+        248,
+        246
+      ],
       "purchase_intent_segments": [
         854,
         852
@@ -1652,6 +2133,10 @@
     },
     {
       "industry_id": "motorcycle-brands",
+      "interest_segments": [
+        255,
+        243
+      ],
       "purchase_intent_segments": [
         805,
         806
@@ -1667,6 +2152,10 @@
     },
     {
       "industry_id": "tyres",
+      "interest_segments": [
+        243,
+        246
+      ],
       "purchase_intent_segments": [
         854,
         861
@@ -1684,6 +2173,10 @@
     },
     {
       "industry_id": "auto-dealers",
+      "interest_segments": [
+        244,
+        243
+      ],
       "purchase_intent_segments": [
         806,
         829,
@@ -1702,6 +2195,11 @@
     },
     {
       "industry_id": "financial-services",
+      "interest_segments": [
+        268,
+        534,
+        538
+      ],
       "purchase_intent_segments": [
         1383,
         1385,
@@ -1723,6 +2221,10 @@
     },
     {
       "industry_id": "retail-banking",
+      "interest_segments": [
+        268,
+        534
+      ],
       "purchase_intent_segments": [
         1385
       ],
@@ -1742,6 +2244,11 @@
     },
     {
       "industry_id": "fintech-neobanks",
+      "interest_segments": [
+        534,
+        268,
+        687
+      ],
       "purchase_intent_segments": [
         1385,
         759
@@ -1756,6 +2263,11 @@
     },
     {
       "industry_id": "investing-platforms",
+      "interest_segments": [
+        538,
+        534,
+        268
+      ],
       "purchase_intent_segments": [
         1397,
         759
@@ -1771,6 +2283,10 @@
     },
     {
       "industry_id": "credit-cards",
+      "interest_segments": [
+        534,
+        535
+      ],
       "purchase_intent_segments": [
         1388,
         1385
@@ -1789,6 +2305,10 @@
     },
     {
       "industry_id": "buy-now-pay-later",
+      "interest_segments": [
+        534,
+        535
+      ],
       "purchase_intent_segments": [
         1388,
         759
@@ -1803,6 +2323,10 @@
     },
     {
       "industry_id": "insurance",
+      "interest_segments": [
+        536,
+        534
+      ],
       "purchase_intent_segments": [
         1389,
         1383
@@ -1822,6 +2346,10 @@
     },
     {
       "industry_id": "crypto-exchanges",
+      "interest_segments": [
+        538,
+        687
+      ],
       "purchase_intent_segments": [
         1617,
         1397,
@@ -1837,6 +2365,11 @@
     },
     {
       "industry_id": "tax-services",
+      "interest_segments": [
+        539,
+        534,
+        268
+      ],
       "purchase_intent_segments": [
         1399,
         1384,
@@ -1857,6 +2390,10 @@
     },
     {
       "industry_id": "telecom-utilities",
+      "interest_segments": [
+        687,
+        703
+      ],
       "purchase_intent_segments": [
         911,
         960
@@ -1878,6 +2415,10 @@
     },
     {
       "industry_id": "mobile-carriers",
+      "interest_segments": [
+        703,
+        687
+      ],
       "purchase_intent_segments": [
         960,
         961,
@@ -1898,6 +2439,10 @@
     },
     {
       "industry_id": "internet-providers",
+      "interest_segments": [
+        687,
+        690
+      ],
       "purchase_intent_segments": [
         1678,
         1676,
@@ -1918,6 +2463,10 @@
     },
     {
       "industry_id": "energy-utilities",
+      "interest_segments": [
+        457,
+        406
+      ],
       "purchase_intent_segments": [
         1476,
         1478
@@ -1934,6 +2483,11 @@
     },
     {
       "industry_id": "home-living",
+      "interest_segments": [
+        457,
+        461,
+        460
+      ],
       "purchase_intent_segments": [
         1407,
         1476,
@@ -1950,6 +2504,10 @@
     },
     {
       "industry_id": "furniture",
+      "interest_segments": [
+        457,
+        461
+      ],
       "purchase_intent_segments": [
         1407,
         1410,
@@ -1965,6 +2523,11 @@
     },
     {
       "industry_id": "home-decor-brands",
+      "interest_segments": [
+        461,
+        457,
+        459
+      ],
       "purchase_intent_segments": [
         1407,
         1476
@@ -1979,6 +2542,11 @@
     },
     {
       "industry_id": "home-appliances",
+      "interest_segments": [
+        457,
+        460,
+        371
+      ],
       "purchase_intent_segments": [
         1477,
         1407
@@ -1994,6 +2562,11 @@
     },
     {
       "industry_id": "kitchenware",
+      "interest_segments": [
+        371,
+        372,
+        459
+      ],
       "purchase_intent_segments": [
         1407,
         972
@@ -2008,6 +2581,11 @@
     },
     {
       "industry_id": "bedding-bath",
+      "interest_segments": [
+        457,
+        461,
+        406
+      ],
       "purchase_intent_segments": [
         1410,
         1407
@@ -2026,6 +2604,9 @@
     },
     {
       "industry_id": "cleaning-household",
+      "interest_segments": [
+        457
+      ],
       "purchase_intent_segments": [
         1484,
         1179
@@ -2040,6 +2621,11 @@
     },
     {
       "industry_id": "home-improvement",
+      "interest_segments": [
+        460,
+        464,
+        457
+      ],
       "purchase_intent_segments": [
         1483,
         1428,
@@ -2056,6 +2642,11 @@
     },
     {
       "industry_id": "gardening-brands",
+      "interest_segments": [
+        458,
+        457,
+        462
+      ],
       "purchase_intent_segments": [
         1486,
         1485
@@ -2071,6 +2662,11 @@
     },
     {
       "industry_id": "baby-kids",
+      "interest_segments": [
+        350,
+        348,
+        407
+      ],
       "purchase_intent_segments": [
         1377,
         1378,
@@ -2087,6 +2683,11 @@
     },
     {
       "industry_id": "baby-food",
+      "interest_segments": [
+        350,
+        407,
+        348
+      ],
       "purchase_intent_segments": [
         1377,
         972,
@@ -2102,6 +2703,10 @@
     },
     {
       "industry_id": "diapers-nappies",
+      "interest_segments": [
+        350,
+        348
+      ],
       "purchase_intent_segments": [
         1377,
         972
@@ -2116,6 +2721,10 @@
     },
     {
       "industry_id": "baby-gear",
+      "interest_segments": [
+        350,
+        348
+      ],
       "purchase_intent_segments": [
         1377,
         1408
@@ -2130,6 +2739,11 @@
     },
     {
       "industry_id": "toys",
+      "interest_segments": [
+        350,
+        348,
+        445
+      ],
       "purchase_intent_segments": [
         1382,
         1377
@@ -2145,6 +2759,11 @@
     },
     {
       "industry_id": "kids-edutainment",
+      "interest_segments": [
+        350,
+        344,
+        348
+      ],
       "purchase_intent_segments": [
         1382,
         757,
@@ -2160,6 +2779,9 @@
     },
     {
       "industry_id": "pets-industry",
+      "interest_segments": [
+        541
+      ],
       "purchase_intent_segments": [
         1549,
         1553,
@@ -2175,6 +2797,11 @@
     },
     {
       "industry_id": "pet-food",
+      "interest_segments": [
+        541,
+        544,
+        543
+      ],
       "purchase_intent_segments": [
         1553,
         1549,
@@ -2196,6 +2823,11 @@
     },
     {
       "industry_id": "pet-supplies",
+      "interest_segments": [
+        541,
+        544,
+        543
+      ],
       "purchase_intent_segments": [
         1553,
         1549
@@ -2214,6 +2846,10 @@
     },
     {
       "industry_id": "pet-tech",
+      "interest_segments": [
+        541,
+        687
+      ],
       "purchase_intent_segments": [
         1553,
         942
@@ -2228,6 +2864,10 @@
     },
     {
       "industry_id": "vet-services",
+      "interest_segments": [
+        541,
+        381
+      ],
       "purchase_intent_segments": [
         1554,
         1549
@@ -2247,6 +2887,10 @@
     },
     {
       "industry_id": "pet-insurance",
+      "interest_segments": [
+        541,
+        536
+      ],
       "purchase_intent_segments": [
         1389,
         1549
@@ -2261,6 +2905,11 @@
     },
     {
       "industry_id": "education-industry",
+      "interest_segments": [
+        344,
+        347,
+        207
+      ],
       "purchase_intent_segments": [
         1368,
         1374,
@@ -2276,6 +2925,11 @@
     },
     {
       "industry_id": "online-courses",
+      "interest_segments": [
+        347,
+        344,
+        338
+      ],
       "purchase_intent_segments": [
         1374,
         757,
@@ -2291,6 +2945,10 @@
     },
     {
       "industry_id": "tutoring",
+      "interest_segments": [
+        344,
+        347
+      ],
       "purchase_intent_segments": [
         1374,
         757
@@ -2305,6 +2963,11 @@
     },
     {
       "industry_id": "language-learning-brands",
+      "interest_segments": [
+        346,
+        344,
+        719
+      ],
       "purchase_intent_segments": [
         1373,
         757
@@ -2319,6 +2982,10 @@
     },
     {
       "industry_id": "k12",
+      "interest_segments": [
+        344,
+        350
+      ],
       "purchase_intent_segments": [
         1368
       ],
@@ -2332,6 +2999,11 @@
     },
     {
       "industry_id": "higher-ed",
+      "interest_segments": [
+        344,
+        207,
+        338
+      ],
       "purchase_intent_segments": [
         1371,
         1368
@@ -2345,6 +3017,12 @@
     },
     {
       "industry_id": "coding-bootcamps",
+      "interest_segments": [
+        687,
+        690,
+        338,
+        344
+      ],
       "purchase_intent_segments": [
         1374,
         1370
@@ -2359,6 +3037,10 @@
     },
     {
       "industry_id": "apps-platforms",
+      "interest_segments": [
+        687,
+        581
+      ],
       "purchase_intent_segments": [
         753,
         763,
@@ -2377,6 +3059,9 @@
     },
     {
       "industry_id": "dating-apps",
+      "interest_segments": [
+        581
+      ],
       "purchase_intent_segments": [
         763,
         774
@@ -2392,6 +3077,10 @@
     },
     {
       "industry_id": "social-platforms",
+      "interest_segments": [
+        581,
+        687
+      ],
       "purchase_intent_segments": [
         774
       ],
@@ -2410,6 +3099,11 @@
     },
     {
       "industry_id": "productivity-apps",
+      "interest_segments": [
+        338,
+        268,
+        342
+      ],
       "purchase_intent_segments": [
         770,
         756
@@ -2424,6 +3118,10 @@
     },
     {
       "industry_id": "language-translation-apps",
+      "interest_segments": [
+        346,
+        719
+      ],
       "purchase_intent_segments": [
         1373,
         757
@@ -2441,6 +3139,9 @@
     },
     {
       "industry_id": "marketplaces",
+      "interest_segments": [
+        606
+      ],
       "purchase_intent_segments": [
         773
       ],
@@ -2459,6 +3160,9 @@
     },
     {
       "industry_id": "ride-share-mobility",
+      "interest_segments": [
+        687
+      ],
       "purchase_intent_segments": [
         767,
         1652
@@ -2474,6 +3178,10 @@
     },
     {
       "industry_id": "retail-ecommerce",
+      "interest_segments": [
+        606,
+        676
+      ],
       "purchase_intent_segments": [
         773,
         972,
@@ -2494,6 +3202,11 @@
     },
     {
       "industry_id": "department-stores",
+      "interest_segments": [
+        606,
+        676,
+        457
+      ],
       "purchase_intent_segments": [
         920,
         1407,
@@ -2514,6 +3227,11 @@
     },
     {
       "industry_id": "specialty-retail",
+      "interest_segments": [
+        606,
+        676,
+        677
+      ],
       "purchase_intent_segments": [
         920,
         865
@@ -2528,6 +3246,10 @@
     },
     {
       "industry_id": "marketplaces-ecom",
+      "interest_segments": [
+        606,
+        676
+      ],
       "purchase_intent_segments": [
         773
       ],
@@ -2546,6 +3268,11 @@
     },
     {
       "industry_id": "d2c-subscription",
+      "interest_segments": [
+        606,
+        677,
+        676
+      ],
       "purchase_intent_segments": [
         773,
         972
@@ -2560,6 +3287,11 @@
     },
     {
       "industry_id": "discount-resale",
+      "interest_segments": [
+        606,
+        676,
+        535
+      ],
       "purchase_intent_segments": [
         773,
         920
@@ -2573,6 +3305,10 @@
     },
     {
       "industry_id": "real-estate",
+      "interest_segments": [
+        583,
+        591
+      ],
       "purchase_intent_segments": [
         1585,
         1590,
@@ -2589,6 +3325,10 @@
     },
     {
       "industry_id": "residential-real-estate",
+      "interest_segments": [
+        583,
+        591
+      ],
       "purchase_intent_segments": [
         1590,
         1588
@@ -2603,6 +3343,9 @@
     },
     {
       "industry_id": "rental-platforms",
+      "interest_segments": [
+        583
+      ],
       "purchase_intent_segments": [
         1587,
         1585
@@ -2616,6 +3359,10 @@
     },
     {
       "industry_id": "mortgages",
+      "interest_segments": [
+        583,
+        534
+      ],
       "purchase_intent_segments": [
         1394,
         1383
@@ -2630,6 +3377,10 @@
     },
     {
       "industry_id": "professional-services",
+      "interest_segments": [
+        268,
+        338
+      ],
       "purchase_intent_segments": [
         871,
         1493,
@@ -2650,6 +3401,9 @@
     },
     {
       "industry_id": "legal-services",
+      "interest_segments": [
+        268
+      ],
       "purchase_intent_segments": [
         1493,
         1494
@@ -2669,6 +3423,10 @@
     },
     {
       "industry_id": "consulting",
+      "interest_segments": [
+        268,
+        338
+      ],
       "purchase_intent_segments": [
         871,
         872
@@ -2687,6 +3445,11 @@
     },
     {
       "industry_id": "accounting",
+      "interest_segments": [
+        268,
+        534,
+        539
+      ],
       "purchase_intent_segments": [
         1384,
         1386,
@@ -2707,6 +3470,10 @@
     },
     {
       "industry_id": "recruitment-hr-tech",
+      "interest_segments": [
+        338,
+        340
+      ],
       "purchase_intent_segments": [
         1372,
         756,
@@ -2722,6 +3489,10 @@
     },
     {
       "industry_id": "marketing-agencies",
+      "interest_segments": [
+        268,
+        338
+      ],
       "purchase_intent_segments": [
         872,
         871
@@ -2739,6 +3510,9 @@
     },
     {
       "industry_id": "non-profit-government",
+      "interest_segments": [
+        522
+      ],
       "purchase_intent_segments": [
         1538,
         1539,
@@ -2759,6 +3533,9 @@
     },
     {
       "industry_id": "charities",
+      "interest_segments": [
+        522
+      ],
       "purchase_intent_segments": [
         1539,
         1538,
@@ -2779,6 +3556,9 @@
     },
     {
       "industry_id": "government-public-sector",
+      "interest_segments": [
+        522
+      ],
       "purchase_intent_segments": [
         1540,
         1538
@@ -2799,6 +3579,9 @@
     },
     {
       "industry_id": "political-advocacy",
+      "interest_segments": [
+        522
+      ],
       "purchase_intent_segments": [
         1540,
         1538
@@ -2823,6 +3606,9 @@
     },
     {
       "industry_id": "tobacco-vape",
+      "interest_segments": [
+        581
+      ],
       "purchase_intent_segments": [
         1467
       ],
@@ -2840,6 +3626,10 @@
     },
     {
       "industry_id": "cannabis-cbd",
+      "interest_segments": [
+        406,
+        415
+      ],
       "purchase_intent_segments": [
         1449,
         1455
@@ -2855,6 +3645,12 @@
     },
     {
       "industry_id": "gambling",
+      "interest_segments": [
+        607,
+        718,
+        654,
+        640
+      ],
       "purchase_intent_segments": [
         799
       ],
@@ -2870,6 +3666,9 @@
     },
     {
       "industry_id": "lottery",
+      "interest_segments": [
+        581
+      ],
       "purchase_intent_segments": [
         799
       ],

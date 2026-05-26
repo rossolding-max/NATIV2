@@ -24,9 +24,9 @@ A JSON file (`talents/*.json`) per talent, validated against `schemas/talent.sch
 - **Contact**: direct email, manager/agency contact, phone (optional).
 - **Billing entity**: company/legal name, country of operation, tax/VAT ID, preferred payment methods. _(Needed before any deal can be invoiced.)_
 - **Platforms & handles**: per-platform handle, URL, follower count, engagement rate, avg views/likes/comments, and a **reference** to that platform's API key (e.g. `env:INSTAGRAM_TOKEN`) — never the raw secret.
-- **Audience demographics**: age bands, gender split, top countries/cities, top languages, interests. Per-platform overrides supported.
+- **Audience demographics**: age bands (IAB-aligned 5-year bands: 18-20, 21-24, 25-29, ..., 75+), gender split, top countries/cities, top languages, interests. Per-platform overrides supported.
 - **Previous brand deals** (rich): brand name, industry, campaign date, platform, deliverables, fee (optional), usage rights granted, performance notes, brand contact.
-- **Similar talent**: same shape as the main talent (id, name, handles, previous brands + industries) — used for competitive positioning and to seed brand discovery.
+- **Similar talent**: thin pointer (id, name, handles, previous brand collaborations). The app enriches each record by AI research and back-derives `inferred_niches` from the brand list — see `docs/recommendation_algorithm.md` § Similar-talent inversion.
 - **Rate card**: per platform → per deliverable type (e.g. Instagram → Reel / Story / Feed / Carousel / Live). Supports bundles, usage rights uplift %, exclusivity uplift %, whitelisting uplift %.
 - **Brand preferences & restrictions**: preferred industries, blocked industries (e.g. gambling, alcohol), active exclusivities (with end date), values/red lines.
 - **Working terms**: default usage rights (organic / whitelisting / paid social), default usage duration, content turnaround time, revisions included, blackout/availability dates.
@@ -55,6 +55,7 @@ The fields below were not in the original request but were added because later p
 - `data/niche_audience_affinity.json` — bridge leg 1: niche → IAB audience segments.
 - `data/industry_audience_affinity.json` — bridge leg 2: industry → IAB audience segments.
 - `scripts/build_affinity.py` — builder script with all authored data and inline validation. Single source of truth for the three affinity files; re-run to regenerate them.
+- `docs/recommendation_algorithm.md` — draft spec for how the app combines all of the above into a ranked list of industries to target for a given talent. Forward-looking contract for when the app is built.
 - `.gitignore` — ensures any `*.local.json` or `.env` files containing real keys are never committed.
 
 ### Reference taxonomies
@@ -108,10 +109,15 @@ Evidence sources used: `iab`, `imh` (Influencer Marketing Hub), `hypeauditor`, `
 **2. Bridged model (via IAB Audience Taxonomy v1.1)**
 Uses the official IAB taxonomy as a shared vocabulary between creators and advertisers — the same crosswalk that ad platforms (Meta, Google, TikTok Ads) build internally.
 
-- `niche_audience_affinity.json` — every niche links to relevant IAB **Interest** + **Demographic** segments (what its audience consumes + who they are).
-- `industry_audience_affinity.json` — every industry links to relevant IAB **Purchase Intent** + **Demographic** segments (what its target customer is in-market to buy + who they are).
-- Niche↔industry affinity is then **computed at runtime** as the overlap of their IAB segment vectors.
+Both sides cite from all three IAB vocabularies for a real, bidirectional bridge:
 
-The bridged model is more compositional than direct: when a specific talent's `audience_demographics` are layered in, the system can compute "best industries for *this* talent" rather than the niche baseline. Direct stays authoritative for ranking; bridged adds explainability ("matched because both target IAB segment [1377] Family and Parenting").
+- `niche_audience_affinity.json` — every niche links to relevant IAB **Interest** (what its audience consumes), **Purchase Intent** (what its audience buys), and **Demographic** (who they are) segments.
+- `industry_audience_affinity.json` — every industry links to relevant IAB **Interest** (what content its target customer engages with), **Purchase Intent** (what its target customer is in-market to buy), and **Demographic** segments.
+- Niche↔industry affinity is then **computed at runtime** as the overlap of their IAB segment vectors across all three vocabularies.
 
-**Why two models?** Direct is fast and trustworthy for v0 ranking. Bridged adds extensibility — a new niche or industry only needs *its* IAB links, not N new direct edges. Keeping both lets the app cross-check: large divergence between direct and bridged scores is a signal that either the direct edge needs review or the IAB mapping is incomplete.
+Talent audience demographics are **IAB-aligned by schema** (the 13 IAB Age Range bands are the only allowed `age_bands` keys), so a specific talent's `audience_demographics` plugs into the bridge directly. The system can therefore compute "best industries for *this* talent" — not just the niche baseline — and explain matches in IAB terms ("matched because both target IAB segment [1377] Family and Parenting and Demo [25-29, 30-34, Female]").
+
+**Why two models?** Direct is fast and trustworthy for ranking. Bridged adds compositional explainability and lets the recommender combine niche signal with the specific talent's real demos. The two are combined in `docs/recommendation_algorithm.md`.
+
+### Recommendation algorithm
+The full recipe — how the app combines direct affinity + IAB bridge + past deals + brand preferences + the sensitive flag into a ranked list of industries with `why[]` explanations and `warnings[]` — lives in `docs/recommendation_algorithm.md`. That document is the contract the app will implement.

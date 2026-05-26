@@ -7,6 +7,7 @@
   "required": ["id", "name", "platforms"],
   "additionalProperties": false,
   "properties": {
+    "$schema": { "type": "string", "description": "Optional reference to this schema for IDE validation." },
     "id": {
       "type": "string",
       "description": "Stable slug, e.g. 'jane-doe'. Used as the primary key across phases.",
@@ -90,8 +91,14 @@
       "properties": {
         "age_bands": {
           "type": "object",
-          "description": "Share by age band as a percentage 0–100. Keys: '13-17','18-24','25-34','35-44','45-54','55-64','65+'.",
-          "additionalProperties": { "type": "number", "minimum": 0, "maximum": 100 }
+          "description": "Share by age band as a percentage 0–100. Keys MUST be IAB Audience Taxonomy 1.1 Age Range bands so demographics bridge cleanly to industry audience profiles. IAB has no under-18 segment; if your platform analytics report under-18 share, exclude it from these percentages (re-normalise to 100% over 18+).",
+          "additionalProperties": false,
+          "propertyNames": {
+            "enum": ["18-20", "21-24", "25-29", "30-34", "35-39", "40-44", "45-49", "50-54", "55-59", "60-64", "65-69", "70-74", "75+"]
+          },
+          "patternProperties": {
+            "^.*$": { "type": "number", "minimum": 0, "maximum": 100 }
+          }
         },
         "gender_split": {
           "type": "object",
@@ -404,13 +411,19 @@
 
     "similarTalent": {
       "type": "object",
+      "description": "Thin pointer to a competitor/comparable creator. Starts as a seed (name + handles) and is enriched by AI research over time. `previous_brands` is the source of truth; `inferred_niches` is back-derived from those brands by inverting `data/niche_industry_affinity.json` (industry -> niches that resonate).",
       "required": ["name"],
       "additionalProperties": false,
       "properties": {
-        "id": { "type": "string" },
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]*$",
+          "description": "Optional slug for cross-referencing."
+        },
         "name": { "type": "string" },
         "handles": {
           "type": "array",
+          "description": "Public platform handles. Starting point for AI research.",
           "items": {
             "type": "object",
             "required": ["platform", "handle"],
@@ -424,20 +437,65 @@
         },
         "previous_brands": {
           "type": "array",
+          "description": "Known brand collaborations. Each `industry_id` is auto-resolved via `data/brand_industry_map.json` (or AI inference fallback). This list is the source of truth — niches are derived from it, not authored.",
           "items": {
             "type": "object",
-            "required": ["brand", "industry_id"],
+            "required": ["brand"],
             "additionalProperties": false,
             "properties": {
               "brand": { "type": "string" },
               "industry_id": {
                 "$ref": "#/$defs/industryId",
-                "description": "Industry ID from `data/industries.json`."
+                "description": "Industry ID from `data/industries.json`. Optional on input — resolved by the app from the brand name."
+              },
+              "source": {
+                "type": "string",
+                "description": "Where this collaboration was observed (URL, post handle, manual entry)."
               }
             }
           }
         },
-        "notes": { "type": "string" }
+        "inferred_niches": {
+          "type": "array",
+          "description": "Niches back-derived from `previous_brands` by inverting `data/niche_industry_affinity.json` — for each industry, which niches list it as a primary/secondary/tertiary match? Computed by the app, not hand-authored. Stored on the record so it persists between sessions and can be reviewed/overridden.",
+          "items": {
+            "type": "object",
+            "required": ["niche_id", "confidence"],
+            "additionalProperties": false,
+            "properties": {
+              "niche_id": { "$ref": "#/$defs/nicheId" },
+              "confidence": {
+                "type": "string",
+                "enum": ["primary", "secondary", "tertiary"],
+                "description": "Aggregated strength across all this creator's previous brands. `primary` if multiple brands point at this niche at primary tier; weaker otherwise."
+              },
+              "supporting_brands": {
+                "type": "array",
+                "description": "The previous_brands entries (by brand name) that contributed to this inference.",
+                "items": { "type": "string" }
+              }
+            }
+          }
+        },
+        "notes": { "type": "string" },
+        "research": {
+          "type": "object",
+          "description": "AI-research workflow metadata. Tracks enrichment state so the app knows when to refresh.",
+          "additionalProperties": false,
+          "properties": {
+            "status": {
+              "type": "string",
+              "enum": ["seed", "researching", "enriched", "failed", "stale"],
+              "description": "`seed` = name+handles only; `researching` = AI run in flight; `enriched` = previous_brands + inferred_niches populated; `failed` = AI couldn't enrich; `stale` = enriched but past refresh window."
+            },
+            "last_researched_at": { "type": "string", "format": "date-time" },
+            "sources": {
+              "type": "array",
+              "description": "URLs / source notes the AI used to enrich this record.",
+              "items": { "type": "string" }
+            }
+          }
+        }
       }
     },
 

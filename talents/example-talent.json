@@ -29,11 +29,11 @@
       "url": "https://instagram.com/exampletalent",
       "primary": true,
       "stats": {
-        "followers": 0,
-        "engagement_rate_pct": 0,
-        "avg_views": 0,
-        "avg_likes": 0,
-        "avg_comments": 0,
+        "followers": 285000,
+        "engagement_rate_pct": 4.8,
+        "avg_views": 180000,
+        "avg_likes": 13700,
+        "avg_comments": 290,
         "last_updated": "2026-05-26"
       },
       "api_credentials": {
@@ -44,18 +44,36 @@
       "platform": "tiktok",
       "handle": "@exampletalent",
       "url": "https://tiktok.com/@exampletalent",
-      "stats": { "followers": 0, "engagement_rate_pct": 0, "avg_views": 0, "last_updated": "2026-05-26" },
+      "stats": {
+        "followers": 412000,
+        "engagement_rate_pct": 7.2,
+        "avg_views": 320000,
+        "avg_likes": 23000,
+        "avg_comments": 410,
+        "last_updated": "2026-05-26"
+      },
       "api_credentials": { "access_token_ref": "env:TIKTOK_TOKEN_EXAMPLE_TALENT" }
     }
   ],
 
   "audience_demographics": {
-    "age_bands": { "18-24": 35, "25-34": 45, "35-44": 15, "45-54": 5 },
-    "gender_split": { "female": 70, "male": 28, "non_binary": 1, "unknown": 1 },
+    "age_bands": {
+      "18-20": 8,
+      "21-24": 22,
+      "25-29": 28,
+      "30-34": 20,
+      "35-39": 12,
+      "40-44": 6,
+      "45-49": 3,
+      "50-54": 1
+    },
+    "gender_split": { "female": 71, "male": 27, "non_binary": 1, "unknown": 1 },
     "top_countries": [
-      { "country": "GB", "share": 55 },
-      { "country": "US", "share": 20 },
-      { "country": "AU", "share": 8 }
+      { "country": "GB", "share": 54 },
+      { "country": "US", "share": 21 },
+      { "country": "AU", "share": 8 },
+      { "country": "IE", "share": 5 },
+      { "country": "CA", "share": 4 }
     ],
     "interests": ["fitness", "running", "healthy eating", "travel"]
   },
@@ -75,14 +93,23 @@
 
   "similar_talent": [
     {
+      "id": "other-creator",
       "name": "Other Creator",
       "handles": [
-        { "platform": "instagram", "handle": "@othercreator", "url": "https://instagram.com/othercreator" }
+        { "platform": "instagram", "handle": "@othercreator", "url": "https://instagram.com/othercreator" },
+        { "platform": "tiktok", "handle": "@othercreator", "url": "https://tiktok.com/@othercreator" }
       ],
       "previous_brands": [
-        { "brand": "Gymshark", "industry_id": "activewear" },
-        { "brand": "Myprotein", "industry_id": "sports-nutrition" }
-      ]
+        { "brand": "Gymshark", "industry_id": "activewear", "source": "https://instagram.com/p/example1" },
+        { "brand": "Myprotein", "industry_id": "sports-nutrition", "source": "https://instagram.com/p/example2" },
+        { "brand": "On Running", "industry_id": "sportswear" }
+      ],
+      "inferred_niches": [],
+      "notes": "Closest competitive comparable; similar audience size and country mix.",
+      "research": {
+        "status": "seed",
+        "sources": []
+      }
     }
   ],
 

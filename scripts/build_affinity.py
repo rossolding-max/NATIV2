@@ -1273,6 +1273,424 @@ i2a('firearms', evidence='Adult-only; no clean IAB Purchase Intent mapping. Sens
 # Industries without specific authored mapping inherit from parent at runtime.
 
 # ---------------------------------------------------------------------------
+# Bidirectional bridge augmentation
+# ---------------------------------------------------------------------------
+# IAB Interest and Purchase Intent are disjoint vocabularies. To let the bridge
+# score on more than just Demographic overlap, we add the OTHER vocabulary to
+# each side: niches get the Purchase Intent segments their audience is in-market
+# for (commercial signal); industries get the Interest segments their target
+# customer engages with (content signal). Authored where meaningful; broad
+# audiences and orphan categories left without the augmentation rather than
+# faked.
+
+# niche_id -> [Purchase Intent IAB IDs] (what this niche's audience buys)
+NICHE_PI = {
+    # Beauty
+    'beauty': [PI_BEAUTY_SERVICES, PI_SKIN_CARE, PI_BEAUTY_SALONS, PI_HAIR_SALONS, PI_COSMETIC_MEDICAL],
+    'makeup': [PI_BEAUTY_SERVICES, PI_BEAUTY_SALONS],
+    'skincare': [PI_SKIN_CARE, PI_COSMETIC_MEDICAL, PI_BEAUTY_SERVICES, PI_DRUGSTORES],
+    'haircare': [PI_HAIR_SALONS, PI_HAIR_LOSS, PI_BEAUTY_SERVICES],
+    'nails': [PI_NAIL_SALONS, PI_BEAUTY_SERVICES],
+    'fragrance': [PI_BEAUTY_SERVICES, PI_BEAUTY_SALONS],
+    # Fashion
+    'fashion': [PI_CLOTHING, PI_FOOTWEAR, PI_CLOTHING_ACCESSORIES, PI_JEWELRY_WATCHES, PI_BAGS_WALLETS],
+    'streetwear': [PI_CLOTHING, PI_FOOTWEAR, PI_CLOTHING_ACCESSORIES],
+    'luxury-fashion': [PI_CLOTHING, PI_JEWELRY_WATCHES, PI_BAGS_WALLETS],
+    'sustainable-fashion': [PI_CLOTHING, PI_FOOTWEAR],
+    'modest-fashion': [PI_CLOTHING],
+    'plus-size-fashion': [PI_CLOTHING],
+    'sneakers': [PI_FOOTWEAR, PI_CLOTHING],
+    'accessories': [PI_JEWELRY_WATCHES, PI_BAGS_WALLETS, PI_SUNGLASSES, PI_CLOTHING_ACCESSORIES],
+    'menswear': [PI_CLOTHING, PI_FOOTWEAR, PI_JEWELRY_WATCHES, PI_BEAUTY_SERVICES],
+    # Fitness
+    'fitness': [PI_EXERCISE_EQUIP, PI_HEALTH_FITNESS_APPS, PI_GYMS, PI_PERSONAL_TRAINERS, PI_ATHLETICS_EQUIP],
+    'bodybuilding': [PI_EXERCISE_EQUIP, PI_GYMS, PI_HEALTH_FITNESS_APPS, PI_ATHLETICS_EQUIP],
+    'weightlifting': [PI_EXERCISE_EQUIP, PI_GYMS, PI_ATHLETICS_EQUIP],
+    'running': [PI_FOOTWEAR, PI_ATHLETICS_EQUIP, PI_HEALTH_FITNESS_APPS, PI_CLOTHING],
+    'yoga': [PI_YOGA_STUDIOS, PI_GYMS, PI_CLOTHING, PI_HEALTH_FITNESS_APPS],
+    'pilates': [PI_GYMS, PI_PERSONAL_TRAINERS, PI_CLOTHING],
+    'crossfit': [PI_GYMS, PI_EXERCISE_EQUIP, PI_ATHLETICS_EQUIP],
+    'hiit': [PI_HEALTH_FITNESS_APPS, PI_EXERCISE_EQUIP, PI_GYMS],
+    'calisthenics': [PI_HEALTH_FITNESS_APPS, PI_CLOTHING],
+    'cycling': [PI_SPORTING_GOODS, PI_ATHLETICS_EQUIP, PI_OUTDOOR_REC_EQUIP],
+    # Health & wellness
+    'health-wellness': [PI_HEALTH_MEDICAL, PI_ALT_MEDICINE, PI_DRUGSTORES, PI_HEALTH_FITNESS_APPS],
+    'nutrition': [PI_HEALTH_MEDICAL, PI_DRUGSTORES, PI_ALT_MEDICINE],
+    'supplements': [PI_DRUGSTORES, PI_HEALTH_MEDICAL, PI_ALT_MEDICINE],
+    'biohacking': [PI_CONSUMER_ELECTRONICS, PI_HEALTH_FITNESS_APPS, PI_HEALTH_MEDICAL],
+    'sleep': [PI_BEDS, PI_HEALTH_MEDICAL, PI_HEALTH_FITNESS_APPS],
+    'mental-health': [PI_HEALTHCARE, PI_MEDICAL_APPS, PI_HEALTH_MEDICAL],
+    'meditation': [PI_HEALTH_FITNESS_APPS, PI_MEDICAL_APPS, PI_LIFESTYLE_APPS],
+    # Food & drink
+    'food-drink': [PI_CPG, PI_EDIBLE, PI_RESTAURANTS, PI_FAST_FOOD, PI_FOOD_DELIVERY],
+    'cooking': [PI_CPG, PI_EDIBLE, PI_FURNITURE],
+    'baking': [PI_CPG, PI_EDIBLE, PI_BAKERIES],
+    'restaurants': [PI_RESTAURANTS, PI_FAST_FOOD, PI_FOOD_DELIVERY, PI_FOOD_BEV_SERVICES],
+    'vegan': [PI_CPG, PI_EDIBLE, PI_HEALTH_MEDICAL],
+    'keto': [PI_CPG, PI_EDIBLE, PI_HEALTH_MEDICAL],
+    'coffee': [PI_CPG, PI_EDIBLE, PI_BAKERIES, PI_RESTAURANTS],
+    'cocktails': [PI_BARS, PI_CPG, PI_RESTAURANTS],
+    'wine': [PI_BARS, PI_CPG, PI_RESTAURANTS],
+    # Travel
+    'travel': [PI_TRAVEL_TOURISM, PI_HOTELS, PI_AIR_TRAVEL, PI_TRAVEL_AGENTS, PI_TRAVEL_APPS],
+    'luxury-travel': [PI_HOTELS, PI_AIR_TRAVEL, PI_CRUISE, PI_TRAVEL_TOURISM],
+    'budget-travel': [PI_BUDGET_TRAVEL, PI_AIR_TRAVEL, PI_TRAVEL_AGENTS, PI_BNB],
+    'solo-travel': [PI_TRAVEL_TOURISM, PI_HOTELS, PI_AIR_TRAVEL, PI_TRAVEL_AGENTS],
+    'family-travel': [PI_FAMILY_TRAVEL_PI, PI_HOTELS, PI_CRUISE, PI_TRAVEL_TOURISM],
+    'adventure-travel': [PI_ADVENTURE_TRAVEL_PI, PI_TRAVEL_TOURISM, PI_OUTDOOR_REC_EQUIP],
+    'digital-nomad': [PI_TRAVEL_TOURISM, PI_BNB, PI_COMPUTER_SOFTWARE, PI_WEB_HOSTING],
+    # Lifestyle (broad)
+    'lifestyle': [PI_LIFESTYLE_APPS, PI_CPG, PI_CLOTHING, PI_FOOD_DELIVERY],
+    'productivity': [PI_PRODUCTIVITY_APPS, PI_COMPUTER_SOFTWARE, PI_BUSINESS_APPS],
+    'minimalism': [PI_FURNITURE, PI_CLOTHING, PI_HOUSEKEEPING],
+    'day-in-the-life': [PI_LIFESTYLE_APPS, PI_FOOD_DELIVERY, PI_CLOTHING],
+    # Family & parenting
+    'family-parenting': [PI_FAMILY_PARENTING, PI_KIDS_ACTIVITIES, PI_CHILDCARE, PI_BABY_FURNITURE, PI_CPG],
+    'pregnancy': [PI_FAMILY_PARENTING, PI_BABY_FURNITURE, PI_HEALTH_MEDICAL, PI_BABY_SHOWERS],
+    'newborn-baby': [PI_FAMILY_PARENTING, PI_BABY_FURNITURE, PI_CPG, PI_CHILDCARE],
+    'toddler': [PI_KIDS_ACTIVITIES, PI_FAMILY_PARENTING, PI_BABY_FURNITURE],
+    'mom-life': [PI_FAMILY_PARENTING, PI_KIDS_ACTIVITIES, PI_CPG, PI_CHILDCARE, PI_BEAUTY_SERVICES],
+    'dad-life': [PI_FAMILY_PARENTING, PI_HOME_IMPROVEMENT_PI, PI_AUTO_OWNERSHIP, PI_BBQ_GRILLS, PI_INSURANCE_PI],
+    # Home & interiors
+    'home-interiors': [PI_FURNITURE, PI_HOME_IMPROVEMENT_PI, PI_HOME_GARDEN_SERVICES, PI_HARDWARE],
+    'interior-design': [PI_FURNITURE, PI_HOME_GARDEN_SERVICES],
+    'home-renovation': [PI_HOME_IMPROVEMENT_PI, PI_HARDWARE, PI_TOOLS],
+    'gardening': [PI_LAWN_GARDEN, PI_LANDSCAPING_PI, PI_HOME_GARDEN_SERVICES],
+    'organisation': [PI_FURNITURE, PI_HOUSEKEEPING],
+    # Tech
+    'tech': [PI_CONSUMER_ELECTRONICS, PI_COMPUTERS, PI_MOBILE_PHONES, PI_SOFTWARE, PI_AUDIO],
+    'consumer-electronics': [PI_CONSUMER_ELECTRONICS, PI_AUDIO, PI_TVS, PI_CAMERAS],
+    'ai': [PI_COMPUTER_SOFTWARE, PI_PRODUCTIVITY_APPS],
+    'software-reviews': [PI_COMPUTER_SOFTWARE, PI_PRODUCTIVITY_APPS, PI_BUSINESS_APPS],
+    'pc-building': [PI_COMPUTERS, PI_GAME_CONSOLE_ACC, PI_CONSUMER_ELECTRONICS],
+    'mobile-phones': [PI_MOBILE_PHONES, PI_MOBILE_PLANS, PI_CONSUMER_ELECTRONICS],
+    # Gaming
+    'gaming': [PI_GAMES_CONSOLES, PI_GAME_CONSOLE_ACC, PI_GAME_APPS, PI_DIGITAL_GOODS],
+    'pc-gaming': [PI_COMPUTERS, PI_GAME_CONSOLE_ACC, PI_GAMES_CONSOLES],
+    'console-gaming': [PI_GAMES_CONSOLES, PI_GAME_CONSOLE_ACC],
+    'mobile-gaming': [PI_GAME_APPS, PI_DIGITAL_GOODS, PI_MOBILE_PHONES],
+    'esports': [PI_GAMES_CONSOLES, PI_GAME_CONSOLE_ACC, PI_TICKETS],
+    'streaming': [PI_GAME_CONSOLE_ACC, PI_AUDIO, PI_COMPUTER_SOFTWARE],
+    # Entertainment
+    'entertainment': [PI_MUSIC_VIDEO_STREAMING, PI_TV_PI, PI_TICKETS, PI_ENTERTAINMENT_APPS],
+    'comedy': [PI_TV_PI, PI_MUSIC_VIDEO_STREAMING, PI_FAST_FOOD, PI_LIFESTYLE_APPS],
+    'sketch-comedy': [PI_MUSIC_VIDEO_STREAMING, PI_TV_PI],
+    'memes': [PI_LIFESTYLE_APPS, PI_GAME_APPS, PI_CLOTHING],
+    'reactions': [PI_MUSIC_VIDEO_STREAMING, PI_GAMES_CONSOLES, PI_TV_PI],
+    'storytime': [PI_MUSIC_VIDEO_STREAMING, PI_BOOK_APPS, PI_MEDICAL_APPS],
+    'asmr': [PI_SKIN_CARE, PI_BEDS, PI_AUDIO],
+    # Music
+    'music': [PI_MUSIC_VIDEO_STREAMING, PI_MUSIC_APPS, PI_TICKETS, PI_AUDIO],
+    'artist-musician': [PI_MUSIC_VIDEO_STREAMING, PI_TICKETS, PI_CLOTHING, PI_FOOTWEAR],
+    'dj-producer': [PI_AUDIO, PI_COMPUTER_SOFTWARE, PI_TICKETS],
+    'music-reviews': [PI_MUSIC_VIDEO_STREAMING, PI_MUSIC_APPS, PI_AUDIO],
+    # Art & design
+    'art-design': [PI_ARTS_CRAFTS_PI, PI_COMPUTER_SOFTWARE],
+    'illustration': [PI_COMPUTER_SOFTWARE, PI_ARTS_CRAFTS_PI],
+    'graphic-design': [PI_COMPUTER_SOFTWARE, PI_PRODUCTIVITY_APPS],
+    'digital-art': [PI_COMPUTER_SOFTWARE, PI_COMPUTERS],
+    'painting': [PI_ARTS_CRAFTS_PI, PI_WORKSHOPS],
+    'photography': [PI_CAMERAS, PI_CONSUMER_ELECTRONICS, PI_COMPUTER_SOFTWARE],
+    # Education
+    'education': [PI_ONLINE_EDUCATION, PI_EDU_APPS, PI_EDU_CAREERS, PI_COLLEGES],
+    'science': [PI_ONLINE_EDUCATION, PI_EDU_APPS, PI_BOOK_APPS],
+    'history': [PI_BOOK_APPS, PI_MUSIC_VIDEO_STREAMING, PI_ONLINE_EDUCATION],
+    'languages': [PI_LANGUAGE_LEARNING, PI_EDU_APPS, PI_ONLINE_EDUCATION],
+    'study-tips': [PI_EDU_APPS, PI_ONLINE_EDUCATION, PI_PRODUCTIVITY_APPS, PI_BOOK_APPS],
+    # Business & finance
+    'business-finance': [PI_FINANCE_INSURANCE, PI_BANKING, PI_STOCKS_INVESTMENTS, PI_FINANCE_APPS],
+    'entrepreneurship': [PI_BUSINESS_APPS, PI_PRODUCTIVITY_APPS, PI_BANKING],
+    'personal-finance': [PI_BANKING, PI_FINANCE_APPS, PI_CREDIT_CARDS, PI_STOCKS_INVESTMENTS],
+    'investing': [PI_STOCKS_INVESTMENTS, PI_FINANCE_APPS, PI_RETIREMENT_PI],
+    'crypto-web3': [PI_DIGITAL_GOODS, PI_STOCKS_INVESTMENTS, PI_FINANCE_APPS],
+    'career': [PI_EMPLOYMENT_AGENCIES, PI_CAREER_IMPROVEMENT, PI_ONLINE_EDUCATION],
+    # Sports
+    'sports': [PI_SPORTING_GOODS, PI_ATHLETICS_EQUIP, PI_TICKETS, PI_FANTASY_SPORTS, PI_SPORTS_APPS],
+    'football-soccer': [PI_SPORTING_GOODS, PI_ATHLETICS_EQUIP, PI_TICKETS],
+    'american-football': [PI_FANTASY_SPORTS, PI_TICKETS, PI_SPORTS_APPS],
+    'basketball': [PI_FOOTWEAR, PI_ATHLETICS_EQUIP, PI_TICKETS],
+    'tennis': [PI_ATHLETICS_EQUIP, PI_SPORTING_GOODS, PI_TICKETS],
+    'golf': [PI_SPORTING_GOODS, PI_ATHLETICS_EQUIP],
+    'motorsport': [PI_TICKETS, PI_AUTO_PARTS, PI_AUTO_OWNERSHIP],
+    'combat-sports': [PI_ATHLETICS_EQUIP, PI_GYMS, PI_TICKETS, PI_SELF_DEFENSE],
+    # Outdoors
+    'outdoors': [PI_OUTDOOR_REC_EQUIP, PI_SPORTING_GOODS, PI_CAMPING_PI],
+    'hiking': [PI_OUTDOOR_REC_EQUIP, PI_FOOTWEAR, PI_CLOTHING],
+    'camping': [PI_OUTDOOR_REC_EQUIP, PI_CAMPING_PI, PI_AUTO_OWNERSHIP],
+    'climbing': [PI_OUTDOOR_REC_EQUIP, PI_FOOTWEAR],
+    'surfing': [PI_OUTDOOR_REC_EQUIP, PI_CLOTHING, PI_BEACH_TRAVEL_PI],
+    'snowsports': [PI_OUTDOOR_REC_EQUIP, PI_CLOTHING, PI_TRAVEL_TOURISM],
+    'fishing': [PI_OUTDOOR_REC_EQUIP, PI_SPORTING_GOODS],
+    # Automotive
+    'automotive': [PI_AUTO_OWNERSHIP, PI_NEW_VEHICLES, PI_AUTO_PARTS, PI_AUTO_SERVICES],
+    'car-reviews': [PI_NEW_VEHICLES, PI_AUTO_OWNERSHIP, PI_AUTO_PARTS],
+    'ev': [PI_NEW_VEHICLES, PI_AUTO_OWNERSHIP],
+    'motorcycles': [PI_AUTO_OWNERSHIP, PI_NEW_VEHICLES],
+    'classic-cars': [PI_AUTO_PARTS, PI_AUTO_OWNERSHIP],
+    'car-modding': [PI_AUTO_PARTS, PI_AUTO_PRODUCTS, PI_TOOLS],
+    # Pets
+    'pets': [PI_PET_STORES, PI_PET_SERVICES, PI_VET_SERVICES, PI_PET_GROOMING],
+    'dogs': [PI_PET_STORES, PI_VET_SERVICES, PI_PET_GROOMING, PI_PET_SITTING],
+    'cats': [PI_PET_STORES, PI_VET_SERVICES, PI_PET_SERVICES],
+    'exotic-pets': [PI_PET_STORES, PI_VET_SERVICES],
+    # Sustainability
+    'sustainability': [PI_CPG, PI_EDIBLE, PI_NEW_VEHICLES, PI_CHARITIES],
+    'zero-waste': [PI_CPG, PI_NON_EDIBLE, PI_HOUSEKEEPING],
+    'ethical-living': [PI_CPG, PI_CLOTHING, PI_CHARITIES],
+    # Spirituality
+    'spirituality': [PI_PSYCHICS_ASTROLOGY, PI_LIFESTYLE_APPS, PI_MEDICAL_APPS],
+    'astrology': [PI_PSYCHICS_ASTROLOGY, PI_LIFESTYLE_APPS, PI_REFERENCE_APPS],
+    'tarot': [PI_PSYCHICS_ASTROLOGY, PI_LIFESTYLE_APPS],
+    # News / politics / dance / etc.
+    'news-politics': [PI_BOOK_APPS, PI_NEWS_APPS, PI_MUSIC_VIDEO_STREAMING],
+    'social-commentary': [PI_BOOK_APPS, PI_ONLINE_EDUCATION, PI_MUSIC_VIDEO_STREAMING],
+    'dance': [PI_DANCE_STUDIOS, PI_CLOTHING, PI_FOOTWEAR, PI_MUSIC_APPS],
+    'film-tv': [PI_MUSIC_VIDEO_STREAMING, PI_TV_PI, PI_TICKETS],
+    'books': [PI_BOOK_APPS, PI_MUSIC_VIDEO_STREAMING],
+    'diy-crafts': [PI_ARTS_CRAFTS_PI, PI_TOOLS, PI_HARDWARE, PI_WORKSHOPS],
+    'wedding': [PI_WEDDING, PI_JEWELRY_WATCHES, PI_HOTELS, PI_TRAVEL_TOURISM],
+    'lgbtq': [PI_CLOTHING, PI_BEAUTY_SERVICES, PI_LIFESTYLE_APPS],
+    'body-positivity': [PI_CLOTHING, PI_BEAUTY_SERVICES, PI_HEALTH_MEDICAL],
+    'disability-advocacy': [PI_HEALTH_MEDICAL, PI_HEALTHCARE, PI_CLOTHING],
+    'veterans-military': [PI_AUTO_OWNERSHIP, PI_INSURANCE_PI, PI_CLOTHING],
+}
+
+# industry_id -> [Interest IAB IDs] (what content this industry's customers engage with)
+INDUSTRY_INT = {
+    # Beauty
+    'beauty-personal-care': [INT_BEAUTY, INT_PERSONAL_CARE, INT_STYLE_FASHION],
+    'cosmetics': [INT_BEAUTY, INT_FASHION_TRENDS, INT_PERSONAL_CARE, INT_STYLE_FASHION],
+    'skincare-brands': [INT_BEAUTY, INT_PERSONAL_CARE, INT_HEALTHY_LIVING, INT_WELLNESS],
+    'haircare-brands': [INT_BEAUTY, INT_PERSONAL_CARE, INT_STYLE_FASHION],
+    'fragrance-brands': [INT_BEAUTY, INT_HIGH_FASHION, INT_DESIGNER_CLOTHING],
+    'oral-care': [INT_HEALTHY_LIVING, INT_PERSONAL_CARE],
+    'mens-grooming': [INT_PERSONAL_CARE, INT_MENS_FASHION, INT_MENS_HEALTH],
+    'personal-hygiene': [INT_PERSONAL_CARE, INT_HEALTHY_LIVING],
+    # Fashion
+    'fashion-apparel': [INT_STYLE_FASHION, INT_FASHION_TRENDS, INT_WOMENS_FASHION, INT_MENS_FASHION],
+    'womenswear': [INT_STYLE_FASHION, INT_WOMENS_FASHION, INT_FASHION_TRENDS],
+    'menswear-brands': [INT_MENS_FASHION, INT_STYLE_FASHION, INT_DESIGNER_CLOTHING],
+    'kidswear': [INT_CHILDRENS_CLOTHING, INT_PARENTING, INT_FAMILY],
+    'footwear': [INT_STYLE_FASHION, INT_FASHION_TRENDS, INT_STREET_STYLE],
+    'luxury-goods': [INT_HIGH_FASHION, INT_DESIGNER_CLOTHING, INT_FASHION_TRENDS],
+    'fast-fashion': [INT_STYLE_FASHION, INT_FASHION_TRENDS, INT_WOMENS_FASHION],
+    'jewellery': [INT_HIGH_FASHION, INT_DESIGNER_CLOTHING, INT_STYLE_FASHION],
+    'watches': [INT_DESIGNER_CLOTHING, INT_MENS_FASHION, INT_HIGH_FASHION],
+    'eyewear': [INT_STYLE_FASHION, INT_FASHION_TRENDS],
+    'bags-luggage': [INT_STYLE_FASHION, INT_HIGH_FASHION, INT_TRAVEL],
+    'activewear': [INT_FITNESS, INT_HEALTHY_LIVING, INT_STYLE_FASHION, INT_SPORTS],
+    'intimates': [INT_STYLE_FASHION, INT_WOMENS_FASHION, INT_PERSONAL_CARE],
+    'swimwear': [INT_STYLE_FASHION, INT_BEACH_TRAVEL, INT_WOMENS_FASHION],
+    # Sports & outdoor
+    'sports-outdoor': [INT_SPORTS, INT_FITNESS, INT_HEALTHY_LIVING, INT_ADVENTURE_TRAVEL],
+    'sportswear': [INT_FITNESS, INT_SPORTS, INT_HEALTHY_LIVING, INT_STYLE_FASHION],
+    'sporting-equipment': [INT_SPORTS, INT_FITNESS, INT_HEALTHY_LIVING],
+    'outdoor-gear': [INT_ADVENTURE_TRAVEL, INT_CAMPING, INT_EXTREME_SPORTS, INT_SPORTS],
+    'bicycles': [INT_CYCLING, INT_FITNESS, INT_SPORTS],
+    'fitness-equipment': [INT_FITNESS, INT_HEALTHY_LIVING, INT_NUTRITION],
+    'gyms-studios': [INT_FITNESS, INT_HEALTHY_LIVING, INT_WELLNESS],
+    'sports-teams-leagues': [INT_SPORTS, INT_SPORTS_TV, INT_AMERICAN_FOOTBALL],
+    # Food & beverage
+    'food-beverage': [INT_FOOD_DRINK, INT_COOKING, INT_DINING_OUT],
+    'snacks': [INT_FOOD_DRINK, INT_POP_CULTURE],
+    'frozen-food': [INT_FOOD_DRINK, INT_COOKING],
+    'dairy': [INT_FOOD_DRINK, INT_HEALTHY_LIVING],
+    'plant-based-food': [INT_VEGAN, INT_FOOD_MOVEMENTS, INT_HEALTHY_LIVING, INT_HEALTHY_COOKING],
+    'meal-kits': [INT_COOKING, INT_HEALTHY_COOKING, INT_FOOD_DRINK],
+    'ready-meals': [INT_FOOD_DRINK, INT_COOKING],
+    'condiments-sauces': [INT_COOKING, INT_FOOD_DRINK],
+    'coffee-tea': [INT_NON_ALCOHOLIC, INT_FOOD_DRINK],
+    'soft-drinks': [INT_NON_ALCOHOLIC, INT_FOOD_DRINK, INT_POP_CULTURE],
+    'bottled-water': [INT_HEALTHY_LIVING, INT_NON_ALCOHOLIC],
+    'alcohol-beer': [INT_ALCOHOL, INT_FOOD_DRINK, INT_SPORTS_TV],
+    'alcohol-wine': [INT_ALCOHOL, INT_DINING_OUT, INT_FOOD_DRINK],
+    'alcohol-spirits': [INT_ALCOHOL, INT_FOOD_DRINK],
+    'no-low-alcohol': [INT_HEALTHY_LIVING, INT_WELLNESS, INT_FOOD_DRINK],
+    'restaurants-qsr': [INT_DINING_OUT, INT_FOOD_DRINK],
+    'grocery': [INT_FOOD_DRINK, INT_COOKING, INT_HEALTHY_COOKING],
+    'food-delivery': [INT_DINING_OUT, INT_FOOD_DRINK],
+    # Health & pharma
+    'health-pharma': [INT_HEALTH_SERVICES, INT_HEALTHY_LIVING, INT_PHARMA_CONDITIONS],
+    'supplements-brands': [INT_NUTRITION, INT_HEALTHY_LIVING, INT_FITNESS, INT_WELLNESS],
+    'sports-nutrition': [INT_NUTRITION, INT_BODYBUILDING, INT_FITNESS, INT_HEALTHY_LIVING],
+    'otc-medicine': [INT_HEALTH_SERVICES, INT_PHARMA_CONDITIONS],
+    'prescription-pharma': [INT_PHARMA_CONDITIONS, INT_HEALTH_SERVICES],
+    'telehealth': [INT_HEALTH_SERVICES, INT_HEALTHY_LIVING],
+    'mental-health-services': [INT_PHARMA_CONDITIONS, INT_HEALTHY_LIVING, INT_WELLNESS],
+    'weight-management': [INT_WEIGHT_LOSS, INT_HEALTHY_LIVING, INT_NUTRITION],
+    'sexual-wellness': [INT_HEALTHY_LIVING, INT_WELLNESS],
+    'femtech': [INT_WOMENS_HEALTH, INT_HEALTHY_LIVING, INT_WELLNESS],
+    'dental-services': [INT_HEALTH_SERVICES, INT_PERSONAL_CARE],
+    'vision-care': [INT_HEALTH_SERVICES],
+    # Technology
+    'technology': [INT_TECH, INT_CONSUMER_ELECTRONICS, INT_COMPUTING],
+    'consumer-electronics-brands': [INT_CONSUMER_ELECTRONICS, INT_TECH],
+    'mobile-devices': [INT_CONSUMER_ELECTRONICS, INT_TECH],
+    'wearables': [INT_TECH, INT_FITNESS, INT_HEALTHY_LIVING, INT_CONSUMER_ELECTRONICS],
+    'audio-equipment': [INT_CONSUMER_ELECTRONICS, INT_MUSIC, INT_TECH],
+    'computing-hardware': [INT_COMPUTING, INT_CONSUMER_ELECTRONICS, INT_GAMING],
+    'saas': [INT_BUSINESS_FINANCE, INT_CAREERS, INT_TECH],
+    'consumer-software': [INT_TECH, INT_COMPUTING],
+    'ai-products': [INT_AI, INT_TECH, INT_COMPUTING],
+    'cybersecurity': [INT_TECH, INT_COMPUTING],
+    'smart-home': [INT_SMART_HOME, INT_TECH, INT_HOME_GARDEN],
+    # Gaming industry
+    'gaming-industry': [INT_GAMING, INT_CONSOLE_GAMES, INT_PC_GAMES, INT_MOBILE_GAMES],
+    'game-publishers': [INT_GAMING, INT_CONSOLE_GAMES, INT_PC_GAMES],
+    'indie-games': [INT_GAMING, INT_PC_GAMES, INT_GAME_GENRES],
+    'mobile-games-publishers': [INT_MOBILE_GAMES, INT_GAMING],
+    'gaming-hardware': [INT_GAMING, INT_PC_GAMES, INT_COMPUTING, INT_CONSUMER_ELECTRONICS],
+    'esports-orgs': [INT_ESPORTS, INT_GAMING, INT_SPORTS],
+    'creator-tools': [INT_CONTENT_PRODUCTION, INT_TECH, INT_GAMING],
+    # Media & entertainment
+    'media-entertainment': [INT_TV, INT_MOVIES, INT_MUSIC, INT_POP_CULTURE],
+    'streaming-services': [INT_TV, INT_MOVIES, INT_POP_CULTURE],
+    'film-tv-studios': [INT_MOVIES, INT_TV, INT_POP_CULTURE],
+    'music-labels': [INT_MUSIC, INT_POP_CULTURE],
+    'music-dsps': [INT_MUSIC, INT_POP_CULTURE],
+    'podcasts-networks': [INT_POP_CULTURE, INT_NEWS_POLITICS],
+    'publishing': [INT_BOOKS, INT_POP_CULTURE],
+    'live-events': [INT_MUSIC, INT_POP_CULTURE, INT_SPORTS],
+    'ticketing': [INT_MUSIC, INT_SPORTS, INT_POP_CULTURE, INT_MOVIES],
+    # Travel & hospitality
+    'travel-hospitality': [INT_TRAVEL, INT_ADVENTURE_TRAVEL, INT_BEACH_TRAVEL],
+    'airlines': [INT_TRAVEL, INT_ADVENTURE_TRAVEL],
+    'hotels': [INT_TRAVEL, INT_BEACH_TRAVEL, INT_FAMILY_TRAVEL],
+    'short-term-rentals': [INT_TRAVEL, INT_FAMILY_TRAVEL, INT_ADVENTURE_TRAVEL],
+    'otas': [INT_TRAVEL, INT_ADVENTURE_TRAVEL],
+    'cruises': [INT_TRAVEL, INT_BEACH_TRAVEL],
+    'tourism-boards': [INT_TRAVEL, INT_ADVENTURE_TRAVEL, INT_FAMILY_TRAVEL],
+    'luggage-travel-gear': [INT_TRAVEL, INT_STYLE_FASHION],
+    'car-rental': [INT_TRAVEL, INT_ROAD_TRIPS],
+    # Automotive
+    'automotive-industry': [INT_AUTO, INT_AUTO_BUYING, INT_AUTO_TECH, INT_AUTO_CULTURE],
+    'auto-oems': [INT_AUTO, INT_AUTO_BUYING],
+    'ev-brands': [INT_AUTO_GREEN, INT_AUTO_TECH, INT_AUTO],
+    'auto-aftermarket': [INT_AUTO_PERFORMANCE, INT_AUTO_CULTURE, INT_AUTO_TECH],
+    'motorcycle-brands': [INT_AUTO_MOTORCYCLES, INT_AUTO],
+    'tyres': [INT_AUTO, INT_AUTO_TECH],
+    'auto-dealers': [INT_AUTO_BUYING, INT_AUTO],
+    # Financial services
+    'financial-services': [INT_BUSINESS_FINANCE, INT_PERSONAL_FINANCE, INT_INVESTING],
+    'retail-banking': [INT_BUSINESS_FINANCE, INT_PERSONAL_FINANCE],
+    'fintech-neobanks': [INT_PERSONAL_FINANCE, INT_BUSINESS_FINANCE, INT_TECH],
+    'investing-platforms': [INT_INVESTING, INT_PERSONAL_FINANCE, INT_BUSINESS_FINANCE],
+    'credit-cards': [INT_PERSONAL_FINANCE, INT_FRUGAL],
+    'buy-now-pay-later': [INT_PERSONAL_FINANCE, INT_FRUGAL],
+    'insurance': [INT_INSURANCE, INT_PERSONAL_FINANCE],
+    'crypto-exchanges': [INT_INVESTING, INT_TECH],
+    'tax-services': [INT_TAXES, INT_PERSONAL_FINANCE, INT_BUSINESS_FINANCE],
+    # Telecom & utilities
+    'telecom-utilities': [INT_TECH, INT_CONSUMER_ELECTRONICS],
+    'mobile-carriers': [INT_CONSUMER_ELECTRONICS, INT_TECH],
+    'internet-providers': [INT_TECH, INT_COMPUTING],
+    'energy-utilities': [INT_HOME_GARDEN, INT_HEALTHY_LIVING],
+    # Home & living
+    'home-living': [INT_HOME_GARDEN, INT_INTERIOR_DECOR, INT_HOME_IMPROVEMENT],
+    'furniture': [INT_HOME_GARDEN, INT_INTERIOR_DECOR],
+    'home-decor-brands': [INT_INTERIOR_DECOR, INT_HOME_GARDEN, INT_HOME_ENTERTAINING],
+    'home-appliances': [INT_HOME_GARDEN, INT_HOME_IMPROVEMENT, INT_COOKING],
+    'kitchenware': [INT_COOKING, INT_BAKING, INT_HOME_ENTERTAINING],
+    'bedding-bath': [INT_HOME_GARDEN, INT_INTERIOR_DECOR, INT_HEALTHY_LIVING],
+    'cleaning-household': [INT_HOME_GARDEN],
+    'home-improvement': [INT_HOME_IMPROVEMENT, INT_REMODELING, INT_HOME_GARDEN],
+    'gardening-brands': [INT_GARDENING, INT_HOME_GARDEN, INT_LANDSCAPING],
+    # Baby & kids
+    'baby-kids': [INT_PARENTING, INT_FAMILY, INT_CHILDRENS_HEALTH],
+    'baby-food': [INT_PARENTING, INT_CHILDRENS_HEALTH, INT_FAMILY],
+    'diapers-nappies': [INT_PARENTING, INT_FAMILY],
+    'baby-gear': [INT_PARENTING, INT_FAMILY],
+    'toys': [INT_PARENTING, INT_FAMILY, INT_GAMES_PUZZLES],
+    'kids-edutainment': [INT_PARENTING, INT_EDUCATION, INT_FAMILY],
+    # Pets
+    'pets-industry': [INT_PETS],
+    'pet-food': [INT_PETS, INT_DOGS, INT_CATS],
+    'pet-supplies': [INT_PETS, INT_DOGS, INT_CATS],
+    'pet-tech': [INT_PETS, INT_TECH],
+    'vet-services': [INT_PETS, INT_HEALTH_SERVICES],
+    'pet-insurance': [INT_PETS, INT_INSURANCE],
+    # Education
+    'education-industry': [INT_EDUCATION, INT_ONLINE_EDU, INT_ACADEMIC],
+    'online-courses': [INT_ONLINE_EDU, INT_EDUCATION, INT_CAREERS],
+    'tutoring': [INT_EDUCATION, INT_ONLINE_EDU],
+    'language-learning-brands': [INT_LANGUAGE_LEARNING, INT_EDUCATION, INT_TRAVEL],
+    'k12': [INT_EDUCATION, INT_PARENTING],
+    'higher-ed': [INT_EDUCATION, INT_ACADEMIC, INT_CAREERS],
+    'coding-bootcamps': [INT_TECH, INT_COMPUTING, INT_CAREERS, INT_EDUCATION],
+    # Apps & platforms
+    'apps-platforms': [INT_TECH, INT_POP_CULTURE],
+    'dating-apps': [INT_POP_CULTURE],
+    'social-platforms': [INT_POP_CULTURE, INT_TECH],
+    'productivity-apps': [INT_CAREERS, INT_BUSINESS_FINANCE, INT_REMOTE_WORK],
+    'language-translation-apps': [INT_LANGUAGE_LEARNING, INT_TRAVEL],
+    'marketplaces': [INT_SHOPPING],
+    'ride-share-mobility': [INT_TECH],
+    # Retail
+    'retail-ecommerce': [INT_SHOPPING, INT_STYLE_FASHION],
+    'department-stores': [INT_SHOPPING, INT_STYLE_FASHION, INT_HOME_GARDEN],
+    'specialty-retail': [INT_SHOPPING, INT_STYLE_FASHION, INT_BEAUTY],
+    'marketplaces-ecom': [INT_SHOPPING, INT_STYLE_FASHION],
+    'd2c-subscription': [INT_SHOPPING, INT_BEAUTY, INT_STYLE_FASHION],
+    'discount-resale': [INT_SHOPPING, INT_STYLE_FASHION, INT_FRUGAL],
+    # Real estate
+    'real-estate': [INT_REAL_ESTATE, INT_REAL_ESTATE_BUYING],
+    'residential-real-estate': [INT_REAL_ESTATE, INT_REAL_ESTATE_BUYING],
+    'rental-platforms': [INT_REAL_ESTATE],
+    'mortgages': [INT_REAL_ESTATE, INT_PERSONAL_FINANCE],
+    # Professional services
+    'professional-services': [INT_BUSINESS_FINANCE, INT_CAREERS],
+    'legal-services': [INT_BUSINESS_FINANCE],
+    'consulting': [INT_BUSINESS_FINANCE, INT_CAREERS],
+    'accounting': [INT_BUSINESS_FINANCE, INT_PERSONAL_FINANCE, INT_TAXES],
+    'recruitment-hr-tech': [INT_CAREERS, INT_CAREER_ADVICE],
+    'marketing-agencies': [INT_BUSINESS_FINANCE, INT_CAREERS],
+    # Non-profit / political
+    'non-profit-government': [INT_NEWS_POLITICS],
+    'charities': [INT_NEWS_POLITICS],
+    'government-public-sector': [INT_NEWS_POLITICS],
+    'political-advocacy': [INT_NEWS_POLITICS],
+    # Sensitive (limited Interest mapping where it exists; left empty otherwise)
+    'tobacco-vape': [INT_POP_CULTURE],
+    'cannabis-cbd': [INT_HEALTHY_LIVING, INT_WELLNESS],
+    'gambling': [INT_SPORTS, INT_SPORTS_TV, INT_POKER, INT_FANTASY_SPORTS],
+    'lottery': [INT_POP_CULTURE],
+}
+
+# Apply augmentations: rebuild each group with consistent key order
+# (niche_id|industry_id, interest_segments, purchase_intent_segments, demographic_segments, evidence)
+for nid, pi_ids in NICHE_PI.items():
+    if nid not in N2A:
+        continue
+    assert nid in niches, f"NICHE_PI references unknown niche {nid}"
+    for x in pi_ids:
+        assert x in iab, f"NICHE_PI[{nid}]: unknown IAB segment {x}"
+    g = N2A[nid]
+    new_g = {'niche_id': g['niche_id']}
+    if 'interest_segments' in g:
+        new_g['interest_segments'] = g['interest_segments']
+    new_g['purchase_intent_segments'] = pi_ids
+    if 'demographic_segments' in g:
+        new_g['demographic_segments'] = g['demographic_segments']
+    new_g['evidence'] = g['evidence']
+    N2A[nid] = new_g
+
+for iid, int_ids in INDUSTRY_INT.items():
+    if iid not in I2A:
+        continue
+    assert iid in industries, f"INDUSTRY_INT references unknown industry {iid}"
+    for x in int_ids:
+        assert x in iab, f"INDUSTRY_INT[{iid}]: unknown IAB segment {x}"
+    g = I2A[iid]
+    new_g = {'industry_id': g['industry_id']}
+    new_g['interest_segments'] = int_ids
+    if 'purchase_intent_segments' in g:
+        new_g['purchase_intent_segments'] = g['purchase_intent_segments']
+    if 'demographic_segments' in g:
+        new_g['demographic_segments'] = g['demographic_segments']
+    new_g['evidence'] = g['evidence']
+    I2A[iid] = new_g
+
+# ---------------------------------------------------------------------------
 # Emit files
 # ---------------------------------------------------------------------------
 ROOT_DATA = DATA
