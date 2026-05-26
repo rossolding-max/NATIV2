@@ -4,7 +4,8 @@
 
 **Pairs with:**
 - `schemas/brand_deal.schema.json` — the data contract.
-- `docs/onboarding_workflow.md` — Step 3 (media pack) and Step 5 (questionnaire) are the primary capture surfaces.
+- `docs/onboarding_workflow.md` — Step 3 (media pack) and Step 5 (questionnaire) are the primary capture surfaces for HISTORICAL deals at onboarding.
+- `docs/deal_lifecycle_workflow.md` (Phase 4) — NEW deals close into this layer via auto-archive. Phase 4 deal's `close.archived_to_brand_deal_id` points here; this record's `archived_from_deal_id` points back.
 - `docs/brand_discovery.md` — Search 1 (re-engagement) reads from this data.
 - `docs/outreach_workflow.md` — the AI generation step uses this as citation material.
 - `docs/contact_enrichment_workflow.md` — warm-intro identification via `main_brand_contact_id`.

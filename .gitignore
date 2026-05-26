@@ -33,6 +33,15 @@ data/brand_deals/
 # never committed.
 data/agency_profile.json
 
+# Deal lifecycle records (Phase 4): per-deal pipeline files with
+# commercial data (fees, signed contracts, invoice amounts, payment
+# records), brand briefs, content drafts. Schema
+# (schemas/deal.schema.json) and spec (docs/deal_lifecycle_workflow.md)
+# are tracked; the per-deal data is NEVER committed. On successful close,
+# the deal auto-archives into data/brand_deals/{talent_id}.json (also
+# gitignored).
+data/deals/
+
 # Outreach enrollments: per-(talent, contact) running sequence
 # instances with PII + AI-generated email content. Schema
 # (schemas/pitch_enrollment.schema.json) tracked; data never.

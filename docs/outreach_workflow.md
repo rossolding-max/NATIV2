@@ -343,7 +343,7 @@ When `email_replied` fires:
 2. Update `enrollment.steps[N].outcome_classification`.
 
 3. **Kill logic:**
-   - `interested` → kill this enrollment; UI surfaces as hot lead; talent gets notified
+   - `interested` → kill this enrollment; **create a Phase 4 deal in `stage: "lead"`** (per `docs/deal_lifecycle_workflow.md`) with `originating_enrollment_id` set; UI surfaces as hot lead; agent gets notified. If `extracted_signals.asked_for_meeting == true`, the deal pre-seeds at `substage: "initial_call_scheduled"` instead of `new_lead`.
    - `declined` → kill this enrollment; consider `do_not_contact: true` (manual or auto based on tone)
    - `out_of_office` → pause enrollment until `ooo_until + 1 day`, then auto-resume
    - `unrelated` → kill this enrollment only (don't penalize contact)

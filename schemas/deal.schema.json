@@ -1,0 +1,443 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://nativ2/schemas/deal.schema.json",
+  "title": "Deal Lifecycle Record",
+  "description": "Phase 4 deal record — moves through 5 stages from a Phase 3b `interested` reply through to a paid + archived deal. Per-deal file at `data/deals/{deal_id}.json` (gitignored — commercial data, signed contracts, invoice amounts). On close + payment + KPI capture, the orchestrator auto-archives this into `data/brand_deals/{talent_id}.json` (Phase 1.5). See `docs/deal_lifecycle_workflow.md`.",
+  "type": "object",
+  "required": ["deal_id", "talent_id", "brand_id", "stage", "substage", "assigned_agent_id", "created_at"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+
+    "deal_id": {
+      "type": "string",
+      "pattern": "^deal_pipeline_[a-z0-9_-]+$",
+      "description": "Globally unique pipeline-deal identifier. Format: `deal_pipeline_{year}_{quarter}_{brand_slug}_{talent_slug}` or similar (slugs allowed to contain hyphens). Distinguished from Phase 1.5 `brand_deals[].deal_id` (which starts `deal_`) so we never collide IDs between pipeline + archived."
+    },
+    "talent_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+    "brand_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+    "brand_name": { "type": "string", "description": "Denormalised for at-a-glance reading." },
+    "industry_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+
+    "primary_contact_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]*$",
+      "description": "FK to a contact in `data/brand_contacts/{brand_id}.json`. The buyer driving the deal."
+    },
+    "additional_contact_ids": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+      "description": "Other contacts looped in (legal, finance, brand manager, agency-of-record)."
+    },
+    "originating_enrollment_id": {
+      "type": "string",
+      "pattern": "^enr_[a-z0-9]+$",
+      "description": "FK to `data/pitch_enrollments/{enrollment_id}.json` — which Phase 3b outreach pitch produced the `interested` reply that created this deal. Closes the outreach→deal analytics loop."
+    },
+    "assigned_agent_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]*$",
+      "description": "FK to an agent in `agency_profile.agents[]`. v0.1: always the single primary agent. v2: per-deal assignment."
+    },
+
+    "stage": {
+      "type": "string",
+      "enum": ["lead", "proposal", "contract", "delivery", "close", "archived"],
+      "description": "Top-level lifecycle stage. `archived` is the post-close terminal state after auto-archive into Phase 1.5 brand_deals."
+    },
+    "substage": {
+      "type": "string",
+      "enum": [
+        "new_lead", "initial_call_scheduled", "initial_call_completed", "brief_received", "qualified", "disqualified",
+        "proposal_drafting", "proposal_sent", "under_review", "negotiation", "terms_agreed",
+        "contract_drafting", "contract_in_review_brand", "contract_in_review_talent", "contract_revisions", "contract_executed", "contract_failed",
+        "pre_production", "content_in_production", "pending_brand_approval", "revisions_requested", "approved_for_posting", "live", "performance_window",
+        "invoice_sent", "invoice_paid", "post_campaign_reporting", "archived",
+        "lost", "killed", "paused"
+      ],
+      "description": "Granular state within (or terminal-state outside of) the current stage. Transition validity is enforced by the orchestrator per the state machine in docs/deal_lifecycle_workflow.md."
+    },
+    "is_terminal": {
+      "type": "boolean",
+      "default": false,
+      "description": "True if substage is one of: disqualified, lost, killed, contract_failed, archived. Used to filter pipeline views."
+    },
+    "is_won": {
+      "type": "boolean",
+      "default": false,
+      "description": "True only after stage=archived with payment_received. Distinguished from terminal-but-lost."
+    },
+
+    "stage_history": {
+      "type": "array",
+      "description": "Audit trail of every stage/substage transition. Append-only.",
+      "items": {
+        "type": "object",
+        "required": ["stage", "substage", "at"],
+        "additionalProperties": false,
+        "properties": {
+          "stage": { "type": "string" },
+          "substage": { "type": "string" },
+          "at": { "type": "string", "format": "date-time" },
+          "by_agent_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+          "note": { "type": "string", "description": "Optional context on the transition." }
+        }
+      }
+    },
+
+    "expected_value_usd": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Best estimate of deal value, updated as the deal progresses. At lead stage = ballpark; at proposal stage = the proposed fee; at contract stage = the contracted fee."
+    },
+    "expected_close_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Best estimate of when the deal will reach `archived` (i.e. signed + delivered + paid). Used for pipeline forecasting."
+    },
+    "actual_final_value_usd": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Final paid amount. Set when stage=archived. May differ from expected_value_usd if scope changed mid-deal."
+    },
+
+    "next_action": {
+      "type": "string",
+      "description": "Free-text or templated next action the agent needs to take. e.g. 'Send revised proposal with adjusted usage rights'. Drives the agent's daily task list."
+    },
+    "next_action_due_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the next_action is due. Drives the daily reminder cron — overdue actions surface in the agent's morning summary."
+    },
+
+    "lead": { "$ref": "#/$defs/leadStage" },
+    "proposal": { "$ref": "#/$defs/proposalStage" },
+    "contract": { "$ref": "#/$defs/contractStage" },
+    "delivery": { "$ref": "#/$defs/deliveryStage" },
+    "close": { "$ref": "#/$defs/closeStage" },
+
+    "loss": {
+      "type": "object",
+      "description": "Populated only when substage is `lost`, `killed`, `disqualified`, or `contract_failed`. Captures structured loss-reason for funnel analytics.",
+      "required": ["reason", "at"],
+      "additionalProperties": false,
+      "properties": {
+        "reason": {
+          "type": "string",
+          "enum": ["budget", "timing", "competitor_won", "internal_pivot", "talent_no_fit", "terms_disagreed", "unresponsive", "compliance_block", "other"],
+          "description": "budget: brand insufficient budget; timing: schedule didn't work; competitor_won: brand picked another creator; internal_pivot: brand strategy changed; talent_no_fit: talent declined; terms_disagreed: couldn't agree on usage rights/exclusivity/etc; unresponsive: went dark; compliance_block: values/red-lines conflict; other: free-text."
+        },
+        "at": { "type": "string", "format": "date-time" },
+        "by_agent_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+        "notes": { "type": "string", "description": "Free-text detail on the loss circumstances." },
+        "competitor_brand": { "type": "string", "description": "If reason=competitor_won, who won." },
+        "lost_at_stage": { "type": "string", "enum": ["lead", "proposal", "contract", "delivery"], "description": "Which stage we were in when the deal went sideways." }
+      }
+    },
+
+    "attachments": {
+      "type": "array",
+      "description": "All documents associated with the deal: briefs, proposals, contracts, content drafts, approvals, invoices, reports. Files stored externally (S3/cloud storage); this array holds metadata + references.",
+      "items": { "$ref": "#/$defs/attachment" }
+    },
+    "notes": {
+      "type": "array",
+      "description": "Free-text notes from the agent. Append-only audit trail of insights, conversations, decisions.",
+      "items": { "$ref": "#/$defs/note" }
+    },
+
+    "created_at": { "type": "string", "format": "date-time" },
+    "updated_at": { "type": "string", "format": "date-time" },
+    "created_by_agent_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" }
+  },
+
+  "$defs": {
+
+    "leadStage": {
+      "type": "object",
+      "description": "Captured during LEAD stage. Discovery call notes, brand brief, qualification decision.",
+      "additionalProperties": false,
+      "properties": {
+        "discovery_call_scheduled_at": { "type": "string", "format": "date-time" },
+        "discovery_call_completed_at": { "type": "string", "format": "date-time" },
+        "discovery_call_notes": { "type": "string" },
+        "brief_text": { "type": "string", "description": "Inline brief text if brand sent in email/chat." },
+        "brief_attachment_id": { "type": "string", "description": "FK to attachments[] if brief is a PDF/doc." },
+        "brief_received_at": { "type": "string", "format": "date-time" },
+        "qualification_decision": { "type": "string", "enum": ["qualified", "disqualified", "pending"] },
+        "qualification_decision_at": { "type": "string", "format": "date-time" },
+        "qualification_rationale": { "type": "string", "description": "Why qualified or disqualified — used by analytics to learn what we say yes/no to." }
+      }
+    },
+
+    "proposalStage": {
+      "type": "object",
+      "description": "Captured during PROPOSAL stage. Mirrors brand_deal.deliverables/commercials shape — when archived, these fields carry into the brand_deal record.",
+      "additionalProperties": false,
+      "properties": {
+        "proposal_attachment_id": { "type": "string", "description": "FK to attachments[] for the formal proposal PDF." },
+        "proposal_sent_at": { "type": "string", "format": "date-time" },
+        "deliverables": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["platform", "format", "count"],
+            "additionalProperties": false,
+            "properties": {
+              "platform": {
+                "type": "string",
+                "enum": ["instagram", "tiktok", "youtube", "twitter_x", "linkedin", "pinterest", "twitch", "snapchat", "facebook", "substack", "podcast", "other"]
+              },
+              "format": {
+                "type": "string",
+                "enum": ["reel", "story", "feed_post", "carousel", "live", "video_long_form", "video_short", "podcast_episode", "podcast_read", "newsletter", "tweet_thread", "linkedin_post", "appearance", "co_created_product", "other"]
+              },
+              "count": { "type": "integer", "minimum": 1 }
+            }
+          }
+        },
+        "fee_usd": { "type": "number", "minimum": 0 },
+        "fee_currency_original": { "type": "string", "pattern": "^[A-Z]{3}$" },
+        "fee_original_amount": { "type": "number", "minimum": 0 },
+        "usage_rights_granted": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["organic", "whitelisting_30d", "whitelisting_60d", "whitelisting_90d", "whitelisting_unlimited", "paid_social_30d", "paid_social_90d", "paid_social_perpetual", "website_use", "broadcast", "print", "perpetual_all_channels"]
+          }
+        },
+        "exclusivity": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "category": { "type": "string" },
+            "duration_days": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "additional_compensation": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["type"],
+            "additionalProperties": false,
+            "properties": {
+              "type": { "type": "string", "enum": ["gifted_product", "comped_event", "comped_travel", "equity", "discount_code", "other"] },
+              "value_usd": { "type": "number", "minimum": 0 },
+              "description": { "type": "string" }
+            }
+          }
+        },
+        "negotiation_log": {
+          "type": "array",
+          "description": "Chronological back-and-forth during negotiation.",
+          "items": {
+            "type": "object",
+            "required": ["at", "direction", "summary"],
+            "additionalProperties": false,
+            "properties": {
+              "at": { "type": "string", "format": "date-time" },
+              "direction": { "type": "string", "enum": ["sent_to_brand", "received_from_brand", "internal_decision"] },
+              "channel": { "type": "string", "enum": ["email", "call", "meeting", "message", "other"] },
+              "summary": { "type": "string" },
+              "terms_changed": { "type": "string", "description": "Description of what changed in the proposal as a result of this exchange." },
+              "attachment_ids": { "type": "array", "items": { "type": "string" } }
+            }
+          }
+        },
+        "terms_agreed_at": { "type": "string", "format": "date-time" },
+        "agreed_final_terms_summary": { "type": "string", "description": "One-paragraph summary of what got verbally agreed at terms_agreed transition. The legal contract written in CONTRACT stage should match this." }
+      }
+    },
+
+    "contractStage": {
+      "type": "object",
+      "description": "Captured during CONTRACT stage. v0.1: manual PDF + dates. v2: DocuSign/PandaDoc/HelloSign integration via API.",
+      "additionalProperties": false,
+      "properties": {
+        "contract_attachment_id": { "type": "string", "description": "FK to attachments[] for the final signed PDF." },
+        "draft_contract_attachment_id": { "type": "string", "description": "Pre-signature draft PDF." },
+        "e_sign_provider": {
+          "type": "string",
+          "enum": ["manual", "docusign", "pandadoc", "hellosign", "other"],
+          "default": "manual",
+          "description": "v0.1: manual (PDF upload + dates tracked). v2: API integration with the chosen provider auto-populates signed_at fields and the contract_attachment_id."
+        },
+        "e_sign_envelope_id": { "type": "string", "description": "Provider's identifier for the e-sign envelope. v2." },
+        "contract_drafting_started_at": { "type": "string", "format": "date-time" },
+        "sent_to_brand_for_review_at": { "type": "string", "format": "date-time" },
+        "sent_to_talent_for_review_at": { "type": "string", "format": "date-time" },
+        "talent_signed_at": { "type": "string", "format": "date-time" },
+        "brand_signed_at": { "type": "string", "format": "date-time" },
+        "contract_executed_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When BOTH sides have signed. This is the moment legally + the moment delivery can begin."
+        },
+        "amendment_log": {
+          "type": "array",
+          "description": "Post-execution amendments (scope changes, extensions). Each is itself a mini-contract event.",
+          "items": {
+            "type": "object",
+            "required": ["at", "summary"],
+            "additionalProperties": false,
+            "properties": {
+              "at": { "type": "string", "format": "date-time" },
+              "summary": { "type": "string" },
+              "attachment_id": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+
+    "deliveryStage": {
+      "type": "object",
+      "description": "Captured during DELIVERY stage. Content production, brand approval, posting, performance capture.",
+      "additionalProperties": false,
+      "properties": {
+        "production_kickoff_at": { "type": "string", "format": "date-time" },
+        "products_shipped_to_talent_at": { "type": "string", "format": "date-time", "description": "If applicable — brand sent product samples." },
+        "products_received_by_talent_at": { "type": "string", "format": "date-time" },
+        "content_drafts": {
+          "type": "array",
+          "description": "Per-deliverable content drafts submitted for brand approval. Versioned — revisions add new entries.",
+          "items": {
+            "type": "object",
+            "required": ["deliverable_ref", "version", "submitted_at", "brand_review_status"],
+            "additionalProperties": false,
+            "properties": {
+              "deliverable_ref": { "type": "string", "description": "Reference to which entry in `proposal.deliverables[]` this is (e.g. 'instagram-reel-1')." },
+              "version": { "type": "integer", "minimum": 1 },
+              "draft_attachment_id": { "type": "string" },
+              "draft_url": { "type": "string", "format": "uri", "description": "Optional external preview URL." },
+              "submitted_at": { "type": "string", "format": "date-time" },
+              "brand_review_status": {
+                "type": "string",
+                "enum": ["pending", "approved", "revisions_requested", "rejected"]
+              },
+              "brand_review_at": { "type": "string", "format": "date-time" },
+              "brand_review_notes": { "type": "string" }
+            }
+          }
+        },
+        "posting_schedule": {
+          "type": "array",
+          "description": "When content is scheduled to / has gone live.",
+          "items": {
+            "type": "object",
+            "required": ["deliverable_ref", "scheduled_for"],
+            "additionalProperties": false,
+            "properties": {
+              "deliverable_ref": { "type": "string" },
+              "scheduled_for": { "type": "string", "format": "date-time" },
+              "posted_at": { "type": "string", "format": "date-time", "description": "When it actually went live." },
+              "post_url": { "type": "string", "format": "uri" }
+            }
+          }
+        },
+        "performance_capture_window_starts_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Typically the day the first piece of content goes live. KPI capture cron starts pulling platform insights from this point."
+        },
+        "performance_capture_window_ends_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Typically 30 days after last post — KPIs continue to grow during this window. After this, final KPI snapshot taken."
+        }
+      }
+    },
+
+    "closeStage": {
+      "type": "object",
+      "description": "Captured during CLOSE stage. Invoicing, payment, final report, archive trigger.",
+      "additionalProperties": false,
+      "properties": {
+        "invoice_id": {
+          "type": "string",
+          "description": "External invoice identifier — agency's invoicing system / Xero / QuickBooks / etc."
+        },
+        "invoice_attachment_id": { "type": "string", "description": "FK to attachments[] for the invoice PDF." },
+        "invoice_provider": {
+          "type": "string",
+          "enum": ["manual", "stripe_invoices", "xero", "quickbooks", "wave", "other"],
+          "default": "manual",
+          "description": "v0.1: manual (PDF + dates). v2: API integration auto-populates these fields."
+        },
+        "invoice_amount_usd": { "type": "number", "minimum": 0 },
+        "invoice_currency": { "type": "string", "pattern": "^[A-Z]{3}$" },
+        "invoice_sent_at": { "type": "string", "format": "date-time" },
+        "payment_due_at": { "type": "string", "format": "date-time" },
+        "payment_received_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When payment landed. Required before auto-archive can fire."
+        },
+        "payment_method": {
+          "type": "string",
+          "enum": ["bank_transfer", "wire", "ach", "stripe", "paypal", "check", "other"]
+        },
+        "final_performance_report_attachment_id": {
+          "type": "string",
+          "description": "FK to attachments[] for the post-campaign performance report sent to brand."
+        },
+        "final_kpis": {
+          "type": "object",
+          "description": "Final KPI snapshot at archive time. Shape mirrors `brand_deal.kpis` from the Phase 1.5 schema — when auto-archived, these fields carry directly into the brand_deal record. Each metric has {value, source, as_of, verified_at} per the honesty-floor policy.",
+          "additionalProperties": true
+        },
+        "archived_to_brand_deal_id": {
+          "type": "string",
+          "pattern": "^deal_[a-z0-9_-]+$",
+          "description": "FK to the created entry in `data/brand_deals/{talent_id}.json` after auto-archive fires. Closes the loop — anyone looking at this deal can navigate forward to its archived historical record."
+        },
+        "archived_at": { "type": "string", "format": "date-time" }
+      }
+    },
+
+    "attachment": {
+      "type": "object",
+      "required": ["attachment_id", "type", "filename", "uploaded_at"],
+      "additionalProperties": false,
+      "properties": {
+        "attachment_id": {
+          "type": "string",
+          "pattern": "^att_[a-z0-9]+$",
+          "description": "Stable identifier. Other fields reference this (e.g. proposal.proposal_attachment_id)."
+        },
+        "type": {
+          "type": "string",
+          "enum": ["brief", "proposal", "contract", "amendment", "content_draft", "approval_artifact", "post_screenshot", "invoice", "payment_confirmation", "performance_report", "other"]
+        },
+        "filename": { "type": "string" },
+        "url": {
+          "type": "string",
+          "format": "uri",
+          "description": "Reference to where the file actually lives. v0.1: filesystem path or external link. v2: signed S3 URL."
+        },
+        "size_bytes": { "type": "integer", "minimum": 0 },
+        "mime_type": { "type": "string" },
+        "uploaded_at": { "type": "string", "format": "date-time" },
+        "uploaded_by_agent_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+        "description": { "type": "string" }
+      }
+    },
+
+    "note": {
+      "type": "object",
+      "required": ["note_id", "agent_id", "created_at", "content"],
+      "additionalProperties": false,
+      "properties": {
+        "note_id": { "type": "string", "pattern": "^note_[a-z0-9]+$" },
+        "agent_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+        "created_at": { "type": "string", "format": "date-time" },
+        "content": { "type": "string" },
+        "mentioned_contact_ids": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" }
+        }
+      }
+    }
+  }
+}

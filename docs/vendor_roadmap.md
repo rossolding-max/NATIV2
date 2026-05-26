@@ -31,6 +31,17 @@
 **Env var:** `LINKEDIN_API_KEY` (or per the provided access mechanism).
 **v0.1 scope is enrichment only — NOT outreach.** The LinkedIn API in v0.1 is used to read profile data, last-activity dates, and search. Sending LinkedIn messages / InMails / connection requests as part of an outreach sequence is **deferred to v2** — see `docs/outreach_workflow.md` § "Email-only in v0.1". When v2 ships LinkedIn-channel sending, we'll evaluate sender vendors (Sales Navigator API vs third-party platforms like Closely / Expandi / La Growth Machine) against LinkedIn's automation-policy enforcement.
 
+### Phase 4 vendor integrations (deferred — v2)
+**Role:** Phase 4 deal lifecycle (`docs/deal_lifecycle_workflow.md`) currently tracks contracts + invoices manually in v0.1 (PDF upload + dates). v2 adds API integrations for the high-friction operations:
+
+| Concern | v2 vendor options |
+|---|---|
+| Contract e-sign | **DocuSign** (industry standard), **PandaDoc** (best for proposal-to-contract flow), **HelloSign** / Dropbox Sign (cheaper) |
+| Invoicing | **Stripe Invoices** (also handles payment), **Xero** (UK + global accounting), **QuickBooks** (US accounting), **Wave** (free) |
+| Payment confirmation | Webhook from any of the above auto-populates `deal.close.payment_received_at` |
+
+Schema is already shaped to absorb: `deal.contract.e_sign_provider` + `e_sign_envelope_id`, `deal.close.invoice_provider` + `invoice_id`. v0.1 = `manual` for both; v2 swaps to vendor enum values + populates IDs from API. Env vars `DOCUSIGN_API_KEY`, `STRIPE_API_KEY`, `XERO_CLIENT_ID` etc. added when each vendor wires up.
+
 ### Smartlead.ai — outreach send + sequence backend (Phase 3b lead vendor)
 **Role:** Powers the cold-outreach engine spec'd in `docs/outreach_workflow.md`. Our app generates per-step AI content (Claude on our side) and pushes it to Smartlead via API; Smartlead handles the agency's sending mailbox + warmup, send scheduling, open/click tracking, reply detection. Webhooks fire back to our app for kill-logic and analytics.
 **Why Smartlead over alternatives:** API-first design — purpose-built for custom-app integration. Unlimited mailbox warmup included in base plan. Robust webhook support for the kill-on-reply logic. Per-mailbox economics align with our agency-sends-on-behalf model.
@@ -185,6 +196,9 @@ This is what the orchestrator will need configured by v0.1:
 | `PRODUCT_HUNT_DEVELOPER_TOKEN` | Daily launch feed | No (deferred — but free when added) |
 | `HUNTER_API_KEY` | Hunter.io email verification (Phase 3a v2) | No (v2) |
 | `CLAY_API_KEY` | Clay multi-source orchestrator (Phase 3a v2) | No (v2) |
+| `DOCUSIGN_API_KEY` | Contract e-sign (Phase 4 v2) | No (v2) |
+| `STRIPE_API_KEY` | Invoicing + payment confirmation (Phase 4 v2) | No (v2) |
+| `XERO_CLIENT_ID` | Accounting integration (Phase 4 v2) | No (v2) |
 
 This inventory is the source of truth — when adding a new vendor, append to this table.
 

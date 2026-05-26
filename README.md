@@ -14,7 +14,7 @@ Build an AI-powered assistant that helps an influencer (or a roster of influence
 | 2 | **Brand Discovery & Targeting** | v0.1 spec + data shipped | For a given talent, produce a ranked list of industries to pitch and a ranked long-list of specific brands within them — with qualification filtering, sensitive-vertical warnings, and re-engagement on a monthly cron. |
 | 3a | **Contact CRM** | v0.1 spec + schema shipped | For every primary-tier brand candidate, find the right named contacts (Apollo + LinkedIn API + web search) with verified emails, LinkedIn URLs, location, tenure, and a `decision_role` classification (CMO of a $50B brand is *not* the buyer for a £5k Reel — the IM Manager 2 levels down is). |
 | 3b | **Outreach** | v0.1 spec + schemas + angles library shipped | AI-generated personalised email sequences per contact + decision_role, sent via Smartlead from per-talent domains, with reply detection, kill-on-reply, and full per-email analytics provenance. |
-| 4 | **Deal admin** | TBD | Contracts, invoicing, usage-rights tracking, exclusivity-clock management, post-campaign reporting. |
+| 4 | **Deal Lifecycle** | v0.1 spec + schema shipped | Moves a deal through 5 stages — LEAD → PROPOSAL → CONTRACT → DELIVERY → CLOSE — from a Phase 3b `interested` reply through to a paid + archived deal. Auto-archives won deals into Phase 1.5 brand_deals. Structured loss-reason enum + funnel analytics. v0.1 tracks contracts/invoices manually; v2 adds DocuSign + Stripe + Xero API integrations. |
 
 ## End-to-end data flow
 
@@ -104,8 +104,28 @@ Build an AI-powered assistant that helps an influencer (or a roster of influence
 │     push to Smartlead → real-time webhooks → reply classification   │
 │     → kill across roster → analytics aggregation                    │
 │   schemas/pitch_template + pitch_enrollment + pitch_angle           │
-│   send via Smartlead from per-talent sender domains                 │
-└────────────────────────────────────────────────────────────────────┘
+│   send via Smartlead from the agency's mailbox                      │
+└────────────────────────────┬───────────────────────────────────────┘
+                             │ reply outcome=interested
+                             ▼
+┌────────────────────────────────────────────────────────────────────┐
+│ Phase 4  DEAL LIFECYCLE                                             │
+│   docs/deal_lifecycle_workflow.md                                   │
+│     5 stages: LEAD → PROPOSAL → CONTRACT → DELIVERY → CLOSE         │
+│     Each with substages, per-stage data blocks, state machine.      │
+│     v0.1 = manual contracts/invoices (PDF + dates);                 │
+│     v2 = DocuSign + Stripe + Xero API.                              │
+│     Structured loss-reason enum at any stage → funnel analytics.    │
+│   schemas/deal.schema.json                                          │
+│   output: data/deals/{deal_id}.json (gitignored)                    │
+└────────────────────────────┬───────────────────────────────────────┘
+                             │ on close + payment + KPIs:
+                             │ auto-archive
+                             ▼
+                  ┌─────────────────────────┐
+                  │  Phase 1.5 brand_deals  │
+                  │  (closes the loop)      │
+                  └─────────────────────────┘
 
    Cross-cutting:  docs/vendor_roadmap.md  ← external services + env vars
 ```
@@ -144,6 +164,7 @@ The fields below were not in the original request but were added because later p
 
 ### Files
 - `schemas/agency_profile.schema.json` — JSON Schema for the Phase 0 agency identity. Captures agency name/domain, the primary agent's identity, sending mailbox + warmup state, default signature template, CAN-SPAM-required company address. v0.1 enforces single-agent constraint via `agents` `maxItems: 1`. Validates `data/agency_profile.json` (gitignored).
+- `schemas/deal.schema.json` — JSON Schema for Phase 4 deal pipeline records. 5-stage lifecycle (LEAD → PROPOSAL → CONTRACT → DELIVERY → CLOSE) + substages + state machine + per-stage data blocks + attachments + notes + audit trail. Structured loss-reason enum. v0.1 = manual contracts/invoices; v2 fields ready for DocuSign / Stripe / Xero / QuickBooks API integration. Validates files under `data/deals/` (gitignored — commercial data + contracts + invoice amounts).
 - `schemas/talent.schema.json` — JSON Schema (Draft 2020-12) describing the talent profile.
 - `schemas/brand_candidates.schema.json` — JSON Schema for the per-talent Brand Discovery output. Validates every file written by the orchestrator under `data/brand_candidates/` (the folder itself is gitignored — generated artifact, not source).
 - `schemas/brand_contact.schema.json` — JSON Schema for per-brand contact records (Phase 3a). Validates every file under `data/brand_contacts/` (gitignored — contacts are PII and vendor data is licensed).
@@ -165,6 +186,7 @@ The fields below were not in the original request but were added because later p
 - `scripts/enrich_brand_map.py` — adds the 5 metadata fields per brand to `brand_industry_map.json`. Re-runnable; honest-gaps policy (omit fields where the curated value is unknown).
 - `docs/recommendation_algorithm.md` — draft spec for how the app combines all of the above into a ranked list of industries to target for a given talent. Forward-looking contract for when the app is built.
 - `docs/agency_setup_workflow.md` — Phase 0 one-time setup before any talent onboards. 7-step process: agency identity, primary agent, DNS records (SPF/DKIM/DMARC), sending mailbox provisioning via Smartlead, signature template (CAN-SPAM-compliant), 2-4 week warmup, final validation. v0.1 single-agent constraint documented; v2 expansion plan for multi-agent rosters.
+- `docs/deal_lifecycle_workflow.md` — Phase 4 spec for the deal pipeline. Defines the 5-stage lifecycle (LEAD → PROPOSAL → CONTRACT → DELIVERY → CLOSE), per-stage substages and data blocks, full state machine with valid transitions, structured loss reasons (budget / timing / competitor_won / internal_pivot / talent_no_fit / terms_disagreed / unresponsive / compliance_block / other), auto-archive on close into Phase 1.5 brand_deals, integration touchpoints with Phase 3b outreach (interested reply triggers deal creation) and Phase 1.5 (close triggers archive), notifications + reminders driven by `next_action_due_at`, failure handling, and the v2 vendor-integration roadmap (DocuSign / PandaDoc / HelloSign for e-sign; Stripe / Xero / QuickBooks for invoicing).
 - `docs/onboarding_workflow.md` — draft spec for how a user adds a new talent: web wizard with OAuth platform connections (paste-fallback), media-pack extraction by LLM, adaptive questionnaire for gaps, hybrid similar-talent seeding (user + AI suggestions), and a background AI research pass that populates similar-talent records. The per-talent sender-domain section was removed: outreach now uses the agency's pre-warmed mailbox from Phase 0.
 - `docs/brand_discovery.md` — draft spec for the long-list generator. **16 independent searches** runnable today (re-engagement, network expansion, affinity expansion, geo, life-stage, constraint-aware, graph, recently-funded via web search, **trending/rising brands via the [`last30days` skill](https://github.com/mvanhorn/last30days-skill) — multi-source social momentum signal across Reddit/X/TikTok/YouTube/HN/etc., run as a monthly cron**) merged with multi-source scoring. Monthly cron drives re-engagement with per-brand cool-downs. Future-versions section lists 12 more searches that need external data (Crunchbase API as a structured upgrade to Search 15, live `#ad` scraping, affiliate networks, creator marketplaces, EMV reports, etc.). Both structural enrichments (`brand_industry_map` metadata + `brand_competitors` graph) are now shipped and used by Searches 3, 4, 10, 14.
 - `docs/vendor_roadmap.md` — single source of truth for external-service decisions. Confirms **Exa** as the v0.1 web-search provider (Search 15). Catalogues deferred vendors with criteria for when to add each: ScrapeCreators (Search 16 visual platforms), Owler (competitor maintenance), Modash/HypeAuditor (brand DB bulk import), Exploding Topics (pre-trend detection), Product Hunt API (day-of launches), Tribe Dynamics EMV (top-spending brands per category), SimilarWeb (audience-overlap competitors), Crunchbase (structured funding data), Apollo (Phase 3 outreach contact discovery), plus alternatives for each. Includes the env-var inventory for all current + deferred services.
@@ -487,3 +509,67 @@ That's the entire vendor footprint for Phase 3b. Resend was considered but rejec
 Each slice computes: sent, delivered, reply rate, positive reply rate, human open rate (MPP-filtered), click rate, bounce rate, mean time-to-reply, total cost, cost per positive reply.
 
 **v0.1 explicit non-goal:** the analyzer does NOT auto-update `pitch_angles.json` `authored_strength_score`. Output is for human review only. Users edit angles manually as they learn. Closed-loop auto-tuning is a v2 deliverable.
+
+---
+
+## Phase 4 — Deal Lifecycle
+
+### Output
+A pipeline of active deals at `data/deals/{deal_id}.json` (gitignored — contracts, invoice amounts, payment records). Each deal moves through 5 stages from a Phase 3b `interested` reply through to a paid + archived brand deal. Validated against `schemas/deal.schema.json`.
+
+### The 5-stage lifecycle
+
+```
+LEAD ──► PROPOSAL ──► CONTRACT ──► DELIVERY ──► CLOSE ──► (archive to Phase 1.5)
+```
+
+| Stage | Substages | Data captured |
+|---|---|---|
+| **1. LEAD** | new_lead → initial_call_scheduled → initial_call_completed → brief_received → qualified / disqualified | Discovery call notes, brand brief (text or PDF), qualification decision + rationale |
+| **2. PROPOSAL** | proposal_drafting → proposal_sent → under_review → negotiation → terms_agreed / lost | Deliverables, fee_usd, usage_rights_granted, exclusivity, negotiation_log (chronological back-and-forth), agreed final terms summary |
+| **3. CONTRACT** | drafting → in_review_brand / in_review_talent → revisions → executed / failed | Draft + final PDFs, e_sign_provider (manual / docusign / pandadoc / hellosign), signed_at timestamps both sides, amendment log |
+| **4. DELIVERY** | pre_production → content_in_production → pending_brand_approval → revisions_requested → approved_for_posting → live → performance_window | Production schedule, products shipped, content drafts versioned per deliverable, brand approval log, posting schedule with URLs, performance capture window |
+| **5. CLOSE** | invoice_sent → invoice_paid → post_campaign_reporting → archived | Invoice ID + amount + provider (manual / stripe / xero / quickbooks), payment received timestamp + method, final performance report, final KPI snapshot, archive trigger |
+
+### State machine
+Every transition is governed by an explicit rule set in `docs/deal_lifecycle_workflow.md` § State machine. The orchestrator rejects any invalid transition (with a force-override flag for unusual cases like resurrecting a `lost` deal). `stage_history[]` is an append-only audit log of every transition with timestamp + agent + optional note.
+
+### Structured loss reasons
+Any non-archived terminal state populates a `loss` block with:
+- `reason` enum: `budget` / `timing` / `competitor_won` / `internal_pivot` / `talent_no_fit` / `terms_disagreed` / `unresponsive` / `compliance_block` / `other`
+- `lost_at_stage` (which stage we were in when the deal died)
+- `competitor_brand` (if reason=competitor_won)
+- Free-text `notes`
+
+Loss reason × lost_at_stage cross-tab in the analyzer surfaces funnel diagnostics ("30% of LEAD losses are `unresponsive` — discovery cadence too slow").
+
+### Auto-archive on close
+When `payment_received_at` is set AND `final_kpis` is captured AND `final_performance_report_attachment_id` is set, the orchestrator automatically:
+1. Builds a Phase 1.5 brand_deal record from the deal's data (deliverables, fee, KPIs, etc.)
+2. Sets the new brand_deal's `originated_from_pitch_enrollment_id` (closes the outreach → deal loop)
+3. Sets the brand_deal's `archived_from_deal_id` to this deal's id (bidirectional link)
+4. Writes to `data/brand_deals/{talent_id}.json`
+5. Sets this deal's `archived_to_brand_deal_id` + `archived_at`
+6. Transitions to `stage: "archived"`, `is_terminal: true`, `is_won: true`
+
+Single source of truth: active deals live in Phase 4; historical deals live in Phase 1.5. No drift.
+
+### Integration with Phase 3b outreach
+Reply classification `outcome="interested"` triggers deal creation in `stage: "lead"`:
+- `originating_enrollment_id` = the pitch enrollment that won the reply
+- `primary_contact_id` = the contact who replied
+- `assigned_agent_id` = the agent who sent the outreach
+- `outcome_classification.extracted_signals` pre-seeds substage (e.g. `asked_for_meeting: true` → `substage: "initial_call_scheduled"`)
+
+This closes the full **funnel: emails sent → delivered → replied → interested → deal created → won**. The analyzer can now compute per-angle / per-template / per-decision-role conversion-to-won-deal rates, not just reply rates.
+
+### Notifications + reminders
+Every deal carries `next_action` (free-text) + `next_action_due_at` (timestamp). A daily cron surfaces overdue actions in the agent's morning summary. The orchestrator auto-updates `next_action` on stage transitions (e.g. on `proposal_sent`, sets next_action to "Follow up in 3 days if no reply" with `next_action_due_at: proposal_sent_at + 3d`).
+
+### v0.1 vs v2 vendor integrations
+**v0.1 — manual:** contracts and invoices are tracked as PDF attachments + manually-set timestamps. `e_sign_provider: "manual"`, `invoice_provider: "manual"`.
+
+**v2 — API-integrated:** schema already has `e_sign_provider` / `e_sign_envelope_id` and `invoice_provider` / `invoice_id` fields. When v2 wires up DocuSign / PandaDoc / Stripe / Xero / QuickBooks, webhooks auto-populate the timestamp fields and upload signed PDFs. See `docs/vendor_roadmap.md` § Phase 4 vendor integrations.
+
+### Storage
+`data/deals/{deal_id}.json` per deal. Gitignored. Filesystem JSON for v0.1; production should move to Postgres (workflow state) + S3 (attachments) at build time.

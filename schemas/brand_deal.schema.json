@@ -263,6 +263,11 @@
           "pattern": "^enr_[a-z0-9]+$",
           "description": "Optional FK to `data/pitch_enrollments/{enrollment_id}.json` if this deal originated from a pitch our outreach engine sent. Closes the loop: we can compute 'reply → deal' conversion rates by talent / template / angle for the analytics layer."
         },
+        "archived_from_deal_id": {
+          "type": "string",
+          "pattern": "^deal_pipeline_[a-z0-9_-]+$",
+          "description": "Optional FK to the Phase 4 pipeline deal (`data/deals/{deal_id}.json`) that this historical brand_deal was auto-archived from. Closes the bidirectional link: the pipeline deal's `close.archived_to_brand_deal_id` points here, and this field points back. Anyone reviewing this archived deal can navigate to the full pipeline history."
+        },
 
         "data_sources": {
           "type": "array",
