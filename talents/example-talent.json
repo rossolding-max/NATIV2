@@ -1,0 +1,137 @@
+{
+  "$schema": "../schemas/talent.schema.json",
+  "id": "example-talent",
+  "name": "Example Talent",
+  "pronouns": "she/her",
+  "age": 27,
+  "location": { "city": "London", "country": "GB" },
+  "timezone": "Europe/London",
+  "languages": ["en-GB"],
+  "bio": "Lifestyle + fitness creator focused on sustainable training and everyday wellness.",
+  "content_niches": ["fitness", "wellness", "lifestyle"],
+
+  "contact": {
+    "email": "talent@example.com",
+    "manager": { "name": "", "email": "", "agency": "" }
+  },
+
+  "billing_entity": {
+    "legal_name": "Example Talent Ltd",
+    "country": "GB",
+    "tax_id": "",
+    "payment_methods": ["bank_transfer", "wise"]
+  },
+
+  "platforms": [
+    {
+      "platform": "instagram",
+      "handle": "@exampletalent",
+      "url": "https://instagram.com/exampletalent",
+      "primary": true,
+      "stats": {
+        "followers": 0,
+        "engagement_rate_pct": 0,
+        "avg_views": 0,
+        "avg_likes": 0,
+        "avg_comments": 0,
+        "last_updated": "2026-05-26"
+      },
+      "api_credentials": {
+        "access_token_ref": "env:INSTAGRAM_TOKEN_EXAMPLE_TALENT"
+      }
+    },
+    {
+      "platform": "tiktok",
+      "handle": "@exampletalent",
+      "url": "https://tiktok.com/@exampletalent",
+      "stats": { "followers": 0, "engagement_rate_pct": 0, "avg_views": 0, "last_updated": "2026-05-26" },
+      "api_credentials": { "access_token_ref": "env:TIKTOK_TOKEN_EXAMPLE_TALENT" }
+    }
+  ],
+
+  "audience_demographics": {
+    "age_bands": { "18-24": 35, "25-34": 45, "35-44": 15, "45-54": 5 },
+    "gender_split": { "female": 70, "male": 28, "non_binary": 1, "unknown": 1 },
+    "top_countries": [
+      { "country": "GB", "share": 55 },
+      { "country": "US", "share": 20 },
+      { "country": "AU", "share": 8 }
+    ],
+    "interests": ["fitness", "running", "healthy eating", "travel"]
+  },
+
+  "previous_brands": [
+    {
+      "brand": "Example Sportswear Co",
+      "industry": "sportswear",
+      "campaign_date": "2025-09-01",
+      "platforms": ["instagram", "tiktok"],
+      "deliverables": ["1x reel", "3x stories"],
+      "fee": { "amount": 5000, "currency": "GBP" },
+      "usage_rights_granted": "Organic + 30 days whitelisting",
+      "performance_notes": "Reel hit 1.2M views, 8% ER."
+    }
+  ],
+
+  "similar_talent": [
+    {
+      "name": "Other Creator",
+      "handles": [
+        { "platform": "instagram", "handle": "@othercreator", "url": "https://instagram.com/othercreator" }
+      ],
+      "previous_brands": [
+        { "brand": "Big Athleisure Brand", "industry": "sportswear" },
+        { "brand": "Protein Co", "industry": "supplements" }
+      ]
+    }
+  ],
+
+  "rate_card": {
+    "instagram": {
+      "currency": "GBP",
+      "deliverables": {
+        "reel": { "price": 4000 },
+        "story": { "price": 800, "notes": "Per frame" },
+        "feed_post": { "price": 2500 },
+        "carousel": { "price": 3000 }
+      },
+      "uplifts": { "usage_rights_pct": 30, "whitelisting_pct": 50, "exclusivity_pct": 100 }
+    },
+    "tiktok": {
+      "currency": "GBP",
+      "deliverables": {
+        "short": { "price": 3500 }
+      },
+      "uplifts": { "usage_rights_pct": 30, "whitelisting_pct": 50 }
+    }
+  },
+
+  "brand_preferences": {
+    "preferred_industries": ["sportswear", "wellness", "healthy food", "travel"],
+    "blocked_industries": ["gambling", "fast fashion", "tobacco", "alcohol"],
+    "values_red_lines": ["no diet culture / weight-loss products"],
+    "active_exclusivities": []
+  },
+
+  "working_terms": {
+    "default_usage_rights": "organic_plus_whitelisting",
+    "default_usage_duration_days": 30,
+    "default_turnaround_days": 14,
+    "revisions_included": 2,
+    "blackout_dates": []
+  },
+
+  "press_kit": {
+    "media_kit_url": "",
+    "headshot_urls": [],
+    "press_mentions": [],
+    "awards": []
+  },
+
+  "disclosure_defaults": { "style": "Paid partnership" },
+
+  "other_stats": {
+    "newsletter_subscribers": 0,
+    "podcast_downloads_monthly": 0
+  }
+}

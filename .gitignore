@@ -1,0 +1,7 @@
+.env
+.env.*
+!.env.example
+*.local.json
+talents/*.local.json
+node_modules/
+.DS_Store

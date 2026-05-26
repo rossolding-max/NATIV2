@@ -1,0 +1,425 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://nativ2.local/schemas/talent.schema.json",
+  "title": "Talent Profile",
+  "description": "Profile of an influencer/creator for the NATIV2 AI marketing assistant. One file per talent (multi-talent roster).",
+  "type": "object",
+  "required": ["id", "name", "platforms"],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Stable slug, e.g. 'jane-doe'. Used as the primary key across phases.",
+      "pattern": "^[a-z0-9][a-z0-9-]*$"
+    },
+    "name": { "type": "string" },
+    "pronouns": { "type": "string" },
+    "age": { "type": "integer", "minimum": 13, "maximum": 120 },
+    "date_of_birth": { "type": "string", "format": "date" },
+    "location": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "city": { "type": "string" },
+        "region": { "type": "string" },
+        "country": { "type": "string", "description": "ISO 3166-1 alpha-2, e.g. 'GB', 'US'." }
+      }
+    },
+    "timezone": { "type": "string", "description": "IANA timezone, e.g. 'Europe/London'." },
+    "languages": {
+      "type": "array",
+      "items": { "type": "string", "description": "BCP-47 tag, e.g. 'en', 'en-GB', 'es'." },
+      "uniqueItems": true
+    },
+    "bio": { "type": "string", "description": "Short pitch — 1–3 sentences." },
+    "content_niches": {
+      "type": "array",
+      "description": "Primary content categories, e.g. 'fitness', 'beauty', 'gaming'.",
+      "items": { "type": "string" },
+      "uniqueItems": true
+    },
+
+    "contact": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "email": { "type": "string", "format": "email" },
+        "phone": { "type": "string" },
+        "manager": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "name": { "type": "string" },
+            "email": { "type": "string", "format": "email" },
+            "phone": { "type": "string" },
+            "agency": { "type": "string" }
+          }
+        }
+      }
+    },
+
+    "billing_entity": {
+      "type": "object",
+      "description": "Legal/tax info needed to invoice brands.",
+      "additionalProperties": false,
+      "properties": {
+        "legal_name": { "type": "string" },
+        "company_number": { "type": "string" },
+        "country": { "type": "string", "description": "ISO 3166-1 alpha-2." },
+        "tax_id": { "type": "string", "description": "VAT/EIN/equivalent." },
+        "address": { "type": "string" },
+        "payment_methods": {
+          "type": "array",
+          "items": { "type": "string", "enum": ["bank_transfer", "paypal", "stripe", "wise", "crypto", "other"] },
+          "uniqueItems": true
+        }
+      }
+    },
+
+    "platforms": {
+      "type": "array",
+      "description": "One entry per social platform the talent is active on.",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/platformAccount" }
+    },
+
+    "audience_demographics": {
+      "type": "object",
+      "description": "Aggregate audience demographics across all platforms. Per-platform overrides live on each platform entry.",
+      "additionalProperties": false,
+      "properties": {
+        "age_bands": {
+          "type": "object",
+          "description": "Share by age band as a percentage 0–100. Keys: '13-17','18-24','25-34','35-44','45-54','55-64','65+'.",
+          "additionalProperties": { "type": "number", "minimum": 0, "maximum": 100 }
+        },
+        "gender_split": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "female": { "type": "number", "minimum": 0, "maximum": 100 },
+            "male": { "type": "number", "minimum": 0, "maximum": 100 },
+            "non_binary": { "type": "number", "minimum": 0, "maximum": 100 },
+            "unknown": { "type": "number", "minimum": 0, "maximum": 100 }
+          }
+        },
+        "top_countries": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["country", "share"],
+            "additionalProperties": false,
+            "properties": {
+              "country": { "type": "string", "description": "ISO 3166-1 alpha-2." },
+              "share": { "type": "number", "minimum": 0, "maximum": 100 }
+            }
+          }
+        },
+        "top_cities": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["city", "share"],
+            "additionalProperties": false,
+            "properties": {
+              "city": { "type": "string" },
+              "country": { "type": "string" },
+              "share": { "type": "number", "minimum": 0, "maximum": 100 }
+            }
+          }
+        },
+        "top_languages": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["language", "share"],
+            "additionalProperties": false,
+            "properties": {
+              "language": { "type": "string" },
+              "share": { "type": "number", "minimum": 0, "maximum": 100 }
+            }
+          }
+        },
+        "interests": {
+          "type": "array",
+          "items": { "type": "string" },
+          "uniqueItems": true
+        }
+      }
+    },
+
+    "previous_brands": {
+      "type": "array",
+      "description": "Brands the talent has worked with previously.",
+      "items": { "$ref": "#/$defs/brandDeal" }
+    },
+
+    "similar_talent": {
+      "type": "array",
+      "description": "Other creators in the same competitive set — used for positioning and brand discovery.",
+      "items": { "$ref": "#/$defs/similarTalent" }
+    },
+
+    "rate_card": {
+      "type": "object",
+      "description": "Price per deliverable, keyed by platform → deliverable type.",
+      "additionalProperties": {
+        "type": "object",
+        "description": "Per-platform rate card.",
+        "additionalProperties": false,
+        "properties": {
+          "currency": { "type": "string", "description": "ISO 4217, e.g. 'GBP', 'USD'." },
+          "deliverables": {
+            "type": "object",
+            "description": "Keyed by deliverable type, e.g. 'reel','story','feed_post','carousel','live','long_form_video','short','tweet','thread','podcast_mention','newsletter'.",
+            "additionalProperties": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["price"],
+              "properties": {
+                "price": { "type": "number", "minimum": 0 },
+                "notes": { "type": "string" }
+              }
+            }
+          },
+          "bundles": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["name", "price"],
+              "additionalProperties": false,
+              "properties": {
+                "name": { "type": "string" },
+                "includes": { "type": "array", "items": { "type": "string" } },
+                "price": { "type": "number", "minimum": 0 },
+                "notes": { "type": "string" }
+              }
+            }
+          },
+          "uplifts": {
+            "type": "object",
+            "description": "Percentage uplifts on base price for extra rights.",
+            "additionalProperties": false,
+            "properties": {
+              "usage_rights_pct": { "type": "number", "minimum": 0 },
+              "whitelisting_pct": { "type": "number", "minimum": 0 },
+              "exclusivity_pct": { "type": "number", "minimum": 0 }
+            }
+          }
+        }
+      }
+    },
+
+    "brand_preferences": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "preferred_industries": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+        "blocked_industries": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+        "values_red_lines": {
+          "type": "array",
+          "description": "Hard nos — e.g. 'fast fashion', 'crypto', 'gambling'.",
+          "items": { "type": "string" }
+        },
+        "active_exclusivities": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["category"],
+            "additionalProperties": false,
+            "properties": {
+              "category": { "type": "string", "description": "e.g. 'protein powder', 'running shoes'." },
+              "brand": { "type": "string" },
+              "ends_on": { "type": "string", "format": "date" }
+            }
+          }
+        }
+      }
+    },
+
+    "working_terms": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "default_usage_rights": {
+          "type": "string",
+          "enum": ["organic_only", "organic_plus_whitelisting", "organic_plus_paid_social", "full_paid_media"]
+        },
+        "default_usage_duration_days": { "type": "integer", "minimum": 0 },
+        "default_turnaround_days": { "type": "integer", "minimum": 0 },
+        "revisions_included": { "type": "integer", "minimum": 0 },
+        "blackout_dates": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["start", "end"],
+            "additionalProperties": false,
+            "properties": {
+              "start": { "type": "string", "format": "date" },
+              "end": { "type": "string", "format": "date" },
+              "reason": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+
+    "press_kit": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "media_kit_url": { "type": "string", "format": "uri" },
+        "headshot_urls": { "type": "array", "items": { "type": "string", "format": "uri" } },
+        "demo_reel_urls": { "type": "array", "items": { "type": "string", "format": "uri" } },
+        "press_mentions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["title", "url"],
+            "additionalProperties": false,
+            "properties": {
+              "title": { "type": "string" },
+              "publication": { "type": "string" },
+              "url": { "type": "string", "format": "uri" },
+              "date": { "type": "string", "format": "date" }
+            }
+          }
+        },
+        "awards": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+
+    "disclosure_defaults": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "style": { "type": "string", "enum": ["#ad", "#sponsored", "Paid partnership", "Gifted", "other"] },
+        "notes": { "type": "string" }
+      }
+    },
+
+    "other_stats": {
+      "type": "object",
+      "description": "Free-form key/value bag for anything that doesn't fit (newsletter subs, Discord size, podcast downloads, etc.).",
+      "additionalProperties": true
+    }
+  },
+
+  "$defs": {
+    "platformAccount": {
+      "type": "object",
+      "required": ["platform", "handle"],
+      "additionalProperties": false,
+      "properties": {
+        "platform": {
+          "type": "string",
+          "enum": ["instagram", "tiktok", "youtube", "x", "twitter", "facebook", "snapchat", "twitch", "linkedin", "pinterest", "threads", "substack", "podcast", "other"]
+        },
+        "handle": { "type": "string" },
+        "url": { "type": "string", "format": "uri" },
+        "primary": { "type": "boolean", "description": "True if this is the talent's main platform." },
+        "stats": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "followers": { "type": "integer", "minimum": 0 },
+            "engagement_rate_pct": { "type": "number", "minimum": 0, "maximum": 100 },
+            "avg_views": { "type": "integer", "minimum": 0 },
+            "avg_likes": { "type": "integer", "minimum": 0 },
+            "avg_comments": { "type": "integer", "minimum": 0 },
+            "avg_shares": { "type": "integer", "minimum": 0 },
+            "last_updated": { "type": "string", "format": "date" }
+          }
+        },
+        "audience_demographics_override": {
+          "description": "Optional per-platform override of the top-level audience_demographics.",
+          "$ref": "#/properties/audience_demographics"
+        },
+        "api_credentials": {
+          "type": "object",
+          "description": "References to credentials — never the raw secret.",
+          "additionalProperties": false,
+          "properties": {
+            "access_token_ref": { "type": "string", "description": "e.g. 'env:INSTAGRAM_TOKEN' or 'vault:nativ2/instagram/jane-doe'." },
+            "refresh_token_ref": { "type": "string" },
+            "client_id_ref": { "type": "string" },
+            "client_secret_ref": { "type": "string" },
+            "scopes": { "type": "array", "items": { "type": "string" } },
+            "expires_at": { "type": "string", "format": "date-time" }
+          }
+        }
+      }
+    },
+
+    "brandDeal": {
+      "type": "object",
+      "required": ["brand", "industry"],
+      "additionalProperties": false,
+      "properties": {
+        "brand": { "type": "string" },
+        "industry": { "type": "string", "description": "e.g. 'beauty', 'fintech', 'sportswear'." },
+        "campaign_date": { "type": "string", "format": "date" },
+        "platforms": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "deliverables": { "type": "array", "items": { "type": "string" } },
+        "fee": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "amount": { "type": "number", "minimum": 0 },
+            "currency": { "type": "string" }
+          }
+        },
+        "usage_rights_granted": { "type": "string" },
+        "performance_notes": { "type": "string" },
+        "brand_contact": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "name": { "type": "string" },
+            "role": { "type": "string" },
+            "email": { "type": "string", "format": "email" }
+          }
+        }
+      }
+    },
+
+    "similarTalent": {
+      "type": "object",
+      "required": ["name"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "handles": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["platform", "handle"],
+            "additionalProperties": false,
+            "properties": {
+              "platform": { "type": "string" },
+              "handle": { "type": "string" },
+              "url": { "type": "string", "format": "uri" }
+            }
+          }
+        },
+        "previous_brands": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["brand", "industry"],
+            "additionalProperties": false,
+            "properties": {
+              "brand": { "type": "string" },
+              "industry": { "type": "string" }
+            }
+          }
+        },
+        "notes": { "type": "string" }
+      }
+    }
+  }
+}
