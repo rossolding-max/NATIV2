@@ -9,6 +9,7 @@ Pairs with:
 - `docs/recommendation_algorithm.md` — runs first on the talent profile and ranks **industries**; the recommended industries feed Searches 5–9 here.
 - `docs/onboarding_workflow.md` — produces the talent profile this doc reads. Step 9B of onboarding triggers the first Brand Discovery run automatically.
 - `docs/brand_enrichment_workflow.md` — Searches 15 and 16 surface novel brands and call this pipeline to enrich them before adding to the candidates file.
+- `docs/contact_enrichment_workflow.md` (Phase 3a) — when a brand surfaces here at `tier: primary` AND `qualification.tier ∈ [qualified, speculative]`, the contact enrichment pipeline kicks off automatically to find named contacts at that brand. The contacts file (`data/brand_contacts/{brand_id}.json`) becomes the input for Phase 3b outreach.
 - `docs/vendor_roadmap.md` — the external services these searches use (Exa confirmed; `last30days` skill via its own sub-services).
 
 ---

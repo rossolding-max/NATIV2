@@ -10,7 +10,8 @@ Build an AI-powered assistant that helps an influencer (or a roster of influence
 |---|-------|--------|---------|
 | 1 | **Talent Profile** | v0.1 spec + data shipped | Capture everything the system needs about the creator(s) — identity, audience, history, rates, similar talents. The foundation every later phase reads from. |
 | 2 | **Brand Discovery & Targeting** | v0.1 spec + data shipped | For a given talent, produce a ranked list of industries to pitch and a ranked long-list of specific brands within them — with qualification filtering, sensitive-vertical warnings, and re-engagement on a monthly cron. |
-| 3 | **Outreach** | TBD | Take the ranked brand list, find the right contact (Apollo et al.), draft + send personalised pitches, track replies, hand off to negotiation. |
+| 3a | **Contact CRM** | v0.1 spec + schema shipped | For every primary-tier brand candidate, find the right named contacts (Apollo + LinkedIn API + web search) with verified emails, LinkedIn URLs, location, tenure, and a `decision_role` classification (CMO of a $50B brand is *not* the buyer for a £5k Reel — the IM Manager 2 levels down is). |
+| 3b | **Outreach** | TBD | Templated personalised pitches, send-and-track infrastructure, reply detection, follow-up cadences. |
 | 4 | **Deal admin** | TBD | Contracts, invoicing, usage-rights tracking, exclusivity-clock management, post-campaign reporting. |
 
 ## End-to-end data flow
@@ -55,8 +56,20 @@ Build an AI-powered assistant that helps an influencer (or a roster of influence
                              │
                              ▼
 ┌────────────────────────────────────────────────────────────────────┐
-│ Phase 3  OUTREACH (TBD)                                            │
-│   Apollo for contact discovery → personalised pitch → reply track  │
+│ Phase 3a  CONTACT CRM                                              │
+│   docs/contact_enrichment_workflow.md                              │
+│     9-step pipeline: identify target roles → Apollo lookup →       │
+│     LinkedIn API enrichment → web-search backup → email verify →   │
+│     decision-role classify → placeholders → dedup → write          │
+│     output: data/brand_contacts/{brand_id}.json (gitignored, PII)  │
+│     schema: schemas/brand_contact.schema.json                      │
+│   triggered on primary-tier brand promotion + manual + quarterly   │
+└────────────────────────────┬───────────────────────────────────────┘
+                             │
+                             ▼
+┌────────────────────────────────────────────────────────────────────┐
+│ Phase 3b  OUTREACH (TBD)                                           │
+│   Templated personalised pitches → send/track → reply → follow-up  │
 └────────────────────────────────────────────────────────────────────┘
 
    Cross-cutting:  docs/vendor_roadmap.md  ← external services + env vars
@@ -97,6 +110,7 @@ The fields below were not in the original request but were added because later p
 ### Files
 - `schemas/talent.schema.json` — JSON Schema (Draft 2020-12) describing the talent profile.
 - `schemas/brand_candidates.schema.json` — JSON Schema for the per-talent Brand Discovery output. Validates every file written by the orchestrator under `data/brand_candidates/` (the folder itself is gitignored — generated artifact, not source).
+- `schemas/brand_contact.schema.json` — JSON Schema for per-brand contact records (Phase 3a). Validates every file under `data/brand_contacts/` (gitignored — contacts are PII and vendor data is licensed).
 - `talents/example-talent.json` — template instance, partially filled.
 - `data/niches.json` — canonical creator content-niche taxonomy (145 entries).
 - `data/industries.json` — canonical brand-industry taxonomy (178 entries).
@@ -113,6 +127,7 @@ The fields below were not in the original request but were added because later p
 - `docs/brand_discovery.md` — draft spec for the long-list generator. **16 independent searches** runnable today (re-engagement, network expansion, affinity expansion, geo, life-stage, constraint-aware, graph, recently-funded via web search, **trending/rising brands via the [`last30days` skill](https://github.com/mvanhorn/last30days-skill) — multi-source social momentum signal across Reddit/X/TikTok/YouTube/HN/etc., run as a monthly cron**) merged with multi-source scoring. Monthly cron drives re-engagement with per-brand cool-downs. Future-versions section lists 12 more searches that need external data (Crunchbase API as a structured upgrade to Search 15, live `#ad` scraping, affiliate networks, creator marketplaces, EMV reports, etc.). Both structural enrichments (`brand_industry_map` metadata + `brand_competitors` graph) are now shipped and used by Searches 3, 4, 10, 14.
 - `docs/vendor_roadmap.md` — single source of truth for external-service decisions. Confirms **Exa** as the v0.1 web-search provider (Search 15). Catalogues deferred vendors with criteria for when to add each: ScrapeCreators (Search 16 visual platforms), Owler (competitor maintenance), Modash/HypeAuditor (brand DB bulk import), Exploding Topics (pre-trend detection), Product Hunt API (day-of launches), Tribe Dynamics EMV (top-spending brands per category), SimilarWeb (audience-overlap competitors), Crunchbase (structured funding data), Apollo (Phase 3 outreach contact discovery), plus alternatives for each. Includes the env-var inventory for all current + deferred services.
 - `docs/brand_enrichment_workflow.md` — draft spec for the 9-step pipeline that takes a brand from name-only to fully-populated record in `brand_industry_map.json`. Covers identity resolution, domain resolution, industry classification, HQ/markets, company stage, campaign tier, creator-program presence, revenue + headcount, social follower counts. Three triggers (seed expansion / in-flight discovery writeback / annual refresh), tool-per-step mapping, honesty-floor policy, validation gates, and a state machine. Pairs with brand_discovery.md (consumer) and vendor_roadmap.md (external services).
+- `docs/contact_enrichment_workflow.md` — Phase 3a spec for the 9-step pipeline that turns a primary-tier brand candidate into a list of named contacts with verified emails, LinkedIn URLs, location, tenure, and decision-role classification. Covers target-role identification (scaled to brand size), Apollo employee lookup, LinkedIn API enrichment, web-search backup via Exa, email verification, LLM-driven decision-role classification (the CMO-of-megabrand vs. IM-Manager-2-levels-down distinction), placeholder generation for known-but-unfilled roles, cross-source dedup, GDPR-compliant opt-out handling, and the shared-roster-pool / per-talent-pitch-history model.
 - `.gitignore` — ensures any `*.local.json` or `.env` files containing real keys are never committed.
 
 ### Reference taxonomies
@@ -233,9 +248,82 @@ Honest-gaps policy: fields are absent when not confident — never null, never f
 ### Output preservation
 The orchestrator merges fresh discovery output with the previous run's workflow state. Discovery-output fields (`score`, `tier`, `sources`, etc.) are rebuilt every run; workflow-state fields (`status`, `assigned_to`, `user_notes`, `pitch_history`, `first_surfaced_at`) are **preserved**. A user-set `status: "shortlisted"` survives next month's discovery re-run intact. Immutable monthly snapshots are kept under `data/brand_candidates/runs/{talent_id}/run_{date}.json` — needed for the rising-delta / mention-velocity enhancements specced for Search 16.
 
-### Vendor stack (v0.1)
-Only two paid dependencies:
+### Vendor stack (v0.1, for Phase 2)
+Two paid dependencies:
 - **Exa** — semantic web search for Search 15 + brand enrichment lookups.
 - **Anthropic SDK (Claude Haiku 4.5)** — classification + extraction throughout.
 
 Everything else (Reddit / HN / YouTube / X / GitHub / Wikipedia / Yahoo Finance for the `last30days` and enrichment pipelines) uses free public APIs or scrapes. Deferred vendors with criteria-for-adding live in `docs/vendor_roadmap.md`.
+
+---
+
+## Phase 3a — Contact CRM
+
+### Output
+A per-brand contact list at `data/brand_contacts/{brand_id}.json`, validated against `schemas/brand_contact.schema.json`. The folder is **gitignored** — contacts are PII and vendor data (Apollo/LinkedIn) is licensed; only the schema and spec are tracked in the repo.
+
+### Shared pool, per-talent pitch history
+One contact pool serves the whole roster (no double-paying Apollo for the same person if two talents target the same brand). `pitch_history[]` on each contact carries `talent_id` per entry — so we know which talent pitched whom and when, with a configurable 14-day cooldown to prevent double-pitching the same person across two talents in our roster.
+
+### Contact record sections
+
+| Section | Fields |
+|---|---|
+| **Identity** | `contact_id` (slug), `brand_id`, `name.{full,first,last,preferred}`, `is_placeholder` |
+| **Role** | `title`, `function` (enum: influencer_marketing / brand_partnerships / marketing / brand_management / social_media / pr_comms / creative / founder_ceo / agency_of_record / ...), `seniority` (founder / c_suite / svp / vp / director / manager / ic), `decision_role`, `decision_role_rationale`, `decision_authority_size_band` |
+| **Location** | city, country (ISO α-2), timezone |
+| **Channels** | `email.{address, verification_status, source, verified_at}` · `linkedin.{url, handle, last_updated, last_activity}` · `social_handles` · `phone` (rare) |
+| **Tenure** | `started_at`, `previous_brand`, `is_current` |
+| **Qualification** | `score` (0–1), `tier` (qualified / speculative / unqualified), `signals[]` |
+| **Workflow** (preserved across re-enrichment) | `tags[]`, `notes`, `pitch_history[]`, `do_not_contact`, `opt_out_at`, `champion_for_talents[]` |
+| **Enrichment meta** | `first_discovered_at`, `last_verified_at`, `verification_sources[]`, `confidence` |
+
+### Decision-role taxonomy
+A CMO at a $50B+ brand has the title but not the sign-off authority for a £5k Reel deal. The Influencer Marketing Manager 2 levels down is the real `decision_maker`. The taxonomy captures both, with explicit role:
+
+| `decision_role` | Typical at |
+|---|---|
+| `decision_maker` | IM Manager at mid+ brand; founder/CEO at startup |
+| `budget_holder` | Finance director, AOR account director |
+| `influencer` (decision-shaping, not the creator role) | Senior brand manager, creative director, *CMO at megabrand* |
+| `champion` | Internal advocate / known fan |
+| `gatekeeper` | EA, AOR account manager |
+| `end_user` | Brand manager, social media manager |
+| `recommender` | Brand-side creatives, junior staff |
+| `blocker` | Captured from past outreach failures |
+| `unknown` | Default until classified |
+
+LLM-driven classification at Step 6 of the enrichment pipeline outputs `decision_role` + a one-line rationale visible to the user.
+
+### Contact-qualification signals
+Ranks contacts *within* a brand (separate from brand-level qualification in Phase 2):
+
+| Direction | Signal | Source |
+|---|---|---|
+| (+) | `has_verified_email`, `holds_decision_role`, `tenure_at_least_1y`, `recent_linkedin_activity`, `champion_for_other_talents`, `warm_intro_available`, `matches_brand_typical_tier`, `in_target_audience_country` | Apollo + LinkedIn API + pitch_history |
+| (−) | `left_brand`, `placeholder_only`, `email_bounced_recently`, `senior_executive_at_large_brand`, `unverified_email`, `no_linkedin_url`, `stale_data` | Same + verification status |
+
+### Triggers
+- **Auto:** when a brand surfaces in `brand_candidates` as `tier: primary` AND `qualification.tier ∈ [qualified, speculative]` AND no contacts file exists yet — kicks off in-flight after Brand Discovery completes.
+- **Manual:** user clicks "find contacts" for a specific brand.
+- **Refresh:** quarterly re-verifies emails; annual re-pulls LinkedIn data.
+
+### Vendor stack (Phase 3 v0.1)
+Three confirmed for v0.1:
+- **Apollo** — primary employee lookup + email verification (~$0.20–$0.50/contact)
+- **LinkedIn API** (user-provided) — freshness check, last-activity, search for contacts Apollo misses
+- **Exa** — fallback for brands Apollo doesn't cover (small D2C, niche)
+- **Claude Haiku** — decision-role classification + web-search extraction
+
+Deferred to Phase 3 v2: **Hunter.io**, **Clay.com**, **RocketReach** — see `docs/vendor_roadmap.md` for criteria.
+
+### Privacy / GDPR
+- Folder gitignored — contact PII never committed
+- Right to be forgotten: `opt_out_at` + `do_not_contact` keep record (audit) but exclude from all future outreach
+- Lawful basis: legitimate-interest for B2B marketing-role contacts; outreach on behalf of named talent
+- Data minimisation: phone/personal-email opt-in per-brand, not default
+- Vendor licensing: Apollo data stays in the gitignored folder, never redistributed
+- Per-talent cooldown: 14 days between pitches to the same contact across different talents in our roster
+
+### Placeholder contacts
+When a target role is known to exist at a brand (e.g. "Nike must have an IM Manager") but no person is found, the pipeline writes a placeholder record (`is_placeholder: true`, name like "Unknown — Influencer Marketing Manager"). Surfaces coverage gaps as a dashboard signal so they can be filled later. Placeholders are filtered from default outreach lists but counted in the per-brand contact coverage stat.

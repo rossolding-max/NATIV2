@@ -5,7 +5,7 @@
 ## Confirmed for v0.1
 
 ### Exa — semantic web search
-**Role:** powers Search 15 (recently-funded / newly-visible brands) and any other AI-grounding search the orchestrator needs.
+**Role:** powers Search 15 (recently-funded / newly-visible brands) and any other AI-grounding search the orchestrator needs. Also used by the Brand Enrichment pipeline (Step 4 fallback in `docs/brand_enrichment_workflow.md`) and the Contact Enrichment pipeline (Step 4 in `docs/contact_enrichment_workflow.md`).
 **Why Exa:** purpose-built for AI-agent workflows. Neural + keyword hybrid; clean structured outputs; content extraction endpoint; "find similar URL" lets you seed with one trending brand page and pull lookalikes; better signal-per-query than general search APIs for discovery use cases.
 **Endpoints we'll use:**
 - `/search` — neural search with `category` + `livecrawl` + `text` content extraction
@@ -13,6 +13,22 @@
 - `/contents` — extract structured page content for LLM brand extraction
 **Cost:** free tier covers initial development; paid scales linearly with query volume. Re-evaluate when monthly call volume passes the free quota.
 **Env var:** `EXA_API_KEY`.
+
+### Apollo.io — contact discovery (Phase 3 lead vendor)
+**Role:** Primary source for `data/brand_contacts/{brand_id}.json` (see `docs/contact_enrichment_workflow.md`). Provides employee lookup by brand domain + role filters, SMTP-verified emails, LinkedIn URLs, location, tenure. Best coverage on US/EU B2B + mid-to-large D2C brands.
+**Why Apollo over alternatives:** ~73M+ companies and ~275M+ contacts; inline email verification; reasonable per-record economics at our expected volume.
+**Endpoints we'll use:**
+- `/people/search` — query employees by org domain + title filters
+- `/people/match` — enrich a known person record
+- `/organizations/enrich` — get company-level metadata
+**Cost:** $99–$500+/mo by volume; roughly $0.20–$0.50 per enriched contact at scale. Budget per-talent, per-discovery-run.
+**Env var:** `APOLLO_API_KEY`.
+
+### LinkedIn API — contact verification + LinkedIn-native search
+**Role:** Confirms Apollo data is fresh (Apollo lags 3–6 months on job changes), pulls last-activity dates for the `recent_linkedin_activity` qualification signal, and provides LinkedIn-native search to find contacts Apollo misses (especially smaller brands and recent hires). See `docs/contact_enrichment_workflow.md` Step 3.
+**Scope:** access agreement provided by the user; specific API tier (standard / Sales Navigator / partnership) confirmed at integration time.
+**Cost:** per access agreement.
+**Env var:** `LINKEDIN_API_KEY` (or per the provided access mechanism).
 
 ---
 
@@ -94,19 +110,33 @@ Each deferred vendor has the same template: what it unlocks, cost, when to add, 
 
 ## Phase 3 vendors (outreach, not discovery)
 
-Phase numbering across this codebase: **Phase 1** = Talent Profile, **Phase 2** = Brand Discovery (what this roadmap mainly serves), **Phase 3** = Outreach. The vendors below don't belong in Brand Discovery but are noted here so they're not forgotten when the outreach phase begins.
+Phase numbering across this codebase: **Phase 1** = Talent Profile, **Phase 2** = Brand Discovery (what this roadmap mainly serves), **Phase 3** = Outreach. Apollo + LinkedIn API are now in the v0.1 confirmed list above because the Contact Enrichment pipeline (`docs/contact_enrichment_workflow.md`) is the bridge between Phase 2 and Phase 3. The vendors below extend the Phase 3 stack.
 
-### Apollo.io — contact discovery for outreach
-- **Unlocks:** verified email addresses for marketing / PR / partnerships / brand contacts at target brands. ~275M+ contact records, ~73M+ companies.
-- **Cost:** $99 – $500+/mo by volume.
-- **When to add:** **Phase 3** — the moment Brand Discovery hands a target brand to the outreach engine, Apollo is the first call.
-- **Why NOT for competitor discovery:** Apollo's "similar companies" is algorithmic by industry + size + tech-stack. That doesn't capture marketing-positioning competitive sets (Tesla vs Rivian) any better than our curated `brand_competitors.json`. And Apollo skews B2B SaaS — D2C consumer brands like Gymshark or Liquid Death are thinly covered. Save it for outreach where it's best-in-class.
+### Hunter.io — Apollo alternative / parallel email-verification (v2)
+- **Unlocks:** pattern-based email finder with strong domain-coverage breadth; catches contacts at smaller brands Apollo misses; more affordable for high-volume verification.
+- **Cost:** $34–$349/mo depending on tier.
+- **When to add (v2):** when Apollo coverage gaps become a clear bottleneck (i.e. >20% of primary-tier brands return 0 Apollo hits) or when monthly verification volume makes Apollo's per-record costs unattractive.
+- **Without it:** Apollo handles primary coverage; web-search backup + pattern-inference handles long-tail.
+- **Env var (when added):** `HUNTER_API_KEY`.
 
-### Hunter.io / RocketReach / Clay — Apollo alternatives for contact discovery
-- Briefly: these are competitive with Apollo on different price/coverage tradeoffs. Decide closer to Phase 3.
+### Clay.com — multi-source orchestrator (v2)
+- **Unlocks:** aggregates Apollo + Hunter + LinkedIn + Twitter + 50+ other sources under one API. Per-record pricing (~$0.10–$0.50 per enrichment) means you only pay for what you query.
+- **Cost:** $149–$800+/mo by volume; per-credit pricing for spiky workloads.
+- **When to add (v2):** when contact volume becomes unpredictable and we want a single integration instead of managing 3–4 separate vendor APIs.
+- **Without it:** Apollo + LinkedIn + Exa cover the v0.1 use case directly.
+- **Env var (when added):** `CLAY_API_KEY`.
 
-### Smartlead / Instantly / Outreach.io — outreach automation
-- Email sequencing, deliverability, reply detection. Phase 3 concerns.
+### RocketReach — Apollo alternative (v2)
+- **Unlocks:** different coverage profile from Apollo; particularly strong in EU markets and on contacts at non-US companies.
+- **Cost:** $79–$249/mo per seat.
+- **When to add (v2):** if Apollo's EU coverage proves thin (talent roster has many UK/EU-targeting creators).
+- **Without it:** Apollo + LinkedIn API cover the v0.1 need at the cost of some EU-brand gaps.
+
+### Hunter.io / RocketReach / Clay — quick comparison
+- Briefly: these are competitive with Apollo on different price/coverage tradeoffs. Decide closer to v2 based on observed Apollo coverage gaps.
+
+### Smartlead / Instantly / Outreach.io — outreach automation (Phase 3.5)
+- Email sequencing, deliverability, reply detection. **Distinct from contact discovery** — these are the *next* phase (sending the email), not finding the address. Will be addressed in Phase 3.5 outreach workflow spec.
 
 ---
 
@@ -128,15 +158,18 @@ This is what the orchestrator will need configured by v0.1:
 
 | Env var | Service | Required? |
 |---|---|---|
-| `EXA_API_KEY` | Exa search (Search 15) | **Yes** |
-| `ANTHROPIC_API_KEY` | Claude calls (Search 13 + brand extraction throughout) | **Yes** |
+| `EXA_API_KEY` | Exa search (Search 15 + enrichment fallbacks) | **Yes** |
+| `ANTHROPIC_API_KEY` | Claude calls (classification, extraction, decision-role tagging throughout) | **Yes** |
+| `APOLLO_API_KEY` | Apollo contact discovery (Phase 3 v0.1) | **Yes** (when Phase 3 enrichment runs) |
+| `LINKEDIN_API_KEY` | LinkedIn enrichment + search (Phase 3 v0.1; specific API tier per user-provided access) | **Yes** (when Phase 3 enrichment runs) |
 | `SCRAPECREATORS_API_KEY` | TikTok/IG/Threads/Pinterest in `last30days` (Search 16) | No (deferred) |
 | `OPENROUTER_API_KEY` | Perplexity Sonar fallback in `last30days` | No (deferred) |
 | `OWLER_API_KEY` | Owler competitor maintenance | No (deferred) |
 | `MODASH_API_KEY` *or* `HYPEAUDITOR_API_KEY` | Brand database bulk import | No (deferred) |
 | `EXPLODING_TOPICS_API_KEY` | Pre-trend brand detection | No (deferred) |
 | `PRODUCT_HUNT_DEVELOPER_TOKEN` | Daily launch feed | No (deferred — but free when added) |
-| `APOLLO_API_KEY` | Outreach contact discovery | No (Phase 3) |
+| `HUNTER_API_KEY` | Hunter.io email verification (Phase 3 v2) | No (v2) |
+| `CLAY_API_KEY` | Clay multi-source orchestrator (Phase 3 v2) | No (v2) |
 
 This inventory is the source of truth — when adding a new vendor, append to this table.
 

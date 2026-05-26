@@ -11,3 +11,10 @@ scripts/__pycache__/
 # The schema (schemas/brand_candidates.schema.json) and the spec
 # (docs/brand_discovery.md) are tracked; the generated data is not.
 data/brand_candidates/
+
+# Contact Enrichment generated output: contains PII (names, emails,
+# phone numbers) and licensed vendor data (Apollo, LinkedIn). The
+# schema (schemas/brand_contact.schema.json) and the spec
+# (docs/contact_enrichment_workflow.md) are tracked; the generated
+# data is NEVER committed.
+data/brand_contacts/
