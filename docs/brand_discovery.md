@@ -2,7 +2,7 @@
 
 **Status:** Draft v0.1 (2026-05-26). Forward-looking spec for the system that takes a complete talent profile and produces a ranked long-list of every brand worth pitching.
 
-Reads: `talents/{id}.json` + the full `data/` directory + (eventually) external APIs.
+Reads: `talents/{id}.json` + the full `data/` directory (including the enriched `brand_industry_map.json` and `brand_competitors.json`) + (eventually) external APIs.
 Writes: `data/brand_candidates/{talent_id}.json` (one per talent, rebuilt on schedule + on profile change).
 
 Pairs with:
@@ -91,7 +91,7 @@ Produce an **exhaustive** ranked list of brand-deal candidates for a given talen
 
 ---
 
-## The 14 searches (runnable today on current JSON)
+## The 15 searches (runnable today on current JSON)
 
 Each search is independent; all run in parallel; results merge by brand name + industry.
 
@@ -115,12 +115,15 @@ Each search is independent; all run in parallel; results merge by brand name + i
 **Edge:** filter out brands already in `talent.previous_brands` (those are covered by search 1).
 
 #### Search 3 — Direct competitors of talent's previous brands
-**Reads:** `talent.previous_brands[].industry_id` + `data/brand_industry_map.json`.
-**Logic:** for each industry that's appeared in the talent's brand history, return every other brand in `brand_industry_map.json` with the same `industry_id`. Filter out the talent's own previous brands (already covered).
-**Note:** "competitor" is loose without a true competitor graph (see future search 23). For now, same-industry is the proxy.
+**Reads:** `talent.previous_brands[].brand` (name) + `data/brand_competitors.json` + `data/brand_industry_map.json`.
+**Logic:**
+1. **Primary path:** for each brand in the talent's history, look it up in `brand_competitors.json` → return its curated competitor set directly. Cleanest signal; ~290 named brands have curated competitor sets.
+2. **Fallback path:** if a brand isn't in `brand_competitors.json` (or has fewer than 3 competitors listed), fall back to same-`industry_id` lookup in `brand_industry_map.json`.
+Filter out the talent's own previous brands (already covered by Search 1).
+**Why the graph beats industry-only:** two brands in the same `industry_id` aren't always direct competitors (Tesla and a generic auto-OEM share `ev-brands` but aren't substitutable). The curated graph captures the actual competitive set per the marketing-and-positioning view.
 
 #### Search 4 — Direct competitors of similar talents' brands
-**Reads:** Search 2 output + `data/brand_industry_map.json`.
+**Reads:** Search 2 output + `data/brand_competitors.json` (primary) + `data/brand_industry_map.json` (fallback).
 **Logic:** same as search 3 but applied transitively to similar talents' brand history. Catches brands one degree further out from the talent's direct experience.
 
 #### Search 5 — Brands in primary-tier industries for talent's niches
@@ -153,12 +156,12 @@ Same as search 5 but using `tertiary[]`. Lowest weight; surfaces non-obvious mat
 ### Group D — Audience-geographic
 
 #### Search 10 — Geographic alignment
-**Reads:** `talent.audience_demographics.top_countries[]` + `data/brand_industry_map.json` (filter by domain TLD or future `hq_country` / `sells_in_countries` fields).
-**Logic v0 (today):**
-- Map talent's top 3 audience countries to TLDs (`GB → .co.uk`, `DE → .de`, `JP → .jp`, etc.).
-- For each candidate brand already surfaced by other searches, **boost** the score if its domain matches one of the audience TLDs.
-- *Discover* mode (smaller v0): for each top country, scan `brand_industry_map.json` for brands with matching TLDs that haven't been surfaced by other searches and are in relevant industries.
-**Logic v0.2 (after enrichment — see § Structural moves):** filter on `hq_country` and `sells_in_countries` for precise geo matching.
+**Reads:** `talent.audience_demographics.top_countries[]` + `data/brand_industry_map.json` `hq_country` + `sells_in_countries` fields (now enriched on all 290 brands).
+**Logic:**
+1. Take talent's top 3 audience countries.
+2. **Boost** any candidate brand whose `sells_in_countries` includes at least one of them, or whose `hq_country` matches one.
+3. **Discover** mode: for each top audience country, scan `brand_industry_map.json` for brands that sell there (and are in industries already surfaced by Searches 5–9) but haven't appeared in any other search yet — these are geo-relevant tail candidates.
+**Edge:** `sells_in_countries: "global"` brands match every audience country (the literal string acts as a wildcard) but get a smaller boost than country-specific matches, since "global" is weaker signal than explicit market presence.
 
 #### Search 11 — Audience life-stage signal
 **Reads:** dominant band in `talent.audience_demographics.age_bands` + `data/industry_audience_affinity.json` + IAB Demographic mappings.
@@ -189,10 +192,31 @@ Same as search 5 but using `tertiary[]`. Lowest weight; surfaces non-obvious mat
 ### Group F — Graph expansion (2nd-degree network)
 
 #### Search 14 — Brands the talent's previous brands' competitors work with
-**Reads:** `talent.previous_brands[]` → industries → competitor brands (search 3 output) → cross-reference with `talent.similar_talent[].previous_brands[]` and other talents in our system (if multi-talent roster).
+**Reads:** `talent.previous_brands[]` → competitor brands via `data/brand_competitors.json` (Search 3 output) → cross-reference with `talent.similar_talent[].previous_brands[]` and other talents in our system (if multi-talent roster).
 **Logic:** find creators who worked with the talent's previous brands' competitors → look at *those* creators' brand history → identify brands that appear repeatedly. These are brands clustered around the same competitive set.
 **Why it matters:** surfaces cross-industry patterns the industry filter misses. If Tesla buyers also frequently engage with premium audio brands, a creator who's worked with Tesla should see Sennheiser surfaced even though `ev-brands` and `audio-equipment` aren't strongly linked in the affinity matrix.
 **Limit:** depends on roster size. With 1 talent and few similar talents, this is thin. Grows valuable as the roster + similar-talent database grows.
+
+### Group G — Momentum signals (search-driven, no API yet)
+
+#### Search 15 — Recently funded / newly visible brands in the talent's industries
+**Reads:** `talent.content_niches[]` → primary/secondary industries → LLM-driven web search.
+**Logic:**
+1. For each of the talent's top industries, run targeted LLM-orchestrated web searches: e.g. `"<industry> D2C brand funding 2025 2026"`, `"<industry> Series A 2026"`, `"<industry> launched startup 2026"`, `"<industry> new brand"`.
+2. LLM extracts brand names from the results and classifies each against `data/industries.json`.
+3. Each new brand gets:
+   - Added to `data/brand_industry_map.json` (writeback) with `company_stage` from the funding signal where possible (e.g. "Series A").
+   - Surfaced as a candidate with the `recently_funded` source tag.
+**Why it matters:** newly-funded / newly-visible D2C brands are the most likely to be launching creator programs and have fresh budget to spend. They're also the most likely to be MISSING from a static seed file. This search is the discovery loop that keeps `brand_industry_map.json` growing.
+**Quality control:** the LLM tags each extracted brand with a confidence + source URL. Low-confidence extractions are surfaced for user review before they're committed to `brand_industry_map.json`.
+**Caveats vs API version:**
+- **No structured filtering** by funding stage / amount / date (search returns whatever is publicly indexed).
+- **Freshness depends on the search engine's indexing lag** — may miss very-recent announcements.
+- **Search quotas** apply per orchestrator run; budget appropriately.
+- **De-dup is critical** — the same brand will surface from many queries; merge by normalized name.
+
+**Future enhancement — Crunchbase API integration (deferred):**
+Once integrated, replaces the LLM-search step with structured Crunchbase queries by `industry_keywords + funded_after + stage_in [seed, series_a-c]`. Gives precise filters, freshness within 24h, and structured metadata (founding date, total raised, last round size) that the search-only path can only approximate. Tracked in `External-data future searches § #16` below.
 
 ---
 
@@ -218,11 +242,12 @@ Source weights (default; tunable):
 | `secondary_industry` | 0.20 |
 | `demographic_bridge` | 0.15–0.25 (scales with overlap count) |
 | `similar_talent_worked_with` | 0.10–0.20 (scales with how many similar talents) |
+| `recently_funded` | 0.10–0.15 (scales with stage signal strength) |
 | `preferred_industry` | 0.10 |
 | `competitor_of_similar_talent` | 0.10 |
 | `parent_sibling_niche` | 0.08 |
 | `tertiary_industry` | 0.06 |
-| `geographic_alignment` | 0.04 |
+| `geographic_alignment` | 0.04–0.08 (higher if `hq_country` match; lower if `sells_in_countries: "global"`) |
 | `life_stage_signal` | 0.04 |
 | `values_aligned` | 0.05 |
 | `complementary_to_exclusivity` | 0.05 |
@@ -280,72 +305,65 @@ A brand can appear under multiple names (Lulu / Lululemon / Lululemon Athletica)
 
 ## Searches that need external data (future versions)
 
-These would meaningfully extend coverage but require integrations beyond the current JSON. Prioritised by impact-vs-effort.
+These would meaningfully extend coverage but require integrations beyond the current JSON. Prioritised by impact-vs-effort. Search 15 was upgraded to in-scope (web-search-driven) — its API-backed version is #16 here.
 
 | # | Search | What it adds | External dependency | Priority |
 |---|---|---|---|---|
-| 15 | Brands **currently running creator campaigns** in talent's niche | Live signal: who has budget on the table this week | Scrape `#ad` / "Paid partnership" tags on IG/TikTok for creators in same niche + LLM extract brand names; OR Modash / HypeAuditor / Tribe Dynamics API | **HIGH** |
-| 16 | **Recently funded** D2C brands in talent's industries | Pre-IPO/post-funding brands are the most likely to launch creator programs | Crunchbase API + filter by `industry_id` keywords | **HIGH** |
-| 17 | Brands with **active affiliate programs** | Pre-qualified for creator deals; lower barrier to entry | ShareASale / Awin / Impact / Rakuten / LTK / ShopMy APIs | **HIGH** |
-| 18 | Brands by **rate card tier compatibility** | Filters out brands too big/small for talent's actual price point | Per-brand `typical_campaign_tier` (needs enrichment) | **MEDIUM** |
-| 19 | **Trade show exhibitors** in talent's category | Brands actively spending marketing budget in this vertical | Scraped exhibitor lists per show (Beautycon, Cosmoprof, FIBO, ISPO, etc.) | **MEDIUM** |
-| 20 | **Retail accelerator alumni** in talent's category | Emerging brands at major retailers with marketing momentum | Target Accelerators, Sephora Accelerate, Macy's Holiday Marketplace, Whole Foods Local | **MEDIUM** |
-| 21 | Brands with **recent influencer-agency appointments** | Strong signal that creator budget just landed | Adweek / Drum / PRWeek / Campaign press releases | **MEDIUM** |
-| 22 | **Seasonal product launches** in talent's category | Time-sensitive briefs aligned to launch windows | PR Newswire / PRWeb feeds; LLM categorisation | **MEDIUM** |
-| 23 | Brands on **creator marketplaces** | Brands self-listing = actively looking | Aspire / Grin / BrandSnob / Creator.co marketplace APIs | **MEDIUM** |
-| 24 | **EMV / influencer-ROI top performers** in talent's category | Brands historically getting strong creator-ROI keep investing | HypeAuditor / Tribe Dynamics / CreatorIQ EMV reports | **LOW** |
-| 25 | Brands whose **audience overlaps** with talent's audience (look-alike) | Cross-industry signal: "people who buy X also buy Y" | Resonate / Comscore / Nielsen-style audience-overlap data — expensive | **LOW** |
-| 26 | Brands matching talent's **personal values commitments** (positive D&I, sustainability, etc.) | Authenticity-driven matching | ESG databases (Sustainalytics, MSCI ESG); manual curation | **LOW** |
+| 16 | **API-backed enhancement of Search 15** (recently funded brands with structured metadata) | Precise filters by funding stage / round / date; freshness within 24h; structured `total_raised`, `last_round_size` | Crunchbase API + filter by `industry_id` keywords | **HIGH** |
+| 17 | Brands **currently running creator campaigns** in talent's niche | Live signal: who has budget on the table this week | Scrape `#ad` / "Paid partnership" tags on IG/TikTok for creators in same niche + LLM extract brand names; OR Modash / HypeAuditor / Tribe Dynamics API | **HIGH** |
+| 18 | Brands with **active affiliate programs** | Pre-qualified for creator deals; lower barrier to entry | ShareASale / Awin / Impact / Rakuten / LTK / ShopMy APIs | **HIGH** |
+| 19 | Brands by **rate card tier compatibility** (live signal) | Sharper than the static `typical_campaign_tier` field — adds real-time budget signal from actual recent campaign fees | Aggregated creator-economy data (CreatorIQ / Aspire ledger / paid-post fee aggregators) | **MEDIUM** |
+| 20 | **Trade show exhibitors** in talent's category | Brands actively spending marketing budget in this vertical | Scraped exhibitor lists per show (Beautycon, Cosmoprof, FIBO, ISPO, etc.) | **MEDIUM** |
+| 21 | **Retail accelerator alumni** in talent's category | Emerging brands at major retailers with marketing momentum | Target Accelerators, Sephora Accelerate, Macy's Holiday Marketplace, Whole Foods Local | **MEDIUM** |
+| 22 | Brands with **recent influencer-agency appointments** | Strong signal that creator budget just landed | Adweek / Drum / PRWeek / Campaign press releases | **MEDIUM** |
+| 23 | **Seasonal product launches** in talent's category | Time-sensitive briefs aligned to launch windows | PR Newswire / PRWeb feeds; LLM categorisation | **MEDIUM** |
+| 24 | Brands on **creator marketplaces** | Brands self-listing = actively looking | Aspire / Grin / BrandSnob / Creator.co marketplace APIs | **MEDIUM** |
+| 25 | **EMV / influencer-ROI top performers** in talent's category | Brands historically getting strong creator-ROI keep investing | HypeAuditor / Tribe Dynamics / CreatorIQ EMV reports | **LOW** |
+| 26 | Brands whose **audience overlaps** with talent's audience (look-alike) | Cross-industry signal: "people who buy X also buy Y" | Resonate / Comscore / Nielsen-style audience-overlap data — expensive | **LOW** |
+| 27 | Brands matching talent's **personal values commitments** (positive D&I, sustainability, etc.) | Authenticity-driven matching beyond LLM evaluation | ESG databases (Sustainalytics, MSCI ESG); manual curation | **LOW** |
 
 ---
 
-## Structural moves that unlock more searches with no external API
+## Structural moves — completed in v0.1
 
-Two pieces of one-time data work would meaningfully expand the in-house searches:
+Both structural moves originally flagged as "unlocks more searches" have shipped as part of this round and are now relied on by the searches above.
 
-### A. Enrich `brand_industry_map.json` with brand metadata
+### A. `brand_industry_map.json` enriched ✅
+All 290 brands carry five additional fields:
+- `hq_country` — ISO 3166-1 alpha-2
+- `sells_in_countries` — ISO list or the literal string `"global"`
+- `company_stage` — `bootstrapped | seed | series_a..d | private_growth | public | subsidiary | state_owned | unknown`
+- `typical_campaign_tier` — `nano | micro | mid | macro | premium | unknown` (matches creator follower tiers)
+- `creator_program_presence` — observed channels: `direct | aspire | grin | ltk | shopmy | agency_of_record`
 
-Add five fields per brand (estimated 290 records × ~2 min each = ~10 hours of authoring, or 1 hour with AI-assisted bulk enrichment + review):
+Honest-gaps policy: fields are present only when there's a confident value. Absence means "not yet enriched" — the app treats missing as unknown rather than assuming a default.
 
-```jsonc
-{
-  "name": "Gymshark",
-  "industry_id": "activewear",
-  "aliases": ["gym shark"],
-  "domain": "gymshark.com",
-  // NEW FIELDS:
-  "hq_country": "GB",                                            // ISO 3166-1 alpha-2
-  "sells_in_countries": ["GB","US","AU","DE","FR","CA"],         // primary markets
-  "company_stage": "private_growth",                             // enum: bootstrapped | seed | series_a-d | private_growth | public | subsidiary
-  "typical_campaign_tier": "mid",                                // enum: nano | micro | mid | macro | premium  (matches creator follower tiers)
-  "creator_program_presence": ["aspire","direct"]                // observed channels
-}
-```
+Reproducible via `scripts/enrich_brand_map.py` — re-run to update the enrichment.
 
 **Unlocks:**
-- Search 10 (geographic alignment) — sharper than TLD heuristic.
-- Search 11 (life stage) — `target_audience_summary` could be added too.
-- Search 18 (rate card tier matching).
-- Search 23 (creator marketplace presence — partial — needs marketplace API for live data but presence flag is a good proxy).
+- Search 10 (geographic alignment) — uses `hq_country` + `sells_in_countries` directly.
+- Search 11 (life stage) — informed by `typical_campaign_tier` proxy.
+- Future scoring layer that filters by talent rate-card tier vs `typical_campaign_tier` compatibility (precursor to Search 19).
 
-### B. Add `data/brand_competitors.json`
+### B. `data/brand_competitors.json` shipped ✅
+Curated brand-to-brand competitor graph. All 290 brands in `brand_industry_map.json` have a competitor set (1,241 directed competitor edges total). 33% of named competitors are themselves in `brand_industry_map.json`; the other 67% are "free-form" — known competitors that haven't yet been added to the map. The app resolves them on-demand via AI inference + writeback so the map grows over time.
 
-A focused brand-to-brand competitor graph for the top ~100–200 well-known brands. JSON shape:
-
+JSON shape:
 ```jsonc
 {
   "version": "1.0.0",
   "competitors": {
-    "Gymshark": ["Lululemon", "Alo Yoga", "Sweaty Betty", "Vuori", "Outdoor Voices"],
-    "Tesla": ["Rivian", "Polestar", "Lucid", "BYD", "Mercedes-EQ"],
-    "Allbirds": ["Veja", "Cariuma", "Rothy's", "Atoms"]
+    "Gymshark": ["Lululemon", "Alo Yoga", "Sweaty Betty", "Vuori", "Outdoor Voices", "Under Armour"],
+    "Tesla":    ["Rivian", "Polestar", "Lucid Motors", "BYD", "Mercedes-EQ", "Audi e-tron", "Ford Mustang Mach-E"]
   }
 }
 ```
 
-**Why curate vs derive from industry_id:** two brands in the same `industry_id` aren't always direct competitors. A bespoke graph captures "Lululemon and Gymshark are direct" vs "Lululemon and a generic activewear brand are not really substitutable". Improves Search 3 quality dramatically.
+**Why curate vs derive from industry_id:** two brands in the same `industry_id` aren't always direct competitors. Tesla and a generic auto-OEM share `ev-brands` but aren't substitutable. The curated graph captures actual competitive sets per the marketing-and-positioning view.
 
-**Scope:** start with the top brands by frequency of appearance in `brand_industry_map.json` aliases + the top brands in `previous_brands[]` across all talents. ~200 records is enough to cover the high-value comparisons.
+**Unlocks:**
+- Search 3 + 4 (direct-competitor lookup) use this as the primary source, falling back to same-`industry_id` only when the brand isn't in the graph.
+- Search 14 (2nd-degree graph expansion) traverses the competitor graph directly.
 
 ---
 

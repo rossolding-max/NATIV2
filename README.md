@@ -49,15 +49,17 @@ The fields below were not in the original request but were added because later p
 - `talents/example-talent.json` — template instance, partially filled.
 - `data/niches.json` — canonical creator content-niche taxonomy (145 entries).
 - `data/industries.json` — canonical brand-industry taxonomy (178 entries).
-- `data/brand_industry_map.json` — seed lookup of well-known brand names → `industry_id`. Used by the app's auto-complete and grows over time.
+- `data/brand_industry_map.json` — seed lookup of well-known brand names → `industry_id` (290 brands, all enriched with `hq_country`, `sells_in_countries`, `company_stage`, `typical_campaign_tier`, `creator_program_presence` for Brand Discovery searches). Used by the app's auto-complete and grows over time.
+- `data/brand_competitors.json` — curated brand-to-brand direct-competitor graph (290 brands, 1,241 directed edges). Powers Brand Discovery Search 3/4/14 (direct + transitive competitor lookups). Captures actual competitive sets (Tesla ↔ Rivian/Polestar/Lucid) rather than just same-industry membership.
 - `data/iab_audience_taxonomy_v1.1.json` — official IAB Tech Lab Audience Taxonomy v1.1 (1,558 segments), used as the audience-profile bridge between niches and industries.
 - `data/niche_industry_affinity.json` — direct authored niche↔industry affinity matrix (1,246 edges across 145 niches).
 - `data/niche_audience_affinity.json` — bridge leg 1: niche → IAB audience segments.
 - `data/industry_audience_affinity.json` — bridge leg 2: industry → IAB audience segments.
 - `scripts/build_affinity.py` — builder script with all authored data and inline validation. Single source of truth for the three affinity files; re-run to regenerate them.
+- `scripts/enrich_brand_map.py` — adds the 5 metadata fields per brand to `brand_industry_map.json`. Re-runnable; honest-gaps policy (omit fields where the curated value is unknown).
 - `docs/recommendation_algorithm.md` — draft spec for how the app combines all of the above into a ranked list of industries to target for a given talent. Forward-looking contract for when the app is built.
 - `docs/onboarding_workflow.md` — draft spec for how a user adds a new talent: web wizard with OAuth platform connections (paste-fallback), media-pack extraction by LLM, adaptive questionnaire for gaps, hybrid similar-talent seeding (user + AI suggestions), and a background AI research pass that populates similar-talent records.
-- `docs/brand_discovery.md` — draft spec for the long-list generator. 14 independent searches (re-engagement, network expansion, affinity expansion, geo, life-stage, constraint-aware, graph) merged with multi-source scoring. Monthly cron drives re-engagement with per-brand cool-downs. Future-versions section lists 12 more searches that need external data (Crunchbase, affiliate networks, creator marketplaces, etc.) plus two structural moves (brand metadata enrichment + brand_competitors graph) that unlock more in-house coverage.
+- `docs/brand_discovery.md` — draft spec for the long-list generator. **15 independent searches** runnable today (re-engagement, network expansion, affinity expansion, geo, life-stage, constraint-aware, graph, recently-funded via web search) merged with multi-source scoring. Monthly cron drives re-engagement with per-brand cool-downs. Future-versions section lists 12 more searches that need external data (Crunchbase API as a structured upgrade to Search 15, live `#ad` scraping, affiliate networks, creator marketplaces, EMV reports, etc.). Both structural enrichments (`brand_industry_map` metadata + `brand_competitors` graph) are now shipped and used by Searches 3, 4, 10, 14.
 - `.gitignore` — ensures any `*.local.json` or `.env` files containing real keys are never committed.
 
 ### Reference taxonomies
@@ -95,6 +97,8 @@ When the user types a brand into `previous_brands[].brand`, the app resolves `in
 4. **AI inference fallback** (later phase) — the assistant reads the brand's website / first-page search results and classifies it against `data/industries.json`. The result is then **written back** to `data/brand_industry_map.json` so future lookups are instant and the seed grows.
 
 If multiple matches tie (rare), the app prefers the entry with the more specific (child) `industry_id` over a parent sector.
+
+Each brand record also carries enrichment fields (`hq_country`, `sells_in_countries`, `company_stage`, `typical_campaign_tier`, `creator_program_presence`) used by Brand Discovery searches. Fields are present only when there's a confident value — absence means "not yet enriched"; the app treats missing as unknown rather than assuming a default.
 
 ### Niche ↔ Industry affinity (which industries resonate with which niches)
 Two complementary models, both kept in sync by `scripts/build_affinity.py`.

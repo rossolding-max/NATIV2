@@ -1,320 +1,3983 @@
 {
-  "$comment": "Seed lookup table for auto-completing the `industry_id` field on previous_brands when a user types a brand name. Resolution order at runtime: 1) exact name match (case-insensitive), 2) alias match, 3) domain match, 4) AI inference fallback (later phase). New successful AI inferences should be appended here so the seed grows over time.",
+  "$comment": "Seed lookup table for auto-completing the `industry_id` field on previous_brands when a user types a brand name. Resolution order at runtime: 1) exact name match (case-insensitive), 2) alias match, 3) domain match, 4) AI inference fallback (later phase). New successful AI inferences should be appended here so the seed grows over time. Each record may also carry enrichment fields (hq_country, sells_in_countries, company_stage, typical_campaign_tier, creator_program_presence) used by Brand Discovery searches (see docs/brand_discovery.md). Fields are present only when we have confident values; absence means 'not yet enriched' - the app should treat missing as unknown.",
   "version": "1.0.0",
   "updated": "2026-05-26",
   "brands": [
-    { "name": "Nike", "industry_id": "sportswear", "domain": "nike.com" },
-    { "name": "Adidas", "industry_id": "sportswear", "domain": "adidas.com" },
-    { "name": "Puma", "industry_id": "sportswear", "domain": "puma.com" },
-    { "name": "Under Armour", "industry_id": "sportswear", "domain": "underarmour.com" },
-    { "name": "Reebok", "industry_id": "sportswear", "domain": "reebok.com" },
-    { "name": "ASICS", "industry_id": "sportswear", "domain": "asics.com" },
-    { "name": "New Balance", "industry_id": "sportswear", "domain": "newbalance.com" },
-    { "name": "Hoka", "industry_id": "sportswear", "aliases": ["hoka one one"], "domain": "hoka.com" },
-    { "name": "On Running", "industry_id": "sportswear", "aliases": ["on"], "domain": "on-running.com" },
-    { "name": "Gymshark", "industry_id": "activewear", "domain": "gymshark.com" },
-    { "name": "Lululemon", "industry_id": "activewear", "domain": "lululemon.com" },
-    { "name": "Alo Yoga", "industry_id": "activewear", "aliases": ["alo"], "domain": "aloyoga.com" },
-    { "name": "Vuori", "industry_id": "activewear", "domain": "vuoriclothing.com" },
-    { "name": "Outdoor Voices", "industry_id": "activewear", "domain": "outdoorvoices.com" },
-    { "name": "Patagonia", "industry_id": "outdoor-gear", "domain": "patagonia.com" },
-    { "name": "The North Face", "industry_id": "outdoor-gear", "domain": "thenorthface.com" },
-    { "name": "Columbia", "industry_id": "outdoor-gear", "domain": "columbia.com" },
-    { "name": "Arc'teryx", "industry_id": "outdoor-gear", "domain": "arcteryx.com" },
-    { "name": "REI", "industry_id": "outdoor-gear", "domain": "rei.com" },
-
-    { "name": "Peloton", "industry_id": "fitness-equipment", "domain": "onepeloton.com" },
-    { "name": "Tonal", "industry_id": "fitness-equipment", "domain": "tonal.com" },
-    { "name": "Hydrow", "industry_id": "fitness-equipment", "domain": "hydrow.com" },
-    { "name": "Whoop", "industry_id": "wearables", "domain": "whoop.com" },
-    { "name": "Oura", "industry_id": "wearables", "aliases": ["oura ring"], "domain": "ouraring.com" },
-    { "name": "Garmin", "industry_id": "wearables", "domain": "garmin.com" },
-    { "name": "Fitbit", "industry_id": "wearables", "domain": "fitbit.com" },
-
-    { "name": "Myprotein", "industry_id": "sports-nutrition", "domain": "myprotein.com" },
-    { "name": "Optimum Nutrition", "industry_id": "sports-nutrition", "aliases": ["on nutrition"], "domain": "optimumnutrition.com" },
-    { "name": "Huel", "industry_id": "sports-nutrition", "domain": "huel.com" },
-    { "name": "AG1", "industry_id": "supplements-brands", "aliases": ["athletic greens"], "domain": "drinkag1.com" },
-    { "name": "Ritual", "industry_id": "supplements-brands", "domain": "ritual.com" },
-
-    { "name": "Sephora", "industry_id": "specialty-retail", "domain": "sephora.com" },
-    { "name": "Ulta", "industry_id": "specialty-retail", "aliases": ["ulta beauty"], "domain": "ulta.com" },
-    { "name": "Boots", "industry_id": "specialty-retail", "domain": "boots.com" },
-    { "name": "Glossier", "industry_id": "cosmetics", "domain": "glossier.com" },
-    { "name": "Charlotte Tilbury", "industry_id": "cosmetics", "domain": "charlottetilbury.com" },
-    { "name": "Rare Beauty", "industry_id": "cosmetics", "domain": "rarebeauty.com" },
-    { "name": "Fenty Beauty", "industry_id": "cosmetics", "aliases": ["fenty"], "domain": "fentybeauty.com" },
-    { "name": "MAC Cosmetics", "industry_id": "cosmetics", "aliases": ["mac"], "domain": "maccosmetics.com" },
-    { "name": "NARS", "industry_id": "cosmetics", "domain": "narscosmetics.com" },
-    { "name": "Estée Lauder", "industry_id": "cosmetics", "aliases": ["estee lauder"], "domain": "esteelauder.com" },
-    { "name": "L'Oréal", "industry_id": "cosmetics", "aliases": ["loreal"], "domain": "loreal.com" },
-    { "name": "Maybelline", "industry_id": "cosmetics", "domain": "maybelline.com" },
-    { "name": "CeraVe", "industry_id": "skincare-brands", "domain": "cerave.com" },
-    { "name": "The Ordinary", "industry_id": "skincare-brands", "domain": "theordinary.com" },
-    { "name": "Drunk Elephant", "industry_id": "skincare-brands", "domain": "drunkelephant.com" },
-    { "name": "Olaplex", "industry_id": "haircare-brands", "domain": "olaplex.com" },
-    { "name": "Dyson", "industry_id": "home-appliances", "domain": "dyson.com" },
-    { "name": "Manscaped", "industry_id": "mens-grooming", "domain": "manscaped.com" },
-    { "name": "Dollar Shave Club", "industry_id": "mens-grooming", "domain": "dollarshaveclub.com" },
-    { "name": "Harry's", "industry_id": "mens-grooming", "aliases": ["harrys"], "domain": "harrys.com" },
-    { "name": "Gillette", "industry_id": "mens-grooming", "domain": "gillette.com" },
-
-    { "name": "Zara", "industry_id": "fast-fashion", "domain": "zara.com" },
-    { "name": "H&M", "industry_id": "fast-fashion", "aliases": ["hm", "h and m"], "domain": "hm.com" },
-    { "name": "Shein", "industry_id": "fast-fashion", "domain": "shein.com" },
-    { "name": "Uniqlo", "industry_id": "fashion-apparel", "domain": "uniqlo.com" },
-    { "name": "ASOS", "industry_id": "marketplaces-ecom", "domain": "asos.com" },
-    { "name": "Boohoo", "industry_id": "fast-fashion", "domain": "boohoo.com" },
-    { "name": "PrettyLittleThing", "industry_id": "fast-fashion", "aliases": ["plt"], "domain": "prettylittlething.com" },
-    { "name": "Gucci", "industry_id": "luxury-goods", "domain": "gucci.com" },
-    { "name": "Louis Vuitton", "industry_id": "luxury-goods", "aliases": ["lv"], "domain": "louisvuitton.com" },
-    { "name": "Chanel", "industry_id": "luxury-goods", "domain": "chanel.com" },
-    { "name": "Hermès", "industry_id": "luxury-goods", "aliases": ["hermes"], "domain": "hermes.com" },
-    { "name": "Prada", "industry_id": "luxury-goods", "domain": "prada.com" },
-    { "name": "Dior", "industry_id": "luxury-goods", "domain": "dior.com" },
-    { "name": "Burberry", "industry_id": "luxury-goods", "domain": "burberry.com" },
-    { "name": "Rolex", "industry_id": "watches", "domain": "rolex.com" },
-    { "name": "Tag Heuer", "industry_id": "watches", "domain": "tagheuer.com" },
-    { "name": "Cartier", "industry_id": "jewellery", "domain": "cartier.com" },
-    { "name": "Tiffany & Co", "industry_id": "jewellery", "aliases": ["tiffany"], "domain": "tiffany.com" },
-    { "name": "Pandora", "industry_id": "jewellery", "domain": "pandora.net" },
-    { "name": "Ray-Ban", "industry_id": "eyewear", "aliases": ["rayban"], "domain": "ray-ban.com" },
-    { "name": "Warby Parker", "industry_id": "eyewear", "domain": "warbyparker.com" },
-    { "name": "Oakley", "industry_id": "eyewear", "domain": "oakley.com" },
-    { "name": "Allbirds", "industry_id": "footwear", "domain": "allbirds.com" },
-    { "name": "Crocs", "industry_id": "footwear", "domain": "crocs.com" },
-    { "name": "Dr. Martens", "industry_id": "footwear", "aliases": ["doc martens"], "domain": "drmartens.com" },
-
-    { "name": "Coca-Cola", "industry_id": "soft-drinks", "aliases": ["coke", "coca cola"], "domain": "coca-cola.com" },
-    { "name": "Pepsi", "industry_id": "soft-drinks", "domain": "pepsi.com" },
-    { "name": "Red Bull", "industry_id": "soft-drinks", "domain": "redbull.com" },
-    { "name": "Monster Energy", "industry_id": "soft-drinks", "aliases": ["monster"], "domain": "monsterenergy.com" },
-    { "name": "Celsius", "industry_id": "soft-drinks", "domain": "celsius.com" },
-    { "name": "Liquid Death", "industry_id": "bottled-water", "domain": "liquiddeath.com" },
-    { "name": "Heineken", "industry_id": "alcohol-beer", "domain": "heineken.com" },
-    { "name": "Guinness", "industry_id": "alcohol-beer", "domain": "guinness.com" },
-    { "name": "Stella Artois", "industry_id": "alcohol-beer", "domain": "stellaartois.com" },
-    { "name": "BrewDog", "industry_id": "alcohol-beer", "domain": "brewdog.com" },
-    { "name": "Don Julio", "industry_id": "alcohol-spirits", "domain": "donjulio.com" },
-    { "name": "Patrón", "industry_id": "alcohol-spirits", "aliases": ["patron"], "domain": "patrontequila.com" },
-    { "name": "Grey Goose", "industry_id": "alcohol-spirits", "domain": "greygoose.com" },
-    { "name": "Hendrick's", "industry_id": "alcohol-spirits", "aliases": ["hendricks"], "domain": "hendricksgin.com" },
-    { "name": "Veuve Clicquot", "industry_id": "alcohol-wine", "domain": "veuveclicquot.com" },
-    { "name": "Moët & Chandon", "industry_id": "alcohol-wine", "aliases": ["moet"], "domain": "moet.com" },
-
-    { "name": "McDonald's", "industry_id": "restaurants-qsr", "aliases": ["mcdonalds"], "domain": "mcdonalds.com" },
-    { "name": "Burger King", "industry_id": "restaurants-qsr", "domain": "bk.com" },
-    { "name": "KFC", "industry_id": "restaurants-qsr", "domain": "kfc.com" },
-    { "name": "Subway", "industry_id": "restaurants-qsr", "domain": "subway.com" },
-    { "name": "Chipotle", "industry_id": "restaurants-qsr", "domain": "chipotle.com" },
-    { "name": "Domino's", "industry_id": "restaurants-qsr", "aliases": ["dominos"], "domain": "dominos.com" },
-    { "name": "Starbucks", "industry_id": "coffee-tea", "domain": "starbucks.com" },
-    { "name": "Dunkin'", "industry_id": "restaurants-qsr", "aliases": ["dunkin", "dunkin donuts"], "domain": "dunkindonuts.com" },
-    { "name": "DoorDash", "industry_id": "food-delivery", "domain": "doordash.com" },
-    { "name": "Uber Eats", "industry_id": "food-delivery", "domain": "ubereats.com" },
-    { "name": "Deliveroo", "industry_id": "food-delivery", "domain": "deliveroo.com" },
-    { "name": "Just Eat", "industry_id": "food-delivery", "domain": "just-eat.com" },
-    { "name": "HelloFresh", "industry_id": "meal-kits", "domain": "hellofresh.com" },
-    { "name": "Gousto", "industry_id": "meal-kits", "domain": "gousto.co.uk" },
-    { "name": "Blue Apron", "industry_id": "meal-kits", "domain": "blueapron.com" },
-    { "name": "Beyond Meat", "industry_id": "plant-based-food", "domain": "beyondmeat.com" },
-    { "name": "Impossible Foods", "industry_id": "plant-based-food", "domain": "impossiblefoods.com" },
-    { "name": "Oatly", "industry_id": "plant-based-food", "domain": "oatly.com" },
-    { "name": "Tesco", "industry_id": "grocery", "domain": "tesco.com" },
-    { "name": "Sainsbury's", "industry_id": "grocery", "aliases": ["sainsburys"], "domain": "sainsburys.co.uk" },
-    { "name": "Whole Foods", "industry_id": "grocery", "domain": "wholefoodsmarket.com" },
-    { "name": "Trader Joe's", "industry_id": "grocery", "aliases": ["trader joes"], "domain": "traderjoes.com" },
-    { "name": "Aldi", "industry_id": "grocery", "domain": "aldi.com" },
-
-    { "name": "Apple", "industry_id": "consumer-electronics-brands", "domain": "apple.com" },
-    { "name": "Samsung", "industry_id": "consumer-electronics-brands", "domain": "samsung.com" },
-    { "name": "Sony", "industry_id": "consumer-electronics-brands", "domain": "sony.com" },
-    { "name": "Google", "industry_id": "consumer-software", "domain": "google.com" },
-    { "name": "Microsoft", "industry_id": "saas", "domain": "microsoft.com" },
-    { "name": "Bose", "industry_id": "audio-equipment", "domain": "bose.com" },
-    { "name": "Sonos", "industry_id": "audio-equipment", "domain": "sonos.com" },
-    { "name": "Beats", "industry_id": "audio-equipment", "aliases": ["beats by dre"], "domain": "beatsbydre.com" },
-    { "name": "JBL", "industry_id": "audio-equipment", "domain": "jbl.com" },
-    { "name": "GoPro", "industry_id": "consumer-electronics-brands", "domain": "gopro.com" },
-    { "name": "DJI", "industry_id": "consumer-electronics-brands", "domain": "dji.com" },
-    { "name": "Razer", "industry_id": "gaming-hardware", "domain": "razer.com" },
-    { "name": "Logitech", "industry_id": "computing-hardware", "domain": "logitech.com" },
-    { "name": "HyperX", "industry_id": "gaming-hardware", "domain": "hyperxgaming.com" },
-    { "name": "Nvidia", "industry_id": "computing-hardware", "domain": "nvidia.com" },
-    { "name": "Intel", "industry_id": "computing-hardware", "domain": "intel.com" },
-    { "name": "AMD", "industry_id": "computing-hardware", "domain": "amd.com" },
-
-    { "name": "OpenAI", "industry_id": "ai-products", "aliases": ["chatgpt"], "domain": "openai.com" },
-    { "name": "Anthropic", "industry_id": "ai-products", "aliases": ["claude"], "domain": "anthropic.com" },
-    { "name": "Midjourney", "industry_id": "ai-products", "domain": "midjourney.com" },
-    { "name": "Adobe", "industry_id": "saas", "domain": "adobe.com" },
-    { "name": "Canva", "industry_id": "saas", "domain": "canva.com" },
-    { "name": "Figma", "industry_id": "saas", "domain": "figma.com" },
-    { "name": "Notion", "industry_id": "saas", "domain": "notion.so" },
-    { "name": "Grammarly", "industry_id": "consumer-software", "domain": "grammarly.com" },
-    { "name": "Slack", "industry_id": "saas", "domain": "slack.com" },
-    { "name": "Zoom", "industry_id": "saas", "domain": "zoom.us" },
-    { "name": "NordVPN", "industry_id": "cybersecurity", "domain": "nordvpn.com" },
-    { "name": "ExpressVPN", "industry_id": "cybersecurity", "domain": "expressvpn.com" },
-    { "name": "Surfshark", "industry_id": "cybersecurity", "domain": "surfshark.com" },
-
-    { "name": "Nintendo", "industry_id": "game-publishers", "domain": "nintendo.com" },
-    { "name": "PlayStation", "industry_id": "game-publishers", "aliases": ["sony playstation"], "domain": "playstation.com" },
-    { "name": "Xbox", "industry_id": "game-publishers", "aliases": ["microsoft xbox"], "domain": "xbox.com" },
-    { "name": "Activision Blizzard", "industry_id": "game-publishers", "aliases": ["activision", "blizzard"], "domain": "activisionblizzard.com" },
-    { "name": "Electronic Arts", "industry_id": "game-publishers", "aliases": ["ea"], "domain": "ea.com" },
-    { "name": "Ubisoft", "industry_id": "game-publishers", "domain": "ubisoft.com" },
-    { "name": "Epic Games", "industry_id": "game-publishers", "domain": "epicgames.com" },
-    { "name": "Riot Games", "industry_id": "game-publishers", "domain": "riotgames.com" },
-
-    { "name": "Netflix", "industry_id": "streaming-services", "domain": "netflix.com" },
-    { "name": "Disney+", "industry_id": "streaming-services", "aliases": ["disney plus"], "domain": "disneyplus.com" },
-    { "name": "HBO Max", "industry_id": "streaming-services", "aliases": ["max"], "domain": "max.com" },
-    { "name": "Amazon Prime Video", "industry_id": "streaming-services", "aliases": ["prime video"], "domain": "primevideo.com" },
-    { "name": "Hulu", "industry_id": "streaming-services", "domain": "hulu.com" },
-    { "name": "Apple TV+", "industry_id": "streaming-services", "aliases": ["apple tv plus"], "domain": "tv.apple.com" },
-    { "name": "Spotify", "industry_id": "music-dsps", "domain": "spotify.com" },
-    { "name": "Apple Music", "industry_id": "music-dsps", "domain": "music.apple.com" },
-    { "name": "YouTube Music", "industry_id": "music-dsps", "domain": "music.youtube.com" },
-    { "name": "Audible", "industry_id": "publishing", "domain": "audible.com" },
-    { "name": "Kindle", "industry_id": "publishing", "aliases": ["amazon kindle"], "domain": "amazon.com" },
-
-    { "name": "Airbnb", "industry_id": "short-term-rentals", "domain": "airbnb.com" },
-    { "name": "Vrbo", "industry_id": "short-term-rentals", "domain": "vrbo.com" },
-    { "name": "Booking.com", "industry_id": "otas", "aliases": ["booking"], "domain": "booking.com" },
-    { "name": "Expedia", "industry_id": "otas", "domain": "expedia.com" },
-    { "name": "Kayak", "industry_id": "otas", "domain": "kayak.com" },
-    { "name": "Marriott", "industry_id": "hotels", "domain": "marriott.com" },
-    { "name": "Hilton", "industry_id": "hotels", "domain": "hilton.com" },
-    { "name": "Hyatt", "industry_id": "hotels", "domain": "hyatt.com" },
-    { "name": "Delta Air Lines", "industry_id": "airlines", "aliases": ["delta"], "domain": "delta.com" },
-    { "name": "United Airlines", "industry_id": "airlines", "aliases": ["united"], "domain": "united.com" },
-    { "name": "American Airlines", "industry_id": "airlines", "domain": "aa.com" },
-    { "name": "British Airways", "industry_id": "airlines", "aliases": ["ba"], "domain": "britishairways.com" },
-    { "name": "Emirates", "industry_id": "airlines", "domain": "emirates.com" },
-    { "name": "Ryanair", "industry_id": "airlines", "domain": "ryanair.com" },
-    { "name": "easyJet", "industry_id": "airlines", "domain": "easyjet.com" },
-    { "name": "Uber", "industry_id": "ride-share-mobility", "domain": "uber.com" },
-    { "name": "Lyft", "industry_id": "ride-share-mobility", "domain": "lyft.com" },
-
-    { "name": "Tesla", "industry_id": "ev-brands", "domain": "tesla.com" },
-    { "name": "Rivian", "industry_id": "ev-brands", "domain": "rivian.com" },
-    { "name": "Polestar", "industry_id": "ev-brands", "domain": "polestar.com" },
-    { "name": "Lucid Motors", "industry_id": "ev-brands", "aliases": ["lucid"], "domain": "lucidmotors.com" },
-    { "name": "BYD", "industry_id": "ev-brands", "domain": "byd.com" },
-    { "name": "Toyota", "industry_id": "auto-oems", "domain": "toyota.com" },
-    { "name": "Honda", "industry_id": "auto-oems", "domain": "honda.com" },
-    { "name": "Ford", "industry_id": "auto-oems", "domain": "ford.com" },
-    { "name": "BMW", "industry_id": "auto-oems", "domain": "bmw.com" },
-    { "name": "Mercedes-Benz", "industry_id": "auto-oems", "aliases": ["mercedes"], "domain": "mercedes-benz.com" },
-    { "name": "Audi", "industry_id": "auto-oems", "domain": "audi.com" },
-    { "name": "Porsche", "industry_id": "auto-oems", "domain": "porsche.com" },
-    { "name": "Volkswagen", "industry_id": "auto-oems", "aliases": ["vw"], "domain": "vw.com" },
-    { "name": "Hyundai", "industry_id": "auto-oems", "domain": "hyundai.com" },
-    { "name": "Kia", "industry_id": "auto-oems", "domain": "kia.com" },
-    { "name": "Harley-Davidson", "industry_id": "motorcycle-brands", "aliases": ["harley"], "domain": "harley-davidson.com" },
-    { "name": "Ducati", "industry_id": "motorcycle-brands", "domain": "ducati.com" },
-    { "name": "Triumph Motorcycles", "industry_id": "motorcycle-brands", "aliases": ["triumph"], "domain": "triumphmotorcycles.com" },
-
-    { "name": "Chase", "industry_id": "retail-banking", "aliases": ["jpmorgan chase"], "domain": "chase.com" },
-    { "name": "Bank of America", "industry_id": "retail-banking", "aliases": ["boa"], "domain": "bankofamerica.com" },
-    { "name": "HSBC", "industry_id": "retail-banking", "domain": "hsbc.com" },
-    { "name": "Barclays", "industry_id": "retail-banking", "domain": "barclays.co.uk" },
-    { "name": "Lloyds", "industry_id": "retail-banking", "aliases": ["lloyds bank"], "domain": "lloydsbank.com" },
-    { "name": "Revolut", "industry_id": "fintech-neobanks", "domain": "revolut.com" },
-    { "name": "Monzo", "industry_id": "fintech-neobanks", "domain": "monzo.com" },
-    { "name": "Starling Bank", "industry_id": "fintech-neobanks", "aliases": ["starling"], "domain": "starlingbank.com" },
-    { "name": "Chime", "industry_id": "fintech-neobanks", "domain": "chime.com" },
-    { "name": "Wise", "industry_id": "fintech-neobanks", "aliases": ["transferwise"], "domain": "wise.com" },
-    { "name": "PayPal", "industry_id": "fintech-neobanks", "domain": "paypal.com" },
-    { "name": "Cash App", "industry_id": "fintech-neobanks", "domain": "cash.app" },
-    { "name": "Visa", "industry_id": "credit-cards", "domain": "visa.com" },
-    { "name": "Mastercard", "industry_id": "credit-cards", "domain": "mastercard.com" },
-    { "name": "American Express", "industry_id": "credit-cards", "aliases": ["amex"], "domain": "americanexpress.com" },
-    { "name": "Klarna", "industry_id": "buy-now-pay-later", "domain": "klarna.com" },
-    { "name": "Afterpay", "industry_id": "buy-now-pay-later", "domain": "afterpay.com" },
-    { "name": "Affirm", "industry_id": "buy-now-pay-later", "domain": "affirm.com" },
-    { "name": "Robinhood", "industry_id": "investing-platforms", "domain": "robinhood.com" },
-    { "name": "eToro", "industry_id": "investing-platforms", "domain": "etoro.com" },
-    { "name": "Trading 212", "industry_id": "investing-platforms", "domain": "trading212.com" },
-    { "name": "Coinbase", "industry_id": "crypto-exchanges", "domain": "coinbase.com" },
-    { "name": "Binance", "industry_id": "crypto-exchanges", "domain": "binance.com" },
-    { "name": "Kraken", "industry_id": "crypto-exchanges", "domain": "kraken.com" },
-
-    { "name": "Bumble", "industry_id": "dating-apps", "domain": "bumble.com" },
-    { "name": "Hinge", "industry_id": "dating-apps", "domain": "hinge.co" },
-    { "name": "Tinder", "industry_id": "dating-apps", "domain": "tinder.com" },
-    { "name": "Match.com", "industry_id": "dating-apps", "aliases": ["match"], "domain": "match.com" },
-    { "name": "Duolingo", "industry_id": "language-learning-brands", "domain": "duolingo.com" },
-    { "name": "Babbel", "industry_id": "language-learning-brands", "domain": "babbel.com" },
-    { "name": "MasterClass", "industry_id": "online-courses", "domain": "masterclass.com" },
-    { "name": "Coursera", "industry_id": "online-courses", "domain": "coursera.org" },
-    { "name": "Udemy", "industry_id": "online-courses", "domain": "udemy.com" },
-    { "name": "Skillshare", "industry_id": "online-courses", "domain": "skillshare.com" },
-    { "name": "Headspace", "industry_id": "mental-health-services", "domain": "headspace.com" },
-    { "name": "Calm", "industry_id": "mental-health-services", "domain": "calm.com" },
-    { "name": "BetterHelp", "industry_id": "mental-health-services", "domain": "betterhelp.com" },
-
-    { "name": "Amazon", "industry_id": "marketplaces-ecom", "domain": "amazon.com" },
-    { "name": "eBay", "industry_id": "marketplaces-ecom", "domain": "ebay.com" },
-    { "name": "Etsy", "industry_id": "marketplaces-ecom", "domain": "etsy.com" },
-    { "name": "Shopify", "industry_id": "saas", "domain": "shopify.com" },
-    { "name": "Walmart", "industry_id": "department-stores", "domain": "walmart.com" },
-    { "name": "Target", "industry_id": "department-stores", "domain": "target.com" },
-    { "name": "Costco", "industry_id": "department-stores", "domain": "costco.com" },
-    { "name": "John Lewis", "industry_id": "department-stores", "domain": "johnlewis.com" },
-    { "name": "Marks & Spencer", "industry_id": "department-stores", "aliases": ["m&s"], "domain": "marksandspencer.com" },
-
-    { "name": "IKEA", "industry_id": "furniture", "domain": "ikea.com" },
-    { "name": "West Elm", "industry_id": "furniture", "domain": "westelm.com" },
-    { "name": "Wayfair", "industry_id": "furniture", "domain": "wayfair.com" },
-    { "name": "Casper", "industry_id": "bedding-bath", "domain": "casper.com" },
-    { "name": "Simba", "industry_id": "bedding-bath", "domain": "simbasleep.com" },
-    { "name": "Eight Sleep", "industry_id": "bedding-bath", "domain": "eightsleep.com" },
-    { "name": "Le Creuset", "industry_id": "kitchenware", "domain": "lecreuset.com" },
-    { "name": "Ninja", "industry_id": "home-appliances", "domain": "ninjakitchen.com" },
-    { "name": "Vitamix", "industry_id": "kitchenware", "domain": "vitamix.com" },
-    { "name": "B&Q", "industry_id": "home-improvement", "aliases": ["bandq"], "domain": "diy.com" },
-    { "name": "Home Depot", "industry_id": "home-improvement", "domain": "homedepot.com" },
-    { "name": "Lowe's", "industry_id": "home-improvement", "aliases": ["lowes"], "domain": "lowes.com" },
-
-    { "name": "Lego", "industry_id": "toys", "domain": "lego.com" },
-    { "name": "Mattel", "industry_id": "toys", "domain": "mattel.com" },
-    { "name": "Hasbro", "industry_id": "toys", "domain": "hasbro.com" },
-    { "name": "Pampers", "industry_id": "diapers-nappies", "domain": "pampers.com" },
-    { "name": "Huggies", "industry_id": "diapers-nappies", "domain": "huggies.com" },
-
-    { "name": "Purina", "industry_id": "pet-food", "domain": "purina.com" },
-    { "name": "Pedigree", "industry_id": "pet-food", "domain": "pedigree.com" },
-    { "name": "Royal Canin", "industry_id": "pet-food", "domain": "royalcanin.com" },
-    { "name": "Chewy", "industry_id": "pet-supplies", "domain": "chewy.com" },
-    { "name": "BarkBox", "industry_id": "pet-supplies", "aliases": ["bark"], "domain": "barkbox.com" },
-
-    { "name": "DraftKings", "industry_id": "gambling", "domain": "draftkings.com" },
-    { "name": "FanDuel", "industry_id": "gambling", "domain": "fanduel.com" },
-    { "name": "Bet365", "industry_id": "gambling", "domain": "bet365.com" },
-    { "name": "Paddy Power", "industry_id": "gambling", "domain": "paddypower.com" },
-    { "name": "William Hill", "industry_id": "gambling", "domain": "williamhill.com" },
-
-    { "name": "Verizon", "industry_id": "mobile-carriers", "domain": "verizon.com" },
-    { "name": "AT&T", "industry_id": "mobile-carriers", "domain": "att.com" },
-    { "name": "T-Mobile", "industry_id": "mobile-carriers", "domain": "t-mobile.com" },
-    { "name": "Vodafone", "industry_id": "mobile-carriers", "domain": "vodafone.com" },
-    { "name": "EE", "industry_id": "mobile-carriers", "domain": "ee.co.uk" },
-    { "name": "O2", "industry_id": "mobile-carriers", "domain": "o2.co.uk" },
-    { "name": "Three", "industry_id": "mobile-carriers", "domain": "three.co.uk" },
-
-    { "name": "Octopus Energy", "industry_id": "energy-utilities", "domain": "octopus.energy" },
-    { "name": "British Gas", "industry_id": "energy-utilities", "domain": "britishgas.co.uk" },
-    { "name": "EDF Energy", "industry_id": "energy-utilities", "domain": "edfenergy.com" },
-
-    { "name": "Geico", "industry_id": "insurance", "domain": "geico.com" },
-    { "name": "Progressive", "industry_id": "insurance", "domain": "progressive.com" },
-    { "name": "Lemonade", "industry_id": "insurance", "domain": "lemonade.com" },
-    { "name": "Aviva", "industry_id": "insurance", "domain": "aviva.com" },
-
-    { "name": "Squarespace", "industry_id": "saas", "domain": "squarespace.com" },
-    { "name": "Wix", "industry_id": "saas", "domain": "wix.com" },
-    { "name": "Webflow", "industry_id": "saas", "domain": "webflow.com" }
-  ]
+    {
+      "name": "Nike",
+      "industry_id": "sportswear",
+      "domain": "nike.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "public",
+      "typical_campaign_tier": "premium",
+      "creator_program_presence": [
+        "direct",
+        "agency_of_record"
+      ]
+    },
+    {
+      "name": "Adidas",
+      "industry_id": "sportswear",
+      "domain": "adidas.com",
+      "hq_country": "DE",
+      "sells_in_countries": "global",
+      "company_stage": "public",
+      "typical_campaign_tier": "premium",
+      "creator_program_presence": [
+        "direct",
+        "agency_of_record"
+      ]
+    },
+    {
+      "name": "Puma",
+      "industry_id": "sportswear",
+      "domain": "puma.com",
+      "hq_country": "DE",
+      "sells_in_countries": "global",
+      "company_stage": "public",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct",
+        "agency_of_record"
+      ]
+    },
+    {
+      "name": "Under Armour",
+      "industry_id": "sportswear",
+      "domain": "underarmour.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "public",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Reebok",
+      "industry_id": "sportswear",
+      "domain": "reebok.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "subsidiary",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "ASICS",
+      "industry_id": "sportswear",
+      "domain": "asics.com",
+      "hq_country": "JP",
+      "sells_in_countries": "global",
+      "company_stage": "public",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "New Balance",
+      "industry_id": "sportswear",
+      "domain": "newbalance.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "private_growth",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Hoka",
+      "industry_id": "sportswear",
+      "aliases": [
+        "hoka one one"
+      ],
+      "domain": "hoka.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "subsidiary",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "On Running",
+      "industry_id": "sportswear",
+      "aliases": [
+        "on"
+      ],
+      "domain": "on-running.com",
+      "hq_country": "CH",
+      "sells_in_countries": "global",
+      "company_stage": "public",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Gymshark",
+      "industry_id": "activewear",
+      "domain": "gymshark.com",
+      "hq_country": "GB",
+      "sells_in_countries": [
+        "GB",
+        "US",
+        "AU",
+        "DE",
+        "FR",
+        "CA"
+      ],
+      "company_stage": "private_growth",
+      "typical_campaign_tier": "mid",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Lululemon",
+      "industry_id": "activewear",
+      "domain": "lululemon.com",
+      "hq_country": "CA",
+      "sells_in_countries": "global",
+      "company_stage": "public",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Alo Yoga",
+      "industry_id": "activewear",
+      "aliases": [
+        "alo"
+      ],
+      "domain": "aloyoga.com",
+      "hq_country": "US",
+      "sells_in_countries": [
+        "US",
+        "GB",
+        "CA",
+        "AU"
+      ],
+      "company_stage": "private_growth",
+      "typical_campaign_tier": "mid",
+      "creator_program_presence": [
+        "direct",
+        "ltk"
+      ]
+    },
+    {
+      "name": "Vuori",
+      "industry_id": "activewear",
+      "domain": "vuoriclothing.com",
+      "hq_country": "US",
+      "sells_in_countries": [
+        "US",
+        "GB",
+        "CA"
+      ],
+      "company_stage": "private_growth",
+      "typical_campaign_tier": "mid",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Outdoor Voices",
+      "industry_id": "activewear",
+      "domain": "outdoorvoices.com",
+      "hq_country": "US",
+      "sells_in_countries": [
+        "US"
+      ],
+      "company_stage": "private_growth",
+      "typical_campaign_tier": "mid",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Patagonia",
+      "industry_id": "outdoor-gear",
+      "domain": "patagonia.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "private_growth",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "The North Face",
+      "industry_id": "outdoor-gear",
+      "domain": "thenorthface.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "subsidiary",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Columbia",
+      "industry_id": "outdoor-gear",
+      "domain": "columbia.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "public",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Arc'teryx",
+      "industry_id": "outdoor-gear",
+      "domain": "arcteryx.com",
+      "hq_country": "CA",
+      "sells_in_countries": "global",
+      "company_stage": "subsidiary",
+      "typical_campaign_tier": "mid",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "REI",
+      "industry_id": "outdoor-gear",
+      "domain": "rei.com",
+      "hq_country": "US",
+      "sells_in_countries": [
+        "US"
+      ],
+      "company_stage": "private_growth",
+      "typical_campaign_tier": "mid",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Peloton",
+      "industry_id": "fitness-equipment",
+      "domain": "onepeloton.com",
+      "hq_country": "US",
+      "sells_in_countries": [
+        "US",
+        "GB",
+        "CA",
+        "AU",
+        "DE"
+      ],
+      "company_stage": "public",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Tonal",
+      "industry_id": "fitness-equipment",
+      "domain": "tonal.com",
+      "hq_country": "US",
+      "sells_in_countries": [
+        "US"
+      ],
+      "company_stage": "private_growth",
+      "typical_campaign_tier": "mid",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Hydrow",
+      "industry_id": "fitness-equipment",
+      "domain": "hydrow.com",
+      "hq_country": "US",
+      "sells_in_countries": [
+        "US",
+        "GB"
+      ],
+      "company_stage": "private_growth",
+      "typical_campaign_tier": "mid",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Whoop",
+      "industry_id": "wearables",
+      "domain": "whoop.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "private_growth",
+      "typical_campaign_tier": "mid",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Oura",
+      "industry_id": "wearables",
+      "aliases": [
+        "oura ring"
+      ],
+      "domain": "ouraring.com",
+      "hq_country": "FI",
+      "sells_in_countries": "global",
+      "company_stage": "private_growth",
+      "typical_campaign_tier": "mid",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Garmin",
+      "industry_id": "wearables",
+      "domain": "garmin.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "public",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Fitbit",
+      "industry_id": "wearables",
+      "domain": "fitbit.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "subsidiary",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Myprotein",
+      "industry_id": "sports-nutrition",
+      "domain": "myprotein.com",
+      "hq_country": "GB",
+      "sells_in_countries": "global",
+      "company_stage": "subsidiary",
+      "typical_campaign_tier": "mid",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Optimum Nutrition",
+      "industry_id": "sports-nutrition",
+      "aliases": [
+        "on nutrition"
+      ],
+      "domain": "optimumnutrition.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "subsidiary",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Huel",
+      "industry_id": "sports-nutrition",
+      "domain": "huel.com",
+      "hq_country": "GB",
+      "sells_in_countries": [
+        "GB",
+        "US",
+        "DE",
+        "FR",
+        "JP"
+      ],
+      "company_stage": "private_growth",
+      "typical_campaign_tier": "mid",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "AG1",
+      "industry_id": "supplements-brands",
+      "aliases": [
+        "athletic greens"
+      ],
+      "domain": "drinkag1.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "private_growth",
+      "typical_campaign_tier": "mid",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Ritual",
+      "industry_id": "supplements-brands",
+      "domain": "ritual.com",
+      "hq_country": "US",
+      "sells_in_countries": [
+        "US",
+        "CA",
+        "GB"
+      ],
+      "company_stage": "private_growth",
+      "typical_campaign_tier": "mid",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Sephora",
+      "industry_id": "specialty-retail",
+      "domain": "sephora.com",
+      "hq_country": "FR",
+      "sells_in_countries": "global",
+      "company_stage": "subsidiary",
+      "typical_campaign_tier": "premium",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Ulta",
+      "industry_id": "specialty-retail",
+      "aliases": [
+        "ulta beauty"
+      ],
+      "domain": "ulta.com",
+      "hq_country": "US",
+      "sells_in_countries": [
+        "US"
+      ],
+      "company_stage": "public",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Boots",
+      "industry_id": "specialty-retail",
+      "domain": "boots.com",
+      "hq_country": "GB",
+      "sells_in_countries": [
+        "GB",
+        "IE"
+      ],
+      "company_stage": "subsidiary",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Glossier",
+      "industry_id": "cosmetics",
+      "domain": "glossier.com",
+      "hq_country": "US",
+      "sells_in_countries": [
+        "US",
+        "GB",
+        "CA",
+        "FR"
+      ],
+      "company_stage": "private_growth",
+      "typical_campaign_tier": "mid",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Charlotte Tilbury",
+      "industry_id": "cosmetics",
+      "domain": "charlottetilbury.com",
+      "hq_country": "GB",
+      "sells_in_countries": "global",
+      "company_stage": "subsidiary",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Rare Beauty",
+      "industry_id": "cosmetics",
+      "domain": "rarebeauty.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "private_growth",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Fenty Beauty",
+      "industry_id": "cosmetics",
+      "aliases": [
+        "fenty"
+      ],
+      "domain": "fentybeauty.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "private_growth",
+      "typical_campaign_tier": "premium",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "MAC Cosmetics",
+      "industry_id": "cosmetics",
+      "aliases": [
+        "mac"
+      ],
+      "domain": "maccosmetics.com",
+      "hq_country": "CA",
+      "sells_in_countries": "global",
+      "company_stage": "subsidiary",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "NARS",
+      "industry_id": "cosmetics",
+      "domain": "narscosmetics.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "subsidiary",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Estée Lauder",
+      "industry_id": "cosmetics",
+      "aliases": [
+        "estee lauder"
+      ],
+      "domain": "esteelauder.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "public",
+      "typical_campaign_tier": "premium",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "L'Oréal",
+      "industry_id": "cosmetics",
+      "aliases": [
+        "loreal"
+      ],
+      "domain": "loreal.com",
+      "hq_country": "FR",
+      "sells_in_countries": "global",
+      "company_stage": "public",
+      "typical_campaign_tier": "premium",
+      "creator_program_presence": [
+        "direct",
+        "agency_of_record"
+      ]
+    },
+    {
+      "name": "Maybelline",
+      "industry_id": "cosmetics",
+      "domain": "maybelline.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "subsidiary",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "CeraVe",
+      "industry_id": "skincare-brands",
+      "domain": "cerave.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "subsidiary",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "The Ordinary",
+      "industry_id": "skincare-brands",
+      "domain": "theordinary.com",
+      "hq_country": "CA",
+      "sells_in_countries": "global",
+      "company_stage": "subsidiary",
+      "typical_campaign_tier": "mid",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Drunk Elephant",
+      "industry_id": "skincare-brands",
+      "domain": "drunkelephant.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "subsidiary",
+      "typical_campaign_tier": "mid",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Olaplex",
+      "industry_id": "haircare-brands",
+      "domain": "olaplex.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "public",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Dyson",
+      "industry_id": "home-appliances",
+      "domain": "dyson.com",
+      "hq_country": "GB",
+      "sells_in_countries": "global",
+      "company_stage": "private_growth",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Manscaped",
+      "industry_id": "mens-grooming",
+      "domain": "manscaped.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "private_growth",
+      "typical_campaign_tier": "mid",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Dollar Shave Club",
+      "industry_id": "mens-grooming",
+      "domain": "dollarshaveclub.com",
+      "hq_country": "US",
+      "sells_in_countries": [
+        "US",
+        "CA",
+        "GB",
+        "AU"
+      ],
+      "company_stage": "private_growth",
+      "typical_campaign_tier": "mid",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Harry's",
+      "industry_id": "mens-grooming",
+      "aliases": [
+        "harrys"
+      ],
+      "domain": "harrys.com",
+      "hq_country": "US",
+      "sells_in_countries": [
+        "US",
+        "GB",
+        "DE",
+        "CA"
+      ],
+      "company_stage": "private_growth",
+      "typical_campaign_tier": "mid",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Gillette",
+      "industry_id": "mens-grooming",
+      "domain": "gillette.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "subsidiary",
+      "typical_campaign_tier": "premium",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Zara",
+      "industry_id": "fast-fashion",
+      "domain": "zara.com",
+      "hq_country": "ES",
+      "sells_in_countries": "global",
+      "company_stage": "subsidiary",
+      "typical_campaign_tier": "premium",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "H&M",
+      "industry_id": "fast-fashion",
+      "aliases": [
+        "hm",
+        "h and m"
+      ],
+      "domain": "hm.com",
+      "hq_country": "SE",
+      "sells_in_countries": "global",
+      "company_stage": "public",
+      "typical_campaign_tier": "premium",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Shein",
+      "industry_id": "fast-fashion",
+      "domain": "shein.com",
+      "hq_country": "SG",
+      "sells_in_countries": "global",
+      "company_stage": "private_growth",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Uniqlo",
+      "industry_id": "fashion-apparel",
+      "domain": "uniqlo.com",
+      "hq_country": "JP",
+      "sells_in_countries": "global",
+      "company_stage": "subsidiary",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "ASOS",
+      "industry_id": "marketplaces-ecom",
+      "domain": "asos.com",
+      "hq_country": "GB",
+      "sells_in_countries": "global",
+      "company_stage": "public",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Boohoo",
+      "industry_id": "fast-fashion",
+      "domain": "boohoo.com",
+      "hq_country": "GB",
+      "sells_in_countries": "global",
+      "company_stage": "public",
+      "typical_campaign_tier": "mid",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "PrettyLittleThing",
+      "industry_id": "fast-fashion",
+      "aliases": [
+        "plt"
+      ],
+      "domain": "prettylittlething.com",
+      "hq_country": "GB",
+      "sells_in_countries": "global",
+      "company_stage": "subsidiary",
+      "typical_campaign_tier": "mid",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Gucci",
+      "industry_id": "luxury-goods",
+      "domain": "gucci.com",
+      "hq_country": "IT",
+      "sells_in_countries": "global",
+      "company_stage": "subsidiary",
+      "typical_campaign_tier": "premium",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Louis Vuitton",
+      "industry_id": "luxury-goods",
+      "aliases": [
+        "lv"
+      ],
+      "domain": "louisvuitton.com",
+      "hq_country": "FR",
+      "sells_in_countries": "global",
+      "company_stage": "subsidiary",
+      "typical_campaign_tier": "premium",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Chanel",
+      "industry_id": "luxury-goods",
+      "domain": "chanel.com",
+      "hq_country": "FR",
+      "sells_in_countries": "global",
+      "company_stage": "private_growth",
+      "typical_campaign_tier": "premium",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Hermès",
+      "industry_id": "luxury-goods",
+      "aliases": [
+        "hermes"
+      ],
+      "domain": "hermes.com",
+      "hq_country": "FR",
+      "sells_in_countries": "global",
+      "company_stage": "public",
+      "typical_campaign_tier": "premium",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Prada",
+      "industry_id": "luxury-goods",
+      "domain": "prada.com",
+      "hq_country": "IT",
+      "sells_in_countries": "global",
+      "company_stage": "public",
+      "typical_campaign_tier": "premium",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Dior",
+      "industry_id": "luxury-goods",
+      "domain": "dior.com",
+      "hq_country": "FR",
+      "sells_in_countries": "global",
+      "company_stage": "subsidiary",
+      "typical_campaign_tier": "premium",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Burberry",
+      "industry_id": "luxury-goods",
+      "domain": "burberry.com",
+      "hq_country": "GB",
+      "sells_in_countries": "global",
+      "company_stage": "public",
+      "typical_campaign_tier": "premium",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Rolex",
+      "industry_id": "watches",
+      "domain": "rolex.com",
+      "hq_country": "CH",
+      "sells_in_countries": "global",
+      "company_stage": "private_growth",
+      "typical_campaign_tier": "premium",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Tag Heuer",
+      "industry_id": "watches",
+      "domain": "tagheuer.com",
+      "hq_country": "CH",
+      "sells_in_countries": "global",
+      "company_stage": "subsidiary",
+      "typical_campaign_tier": "premium",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Cartier",
+      "industry_id": "jewellery",
+      "domain": "cartier.com",
+      "hq_country": "FR",
+      "sells_in_countries": "global",
+      "company_stage": "subsidiary",
+      "typical_campaign_tier": "premium",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Tiffany & Co",
+      "industry_id": "jewellery",
+      "aliases": [
+        "tiffany"
+      ],
+      "domain": "tiffany.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "subsidiary",
+      "typical_campaign_tier": "premium",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Pandora",
+      "industry_id": "jewellery",
+      "domain": "pandora.net",
+      "hq_country": "DK",
+      "sells_in_countries": "global",
+      "company_stage": "public",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Ray-Ban",
+      "industry_id": "eyewear",
+      "aliases": [
+        "rayban"
+      ],
+      "domain": "ray-ban.com",
+      "hq_country": "IT",
+      "sells_in_countries": "global",
+      "company_stage": "subsidiary",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Warby Parker",
+      "industry_id": "eyewear",
+      "domain": "warbyparker.com",
+      "hq_country": "US",
+      "sells_in_countries": [
+        "US",
+        "CA"
+      ],
+      "company_stage": "public",
+      "typical_campaign_tier": "mid",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Oakley",
+      "industry_id": "eyewear",
+      "domain": "oakley.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "subsidiary",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Allbirds",
+      "industry_id": "footwear",
+      "domain": "allbirds.com",
+      "hq_country": "US",
+      "sells_in_countries": [
+        "US",
+        "GB",
+        "CA",
+        "AU",
+        "DE",
+        "JP"
+      ],
+      "company_stage": "public",
+      "typical_campaign_tier": "mid",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Crocs",
+      "industry_id": "footwear",
+      "domain": "crocs.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "public",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Dr. Martens",
+      "industry_id": "footwear",
+      "aliases": [
+        "doc martens"
+      ],
+      "domain": "drmartens.com",
+      "hq_country": "GB",
+      "sells_in_countries": "global",
+      "company_stage": "public",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Coca-Cola",
+      "industry_id": "soft-drinks",
+      "aliases": [
+        "coke",
+        "coca cola"
+      ],
+      "domain": "coca-cola.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "public",
+      "typical_campaign_tier": "premium",
+      "creator_program_presence": [
+        "direct",
+        "agency_of_record"
+      ]
+    },
+    {
+      "name": "Pepsi",
+      "industry_id": "soft-drinks",
+      "domain": "pepsi.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "public",
+      "typical_campaign_tier": "premium",
+      "creator_program_presence": [
+        "direct",
+        "agency_of_record"
+      ]
+    },
+    {
+      "name": "Red Bull",
+      "industry_id": "soft-drinks",
+      "domain": "redbull.com",
+      "hq_country": "AT",
+      "sells_in_countries": "global",
+      "company_stage": "private_growth",
+      "typical_campaign_tier": "premium",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Monster Energy",
+      "industry_id": "soft-drinks",
+      "aliases": [
+        "monster"
+      ],
+      "domain": "monsterenergy.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "public",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Celsius",
+      "industry_id": "soft-drinks",
+      "domain": "celsius.com",
+      "hq_country": "US",
+      "sells_in_countries": [
+        "US",
+        "GB",
+        "AU"
+      ],
+      "company_stage": "public",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Liquid Death",
+      "industry_id": "bottled-water",
+      "domain": "liquiddeath.com",
+      "hq_country": "US",
+      "sells_in_countries": [
+        "US",
+        "GB",
+        "CA"
+      ],
+      "company_stage": "private_growth",
+      "typical_campaign_tier": "mid",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Heineken",
+      "industry_id": "alcohol-beer",
+      "domain": "heineken.com",
+      "hq_country": "NL",
+      "sells_in_countries": "global",
+      "company_stage": "public",
+      "typical_campaign_tier": "premium",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Guinness",
+      "industry_id": "alcohol-beer",
+      "domain": "guinness.com",
+      "hq_country": "IE",
+      "sells_in_countries": "global",
+      "company_stage": "subsidiary",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Stella Artois",
+      "industry_id": "alcohol-beer",
+      "domain": "stellaartois.com",
+      "hq_country": "BE",
+      "sells_in_countries": "global",
+      "company_stage": "subsidiary",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "BrewDog",
+      "industry_id": "alcohol-beer",
+      "domain": "brewdog.com",
+      "hq_country": "GB",
+      "sells_in_countries": "global",
+      "company_stage": "private_growth",
+      "typical_campaign_tier": "mid",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Don Julio",
+      "industry_id": "alcohol-spirits",
+      "domain": "donjulio.com",
+      "hq_country": "MX",
+      "sells_in_countries": "global",
+      "company_stage": "subsidiary",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Patrón",
+      "industry_id": "alcohol-spirits",
+      "aliases": [
+        "patron"
+      ],
+      "domain": "patrontequila.com",
+      "hq_country": "MX",
+      "sells_in_countries": "global",
+      "company_stage": "subsidiary",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Grey Goose",
+      "industry_id": "alcohol-spirits",
+      "domain": "greygoose.com",
+      "hq_country": "FR",
+      "sells_in_countries": "global",
+      "company_stage": "subsidiary",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Hendrick's",
+      "industry_id": "alcohol-spirits",
+      "aliases": [
+        "hendricks"
+      ],
+      "domain": "hendricksgin.com",
+      "hq_country": "GB",
+      "sells_in_countries": "global",
+      "company_stage": "subsidiary",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Veuve Clicquot",
+      "industry_id": "alcohol-wine",
+      "domain": "veuveclicquot.com",
+      "hq_country": "FR",
+      "sells_in_countries": "global",
+      "company_stage": "subsidiary",
+      "typical_campaign_tier": "premium",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Moët & Chandon",
+      "industry_id": "alcohol-wine",
+      "aliases": [
+        "moet"
+      ],
+      "domain": "moet.com",
+      "hq_country": "FR",
+      "sells_in_countries": "global",
+      "company_stage": "subsidiary",
+      "typical_campaign_tier": "premium",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "McDonald's",
+      "industry_id": "restaurants-qsr",
+      "aliases": [
+        "mcdonalds"
+      ],
+      "domain": "mcdonalds.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "public",
+      "typical_campaign_tier": "premium",
+      "creator_program_presence": [
+        "direct",
+        "agency_of_record"
+      ]
+    },
+    {
+      "name": "Burger King",
+      "industry_id": "restaurants-qsr",
+      "domain": "bk.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "subsidiary",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "KFC",
+      "industry_id": "restaurants-qsr",
+      "domain": "kfc.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "subsidiary",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Subway",
+      "industry_id": "restaurants-qsr",
+      "domain": "subway.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "private_growth",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Chipotle",
+      "industry_id": "restaurants-qsr",
+      "domain": "chipotle.com",
+      "hq_country": "US",
+      "sells_in_countries": [
+        "US",
+        "CA",
+        "GB",
+        "DE",
+        "FR"
+      ],
+      "company_stage": "public",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Domino's",
+      "industry_id": "restaurants-qsr",
+      "aliases": [
+        "dominos"
+      ],
+      "domain": "dominos.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "public",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Starbucks",
+      "industry_id": "coffee-tea",
+      "domain": "starbucks.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "public",
+      "typical_campaign_tier": "premium",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Dunkin'",
+      "industry_id": "restaurants-qsr",
+      "aliases": [
+        "dunkin",
+        "dunkin donuts"
+      ],
+      "domain": "dunkindonuts.com",
+      "hq_country": "US",
+      "sells_in_countries": [
+        "US"
+      ],
+      "company_stage": "subsidiary",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "DoorDash",
+      "industry_id": "food-delivery",
+      "domain": "doordash.com",
+      "hq_country": "US",
+      "sells_in_countries": [
+        "US",
+        "CA",
+        "AU",
+        "JP",
+        "GB",
+        "DE"
+      ],
+      "company_stage": "public",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Uber Eats",
+      "industry_id": "food-delivery",
+      "domain": "ubereats.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "subsidiary",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Deliveroo",
+      "industry_id": "food-delivery",
+      "domain": "deliveroo.com",
+      "hq_country": "GB",
+      "sells_in_countries": [
+        "GB",
+        "FR",
+        "IT",
+        "BE",
+        "IE",
+        "AE",
+        "SG",
+        "HK"
+      ],
+      "company_stage": "public",
+      "typical_campaign_tier": "mid",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Just Eat",
+      "industry_id": "food-delivery",
+      "domain": "just-eat.com",
+      "hq_country": "GB",
+      "sells_in_countries": [
+        "GB",
+        "IE",
+        "DE",
+        "FR",
+        "ES",
+        "IT",
+        "NL",
+        "AU",
+        "CA"
+      ],
+      "company_stage": "public",
+      "typical_campaign_tier": "mid",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "HelloFresh",
+      "industry_id": "meal-kits",
+      "domain": "hellofresh.com",
+      "hq_country": "DE",
+      "sells_in_countries": [
+        "US",
+        "GB",
+        "DE",
+        "AU",
+        "CA",
+        "NZ",
+        "FR",
+        "NL",
+        "SE"
+      ],
+      "company_stage": "public",
+      "typical_campaign_tier": "mid",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Gousto",
+      "industry_id": "meal-kits",
+      "domain": "gousto.co.uk",
+      "hq_country": "GB",
+      "sells_in_countries": [
+        "GB"
+      ],
+      "company_stage": "private_growth",
+      "typical_campaign_tier": "mid",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Blue Apron",
+      "industry_id": "meal-kits",
+      "domain": "blueapron.com",
+      "hq_country": "US",
+      "sells_in_countries": [
+        "US"
+      ],
+      "company_stage": "private_growth",
+      "typical_campaign_tier": "mid",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Beyond Meat",
+      "industry_id": "plant-based-food",
+      "domain": "beyondmeat.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "public",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Impossible Foods",
+      "industry_id": "plant-based-food",
+      "domain": "impossiblefoods.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "private_growth",
+      "typical_campaign_tier": "mid",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Oatly",
+      "industry_id": "plant-based-food",
+      "domain": "oatly.com",
+      "hq_country": "SE",
+      "sells_in_countries": "global",
+      "company_stage": "public",
+      "typical_campaign_tier": "mid",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Tesco",
+      "industry_id": "grocery",
+      "domain": "tesco.com",
+      "hq_country": "GB",
+      "sells_in_countries": [
+        "GB",
+        "IE"
+      ],
+      "company_stage": "public",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Sainsbury's",
+      "industry_id": "grocery",
+      "aliases": [
+        "sainsburys"
+      ],
+      "domain": "sainsburys.co.uk",
+      "hq_country": "GB",
+      "sells_in_countries": [
+        "GB"
+      ],
+      "company_stage": "public",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Whole Foods",
+      "industry_id": "grocery",
+      "domain": "wholefoodsmarket.com",
+      "hq_country": "US",
+      "sells_in_countries": [
+        "US",
+        "GB",
+        "CA"
+      ],
+      "company_stage": "subsidiary",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Trader Joe's",
+      "industry_id": "grocery",
+      "aliases": [
+        "trader joes"
+      ],
+      "domain": "traderjoes.com",
+      "hq_country": "US",
+      "sells_in_countries": [
+        "US"
+      ],
+      "company_stage": "private_growth",
+      "typical_campaign_tier": "micro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Aldi",
+      "industry_id": "grocery",
+      "domain": "aldi.com",
+      "hq_country": "DE",
+      "sells_in_countries": "global",
+      "company_stage": "private_growth",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Apple",
+      "industry_id": "consumer-electronics-brands",
+      "domain": "apple.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "public",
+      "typical_campaign_tier": "premium",
+      "creator_program_presence": [
+        "direct",
+        "agency_of_record"
+      ]
+    },
+    {
+      "name": "Samsung",
+      "industry_id": "consumer-electronics-brands",
+      "domain": "samsung.com",
+      "hq_country": "KR",
+      "sells_in_countries": "global",
+      "company_stage": "public",
+      "typical_campaign_tier": "premium",
+      "creator_program_presence": [
+        "direct",
+        "agency_of_record"
+      ]
+    },
+    {
+      "name": "Sony",
+      "industry_id": "consumer-electronics-brands",
+      "domain": "sony.com",
+      "hq_country": "JP",
+      "sells_in_countries": "global",
+      "company_stage": "public",
+      "typical_campaign_tier": "premium",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Google",
+      "industry_id": "consumer-software",
+      "domain": "google.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "public",
+      "typical_campaign_tier": "premium",
+      "creator_program_presence": [
+        "direct",
+        "agency_of_record"
+      ]
+    },
+    {
+      "name": "Microsoft",
+      "industry_id": "saas",
+      "domain": "microsoft.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "public",
+      "typical_campaign_tier": "premium",
+      "creator_program_presence": [
+        "direct",
+        "agency_of_record"
+      ]
+    },
+    {
+      "name": "Bose",
+      "industry_id": "audio-equipment",
+      "domain": "bose.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "private_growth",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Sonos",
+      "industry_id": "audio-equipment",
+      "domain": "sonos.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "public",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Beats",
+      "industry_id": "audio-equipment",
+      "aliases": [
+        "beats by dre"
+      ],
+      "domain": "beatsbydre.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "subsidiary",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "JBL",
+      "industry_id": "audio-equipment",
+      "domain": "jbl.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "subsidiary",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "GoPro",
+      "industry_id": "consumer-electronics-brands",
+      "domain": "gopro.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "public",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "DJI",
+      "industry_id": "consumer-electronics-brands",
+      "domain": "dji.com",
+      "hq_country": "CN",
+      "sells_in_countries": "global",
+      "company_stage": "private_growth",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Razer",
+      "industry_id": "gaming-hardware",
+      "domain": "razer.com",
+      "hq_country": "SG",
+      "sells_in_countries": "global",
+      "company_stage": "private_growth",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Logitech",
+      "industry_id": "computing-hardware",
+      "domain": "logitech.com",
+      "hq_country": "CH",
+      "sells_in_countries": "global",
+      "company_stage": "public",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "HyperX",
+      "industry_id": "gaming-hardware",
+      "domain": "hyperxgaming.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "subsidiary",
+      "typical_campaign_tier": "mid",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Nvidia",
+      "industry_id": "computing-hardware",
+      "domain": "nvidia.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "public",
+      "typical_campaign_tier": "premium",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Intel",
+      "industry_id": "computing-hardware",
+      "domain": "intel.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "public",
+      "typical_campaign_tier": "premium",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "AMD",
+      "industry_id": "computing-hardware",
+      "domain": "amd.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "public",
+      "typical_campaign_tier": "premium",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "OpenAI",
+      "industry_id": "ai-products",
+      "aliases": [
+        "chatgpt"
+      ],
+      "domain": "openai.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "private_growth",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Anthropic",
+      "industry_id": "ai-products",
+      "aliases": [
+        "claude"
+      ],
+      "domain": "anthropic.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "private_growth",
+      "typical_campaign_tier": "mid",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Midjourney",
+      "industry_id": "ai-products",
+      "domain": "midjourney.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "private_growth",
+      "typical_campaign_tier": "micro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Adobe",
+      "industry_id": "saas",
+      "domain": "adobe.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "public",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Canva",
+      "industry_id": "saas",
+      "domain": "canva.com",
+      "hq_country": "AU",
+      "sells_in_countries": "global",
+      "company_stage": "private_growth",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Figma",
+      "industry_id": "saas",
+      "domain": "figma.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "private_growth",
+      "typical_campaign_tier": "mid",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Notion",
+      "industry_id": "saas",
+      "domain": "notion.so",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "private_growth",
+      "typical_campaign_tier": "mid",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Grammarly",
+      "industry_id": "consumer-software",
+      "domain": "grammarly.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "private_growth",
+      "typical_campaign_tier": "mid",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Slack",
+      "industry_id": "saas",
+      "domain": "slack.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "subsidiary",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Zoom",
+      "industry_id": "saas",
+      "domain": "zoom.us",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "public",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "NordVPN",
+      "industry_id": "cybersecurity",
+      "domain": "nordvpn.com",
+      "hq_country": "LT",
+      "sells_in_countries": "global",
+      "company_stage": "private_growth",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "ExpressVPN",
+      "industry_id": "cybersecurity",
+      "domain": "expressvpn.com",
+      "hq_country": "VG",
+      "sells_in_countries": "global",
+      "company_stage": "subsidiary",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Surfshark",
+      "industry_id": "cybersecurity",
+      "domain": "surfshark.com",
+      "hq_country": "NL",
+      "sells_in_countries": "global",
+      "company_stage": "private_growth",
+      "typical_campaign_tier": "mid",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Nintendo",
+      "industry_id": "game-publishers",
+      "domain": "nintendo.com",
+      "hq_country": "JP",
+      "sells_in_countries": "global",
+      "company_stage": "public",
+      "typical_campaign_tier": "premium",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "PlayStation",
+      "industry_id": "game-publishers",
+      "aliases": [
+        "sony playstation"
+      ],
+      "domain": "playstation.com",
+      "hq_country": "JP",
+      "sells_in_countries": "global",
+      "company_stage": "subsidiary",
+      "typical_campaign_tier": "premium",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Xbox",
+      "industry_id": "game-publishers",
+      "aliases": [
+        "microsoft xbox"
+      ],
+      "domain": "xbox.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "subsidiary",
+      "typical_campaign_tier": "premium",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Activision Blizzard",
+      "industry_id": "game-publishers",
+      "aliases": [
+        "activision",
+        "blizzard"
+      ],
+      "domain": "activisionblizzard.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "subsidiary",
+      "typical_campaign_tier": "premium",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Electronic Arts",
+      "industry_id": "game-publishers",
+      "aliases": [
+        "ea"
+      ],
+      "domain": "ea.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "public",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Ubisoft",
+      "industry_id": "game-publishers",
+      "domain": "ubisoft.com",
+      "hq_country": "FR",
+      "sells_in_countries": "global",
+      "company_stage": "public",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Epic Games",
+      "industry_id": "game-publishers",
+      "domain": "epicgames.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "private_growth",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Riot Games",
+      "industry_id": "game-publishers",
+      "domain": "riotgames.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "subsidiary",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Netflix",
+      "industry_id": "streaming-services",
+      "domain": "netflix.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "public",
+      "typical_campaign_tier": "premium",
+      "creator_program_presence": [
+        "direct",
+        "agency_of_record"
+      ]
+    },
+    {
+      "name": "Disney+",
+      "industry_id": "streaming-services",
+      "aliases": [
+        "disney plus"
+      ],
+      "domain": "disneyplus.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "subsidiary",
+      "typical_campaign_tier": "premium",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "HBO Max",
+      "industry_id": "streaming-services",
+      "aliases": [
+        "max"
+      ],
+      "domain": "max.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "subsidiary",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Amazon Prime Video",
+      "industry_id": "streaming-services",
+      "aliases": [
+        "prime video"
+      ],
+      "domain": "primevideo.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "subsidiary",
+      "typical_campaign_tier": "premium",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Hulu",
+      "industry_id": "streaming-services",
+      "domain": "hulu.com",
+      "hq_country": "US",
+      "sells_in_countries": [
+        "US",
+        "JP"
+      ],
+      "company_stage": "subsidiary",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Apple TV+",
+      "industry_id": "streaming-services",
+      "aliases": [
+        "apple tv plus"
+      ],
+      "domain": "tv.apple.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "subsidiary",
+      "typical_campaign_tier": "premium",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Spotify",
+      "industry_id": "music-dsps",
+      "domain": "spotify.com",
+      "hq_country": "SE",
+      "sells_in_countries": "global",
+      "company_stage": "public",
+      "typical_campaign_tier": "premium",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Apple Music",
+      "industry_id": "music-dsps",
+      "domain": "music.apple.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "subsidiary",
+      "typical_campaign_tier": "premium",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "YouTube Music",
+      "industry_id": "music-dsps",
+      "domain": "music.youtube.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "subsidiary",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Audible",
+      "industry_id": "publishing",
+      "domain": "audible.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "subsidiary",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Kindle",
+      "industry_id": "publishing",
+      "aliases": [
+        "amazon kindle"
+      ],
+      "domain": "amazon.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "subsidiary",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Airbnb",
+      "industry_id": "short-term-rentals",
+      "domain": "airbnb.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "public",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Vrbo",
+      "industry_id": "short-term-rentals",
+      "domain": "vrbo.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "subsidiary",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Booking.com",
+      "industry_id": "otas",
+      "aliases": [
+        "booking"
+      ],
+      "domain": "booking.com",
+      "hq_country": "NL",
+      "sells_in_countries": "global",
+      "company_stage": "subsidiary",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Expedia",
+      "industry_id": "otas",
+      "domain": "expedia.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "public",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Kayak",
+      "industry_id": "otas",
+      "domain": "kayak.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "subsidiary",
+      "typical_campaign_tier": "mid",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Marriott",
+      "industry_id": "hotels",
+      "domain": "marriott.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "public",
+      "typical_campaign_tier": "premium",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Hilton",
+      "industry_id": "hotels",
+      "domain": "hilton.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "public",
+      "typical_campaign_tier": "premium",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Hyatt",
+      "industry_id": "hotels",
+      "domain": "hyatt.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "public",
+      "typical_campaign_tier": "premium",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Delta Air Lines",
+      "industry_id": "airlines",
+      "aliases": [
+        "delta"
+      ],
+      "domain": "delta.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "public",
+      "typical_campaign_tier": "premium",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "United Airlines",
+      "industry_id": "airlines",
+      "aliases": [
+        "united"
+      ],
+      "domain": "united.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "public",
+      "typical_campaign_tier": "premium",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "American Airlines",
+      "industry_id": "airlines",
+      "domain": "aa.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "public",
+      "typical_campaign_tier": "premium",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "British Airways",
+      "industry_id": "airlines",
+      "aliases": [
+        "ba"
+      ],
+      "domain": "britishairways.com",
+      "hq_country": "GB",
+      "sells_in_countries": "global",
+      "company_stage": "subsidiary",
+      "typical_campaign_tier": "premium",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Emirates",
+      "industry_id": "airlines",
+      "domain": "emirates.com",
+      "hq_country": "AE",
+      "sells_in_countries": "global",
+      "company_stage": "state_owned",
+      "typical_campaign_tier": "premium",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Ryanair",
+      "industry_id": "airlines",
+      "domain": "ryanair.com",
+      "hq_country": "IE",
+      "sells_in_countries": [
+        "GB",
+        "IE",
+        "ES",
+        "IT",
+        "DE",
+        "FR"
+      ],
+      "company_stage": "public",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "easyJet",
+      "industry_id": "airlines",
+      "domain": "easyjet.com",
+      "hq_country": "GB",
+      "sells_in_countries": [
+        "GB",
+        "EU"
+      ],
+      "company_stage": "public",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Uber",
+      "industry_id": "ride-share-mobility",
+      "domain": "uber.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "public",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Lyft",
+      "industry_id": "ride-share-mobility",
+      "domain": "lyft.com",
+      "hq_country": "US",
+      "sells_in_countries": [
+        "US",
+        "CA"
+      ],
+      "company_stage": "public",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Tesla",
+      "industry_id": "ev-brands",
+      "domain": "tesla.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "public",
+      "typical_campaign_tier": "premium",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Rivian",
+      "industry_id": "ev-brands",
+      "domain": "rivian.com",
+      "hq_country": "US",
+      "sells_in_countries": [
+        "US",
+        "CA"
+      ],
+      "company_stage": "public",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Polestar",
+      "industry_id": "ev-brands",
+      "domain": "polestar.com",
+      "hq_country": "SE",
+      "sells_in_countries": "global",
+      "company_stage": "public",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Lucid Motors",
+      "industry_id": "ev-brands",
+      "aliases": [
+        "lucid"
+      ],
+      "domain": "lucidmotors.com",
+      "hq_country": "US",
+      "sells_in_countries": [
+        "US",
+        "EU",
+        "ME"
+      ],
+      "company_stage": "public",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "BYD",
+      "industry_id": "ev-brands",
+      "domain": "byd.com",
+      "hq_country": "CN",
+      "sells_in_countries": "global",
+      "company_stage": "public",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Toyota",
+      "industry_id": "auto-oems",
+      "domain": "toyota.com",
+      "hq_country": "JP",
+      "sells_in_countries": "global",
+      "company_stage": "public",
+      "typical_campaign_tier": "premium",
+      "creator_program_presence": [
+        "direct",
+        "agency_of_record"
+      ]
+    },
+    {
+      "name": "Honda",
+      "industry_id": "auto-oems",
+      "domain": "honda.com",
+      "hq_country": "JP",
+      "sells_in_countries": "global",
+      "company_stage": "public",
+      "typical_campaign_tier": "premium",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Ford",
+      "industry_id": "auto-oems",
+      "domain": "ford.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "public",
+      "typical_campaign_tier": "premium",
+      "creator_program_presence": [
+        "direct",
+        "agency_of_record"
+      ]
+    },
+    {
+      "name": "BMW",
+      "industry_id": "auto-oems",
+      "domain": "bmw.com",
+      "hq_country": "DE",
+      "sells_in_countries": "global",
+      "company_stage": "public",
+      "typical_campaign_tier": "premium",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Mercedes-Benz",
+      "industry_id": "auto-oems",
+      "aliases": [
+        "mercedes"
+      ],
+      "domain": "mercedes-benz.com",
+      "hq_country": "DE",
+      "sells_in_countries": "global",
+      "company_stage": "public",
+      "typical_campaign_tier": "premium",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Audi",
+      "industry_id": "auto-oems",
+      "domain": "audi.com",
+      "hq_country": "DE",
+      "sells_in_countries": "global",
+      "company_stage": "subsidiary",
+      "typical_campaign_tier": "premium",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Porsche",
+      "industry_id": "auto-oems",
+      "domain": "porsche.com",
+      "hq_country": "DE",
+      "sells_in_countries": "global",
+      "company_stage": "public",
+      "typical_campaign_tier": "premium",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Volkswagen",
+      "industry_id": "auto-oems",
+      "aliases": [
+        "vw"
+      ],
+      "domain": "vw.com",
+      "hq_country": "DE",
+      "sells_in_countries": "global",
+      "company_stage": "public",
+      "typical_campaign_tier": "premium",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Hyundai",
+      "industry_id": "auto-oems",
+      "domain": "hyundai.com",
+      "hq_country": "KR",
+      "sells_in_countries": "global",
+      "company_stage": "public",
+      "typical_campaign_tier": "premium",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Kia",
+      "industry_id": "auto-oems",
+      "domain": "kia.com",
+      "hq_country": "KR",
+      "sells_in_countries": "global",
+      "company_stage": "public",
+      "typical_campaign_tier": "premium",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Harley-Davidson",
+      "industry_id": "motorcycle-brands",
+      "aliases": [
+        "harley"
+      ],
+      "domain": "harley-davidson.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "public",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Ducati",
+      "industry_id": "motorcycle-brands",
+      "domain": "ducati.com",
+      "hq_country": "IT",
+      "sells_in_countries": "global",
+      "company_stage": "subsidiary",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Triumph Motorcycles",
+      "industry_id": "motorcycle-brands",
+      "aliases": [
+        "triumph"
+      ],
+      "domain": "triumphmotorcycles.com",
+      "hq_country": "GB",
+      "sells_in_countries": "global",
+      "company_stage": "private_growth",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Chase",
+      "industry_id": "retail-banking",
+      "aliases": [
+        "jpmorgan chase"
+      ],
+      "domain": "chase.com",
+      "hq_country": "US",
+      "sells_in_countries": [
+        "US"
+      ],
+      "company_stage": "subsidiary",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Bank of America",
+      "industry_id": "retail-banking",
+      "aliases": [
+        "boa"
+      ],
+      "domain": "bankofamerica.com",
+      "hq_country": "US",
+      "sells_in_countries": [
+        "US"
+      ],
+      "company_stage": "public",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "HSBC",
+      "industry_id": "retail-banking",
+      "domain": "hsbc.com",
+      "hq_country": "GB",
+      "sells_in_countries": "global",
+      "company_stage": "public",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Barclays",
+      "industry_id": "retail-banking",
+      "domain": "barclays.co.uk",
+      "hq_country": "GB",
+      "sells_in_countries": "global",
+      "company_stage": "public",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Lloyds",
+      "industry_id": "retail-banking",
+      "aliases": [
+        "lloyds bank"
+      ],
+      "domain": "lloydsbank.com",
+      "hq_country": "GB",
+      "sells_in_countries": [
+        "GB"
+      ],
+      "company_stage": "public",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Revolut",
+      "industry_id": "fintech-neobanks",
+      "domain": "revolut.com",
+      "hq_country": "GB",
+      "sells_in_countries": "global",
+      "company_stage": "private_growth",
+      "typical_campaign_tier": "mid",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Monzo",
+      "industry_id": "fintech-neobanks",
+      "domain": "monzo.com",
+      "hq_country": "GB",
+      "sells_in_countries": [
+        "GB",
+        "US"
+      ],
+      "company_stage": "private_growth",
+      "typical_campaign_tier": "mid",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Starling Bank",
+      "industry_id": "fintech-neobanks",
+      "aliases": [
+        "starling"
+      ],
+      "domain": "starlingbank.com",
+      "hq_country": "GB",
+      "sells_in_countries": [
+        "GB"
+      ],
+      "company_stage": "private_growth",
+      "typical_campaign_tier": "mid",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Chime",
+      "industry_id": "fintech-neobanks",
+      "domain": "chime.com",
+      "hq_country": "US",
+      "sells_in_countries": [
+        "US"
+      ],
+      "company_stage": "public",
+      "typical_campaign_tier": "mid",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Wise",
+      "industry_id": "fintech-neobanks",
+      "aliases": [
+        "transferwise"
+      ],
+      "domain": "wise.com",
+      "hq_country": "GB",
+      "sells_in_countries": "global",
+      "company_stage": "public",
+      "typical_campaign_tier": "mid",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "PayPal",
+      "industry_id": "fintech-neobanks",
+      "domain": "paypal.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "public",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Cash App",
+      "industry_id": "fintech-neobanks",
+      "domain": "cash.app",
+      "hq_country": "US",
+      "sells_in_countries": [
+        "US",
+        "GB"
+      ],
+      "company_stage": "subsidiary",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Visa",
+      "industry_id": "credit-cards",
+      "domain": "visa.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "public",
+      "typical_campaign_tier": "premium",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Mastercard",
+      "industry_id": "credit-cards",
+      "domain": "mastercard.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "public",
+      "typical_campaign_tier": "premium",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "American Express",
+      "industry_id": "credit-cards",
+      "aliases": [
+        "amex"
+      ],
+      "domain": "americanexpress.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "public",
+      "typical_campaign_tier": "premium",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Klarna",
+      "industry_id": "buy-now-pay-later",
+      "domain": "klarna.com",
+      "hq_country": "SE",
+      "sells_in_countries": "global",
+      "company_stage": "private_growth",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Afterpay",
+      "industry_id": "buy-now-pay-later",
+      "domain": "afterpay.com",
+      "hq_country": "AU",
+      "sells_in_countries": "global",
+      "company_stage": "subsidiary",
+      "typical_campaign_tier": "mid",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Affirm",
+      "industry_id": "buy-now-pay-later",
+      "domain": "affirm.com",
+      "hq_country": "US",
+      "sells_in_countries": [
+        "US",
+        "CA"
+      ],
+      "company_stage": "public",
+      "typical_campaign_tier": "mid",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Robinhood",
+      "industry_id": "investing-platforms",
+      "domain": "robinhood.com",
+      "hq_country": "US",
+      "sells_in_countries": [
+        "US"
+      ],
+      "company_stage": "public",
+      "typical_campaign_tier": "mid",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "eToro",
+      "industry_id": "investing-platforms",
+      "domain": "etoro.com",
+      "hq_country": "IL",
+      "sells_in_countries": "global",
+      "company_stage": "public",
+      "typical_campaign_tier": "mid",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Trading 212",
+      "industry_id": "investing-platforms",
+      "domain": "trading212.com",
+      "hq_country": "GB",
+      "sells_in_countries": [
+        "GB",
+        "EU"
+      ],
+      "company_stage": "private_growth",
+      "typical_campaign_tier": "mid",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Coinbase",
+      "industry_id": "crypto-exchanges",
+      "domain": "coinbase.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "public",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Binance",
+      "industry_id": "crypto-exchanges",
+      "domain": "binance.com",
+      "hq_country": "AE",
+      "sells_in_countries": "global",
+      "company_stage": "private_growth",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Kraken",
+      "industry_id": "crypto-exchanges",
+      "domain": "kraken.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "private_growth",
+      "typical_campaign_tier": "mid",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Bumble",
+      "industry_id": "dating-apps",
+      "domain": "bumble.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "public",
+      "typical_campaign_tier": "mid",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Hinge",
+      "industry_id": "dating-apps",
+      "domain": "hinge.co",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "subsidiary",
+      "typical_campaign_tier": "mid",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Tinder",
+      "industry_id": "dating-apps",
+      "domain": "tinder.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "subsidiary",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Match.com",
+      "industry_id": "dating-apps",
+      "aliases": [
+        "match"
+      ],
+      "domain": "match.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "subsidiary",
+      "typical_campaign_tier": "mid",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Duolingo",
+      "industry_id": "language-learning-brands",
+      "domain": "duolingo.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "public",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Babbel",
+      "industry_id": "language-learning-brands",
+      "domain": "babbel.com",
+      "hq_country": "DE",
+      "sells_in_countries": "global",
+      "company_stage": "private_growth",
+      "typical_campaign_tier": "mid",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "MasterClass",
+      "industry_id": "online-courses",
+      "domain": "masterclass.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "private_growth",
+      "typical_campaign_tier": "mid",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Coursera",
+      "industry_id": "online-courses",
+      "domain": "coursera.org",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "public",
+      "typical_campaign_tier": "mid",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Udemy",
+      "industry_id": "online-courses",
+      "domain": "udemy.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "public",
+      "typical_campaign_tier": "mid",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Skillshare",
+      "industry_id": "online-courses",
+      "domain": "skillshare.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "private_growth",
+      "typical_campaign_tier": "mid",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Headspace",
+      "industry_id": "mental-health-services",
+      "domain": "headspace.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "private_growth",
+      "typical_campaign_tier": "mid",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Calm",
+      "industry_id": "mental-health-services",
+      "domain": "calm.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "private_growth",
+      "typical_campaign_tier": "mid",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "BetterHelp",
+      "industry_id": "mental-health-services",
+      "domain": "betterhelp.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "subsidiary",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Amazon",
+      "industry_id": "marketplaces-ecom",
+      "domain": "amazon.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "public",
+      "typical_campaign_tier": "premium",
+      "creator_program_presence": [
+        "direct",
+        "agency_of_record"
+      ]
+    },
+    {
+      "name": "eBay",
+      "industry_id": "marketplaces-ecom",
+      "domain": "ebay.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "public",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Etsy",
+      "industry_id": "marketplaces-ecom",
+      "domain": "etsy.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "public",
+      "typical_campaign_tier": "mid",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Shopify",
+      "industry_id": "saas",
+      "domain": "shopify.com",
+      "hq_country": "CA",
+      "sells_in_countries": "global",
+      "company_stage": "public",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Walmart",
+      "industry_id": "department-stores",
+      "domain": "walmart.com",
+      "hq_country": "US",
+      "sells_in_countries": [
+        "US",
+        "CA",
+        "MX"
+      ],
+      "company_stage": "public",
+      "typical_campaign_tier": "premium",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Target",
+      "industry_id": "department-stores",
+      "domain": "target.com",
+      "hq_country": "US",
+      "sells_in_countries": [
+        "US"
+      ],
+      "company_stage": "public",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Costco",
+      "industry_id": "department-stores",
+      "domain": "costco.com",
+      "hq_country": "US",
+      "sells_in_countries": [
+        "US",
+        "CA",
+        "MX",
+        "GB",
+        "JP",
+        "KR",
+        "AU"
+      ],
+      "company_stage": "public",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "John Lewis",
+      "industry_id": "department-stores",
+      "domain": "johnlewis.com",
+      "hq_country": "GB",
+      "sells_in_countries": [
+        "GB"
+      ],
+      "company_stage": "private_growth",
+      "typical_campaign_tier": "mid",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Marks & Spencer",
+      "industry_id": "department-stores",
+      "aliases": [
+        "m&s"
+      ],
+      "domain": "marksandspencer.com",
+      "hq_country": "GB",
+      "sells_in_countries": [
+        "GB",
+        "IE"
+      ],
+      "company_stage": "public",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "IKEA",
+      "industry_id": "furniture",
+      "domain": "ikea.com",
+      "hq_country": "SE",
+      "sells_in_countries": "global",
+      "company_stage": "private_growth",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "West Elm",
+      "industry_id": "furniture",
+      "domain": "westelm.com",
+      "hq_country": "US",
+      "sells_in_countries": [
+        "US",
+        "CA",
+        "GB",
+        "AU"
+      ],
+      "company_stage": "subsidiary",
+      "typical_campaign_tier": "mid",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Wayfair",
+      "industry_id": "furniture",
+      "domain": "wayfair.com",
+      "hq_country": "US",
+      "sells_in_countries": [
+        "US",
+        "CA",
+        "GB",
+        "DE"
+      ],
+      "company_stage": "public",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Casper",
+      "industry_id": "bedding-bath",
+      "domain": "casper.com",
+      "hq_country": "US",
+      "sells_in_countries": [
+        "US",
+        "CA"
+      ],
+      "company_stage": "private_growth",
+      "typical_campaign_tier": "mid",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Simba",
+      "industry_id": "bedding-bath",
+      "domain": "simbasleep.com",
+      "hq_country": "GB",
+      "sells_in_countries": [
+        "GB",
+        "EU"
+      ],
+      "company_stage": "private_growth",
+      "typical_campaign_tier": "mid",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Eight Sleep",
+      "industry_id": "bedding-bath",
+      "domain": "eightsleep.com",
+      "hq_country": "US",
+      "sells_in_countries": [
+        "US",
+        "GB",
+        "CA",
+        "DE"
+      ],
+      "company_stage": "private_growth",
+      "typical_campaign_tier": "mid",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Le Creuset",
+      "industry_id": "kitchenware",
+      "domain": "lecreuset.com",
+      "hq_country": "FR",
+      "sells_in_countries": "global",
+      "company_stage": "private_growth",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Ninja",
+      "industry_id": "home-appliances",
+      "domain": "ninjakitchen.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "subsidiary",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Vitamix",
+      "industry_id": "kitchenware",
+      "domain": "vitamix.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "private_growth",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "B&Q",
+      "industry_id": "home-improvement",
+      "aliases": [
+        "bandq"
+      ],
+      "domain": "diy.com",
+      "hq_country": "GB",
+      "sells_in_countries": [
+        "GB",
+        "IE"
+      ],
+      "company_stage": "subsidiary",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Home Depot",
+      "industry_id": "home-improvement",
+      "domain": "homedepot.com",
+      "hq_country": "US",
+      "sells_in_countries": [
+        "US",
+        "CA",
+        "MX"
+      ],
+      "company_stage": "public",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Lowe's",
+      "industry_id": "home-improvement",
+      "aliases": [
+        "lowes"
+      ],
+      "domain": "lowes.com",
+      "hq_country": "US",
+      "sells_in_countries": [
+        "US",
+        "CA"
+      ],
+      "company_stage": "public",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Lego",
+      "industry_id": "toys",
+      "domain": "lego.com",
+      "hq_country": "DK",
+      "sells_in_countries": "global",
+      "company_stage": "private_growth",
+      "typical_campaign_tier": "premium",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Mattel",
+      "industry_id": "toys",
+      "domain": "mattel.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "public",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Hasbro",
+      "industry_id": "toys",
+      "domain": "hasbro.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "public",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Pampers",
+      "industry_id": "diapers-nappies",
+      "domain": "pampers.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "subsidiary",
+      "typical_campaign_tier": "premium",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Huggies",
+      "industry_id": "diapers-nappies",
+      "domain": "huggies.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "subsidiary",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Purina",
+      "industry_id": "pet-food",
+      "domain": "purina.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "subsidiary",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Pedigree",
+      "industry_id": "pet-food",
+      "domain": "pedigree.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "subsidiary",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Royal Canin",
+      "industry_id": "pet-food",
+      "domain": "royalcanin.com",
+      "hq_country": "FR",
+      "sells_in_countries": "global",
+      "company_stage": "subsidiary",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Chewy",
+      "industry_id": "pet-supplies",
+      "domain": "chewy.com",
+      "hq_country": "US",
+      "sells_in_countries": [
+        "US",
+        "CA"
+      ],
+      "company_stage": "public",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "BarkBox",
+      "industry_id": "pet-supplies",
+      "aliases": [
+        "bark"
+      ],
+      "domain": "barkbox.com",
+      "hq_country": "US",
+      "sells_in_countries": [
+        "US",
+        "CA"
+      ],
+      "company_stage": "public",
+      "typical_campaign_tier": "mid",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "DraftKings",
+      "industry_id": "gambling",
+      "domain": "draftkings.com",
+      "hq_country": "US",
+      "sells_in_countries": [
+        "US"
+      ],
+      "company_stage": "public",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "FanDuel",
+      "industry_id": "gambling",
+      "domain": "fanduel.com",
+      "hq_country": "US",
+      "sells_in_countries": [
+        "US"
+      ],
+      "company_stage": "subsidiary",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Bet365",
+      "industry_id": "gambling",
+      "domain": "bet365.com",
+      "hq_country": "GB",
+      "sells_in_countries": "global",
+      "company_stage": "private_growth",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Paddy Power",
+      "industry_id": "gambling",
+      "domain": "paddypower.com",
+      "hq_country": "IE",
+      "sells_in_countries": [
+        "GB",
+        "IE"
+      ],
+      "company_stage": "subsidiary",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "William Hill",
+      "industry_id": "gambling",
+      "domain": "williamhill.com",
+      "hq_country": "GB",
+      "sells_in_countries": [
+        "GB"
+      ],
+      "company_stage": "subsidiary",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Verizon",
+      "industry_id": "mobile-carriers",
+      "domain": "verizon.com",
+      "hq_country": "US",
+      "sells_in_countries": [
+        "US"
+      ],
+      "company_stage": "public",
+      "typical_campaign_tier": "premium",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "AT&T",
+      "industry_id": "mobile-carriers",
+      "domain": "att.com",
+      "hq_country": "US",
+      "sells_in_countries": [
+        "US"
+      ],
+      "company_stage": "public",
+      "typical_campaign_tier": "premium",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "T-Mobile",
+      "industry_id": "mobile-carriers",
+      "domain": "t-mobile.com",
+      "hq_country": "US",
+      "sells_in_countries": [
+        "US"
+      ],
+      "company_stage": "public",
+      "typical_campaign_tier": "premium",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Vodafone",
+      "industry_id": "mobile-carriers",
+      "domain": "vodafone.com",
+      "hq_country": "GB",
+      "sells_in_countries": "global",
+      "company_stage": "public",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "EE",
+      "industry_id": "mobile-carriers",
+      "domain": "ee.co.uk",
+      "hq_country": "GB",
+      "sells_in_countries": [
+        "GB"
+      ],
+      "company_stage": "subsidiary",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "O2",
+      "industry_id": "mobile-carriers",
+      "domain": "o2.co.uk",
+      "hq_country": "GB",
+      "sells_in_countries": [
+        "GB"
+      ],
+      "company_stage": "subsidiary",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Three",
+      "industry_id": "mobile-carriers",
+      "domain": "three.co.uk",
+      "hq_country": "GB",
+      "sells_in_countries": [
+        "GB"
+      ],
+      "company_stage": "subsidiary",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Octopus Energy",
+      "industry_id": "energy-utilities",
+      "domain": "octopus.energy",
+      "hq_country": "GB",
+      "sells_in_countries": [
+        "GB",
+        "DE",
+        "FR",
+        "JP",
+        "US"
+      ],
+      "company_stage": "private_growth",
+      "typical_campaign_tier": "mid",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "British Gas",
+      "industry_id": "energy-utilities",
+      "domain": "britishgas.co.uk",
+      "hq_country": "GB",
+      "sells_in_countries": [
+        "GB"
+      ],
+      "company_stage": "subsidiary",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "EDF Energy",
+      "industry_id": "energy-utilities",
+      "domain": "edfenergy.com",
+      "hq_country": "GB",
+      "sells_in_countries": [
+        "GB"
+      ],
+      "company_stage": "subsidiary",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Geico",
+      "industry_id": "insurance",
+      "domain": "geico.com",
+      "hq_country": "US",
+      "sells_in_countries": [
+        "US"
+      ],
+      "company_stage": "subsidiary",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Progressive",
+      "industry_id": "insurance",
+      "domain": "progressive.com",
+      "hq_country": "US",
+      "sells_in_countries": [
+        "US"
+      ],
+      "company_stage": "public",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Lemonade",
+      "industry_id": "insurance",
+      "domain": "lemonade.com",
+      "hq_country": "US",
+      "sells_in_countries": [
+        "US",
+        "GB",
+        "DE",
+        "FR",
+        "NL"
+      ],
+      "company_stage": "public",
+      "typical_campaign_tier": "mid",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Aviva",
+      "industry_id": "insurance",
+      "domain": "aviva.com",
+      "hq_country": "GB",
+      "sells_in_countries": [
+        "GB",
+        "IE",
+        "CA"
+      ],
+      "company_stage": "public",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Squarespace",
+      "industry_id": "saas",
+      "domain": "squarespace.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "public",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Wix",
+      "industry_id": "saas",
+      "domain": "wix.com",
+      "hq_country": "IL",
+      "sells_in_countries": "global",
+      "company_stage": "public",
+      "typical_campaign_tier": "macro",
+      "creator_program_presence": [
+        "direct"
+      ]
+    },
+    {
+      "name": "Webflow",
+      "industry_id": "saas",
+      "domain": "webflow.com",
+      "hq_country": "US",
+      "sells_in_countries": "global",
+      "company_stage": "private_growth",
+      "typical_campaign_tier": "mid",
+      "creator_program_presence": [
+        "direct"
+      ]
+    }
+  ],
+  "enrichment_field_definitions": {
+    "hq_country": "ISO 3166-1 alpha-2 country code of the brand's headquarters.",
+    "sells_in_countries": "Either the literal string 'global' or an array of ISO 3166-1 alpha-2 codes for primary markets.",
+    "company_stage": "One of: bootstrapped | seed | series_a | series_b | series_c | series_d | private_growth | public | subsidiary | state_owned | unknown.",
+    "typical_campaign_tier": "One of: nano | micro | mid | macro | premium | unknown. Indicates the creator follower-tier band this brand typically works with.",
+    "creator_program_presence": "Array of observed channels: direct | aspire | grin | ltk | shopmy | agency_of_record."
+  }
 }
