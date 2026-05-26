@@ -38,7 +38,7 @@
     },
     "guardrails": {
       "type": "object",
-      "description": "Hard rules the AI generation must respect across all steps of this template.",
+      "description": "Hard rules the AI generation must respect across all steps of this template. Step 1 manual-approval is enforced system-wide and is NOT configurable here — see `docs/outreach_workflow.md` § Review-before-send queue.",
       "additionalProperties": false,
       "properties": {
         "max_body_chars": { "type": "integer", "minimum": 100, "maximum": 2000, "default": 600 },
@@ -89,8 +89,8 @@
         },
         "channel": {
           "type": "string",
-          "enum": ["email", "linkedin_message", "linkedin_inmail", "linkedin_connection"],
-          "description": "Send channel. Email is the v0.1 primary; LinkedIn channels deferred to v0.2 once we have LinkedIn-send integration."
+          "enum": ["email"],
+          "description": "Send channel for this step. v0.1 supports **email only**. LinkedIn outreach (`linkedin_message`, `linkedin_inmail`, `linkedin_connection`) is deferred to v2 — these values will be re-added to the enum when LinkedIn-send integration ships. Templates authored today must use `email` for every step."
         },
         "preferred_angle_categories": {
           "type": "array",

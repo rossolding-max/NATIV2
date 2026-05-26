@@ -29,6 +29,7 @@
 **Scope:** access agreement provided by the user; specific API tier (standard / Sales Navigator / partnership) confirmed at integration time.
 **Cost:** per access agreement.
 **Env var:** `LINKEDIN_API_KEY` (or per the provided access mechanism).
+**v0.1 scope is enrichment only — NOT outreach.** The LinkedIn API in v0.1 is used to read profile data, last-activity dates, and search. Sending LinkedIn messages / InMails / connection requests as part of an outreach sequence is **deferred to v2** — see `docs/outreach_workflow.md` § "Email-only in v0.1". When v2 ships LinkedIn-channel sending, we'll evaluate sender vendors (Sales Navigator API vs third-party platforms like Closely / Expandi / La Growth Machine) against LinkedIn's automation-policy enforcement.
 
 ### Smartlead.ai — outreach send + sequence backend (Phase 3b lead vendor)
 **Role:** Powers the cold-outreach engine spec'd in `docs/outreach_workflow.md`. Our app generates per-step AI content (Claude on our side) and pushes it to Smartlead via API; Smartlead handles per-talent mailbox + warmup, send scheduling, open/click tracking, reply detection. Webhooks fire back to our app for kill-logic and analytics.

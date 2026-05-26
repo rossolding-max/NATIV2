@@ -21,6 +21,8 @@ For every qualified brand contact, run a personalised multi-step outreach sequen
 
 **Ultimate objective:** signed brand deals. Every metric in this workflow rolls up to that — reply rate is the v0.1 headline metric because it's the most reliable leading indicator of conversion.
 
+**Scope note — v0.1 is email-only.** LinkedIn outreach (DMs, InMails, connection requests) is **deferred to v2**. The schemas, templates, and orchestrator all reject non-email channels at v0.1. LinkedIn API is still used in Phase 3a for contact verification and enrichment (see `docs/contact_enrichment_workflow.md`) — that's a separate use case from sending LinkedIn messages.
+
 ## Architecture
 
 ```
@@ -232,14 +234,36 @@ For each step in the template, the LLM is given:
 
 ## Review-before-send queue (Step D)
 
-Default ON for v0.1 — every generated step waits in a review queue before going to Smartlead. The talent (or agency manager) sees:
+Every generated step waits in a review queue before going to Smartlead. The talent (or agency manager) sees:
 
 - All steps in the sequence at once (so they see the full arc)
 - Each step's: subject, body, scheduled date, angle_used, reasoning
 - Edit-in-place (which triggers AI re-generation with the edit as guidance)
 - Approve-all (or per-step) → pushes to Smartlead
 
-Configurable per-talent in v0.2 — high-trust setups can auto-approve. Recommended: keep review-first for the talent's first 2–3 weeks of outreach, then they can flip auto-approve on if they're confident in the output.
+### Hard rule: step 1 always requires human approval
+
+**Step 1 (the first touch) MUST be reviewed and approved by the user before sending. No auto-approve for the first email, ever — across every talent, every template, every version.** This is a non-configurable invariant of the system.
+
+Why it's locked:
+- First email is the highest-stakes — it's what the recipient sees first, sets the relationship tone, and once sent can't be unsent
+- Reply rates are driven disproportionately by step 1; a bad first impression poisons the whole sequence
+- The AI is genuinely good but never above oversight on the touch that matters most
+- Edge cases (the contact is a personal friend; the brand had a recent PR crisis the AI didn't catch; tone is slightly off for the talent's voice) are exactly what humans catch and AI doesn't
+
+Orchestrator behavior:
+- Step 1 enters `awaiting_approval` state and stays there until explicit user approval
+- The enrollment cannot transition to `active` while step 1 is unapproved
+- Cron jobs / batch approvals never auto-clear step-1 reviews — they require a per-step user action (or at minimum an "approve all in review queue" click)
+
+### Steps 2+ (follow-ups)
+
+For follow-ups, auto-approval is **configurable per-talent in v0.2**. Recommended posture: keep review-first for the talent's first 2–3 weeks of outreach (~50–100 sequences), then flip auto-approve on for follow-ups if the talent is confident in the output. Step 1 remains manual regardless.
+
+Auto-approve guardrails for follow-ups (when enabled in v0.2):
+- Skip auto-approve if the generated content scored low on the post-LLM validation pass
+- Skip auto-approve if the generated content materially diverges from the talent's prior approved tone (per a similarity check against previously-approved emails)
+- Skip auto-approve if the brand has surfaced a `sensitive_category` warning since the last step
 
 ## Smartlead integration (Step E)
 
@@ -461,8 +485,8 @@ Compares favourably to e.g. dedicated agencies charging $2,500+/mo for cold outr
 
 ## Open questions for v0.2 / v0.3
 
-1. **LinkedIn-channel steps** — `channel` enum already includes `linkedin_message`/`linkedin_inmail`/`linkedin_connection` but v0.1 only sends email. Add LinkedIn integration in v0.2 once we have a LinkedIn-send vendor confirmed.
-2. **Auto-approve threshold** — currently all generated content requires review. Configurable per-talent in v0.2 (e.g. auto-approve below confidence X; manual review above).
+1. **LinkedIn outreach channels (v2)** — **explicitly deferred from v0.1.** The schema currently restricts `channel` to `email` only. When v2 ships LinkedIn-send integration, the enum will re-add `linkedin_message` / `linkedin_inmail` / `linkedin_connection` and the orchestrator will route those steps through whichever LinkedIn-send vendor is chosen at that time. v0.1 to v2 transition involves: vendor selection (LinkedIn's official Sales Navigator API vs third-party like Closely / Expandi / La Growth Machine), automation-policy review (LinkedIn's anti-automation enforcement is aggressive), and per-talent LinkedIn account warmup. None of these are blockers for v0.1 — email-only ships now.
+2. **Auto-approve for follow-ups** — **step 1 is permanently manual-only** (locked guardrail). For follow-ups (steps 2+), v0.2 will add per-talent auto-approve configuration with the three guardrails above (validation score, tone-similarity, fresh sensitive flag).
 3. **Closed-loop angle tuning** — `pitch_angles.json` strength_scores currently human-edited. v2: analyzer auto-updates scores based on observed reply rates (with sample-size + variance guards).
 4. **Smartlead campaign segmentation** — v0.1 = one campaign per (talent, template). v0.2 may need finer segmentation (e.g. one campaign per (talent, template, brand_industry) for sender-warmup-by-vertical).
 5. **Reply auto-response** — currently a reply triggers kill + manual handoff. v0.2 could draft a reply for the talent to review (similar to Instantly's AI Reply Agent feature).

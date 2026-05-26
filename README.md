@@ -368,6 +368,11 @@ Per the v0.1 user decision, **every step in every sequence is generated per-cont
 
 Token budget: ~$0.027 per full 4-step sequence. 100 contacts = ~$2.70 in Claude costs.
 
+### Step 1 manual-approval (hard rule)
+**The first email of every sequence requires explicit user approval before sending.** Not configurable, not auto-bypassed, not version-dependent — this is a system invariant. Rationale: the first touch is the highest-stakes email; reply rates are driven disproportionately by step 1; once sent, it cannot be unsent.
+
+Follow-ups (steps 2+) require approval in v0.1 too, but auto-approval for follow-ups becomes a per-talent configurable option in v0.2 (with three guardrails: validation score, tone-similarity to previously-approved content, fresh `sensitive_category` flag). Step 1 stays manual regardless of version or per-talent settings.
+
 ### Reply detection + kill logic
 Smartlead fires a webhook on every reply. Our app:
 1. Claude Haiku classifies reply intent: `interested` / `declined` / `out_of_office` / `unrelated` / `unsubscribe_request` / `needs_more_info` / `wrong_person_routed`
@@ -380,6 +385,9 @@ Per the v0.1 user decision, **reply rate (replied ÷ delivered) is the headline 
 
 ### Per-talent sender domain (deliverability + authenticity)
 Each talent has their own sending domain (e.g. `pitches@janedoetalent.com`). Set up during onboarding via 3 DNS records (SPF, DKIM, DMARC). 2-4 week warmup via Smartlead's peer-to-peer network before first cold send. Per-talent reputation = no cross-contamination, brand recognises the talent's identity, fully Gmail/Yahoo 2024 compliant.
+
+### Email-only in v0.1
+Phase 3b v0.1 sends **email only**. LinkedIn outreach (DMs / InMails / connection requests as part of a sequence) is deferred to v2. The pitch_template schema restricts `channel` to `email`; the orchestrator rejects any non-email step. LinkedIn API is still in v0.1 — but for **contact enrichment** (verifying Apollo data freshness, finding contacts Apollo misses), not for sending. When v2 adds LinkedIn-channel sending we'll evaluate vendors (Sales Nav API vs Closely / Expandi / La Growth Machine), automation-policy compliance, and per-talent LinkedIn account warmup.
 
 ### Vendor stack (Phase 3b v0.1)
 - **Smartlead** — send + sequence + warmup + reply detection (~$94/mo Pro per talent mailbox)
