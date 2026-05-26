@@ -5,6 +5,7 @@
 **Pairs with:**
 - `docs/brand_discovery.md` — produces the brands this workflow enriches contacts for.
 - `docs/brand_enrichment_workflow.md` — same shape and honesty policy, applied to brand records instead of people.
+- `docs/brand_deals_workflow.md` (Phase 1.5) — past-deal records reference contacts here via `main_brand_contact_id`. When a contact at a brand later changes jobs (LinkedIn API picks up the move), we have a warm relationship at their new brand — surfaced as a `champion_internal_advocate` angle target. The past-deal record's `main_brand_contact_id` is what unlocks the warm-intro mapping.
 - `docs/outreach_workflow.md` (Phase 3b) — consumes the contacts this workflow produces. Qualified contacts auto-enrol into AI-generated outreach sequences via Smartlead.
 - `docs/vendor_roadmap.md` — the external services this workflow uses.
 - `schemas/brand_contact.schema.json` — the contract for the output.

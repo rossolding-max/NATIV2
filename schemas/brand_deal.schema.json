@@ -1,0 +1,318 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://nativ2/schemas/brand_deal.schema.json",
+  "title": "Brand Deals (per talent)",
+  "description": "Per-talent file capturing the rich record of every brand campaign the talent has done. One file per talent at `data/brand_deals/{talent_id}.json` (folder gitignored — commercial KPI data and exact fees shouldn't be in the repo). Powers: Brand Discovery Search 1 (re-engagement timing), Pitch Angles (5 KPI-driven angles + enrichment of 3 existing), Outreach AI generation (citation material in pitch prompts), and Contact Enrichment (warm-intro candidate identification). See `docs/brand_deals_workflow.md`.",
+  "type": "object",
+  "required": ["talent_id", "version", "deals"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+    "talent_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]*$",
+      "description": "Slug matching the `id` in the source `talents/{id}.json`."
+    },
+    "version": { "type": "string" },
+    "last_updated_at": { "type": "string", "format": "date-time" },
+    "deals": {
+      "type": "array",
+      "description": "All known brand campaigns for this talent — past + active + upcoming. Sorted newest first by convention.",
+      "items": { "$ref": "#/$defs/deal" }
+    }
+  },
+
+  "$defs": {
+
+    "deal": {
+      "type": "object",
+      "description": "One brand campaign. KPI fields each carry source provenance per the honesty-floor policy — never fabricate. Re-engagement metadata captured separately so Search 1 of Brand Discovery has everything it needs without parsing dates.",
+      "required": ["deal_id", "brand_id", "industry_id", "campaign_type", "outcome", "first_recorded_at", "last_updated_at"],
+      "additionalProperties": false,
+      "properties": {
+
+        "deal_id": {
+          "type": "string",
+          "pattern": "^deal_[a-z0-9_]+$",
+          "description": "Stable identifier. Suggested format: `deal_{year}_{brand_slug}_{quarter_or_seq}` (e.g. `deal_2025_gymshark_q4`)."
+        },
+        "brand_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]*$",
+          "description": "FK to `data/brand_industry_map.json` (normalised name slug)."
+        },
+        "brand_name": {
+          "type": "string",
+          "description": "Denormalised display name for at-a-glance reading. Source of truth remains `brand_industry_map.json`."
+        },
+        "industry_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]*$",
+          "description": "FK to `data/industries.json`. Denormalised from brand_industry_map at deal-creation time."
+        },
+        "campaign_name": {
+          "type": "string",
+          "description": "Brand's name for the campaign (e.g. 'Lift Collection Launch', 'Holiday 2025')."
+        },
+
+        "campaign_type": {
+          "type": "string",
+          "enum": [
+            "sponsored_post",
+            "sponsored_series",
+            "ambassador",
+            "product_seeding",
+            "affiliate",
+            "ugc_license",
+            "whitelisting",
+            "paid_appearance",
+            "brand_integration",
+            "co_branded_product",
+            "podcast_read",
+            "newsletter_mention",
+            "other"
+          ],
+          "description": "Deal structure type. sponsored_post = single piece; sponsored_series = multi-post campaign; ambassador = long-term recurring; product_seeding = gifted product, no fee; affiliate = commission-based; ugc_license = brand licenses talent content; whitelisting = talent content used as brand paid social; paid_appearance = event/panel/host; brand_integration = paid mention in non-sponsored content; co_branded_product = co-creation."
+        },
+        "campaign_objective": {
+          "type": "string",
+          "enum": ["awareness", "consideration", "conversion", "brand_lift", "product_launch", "audience_growth", "retention_loyalty", "crisis_recovery", "other"],
+          "description": "Brand's stated goal for the campaign. Drives which KPIs matter most for the post-campaign analysis."
+        },
+
+        "started_at": { "type": "string", "format": "date" },
+        "ended_at": { "type": "string", "format": "date" },
+        "posted_dates": {
+          "type": "array",
+          "items": { "type": "string", "format": "date" },
+          "description": "Specific dates when content was posted. Used for time-on-feed analysis and post-by-post KPI breakdowns."
+        },
+
+        "deliverables": {
+          "type": "array",
+          "description": "What the talent agreed to produce.",
+          "items": {
+            "type": "object",
+            "required": ["platform", "format", "count"],
+            "additionalProperties": false,
+            "properties": {
+              "platform": {
+                "type": "string",
+                "enum": ["instagram", "tiktok", "youtube", "twitter_x", "linkedin", "pinterest", "twitch", "snapchat", "facebook", "substack", "podcast", "other"]
+              },
+              "format": {
+                "type": "string",
+                "enum": ["reel", "story", "feed_post", "carousel", "live", "video_long_form", "video_short", "podcast_episode", "podcast_read", "newsletter", "tweet_thread", "linkedin_post", "appearance", "co_created_product", "other"]
+              },
+              "count": { "type": "integer", "minimum": 1 },
+              "post_urls": {
+                "type": "array",
+                "items": { "type": "string", "format": "uri" },
+                "description": "Direct URLs to the published content. Useful for verification + showing the brand the work."
+              }
+            }
+          }
+        },
+
+        "fee_usd": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Total fee converted to USD. May be 0 for product_seeding deals."
+        },
+        "fee_currency_original": { "type": "string", "pattern": "^[A-Z]{3}$", "description": "ISO 4217 (e.g. GBP, USD, EUR)." },
+        "fee_original_amount": { "type": "number", "minimum": 0 },
+        "usage_rights_granted": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["organic", "whitelisting_30d", "whitelisting_60d", "whitelisting_90d", "whitelisting_unlimited", "paid_social_30d", "paid_social_90d", "paid_social_perpetual", "website_use", "broadcast", "print", "perpetual_all_channels"]
+          }
+        },
+        "exclusivity": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "category": { "type": "string", "description": "Industry / category the talent was exclusive in." },
+            "duration_days": { "type": "integer", "minimum": 0 },
+            "starts_at": { "type": "string", "format": "date" },
+            "ends_at": { "type": "string", "format": "date" }
+          }
+        },
+        "additional_compensation": {
+          "type": "array",
+          "description": "Non-cash compensation: gifted product, event invites, equity, comped travel.",
+          "items": {
+            "type": "object",
+            "required": ["type"],
+            "additionalProperties": false,
+            "properties": {
+              "type": { "type": "string", "enum": ["gifted_product", "comped_event", "comped_travel", "equity", "discount_code", "other"] },
+              "value_usd": { "type": "number", "minimum": 0 },
+              "description": { "type": "string" }
+            }
+          }
+        },
+
+        "kpis": {
+          "type": "object",
+          "description": "Quantitative results. Every metric carries source provenance. Omit metrics with no confident value.",
+          "additionalProperties": false,
+          "properties": {
+            "reach": { "$ref": "#/$defs/kpiMetric" },
+            "impressions": { "$ref": "#/$defs/kpiMetric" },
+            "engagement_total": { "$ref": "#/$defs/kpiMetric" },
+            "engagement_rate_pct": { "$ref": "#/$defs/kpiMetric" },
+            "video_views": { "$ref": "#/$defs/kpiMetric" },
+            "video_completion_rate_pct": { "$ref": "#/$defs/kpiMetric" },
+            "avg_watch_time_seconds": { "$ref": "#/$defs/kpiMetric" },
+            "likes": { "$ref": "#/$defs/kpiMetric" },
+            "comments": { "$ref": "#/$defs/kpiMetric" },
+            "shares": { "$ref": "#/$defs/kpiMetric" },
+            "saves": { "$ref": "#/$defs/kpiMetric" },
+            "link_clicks": { "$ref": "#/$defs/kpiMetric" },
+            "ctr_pct": { "$ref": "#/$defs/kpiMetric" },
+            "conversions": { "$ref": "#/$defs/kpiMetric" },
+            "sales_attributed_usd": { "$ref": "#/$defs/kpiMetric" },
+            "new_followers_for_brand": { "$ref": "#/$defs/kpiMetric" },
+            "promo_code_redemptions": { "$ref": "#/$defs/kpiMetric" },
+            "cpm_usd": { "$ref": "#/$defs/kpiMetric" },
+            "cpe_usd": { "$ref": "#/$defs/kpiMetric" },
+            "cpv_usd": { "$ref": "#/$defs/kpiMetric" },
+            "emv_usd": { "$ref": "#/$defs/kpiMetric" }
+          }
+        },
+
+        "vs_industry_benchmark": {
+          "type": "object",
+          "description": "Per-KPI comparison against industry benchmarks. SCHEMA SHIPS IN v0.1 but population requires `data/industry_kpi_benchmarks.json` which is deferred to v2 — until then, this object stays empty. When benchmarks data ships, the orchestrator computes these comparisons automatically from `kpis.*` against the benchmark file.",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "category_avg": { "type": "number" },
+              "category_p50": { "type": "number" },
+              "category_p90": { "type": "number" },
+              "performance_label": { "type": "string", "description": "Human-readable summary, e.g. '2.3x category', '+29% vs category', 'top 10%'." },
+              "benchmark_source": { "type": "string" },
+              "benchmark_as_of_year": { "type": "integer" }
+            }
+          }
+        },
+
+        "audience_overlap_with_brand_target_pct": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Estimated percentage of the talent's audience that matches the brand's target customer profile. Computed at campaign-end from IAB segment overlap + any brand-provided audience-match data."
+        },
+        "audience_demographics_at_campaign_time": {
+          "type": "object",
+          "description": "Snapshot of the talent's audience_demographics at the time the campaign ended. Lets us track how the audience has evolved across deals (e.g. 'campaign 1 was 65% F, campaign 3 was 71% F'). Same shape as `talent.audience_demographics`.",
+          "additionalProperties": true
+        },
+
+        "performance_notes": {
+          "type": "string",
+          "description": "Free-text qualitative summary. What worked, what didn't, brand feedback, lessons learned. Used as context by the email generator when citing this campaign."
+        },
+        "outcome": {
+          "type": "string",
+          "enum": ["pending", "successful_renewed", "successful", "mixed", "underperformed", "unfulfilled"],
+          "description": "Overall outcome classification. successful_renewed = brand renewed for follow-on campaign; successful = completed cleanly, no renewal; mixed = some KPIs hit, some missed; underperformed = KPIs missed by >20%; unfulfilled = campaign didn't complete (talent or brand pulled out)."
+        },
+        "case_study_url": {
+          "type": "string",
+          "format": "uri",
+          "description": "Optional public URL of the campaign case study (often on the brand or agency website). Powers the `case_study_available` pitch angle."
+        },
+
+        "do_not_recontact": {
+          "type": "boolean",
+          "default": false,
+          "description": "Hard flag. When true, Brand Discovery Search 1 (re-engagement) will never surface this brand for this talent. Set after a soured deal or explicit 'don't come back' from the brand."
+        },
+        "cool_down_override_days": {
+          "type": ["integer", "null"],
+          "minimum": 0,
+          "description": "Days to wait before this brand is eligible for re-engagement. Null = use default 180 days from ended_at. Set per-deal to honour brand-specific cadences (e.g. 'come back in March' = explicit date)."
+        },
+        "last_re_engagement_pitch_date": {
+          "type": ["string", "null"],
+          "format": "date",
+          "description": "When we last sent a re-engagement pitch to this brand for this talent. Used to extend cool-down on no-response (anti-spam — see Brand Discovery Search 1 § De-spam)."
+        },
+        "renewal_eligibility_date": {
+          "type": ["string", "null"],
+          "format": "date",
+          "description": "Computed: ended_at + cool_down_override_days (or default 180). Null while campaign is `pending`. The orchestrator updates this whenever ended_at or cool_down_override_days changes."
+        },
+
+        "main_brand_contact_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]*$",
+          "description": "FK to a contact_id in `data/brand_contacts/{brand_id}.json`. The person at the brand who ran this campaign. Powers warm-intro identification — when this person changes brands, we know we have a warm relationship to leverage."
+        },
+        "agency_contact_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]*$",
+          "description": "FK if the deal went through an agency-of-record. Contact at the AOR brand_id."
+        },
+
+        "originated_from_pitch_enrollment_id": {
+          "type": "string",
+          "pattern": "^enr_[a-z0-9]+$",
+          "description": "Optional FK to `data/pitch_enrollments/{enrollment_id}.json` if this deal originated from a pitch our outreach engine sent. Closes the loop: we can compute 'reply → deal' conversion rates by talent / template / angle for the analytics layer."
+        },
+
+        "data_sources": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["media_pack", "ig_insights_export", "tiktok_analytics_export", "youtube_analytics_export", "brand_invoice", "brand_report", "tribe_dynamics_report", "hypeauditor_report", "manual_entry", "platform_api", "ai_inference_from_post_urls"]
+          },
+          "description": "Which sources contributed data to this record. Honesty-floor: every populated KPI's `source` should be reflected here."
+        },
+        "first_recorded_at": { "type": "string", "format": "date-time" },
+        "last_updated_at": { "type": "string", "format": "date-time" },
+        "manually_verified_by_talent": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether the talent has reviewed and confirmed the data. Distinguishes AI-extracted-but-unreviewed from talent-verified records. Email generator weights verified records higher when citing metrics."
+        },
+
+        "notes": {
+          "type": "string",
+          "description": "Free-text internal notes (agency-side). Not surfaced to brand contacts."
+        }
+      }
+    },
+
+    "kpiMetric": {
+      "type": "object",
+      "required": ["value", "source"],
+      "additionalProperties": false,
+      "properties": {
+        "value": {
+          "type": "number",
+          "minimum": 0,
+          "description": "The metric value. For rates (engagement_rate_pct, ctr_pct), this is a percentage 0-100."
+        },
+        "source": {
+          "type": "string",
+          "enum": ["platform_verified", "brand_reported", "third_party", "calculated", "self_reported", "estimated"],
+          "description": "platform_verified = pulled directly from IG / TikTok / YouTube Insights API; brand_reported = brand provided the figure; third_party = Tribe Dynamics / HypeAuditor / similar; calculated = derived from other fields (e.g. CPM from fee/impressions); self_reported = talent's claim (lowest confidence); estimated = back-calculated when no source. Email generator strongly prefers platform_verified > brand_reported > third_party when citing metrics."
+        },
+        "source_name": {
+          "type": "string",
+          "description": "Specific source identifier (e.g. 'Instagram Insights API', 'Tribe Dynamics Q4 2025 report')."
+        },
+        "as_of": {
+          "type": "string",
+          "format": "date",
+          "description": "When this figure was captured. KPIs continue to grow after campaign end (e.g. viral pickup); the as_of date tells us when the snapshot was taken."
+        },
+        "verified_at": { "type": "string", "format": "date-time" }
+      }
+    }
+  }
+}

@@ -9,6 +9,7 @@ Build an AI-powered assistant that helps an influencer (or a roster of influence
 | # | Phase | Status | Purpose |
 |---|-------|--------|---------|
 | 1 | **Talent Profile** | v0.1 spec + data shipped | Capture everything the system needs about the creator(s) — identity, audience, history, rates, similar talents. The foundation every later phase reads from. |
+| 1.5 | **Brand Deals (historical campaigns)** | v0.1 spec + schema shipped | Rich per-talent record of every past campaign — campaign type, deliverables, structured KPIs (reach / engagement / conversions / sales) with source provenance, outcome, re-engagement metadata. Powers citation material in outreach pitches and re-engagement timing in Brand Discovery. |
 | 2 | **Brand Discovery & Targeting** | v0.1 spec + data shipped | For a given talent, produce a ranked list of industries to pitch and a ranked long-list of specific brands within them — with qualification filtering, sensitive-vertical warnings, and re-engagement on a monthly cron. |
 | 3a | **Contact CRM** | v0.1 spec + schema shipped | For every primary-tier brand candidate, find the right named contacts (Apollo + LinkedIn API + web search) with verified emails, LinkedIn URLs, location, tenure, and a `decision_role` classification (CMO of a $50B brand is *not* the buyer for a £5k Reel — the IM Manager 2 levels down is). |
 | 3b | **Outreach** | v0.1 spec + schemas + angles library shipped | AI-generated personalised email sequences per contact + decision_role, sent via Smartlead from per-talent domains, with reply detection, kill-on-reply, and full per-email analytics provenance. |
@@ -22,6 +23,20 @@ Build an AI-powered assistant that helps an influencer (or a roster of influence
 │   docs/onboarding_workflow.md     ← how a talent gets in           │
 │   schemas/talent.schema.json      ← what the data looks like       │
 │   talents/{id}.json               ← per-talent file                 │
+└────────────────────────────┬───────────────────────────────────────┘
+                             │
+                             ▼
+┌────────────────────────────────────────────────────────────────────┐
+│ Phase 1.5  BRAND DEALS (historical campaigns)                      │
+│   docs/brand_deals_workflow.md                                     │
+│   schemas/brand_deal.schema.json                                   │
+│     ingestion: media pack (AI extracts KPIs) + manual form +       │
+│                platform-API auto-pull (IG/TikTok/YouTube insights) │
+│     per deal: campaign type + deliverables + KPIs with source      │
+│                provenance + outcome + re-engagement metadata       │
+│     output: data/brand_deals/{talent_id}.json (gitignored)         │
+│   feeds: Phase 2 Search 1 (re-engagement), Phase 3b AI generation  │
+│           (citation material), Phase 3a warm-intro identification  │
 └────────────────────────────┬───────────────────────────────────────┘
                              │
                              ▼
@@ -118,7 +133,8 @@ The fields below were not in the original request but were added because later p
 - `schemas/talent.schema.json` — JSON Schema (Draft 2020-12) describing the talent profile.
 - `schemas/brand_candidates.schema.json` — JSON Schema for the per-talent Brand Discovery output. Validates every file written by the orchestrator under `data/brand_candidates/` (the folder itself is gitignored — generated artifact, not source).
 - `schemas/brand_contact.schema.json` — JSON Schema for per-brand contact records (Phase 3a). Validates every file under `data/brand_contacts/` (gitignored — contacts are PII and vendor data is licensed).
-- `schemas/pitch_angle.schema.json` + `data/pitch_angles.json` — curated library of 37 pitch angles across 15 categories (competitive proof, similar-talent precedent, demographic match, niche fit, brand momentum, geographic alignment, mutual connection, values alignment, re-engagement, performance proof, timeliness, creative concept, insider observation, role defaults, counter-positioning). Each angle has trigger conditions, applicable decision roles + steps, strength score, example phrasing. Powers the AI generation step in Phase 3b outreach.
+- `schemas/brand_deal.schema.json` — JSON Schema for per-talent historical brand-deal records (Phase 1.5). 13 structured sections per deal incl. KPIs with source provenance, vs-benchmark, audience-overlap, re-engagement metadata. Validates every file under `data/brand_deals/` (gitignored — commercial KPIs and fees).
+- `schemas/pitch_angle.schema.json` + `data/pitch_angles.json` — curated library of 42 pitch angles across 15 categories (37 base + 5 KPI-driven angles from Phase 1.5) (competitive proof, similar-talent precedent, demographic match, niche fit, brand momentum, geographic alignment, mutual connection, values alignment, re-engagement, performance proof, timeliness, creative concept, insider observation, role defaults, counter-positioning). Each angle has trigger conditions, applicable decision roles + steps, strength score, example phrasing. Powers the AI generation step in Phase 3b outreach.
 - `schemas/pitch_template.schema.json` — sequence templates (structure not content). Per-step intent + timing + preferred angle categories. 3 default templates ship per decision_role.
 - `schemas/pitch_enrollment.schema.json` — running instance of a template for a specific (talent, contact). Full per-email provenance: which angles used, which model, full engagement event log, LLM-classified outcome. Validates files under `data/pitch_enrollments/` (gitignored).
 - `scripts/analyze_outreach.py` — rolls every enrollment step into A/B-sliceable aggregates (by angle, decision_role, template, step, brand_tier, send_time, subject_pattern, sender_domain, etc.). Outputs `data/outreach_analytics/` (gitignored).
@@ -139,6 +155,7 @@ The fields below were not in the original request but were added because later p
 - `docs/vendor_roadmap.md` — single source of truth for external-service decisions. Confirms **Exa** as the v0.1 web-search provider (Search 15). Catalogues deferred vendors with criteria for when to add each: ScrapeCreators (Search 16 visual platforms), Owler (competitor maintenance), Modash/HypeAuditor (brand DB bulk import), Exploding Topics (pre-trend detection), Product Hunt API (day-of launches), Tribe Dynamics EMV (top-spending brands per category), SimilarWeb (audience-overlap competitors), Crunchbase (structured funding data), Apollo (Phase 3 outreach contact discovery), plus alternatives for each. Includes the env-var inventory for all current + deferred services.
 - `docs/brand_enrichment_workflow.md` — draft spec for the 9-step pipeline that takes a brand from name-only to fully-populated record in `brand_industry_map.json`. Covers identity resolution, domain resolution, industry classification, HQ/markets, company stage, campaign tier, creator-program presence, revenue + headcount, social follower counts. Three triggers (seed expansion / in-flight discovery writeback / annual refresh), tool-per-step mapping, honesty-floor policy, validation gates, and a state machine. Pairs with brand_discovery.md (consumer) and vendor_roadmap.md (external services).
 - `docs/contact_enrichment_workflow.md` — Phase 3a spec for the 9-step pipeline that turns a primary-tier brand candidate into a list of named contacts with verified emails, LinkedIn URLs, location, tenure, and decision-role classification. Covers target-role identification (scaled to brand size), Apollo employee lookup, LinkedIn API enrichment, web-search backup via Exa, email verification, LLM-driven decision-role classification with the simplified 5-value taxonomy (`buyer` / `influencer` / `gatekeeper` / `champion` / `unknown`), placeholder generation for known-but-unfilled roles, cross-source dedup, CAN-SPAM-aligned opt-out handling, and the shared-roster-pool / per-talent-pitch-history model.
+- `docs/brand_deals_workflow.md` — Phase 1.5 spec for the rich brand-deal data layer: schema, three ingestion paths (media pack AI extraction / manual form / platform-API auto-pull), KPI computation rules (CPM/CPE/CTR auto-derived), honesty-floor enforcement, deal lifecycle states (drafted → live → completed → kpis_in → renewal_eligible), integration touchpoints with Brand Discovery Search 1 (re-engagement timing), Outreach AI generation (citation material), and Contact Enrichment (warm-intro identification via `main_brand_contact_id` following the contact between brands).
 - `docs/outreach_workflow.md` — Phase 3b spec for the AI-generated cold-outreach engine. Covers template selection per decision_role, angle evaluation against the 37-angle library, per-step AI generation (Claude Sonnet for first touch / Haiku for follow-ups), review-before-send queue, Smartlead campaign push, real-time webhook handling, reply classification + cross-roster kill logic, per-talent sender domain setup (SPF/DKIM/DMARC + 2-4 week warmup), and the analytics aggregation layer that captures every email's full provenance for A/B analysis. Includes the default templates (buyer-direct-pitch 4 steps, influencer-warm-intro 3 steps, champion-activation 2 steps; gatekeeper = manual only).
 - `.gitignore` — ensures any `*.local.json` or `.env` files containing real keys are never committed.
 
@@ -207,6 +224,47 @@ Talent audience demographics are **IAB-aligned by schema** (the 13 IAB Age Range
 
 ### Recommendation algorithm
 The full recipe — how the app combines direct affinity + IAB bridge + past deals + brand preferences + the sensitive flag into a ranked list of industries with `why[]` explanations and `warnings[]` — lives in `docs/recommendation_algorithm.md`. That document is the contract the app will implement.
+
+---
+
+## Phase 1.5 — Brand Deals (historical campaigns)
+
+### Output
+A rich, per-talent record of every brand campaign — past, active, or upcoming. Lives at `data/brand_deals/{talent_id}.json` (gitignored — commercial KPIs and exact fees shouldn't be in repo). Validated against `schemas/brand_deal.schema.json`. The light `talent.previous_brands[]` array stays as a backwards-compatible index; each entry can carry an optional `deal_id` pointing to the rich record.
+
+### What's captured per deal
+13 structured sections per record:
+- **Identity** — `deal_id`, `brand_id`, `industry_id`, `campaign_name`
+- **Categorization** — `campaign_type` (13-value enum: sponsored_post / sponsored_series / ambassador / product_seeding / affiliate / ugc_license / whitelisting / paid_appearance / brand_integration / co_branded_product / podcast_read / newsletter_mention / other), `campaign_objective`
+- **Timing** — `started_at`, `ended_at`, specific `posted_dates[]`
+- **Deliverables** — `[{platform, format, count, post_urls[]}]`
+- **Commercials** — `fee_usd`, original currency + amount, `usage_rights_granted[]`, `exclusivity{category, duration_days}`, additional non-cash compensation
+- **KPIs** — structured per-metric records with source provenance: `reach`, `impressions`, `engagement_total`, `engagement_rate_pct`, `video_views`, `video_completion_rate_pct`, `saves`, `shares`, `comments`, `link_clicks`, `ctr_pct`, `conversions`, `sales_attributed_usd`, `cpm_usd`, `cpe_usd`, `emv_usd`, etc. Each value tagged `platform_verified` / `brand_reported` / `third_party` / `calculated` / `self_reported` / `estimated`.
+- **vs_industry_benchmark** — schema in place; populated only when v2 ships `data/industry_kpi_benchmarks.json`
+- **Audience match** — `audience_overlap_with_brand_target_pct` + snapshot of `audience_demographics_at_campaign_time`
+- **Qualitative** — `performance_notes`, `outcome` (6 values incl. `successful_renewed`), optional `case_study_url`
+- **Re-engagement metadata** — `do_not_recontact`, `cool_down_override_days`, `last_re_engagement_pitch_date`, `renewal_eligibility_date`
+- **Contacts** — `main_brand_contact_id` (FK to brand_contacts) + optional `agency_contact_id`
+- **Provenance** — `data_sources[]`, `first_recorded_at`, `last_updated_at`, `manually_verified_by_talent`
+- **Linked enrollment** — `originated_from_pitch_enrollment_id` closes the loop: did this deal come from our outreach system?
+
+### Three ingestion paths
+- **Media pack extraction** (onboarding Step 3) — multimodal LLM extracts deals + KPIs from PDFs / PPTX / IG Insights screenshots / brand invoices. Marked `manually_verified_by_talent: false` pending Step 4 reconciliation.
+- **Manual form** (onboarding Step 5 + ongoing) — guided per-deal form when KPIs weren't extracted. Each KPI has a `source` dropdown so the talent declares provenance.
+- **Platform API auto-pull** (ongoing) — nightly job pulls fresh insights for posts with URLs in `deliverables[].post_urls`, captures peak metrics over 30-day window post-campaign.
+
+### Why this unlocks the outreach engine
+The single biggest lever for cold-email reply rates is citing real, specific, sourced numbers from past campaigns. After this build, the outreach AI can generate pitches like:
+
+> "I drove 1.24M reach for Gymshark at a 7.4% ER — the campaign generated $38k in attributed sales and Gymshark renewed me for Q1 2026. Happy to walk through what worked and how it could apply to Alo Yoga."
+
+Five new angles in `data/pitch_angles.json` fire from deal data (`past_campaign_specific_metric`, `past_campaign_brand_renewed`, `past_campaign_high_conversion`, `past_campaign_audience_overlap_proof`, `past_campaign_beat_benchmark`); three existing angles (`past_brand_direct_competitor`, `past_relationship_eligible`, `case_study_available`) draw richer merge fields from deal records. Email generator strongly prefers higher-confidence KPI sources (`platform_verified` > `brand_reported` > `third_party`) when picking which figure to cite.
+
+### Why this powers re-engagement
+Brand Discovery Search 1 reads `renewal_eligibility_date` per deal (configurable per brand: a brand that says "come back in March" sets `cool_down_override_days`) instead of a flat 180-day rule. Hard `do_not_recontact` flags block soured-deal brands forever. Outcome-based downrank filters out brands where outcome was `underperformed` or `unfulfilled`. Anti-spam de-spam extends cool-downs on no-response to avoid harassing brands.
+
+### Honesty-floor policy
+Same posture as elsewhere in the system — never fabricate. Missing metrics are omitted (no null / zero / guess). When sources disagree, prefer freshest from highest-confidence source; note discrepancy in `performance_notes`. `manually_verified_by_talent` flag distinguishes AI-extracted-but-unreviewed from talent-verified records; email generator weights verified records higher.
 
 ---
 

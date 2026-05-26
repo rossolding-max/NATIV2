@@ -611,6 +611,102 @@
       "example_phrasing": "Transparency: I'm currently exclusive with {exclusivity_brand} in {exclusivity_category} through {exclusivity_end_date}. But my audience is hungry for {adjacent_category} — could {target_brand}'s {different_product_line} be a fit?",
       "merge_fields_required": ["exclusivity_brand", "exclusivity_category", "exclusivity_end_date", "adjacent_category", "target_brand", "different_product_line"],
       "notes": "Use carefully. Some brands appreciate the transparency; others see it as a flag. Only fire when the adjacent_category is genuinely non-competing."
+    },
+
+    {
+      "angle_id": "past_campaign_specific_metric",
+      "category": "performance_proof",
+      "name": "Specific past-campaign KPI",
+      "description": "Talent has a documented past campaign (in `data/brand_deals/{talent_id}.json`) with notable KPIs — reach, engagement, video completion, etc. Pitches the target brand with concrete numbers from a similar or competitive campaign. Email generator prefers platform_verified KPIs over self_reported when picking which figure to cite.",
+      "trigger": {
+        "type": "talent_has_deal_with_strong_kpi",
+        "config": {
+          "min_reach": 100000,
+          "preferred_industry_match": "same_or_competitor",
+          "prefer_kpi_source_order": ["platform_verified", "brand_reported", "third_party"]
+        }
+      },
+      "applicable_to_decision_roles": ["buyer", "influencer"],
+      "applicable_to_steps": [1, 2],
+      "authored_strength_score": 0.80,
+      "example_phrasing": "I drove {kpi_value} {kpi_unit} for {past_brand} in {past_campaign_period} — {kpi_source_verification}. Happy to walk through the full audit.",
+      "merge_fields_required": ["kpi_value", "kpi_unit", "past_brand", "past_campaign_period", "kpi_source_verification"],
+      "pair_well_with": ["past_brand_direct_competitor", "iab_demographic_overlap", "specific_creative_concept"],
+      "notes": "When the deal's brand is a direct competitor of the target (via brand_competitors.json), this angle pairs powerfully with past_brand_direct_competitor — combined they form the strongest first-touch hook."
+    },
+
+    {
+      "angle_id": "past_campaign_brand_renewed",
+      "category": "performance_proof",
+      "name": "Past brand renewed",
+      "description": "Talent has a past deal with outcome=successful_renewed — the brand chose to do a follow-on campaign. Strong social proof: 'brand X liked working with me enough to come back'. Particularly powerful when the renewing brand is in the same vertical as the target.",
+      "trigger": {
+        "type": "talent_has_renewed_deal",
+        "config": { "preferred_industry_match": "same_or_competitor" }
+      },
+      "applicable_to_decision_roles": ["buyer", "influencer"],
+      "applicable_to_steps": [1, 2],
+      "authored_strength_score": 0.85,
+      "example_phrasing": "{past_brand} renewed me for {follow_on_period} after the launch campaign — happy to walk through what worked and how it could apply to {target_brand}.",
+      "merge_fields_required": ["past_brand", "follow_on_period", "target_brand"],
+      "pair_well_with": ["past_campaign_specific_metric", "past_brand_direct_competitor"]
+    },
+
+    {
+      "angle_id": "past_campaign_high_conversion",
+      "category": "performance_proof",
+      "name": "Past campaign drove conversions / sales",
+      "description": "Talent has a past deal with strong bottom-funnel KPIs — conversions, link clicks, sales_attributed_usd, promo code redemptions. The headline number that buyers (especially performance-focused brands) most care about. Email generator picks the most impressive of {conversions, sales_attributed_usd, link_clicks, promo_code_redemptions} based on source confidence.",
+      "trigger": {
+        "type": "talent_has_deal_with_conversion_kpis",
+        "config": {
+          "min_conversions": 100,
+          "min_sales_attributed_usd": 5000,
+          "prefer_kpi_source_order": ["brand_reported", "platform_verified", "third_party"]
+        }
+      },
+      "applicable_to_decision_roles": ["buyer"],
+      "applicable_to_steps": [1, 2, 3],
+      "authored_strength_score": 0.85,
+      "example_phrasing": "Last campaign drove {conversion_metric_value} {conversion_metric_unit} for {past_brand} — performance audit available. Confident a similar approach lands for {target_brand}.",
+      "merge_fields_required": ["conversion_metric_value", "conversion_metric_unit", "past_brand", "target_brand"],
+      "pair_well_with": ["specific_creative_concept", "past_brand_direct_competitor"],
+      "notes": "Sales/conversion numbers from brand_reported sources are the highest-trust pitch material — buyers prioritise these over engagement metrics. Email generator should flag if the only available conversion figures are self_reported (low confidence)."
+    },
+
+    {
+      "angle_id": "past_campaign_audience_overlap_proof",
+      "category": "performance_proof",
+      "name": "Past audience overlap with similar brand's target",
+      "description": "Talent has a documented past campaign where `audience_overlap_with_brand_target_pct` was high (e.g. 70%+). Quantitative proof of audience-fit accuracy. Pairs with current-brand demographic angles to extend the story.",
+      "trigger": {
+        "type": "talent_has_high_audience_match_past_campaign",
+        "config": { "min_overlap_pct": 65, "preferred_industry_match": "same_or_competitor" }
+      },
+      "applicable_to_decision_roles": ["buyer", "influencer"],
+      "applicable_to_steps": [1, 2],
+      "authored_strength_score": 0.80,
+      "example_phrasing": "Past audience overlap with {past_brand}'s buyer profile was {overlap_pct}% — likely even higher with {target_brand} given the demographic match.",
+      "merge_fields_required": ["past_brand", "overlap_pct", "target_brand"],
+      "pair_well_with": ["iab_demographic_overlap"]
+    },
+
+    {
+      "angle_id": "past_campaign_beat_benchmark",
+      "category": "performance_proof",
+      "name": "Past campaign beat industry benchmark",
+      "description": "Talent has a past campaign where `vs_industry_benchmark` shows positive (e.g. ER 2.3x category average). Strongest quantitative proof — directly contextualizes the talent's performance vs the rest of the space. NOTE: schema is in place for v0.1 but this angle fires zero times until `data/industry_kpi_benchmarks.json` ships in v2. Captured here so the trigger logic is ready to go live the moment benchmarks are added.",
+      "trigger": {
+        "type": "talent_has_deal_beating_benchmark",
+        "config": { "min_outperformance_pct": 25, "preferred_industry_match": "same_or_competitor" }
+      },
+      "applicable_to_decision_roles": ["buyer", "influencer"],
+      "applicable_to_steps": [1, 2],
+      "authored_strength_score": 0.90,
+      "example_phrasing": "On the {past_brand} campaign, {kpi_name} was {outperformance_multiplier} the {industry} category average ({past_kpi_value} vs {benchmark_value}). Full audit shows why.",
+      "merge_fields_required": ["past_brand", "kpi_name", "outperformance_multiplier", "industry", "past_kpi_value", "benchmark_value"],
+      "pair_well_with": ["past_campaign_specific_metric"],
+      "notes": "Dormant until v2 benchmarks ship. When live, this is the top-strength angle (0.90) — quantitative + comparative + verifiable."
     }
   ]
 }

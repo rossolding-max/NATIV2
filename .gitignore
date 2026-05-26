@@ -19,6 +19,13 @@ data/brand_candidates/
 # data is NEVER committed.
 data/brand_contacts/
 
+# Brand Deals (Phase 1.5): per-talent campaign records with commercial
+# KPIs, fees, and licensed third-party data (Tribe Dynamics, etc.).
+# Schema (schemas/brand_deal.schema.json) and spec
+# (docs/brand_deals_workflow.md) are tracked; the data is NEVER
+# committed.
+data/brand_deals/
+
 # Outreach enrollments: per-(talent, contact) running sequence
 # instances with PII + AI-generated email content. Schema
 # (schemas/pitch_enrollment.schema.json) tracked; data never.

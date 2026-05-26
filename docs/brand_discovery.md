@@ -139,14 +139,17 @@ Each search is independent; all run in parallel; results merge by brand name + i
 ### Group A — Re-engagement (highest conversion likelihood)
 
 #### Search 1 — Previous brands eligible for re-engagement
-**Reads:** `talent.previous_brands[]` + `talent.previous_brands[].campaign_date`.
-**Logic:** include each previous brand where `today - last_campaign_date ≥ cool_down_days` (default 180 days; configurable per brand if specified in `previous_brands[].cool_down_override`).
-**Output tag:** `tier: "re-engage"`. These get a 0.60 weight — highest of any source because warm contacts convert far better than cold.
+**Reads:** `data/brand_deals/{talent_id}.json` (richer record, populated per Phase 1.5 `docs/brand_deals_workflow.md`); falls back to `talent.previous_brands[].campaign_date` for legacy entries without a `deal_id`.
+**Logic:** for each deal where `today ≥ renewal_eligibility_date` AND `do_not_recontact == false`, surface as a re-engagement candidate.
+**Output tag:** `tier: "re-engage"`. Weight 0.60 — highest of any source because warm contacts convert far better than cold.
 **Schedule:** monthly cron job per talent. Surfaces newly-eligible re-engagements as their cool-down elapses.
-**Cool-down logic:**
-- Default: 180 days from last campaign end (or campaign date if no end date).
-- Override per brand: if `previous_brands[].cool_down_override.days` is set, use that.
-- Permanent block: if `previous_brands[].do_not_recontact == true` (set after a soured deal), never re-surface.
+**Cool-down logic (deal-record-driven):**
+- `renewal_eligibility_date` is computed by the orchestrator: `deal.ended_at + (deal.cool_down_override_days OR 180_days_default)`. Re-computed whenever `ended_at` or `cool_down_override_days` changes.
+- Per-deal override: a brand might explicitly say "come back in March" — set `cool_down_override_days` to the gap in days; orchestrator does the math.
+- Permanent block: `deal.do_not_recontact == true` (set after a soured deal) → never re-surface.
+- **Outcome-based downrank:** deals with `outcome ∈ ["unfulfilled", "underperformed"]` are downranked or filtered (configurable per talent) — re-engaging a brand we underperformed for usually fails.
+- **Anti-spam de-spam:** if `deal.last_re_engagement_pitch_date` shows we pitched recently with no response, extend the cool-down by 50% on the next iteration. The orchestrator updates `last_re_engagement_pitch_date` whenever a re-engagement pitch is sent — closing the loop.
+**Per-deal KPI context:** when a deal is surfaced for re-engagement, its KPIs become available citation material for the outreach email (see `docs/outreach_workflow.md` Step C). Email generator can compose pitches like "Following our Q4 campaign — we hit 1.24M reach and $38k attributed sales. New angle for Q2?" rather than just "Hi again."
 
 ### Group B — Network expansion
 

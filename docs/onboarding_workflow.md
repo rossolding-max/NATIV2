@@ -135,7 +135,8 @@ Dropzone accepts PDF / PPTX / PNG / JPG. Multi-file (creators often have separat
    - **Bio** (1–3 sentences)
    - **Rate card** per platform per deliverable (Instagram Reel = £X; Story = £Y; etc.)
    - **Audience demographics** — age bands (re-bucketed to IAB), gender split, top countries, top cities, interests
-   - **Past brand collaborations** — names only (industry_id resolved in Step 6)
+   - **Past brand collaborations** — names + `industry_id` (Step 6 enrichment for unmapped brands)
+   - **Brand-deal KPIs** — for each past brand, extract per Phase 1.5 (`docs/brand_deals_workflow.md`): campaign name, type, dates, deliverables, KPIs (reach / impressions / engagement / video metrics / conversions where visible), outcome, performance notes. Tagged per metric with `source: "platform_verified" | "brand_reported" | "self_reported"` based on what's quoted in the pack. Output goes to `data/brand_deals/{talent_id}.json` with `manually_verified_by_talent: false`, awaiting Step 4 reconciliation.
    - **Press mentions** — title, publication, date, URL if visible
    - **Awards / honours**
    - **Notable stats** — newsletter size, podcast downloads, anything in the "other_stats" bag
@@ -209,6 +210,17 @@ If active_exclusivities is missing:
   "Any current exclusivity deals that would block competing
    brands? E.g. 'exclusive with Nike in sportswear until Dec 2026'."
   → industry picker + brand name + end date
+
+If brand_deals KPIs are missing or AI-extracted figures are flagged
+low-confidence:
+  "I extracted a Gymshark Q4 2025 campaign from your media pack but
+   couldn't find verified KPIs. Can you share the numbers?"
+  → guided form per deal: reach, engagement, video metrics, conversions
+  → each metric has a "source" dropdown (platform_verified / brand_reported
+    / self_reported) so the talent declares provenance honestly
+  → "connect Instagram Insights" one-click pulls platform_verified figures
+    for posts with URLs in deliverables[].post_urls
+  → sets manually_verified_by_talent: true on save
 ```
 
 **Skip-for-now is always allowed** on non-required fields. Skipped fields go into a "complete later" backlog visible from the dashboard.

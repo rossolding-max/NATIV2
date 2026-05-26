@@ -104,7 +104,12 @@
                 "always_for_influencer",
                 "always_for_gatekeeper",
                 "always_for_champion",
-                "active_exclusivity_workaround"
+                "active_exclusivity_workaround",
+                "talent_has_deal_with_strong_kpi",
+                "talent_has_renewed_deal",
+                "talent_has_deal_with_conversion_kpis",
+                "talent_has_high_audience_match_past_campaign",
+                "talent_has_deal_beating_benchmark"
               ],
               "description": "Type of trigger condition. The orchestrator has a Python function per type that returns {fires: bool, merge_field_values: {...}} given the (talent, contact, brand) context. New trigger types require both a code update and an enum extension."
             },

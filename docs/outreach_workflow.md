@@ -200,6 +200,7 @@ For each step in the template, the LLM is given:
    - Full talent profile JSON (excluding sensitive fields)
    - Full contact record (name, title, function, seniority, decision_role, location, tenure)
    - Brand record + brand_snapshot
+   - **Citation material from `data/brand_deals/{talent_id}.json`** — relevant past-deal records (filtered to same-industry, same-competitor-set, or same-brand-if-re-engaging). Each deal contributes KPIs with source provenance; the LLM prefers higher-confidence sources (`platform_verified` > `brand_reported` > `third_party`) when picking which figure to cite. Powers the 5 new `past_campaign_*` angles + enriches `past_brand_direct_competitor`, `past_relationship_eligible`, and `case_study_available`.
    - Previous-step content (for follow-ups, to ensure variation)
    - Engagement signals so far (opened the previous one? clicked anything?)
 
