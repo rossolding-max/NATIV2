@@ -30,6 +30,19 @@
 **Cost:** per access agreement.
 **Env var:** `LINKEDIN_API_KEY` (or per the provided access mechanism).
 
+### Smartlead.ai — outreach send + sequence backend (Phase 3b lead vendor)
+**Role:** Powers the cold-outreach engine spec'd in `docs/outreach_workflow.md`. Our app generates per-step AI content (Claude on our side) and pushes it to Smartlead via API; Smartlead handles per-talent mailbox + warmup, send scheduling, open/click tracking, reply detection. Webhooks fire back to our app for kill-logic and analytics.
+**Why Smartlead over alternatives:** API-first design — purpose-built for custom-app integration. Unlimited mailbox warmup included in base plan (critical for per-talent domain strategy). Per-mailbox economics align with our shared-pool / per-talent model. Robust webhook support for the kill-on-reply logic.
+**Why NOT Resend** (initially considered): Resend's terms of service explicitly prohibit cold/unsolicited outreach — they're a transactional email API. Accounts running cold campaigns get suspended. Resend is purpose-built for password resets / receipts / login alerts, not outbound prospecting.
+**Endpoints we'll use:**
+- `POST /campaigns` — create campaign per (talent, template)
+- `POST /campaigns/{id}/leads` — push enrolled contact + AI-generated content
+- `POST /campaigns/{id}/pause` — kill on reply
+- Webhooks: `email_sent`, `email_delivered`, `email_opened`, `email_clicked`, `email_replied`, `email_bounced`, `email_unsubscribed`
+**Per-talent mailbox setup:** Smartlead requires a sending mailbox per talent (we use the talent's own domain — see `docs/onboarding_workflow.md` § Outbound sender domain setup). Warmup ramps up over 2-4 weeks via Smartlead's peer-to-peer warmup network.
+**Cost:** ~$94/mo Pro tier per active talent mailbox; $39/mo Basic for solo creators. Custom pricing at higher volume.
+**Env var:** `SMARTLEAD_API_KEY`.
+
 ---
 
 ## Deferred to future versions
@@ -159,17 +172,18 @@ This is what the orchestrator will need configured by v0.1:
 | Env var | Service | Required? |
 |---|---|---|
 | `EXA_API_KEY` | Exa search (Search 15 + enrichment fallbacks) | **Yes** |
-| `ANTHROPIC_API_KEY` | Claude calls (classification, extraction, decision-role tagging throughout) | **Yes** |
-| `APOLLO_API_KEY` | Apollo contact discovery (Phase 3 v0.1) | **Yes** (when Phase 3 enrichment runs) |
-| `LINKEDIN_API_KEY` | LinkedIn enrichment + search (Phase 3 v0.1; specific API tier per user-provided access) | **Yes** (when Phase 3 enrichment runs) |
+| `ANTHROPIC_API_KEY` | Claude calls (classification, extraction, decision-role tagging, outreach generation, reply classification) | **Yes** |
+| `APOLLO_API_KEY` | Apollo contact discovery (Phase 3a v0.1) | **Yes** (when Phase 3a enrichment runs) |
+| `LINKEDIN_API_KEY` | LinkedIn enrichment + search (Phase 3a v0.1; specific API tier per user-provided access) | **Yes** (when Phase 3a enrichment runs) |
+| `SMARTLEAD_API_KEY` | Smartlead outreach send + sequence backend (Phase 3b v0.1) | **Yes** (when Phase 3b outreach runs) |
 | `SCRAPECREATORS_API_KEY` | TikTok/IG/Threads/Pinterest in `last30days` (Search 16) | No (deferred) |
 | `OPENROUTER_API_KEY` | Perplexity Sonar fallback in `last30days` | No (deferred) |
 | `OWLER_API_KEY` | Owler competitor maintenance | No (deferred) |
 | `MODASH_API_KEY` *or* `HYPEAUDITOR_API_KEY` | Brand database bulk import | No (deferred) |
 | `EXPLODING_TOPICS_API_KEY` | Pre-trend brand detection | No (deferred) |
 | `PRODUCT_HUNT_DEVELOPER_TOKEN` | Daily launch feed | No (deferred — but free when added) |
-| `HUNTER_API_KEY` | Hunter.io email verification (Phase 3 v2) | No (v2) |
-| `CLAY_API_KEY` | Clay multi-source orchestrator (Phase 3 v2) | No (v2) |
+| `HUNTER_API_KEY` | Hunter.io email verification (Phase 3a v2) | No (v2) |
+| `CLAY_API_KEY` | Clay multi-source orchestrator (Phase 3a v2) | No (v2) |
 
 This inventory is the source of truth — when adding a new vendor, append to this table.
 

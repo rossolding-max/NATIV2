@@ -1,0 +1,162 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://nativ2/schemas/pitch_template.schema.json",
+  "title": "Pitch Template",
+  "description": "Abstract sequence template — defines the STRUCTURE (steps, timing, intent per step, preferred angles) but not the per-contact CONTENT. Templates are reusable across talents + contacts. The AI generation step fills in subject + body per contact at send time, drawing from `data/pitch_angles.json`. See `docs/outreach_workflow.md`. Default templates ship at `data/pitch_templates/` (kept in repo for version-control of the playbook; per-agency customizations gitignored).",
+  "type": "object",
+  "required": ["template_id", "version", "name", "target_decision_role", "steps"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+    "template_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]*$",
+      "description": "Stable kebab-case slug. e.g. `buyer-direct-pitch`."
+    },
+    "version": { "type": "string" },
+    "name": { "type": "string", "description": "Short human-readable label." },
+    "description": { "type": "string" },
+    "target_decision_role": {
+      "type": "string",
+      "enum": ["buyer", "influencer", "gatekeeper", "champion"],
+      "description": "Which contact decision_role this template is designed for. The orchestrator routes contacts to templates automatically based on this field. `unknown` contacts default to the buyer template."
+    },
+    "steps": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 10,
+      "items": { "$ref": "#/$defs/step" }
+    },
+    "success_criteria": {
+      "type": "object",
+      "description": "Targets for this template's performance. Used in the UI to show whether the template is meeting its goal.",
+      "additionalProperties": false,
+      "properties": {
+        "target_reply_rate": { "type": "number", "minimum": 0, "maximum": 1 },
+        "target_positive_reply_rate": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    },
+    "guardrails": {
+      "type": "object",
+      "description": "Hard rules the AI generation must respect across all steps of this template.",
+      "additionalProperties": false,
+      "properties": {
+        "max_body_chars": { "type": "integer", "minimum": 100, "maximum": 2000, "default": 600 },
+        "max_subject_chars": { "type": "integer", "minimum": 20, "maximum": 100, "default": 60 },
+        "require_can_spam_unsubscribe": { "type": "boolean", "default": true },
+        "tone": {
+          "type": "string",
+          "enum": ["direct_professional", "warm_casual", "confident_enthusiastic", "brief_courteous"],
+          "description": "Overall tone signal passed to the LLM. Tuned per template (buyer = direct_professional; champion = warm_casual; gatekeeper = brief_courteous)."
+        }
+      }
+    },
+    "created_at": { "type": "string", "format": "date-time" },
+    "updated_at": { "type": "string", "format": "date-time" }
+  },
+
+  "$defs": {
+    "step": {
+      "type": "object",
+      "required": ["step_number", "intent", "timing_offset_days", "channel"],
+      "additionalProperties": false,
+      "properties": {
+        "step_number": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10,
+          "description": "1-indexed step within the sequence."
+        },
+        "intent": {
+          "type": "string",
+          "enum": [
+            "first_touch_strongest_angle",
+            "follow_up_different_angle",
+            "follow_up_with_creative_concept",
+            "follow_up_with_proof_or_case_study",
+            "specific_ask_with_pricing",
+            "break_up_door_open",
+            "routing_request",
+            "warm_intro_request"
+          ],
+          "description": "What this step is for. The LLM generation prompt is shaped by intent — e.g. `first_touch_strongest_angle` picks the highest-strength applicable angle; `break_up_door_open` is brief and leaves the door open without new asks."
+        },
+        "timing_offset_days": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 90,
+          "description": "Days after the PREVIOUS step (or after enrollment for step 1). Step 1 should be 0 (sent immediately). Typical cadence: 0, 3, 7, 14."
+        },
+        "channel": {
+          "type": "string",
+          "enum": ["email", "linkedin_message", "linkedin_inmail", "linkedin_connection"],
+          "description": "Send channel. Email is the v0.1 primary; LinkedIn channels deferred to v0.2 once we have LinkedIn-send integration."
+        },
+        "preferred_angle_categories": {
+          "type": "array",
+          "description": "Categories the LLM should prefer when picking the angle for this step. Empty array = no preference (LLM picks freely from all applicable).",
+          "items": {
+            "type": "string",
+            "enum": [
+              "competitive_proof",
+              "similar_talent_precedent",
+              "demographic_match",
+              "niche_fit",
+              "brand_momentum",
+              "geographic_alignment",
+              "mutual_connection",
+              "values_alignment",
+              "re_engagement",
+              "performance_proof",
+              "timeliness",
+              "creative_concept",
+              "insider_observation",
+              "role_default",
+              "counter_positioning"
+            ]
+          }
+        },
+        "excluded_angle_categories": {
+          "type": "array",
+          "description": "Categories the LLM must NOT pick for this step (typically used to force variation across steps — e.g. step 2 excludes whatever step 1 used).",
+          "items": { "type": "string" }
+        },
+        "ai_model_override": {
+          "type": "string",
+          "enum": ["claude-sonnet-4-7", "claude-haiku-4-5", "claude-opus-4-7"],
+          "description": "Override default model. Defaults: step 1 = Sonnet (highest-value content); steps 2+ = Haiku (cost optimisation). Use Opus only for ultra-high-value pitches (e.g. premium-tier brands)."
+        },
+        "ai_prompt_overrides": {
+          "type": "object",
+          "description": "Per-step prompt hints layered on top of the default per-intent prompt. Useful for talent-specific tone overrides without forking the template.",
+          "additionalProperties": false,
+          "properties": {
+            "tone_override": { "type": "string" },
+            "must_include_phrases": { "type": "array", "items": { "type": "string" } },
+            "must_exclude_phrases": { "type": "array", "items": { "type": "string" } },
+            "include_attachment_reference": { "type": "boolean" }
+          }
+        },
+        "branching": {
+          "type": "object",
+          "description": "Conditional logic that may skip this step or redirect to a different step based on previous-step engagement.",
+          "additionalProperties": false,
+          "properties": {
+            "skip_if_prior_step_opened": { "type": "boolean", "default": false, "description": "If the previous step was opened but not replied to, skip this follow-up (gives them more time)." },
+            "skip_if_prior_step_clicked": { "type": "boolean", "default": false, "description": "If they clicked a link, skip this follow-up (high engagement; wait for reply)." },
+            "jump_to_step_on_engagement_threshold": {
+              "type": "object",
+              "description": "If cumulative engagement exceeds threshold, jump forward to a closing step.",
+              "additionalProperties": false,
+              "properties": {
+                "min_opens": { "type": "integer" },
+                "min_clicks": { "type": "integer" },
+                "jump_to_step_number": { "type": "integer" }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -11,7 +11,7 @@ Build an AI-powered assistant that helps an influencer (or a roster of influence
 | 1 | **Talent Profile** | v0.1 spec + data shipped | Capture everything the system needs about the creator(s) — identity, audience, history, rates, similar talents. The foundation every later phase reads from. |
 | 2 | **Brand Discovery & Targeting** | v0.1 spec + data shipped | For a given talent, produce a ranked list of industries to pitch and a ranked long-list of specific brands within them — with qualification filtering, sensitive-vertical warnings, and re-engagement on a monthly cron. |
 | 3a | **Contact CRM** | v0.1 spec + schema shipped | For every primary-tier brand candidate, find the right named contacts (Apollo + LinkedIn API + web search) with verified emails, LinkedIn URLs, location, tenure, and a `decision_role` classification (CMO of a $50B brand is *not* the buyer for a £5k Reel — the IM Manager 2 levels down is). |
-| 3b | **Outreach** | TBD | Templated personalised pitches, send-and-track infrastructure, reply detection, follow-up cadences. |
+| 3b | **Outreach** | v0.1 spec + schemas + angles library shipped | AI-generated personalised email sequences per contact + decision_role, sent via Smartlead from per-talent domains, with reply detection, kill-on-reply, and full per-email analytics provenance. |
 | 4 | **Deal admin** | TBD | Contracts, invoicing, usage-rights tracking, exclusivity-clock management, post-campaign reporting. |
 
 ## End-to-end data flow
@@ -68,8 +68,15 @@ Build an AI-powered assistant that helps an influencer (or a roster of influence
                              │
                              ▼
 ┌────────────────────────────────────────────────────────────────────┐
-│ Phase 3b  OUTREACH (TBD)                                           │
-│   Templated personalised pitches → send/track → reply → follow-up  │
+│ Phase 3b  OUTREACH                                                  │
+│   docs/outreach_workflow.md                                         │
+│     Per qualified contact + decision_role: select template →        │
+│     evaluate angles (data/pitch_angles.json) → AI-generate every    │
+│     step (Claude Sonnet step 1, Haiku follow-ups) → review queue →  │
+│     push to Smartlead → real-time webhooks → reply classification   │
+│     → kill across roster → analytics aggregation                    │
+│   schemas/pitch_template + pitch_enrollment + pitch_angle           │
+│   send via Smartlead from per-talent sender domains                 │
 └────────────────────────────────────────────────────────────────────┘
 
    Cross-cutting:  docs/vendor_roadmap.md  ← external services + env vars
@@ -111,6 +118,10 @@ The fields below were not in the original request but were added because later p
 - `schemas/talent.schema.json` — JSON Schema (Draft 2020-12) describing the talent profile.
 - `schemas/brand_candidates.schema.json` — JSON Schema for the per-talent Brand Discovery output. Validates every file written by the orchestrator under `data/brand_candidates/` (the folder itself is gitignored — generated artifact, not source).
 - `schemas/brand_contact.schema.json` — JSON Schema for per-brand contact records (Phase 3a). Validates every file under `data/brand_contacts/` (gitignored — contacts are PII and vendor data is licensed).
+- `schemas/pitch_angle.schema.json` + `data/pitch_angles.json` — curated library of 37 pitch angles across 15 categories (competitive proof, similar-talent precedent, demographic match, niche fit, brand momentum, geographic alignment, mutual connection, values alignment, re-engagement, performance proof, timeliness, creative concept, insider observation, role defaults, counter-positioning). Each angle has trigger conditions, applicable decision roles + steps, strength score, example phrasing. Powers the AI generation step in Phase 3b outreach.
+- `schemas/pitch_template.schema.json` — sequence templates (structure not content). Per-step intent + timing + preferred angle categories. 3 default templates ship per decision_role.
+- `schemas/pitch_enrollment.schema.json` — running instance of a template for a specific (talent, contact). Full per-email provenance: which angles used, which model, full engagement event log, LLM-classified outcome. Validates files under `data/pitch_enrollments/` (gitignored).
+- `scripts/analyze_outreach.py` — rolls every enrollment step into A/B-sliceable aggregates (by angle, decision_role, template, step, brand_tier, send_time, subject_pattern, sender_domain, etc.). Outputs `data/outreach_analytics/` (gitignored).
 - `talents/example-talent.json` — template instance, partially filled.
 - `data/niches.json` — canonical creator content-niche taxonomy (145 entries).
 - `data/industries.json` — canonical brand-industry taxonomy (178 entries).
@@ -128,6 +139,7 @@ The fields below were not in the original request but were added because later p
 - `docs/vendor_roadmap.md` — single source of truth for external-service decisions. Confirms **Exa** as the v0.1 web-search provider (Search 15). Catalogues deferred vendors with criteria for when to add each: ScrapeCreators (Search 16 visual platforms), Owler (competitor maintenance), Modash/HypeAuditor (brand DB bulk import), Exploding Topics (pre-trend detection), Product Hunt API (day-of launches), Tribe Dynamics EMV (top-spending brands per category), SimilarWeb (audience-overlap competitors), Crunchbase (structured funding data), Apollo (Phase 3 outreach contact discovery), plus alternatives for each. Includes the env-var inventory for all current + deferred services.
 - `docs/brand_enrichment_workflow.md` — draft spec for the 9-step pipeline that takes a brand from name-only to fully-populated record in `brand_industry_map.json`. Covers identity resolution, domain resolution, industry classification, HQ/markets, company stage, campaign tier, creator-program presence, revenue + headcount, social follower counts. Three triggers (seed expansion / in-flight discovery writeback / annual refresh), tool-per-step mapping, honesty-floor policy, validation gates, and a state machine. Pairs with brand_discovery.md (consumer) and vendor_roadmap.md (external services).
 - `docs/contact_enrichment_workflow.md` — Phase 3a spec for the 9-step pipeline that turns a primary-tier brand candidate into a list of named contacts with verified emails, LinkedIn URLs, location, tenure, and decision-role classification. Covers target-role identification (scaled to brand size), Apollo employee lookup, LinkedIn API enrichment, web-search backup via Exa, email verification, LLM-driven decision-role classification with the simplified 5-value taxonomy (`buyer` / `influencer` / `gatekeeper` / `champion` / `unknown`), placeholder generation for known-but-unfilled roles, cross-source dedup, CAN-SPAM-aligned opt-out handling, and the shared-roster-pool / per-talent-pitch-history model.
+- `docs/outreach_workflow.md` — Phase 3b spec for the AI-generated cold-outreach engine. Covers template selection per decision_role, angle evaluation against the 37-angle library, per-step AI generation (Claude Sonnet for first touch / Haiku for follow-ups), review-before-send queue, Smartlead campaign push, real-time webhook handling, reply classification + cross-roster kill logic, per-talent sender domain setup (SPF/DKIM/DMARC + 2-4 week warmup), and the analytics aggregation layer that captures every email's full provenance for A/B analysis. Includes the default templates (buyer-direct-pitch 4 steps, influencer-warm-intro 3 steps, champion-activation 2 steps; gatekeeper = manual only).
 - `.gitignore` — ensures any `*.local.json` or `.env` files containing real keys are never committed.
 
 ### Reference taxonomies
@@ -324,3 +336,73 @@ US project — CAN-SPAM is the primary legal frame. The structures below are sta
 
 ### Placeholder contacts
 When a target role is known to exist at a brand (e.g. "Nike must have an IM Manager") but no person is found, the pipeline writes a placeholder record (`is_placeholder: true`, name like "Unknown — Influencer Marketing Manager"). Surfaces coverage gaps as a dashboard signal so they can be filled later. Placeholders are filtered from default outreach lists but counted in the per-brand contact coverage stat.
+
+---
+
+## Phase 3b — Outreach
+
+### Output
+A running outreach engine that turns qualified contacts into AI-generated email sequences with reply detection, kill-on-reply across the roster, and full per-email analytics. Runs on Smartlead as the send/sequence backend; Claude generates per-step content; our app owns the angle selection, kill logic, and analytics.
+
+### Two layers
+- **Template layer** (`schemas/pitch_template.schema.json`) — sequence STRUCTURE (steps, timing, intent per step, preferred angle categories). System ships 3 default templates: `buyer-direct-pitch` (4 steps), `influencer-warm-intro` (3), `champion-activation` (2). `gatekeeper` contacts have no auto-sequence — surfaced for manual handling.
+- **Enrollment layer** (`schemas/pitch_enrollment.schema.json`) — RUNNING INSTANCE of a template for a specific (talent, contact) pair, with AI-generated content per step, Smartlead identifiers, engagement events, and outcome classification.
+
+### Angles library
+[`data/pitch_angles.json`](data/pitch_angles.json) ships **37 curated angles** across 15 categories. Examples:
+- `past_brand_direct_competitor` — talent has worked with a direct competitor of the target brand (strongest competitive proof; strength 0.95)
+- `similar_talent_partnered_with_brand` — a similar talent in our system has partnered with this brand (precedent; strength 0.85)
+- `iab_demographic_overlap` — strong IAB demographic match (quantitative audience fit; strength 0.80)
+- `brand_new_product_launch` — brand recently launched, time-sensitive (strength 0.70)
+- `past_relationship_eligible` — re-engagement of a past brand after cool-down (strength 0.95)
+- ...plus categories for niche fit, brand momentum, geographic alignment, mutual connection, values alignment, performance proof, timeliness, creative concepts, insider observations, and role-default hooks per decision_role.
+
+Each angle has a trigger condition (when it fires for a given talent+contact+brand combo), applicable decision roles, applicable step numbers, an example phrasing pattern the LLM adapts, and a hand-authored `authored_strength_score`. The AI generation step gets the set of APPLICABLE angles, picks one primary + optional supporting, and weaves them into the email.
+
+### AI generation — L4 personalization (every step)
+Per the v0.1 user decision, **every step in every sequence is generated per-contact** (not templated). Step 1 uses Claude Sonnet 4.7 (highest-value content); follow-up steps use Claude Haiku 4.5 (cost optimisation). Full provenance captured per email:
+- Which angles were considered and which was picked
+- Model + tokens + cost per generation
+- Which personalization fields were merged from talent/contact/brand data
+- Reasoning trace
+
+Token budget: ~$0.027 per full 4-step sequence. 100 contacts = ~$2.70 in Claude costs.
+
+### Reply detection + kill logic
+Smartlead fires a webhook on every reply. Our app:
+1. Claude Haiku classifies reply intent: `interested` / `declined` / `out_of_office` / `unrelated` / `unsubscribe_request` / `needs_more_info` / `wrong_person_routed`
+2. Extracts structured signals (asked for pricing? meeting? OoO date? routed to whom?)
+3. Kills the active sequence AND any other active sequences for the same contact across the roster
+4. `interested` → hot lead in talent's UI; `OoO` → pause + auto-resume; `unsubscribe_request` → permanent `do_not_contact: true`
+
+### Headline metric: reply rate
+Per the v0.1 user decision, **reply rate (replied ÷ delivered) is the headline UI metric** — most reliable signal in 2026. Apple Mail Privacy Protection has made open rates noisy (auto-loads tracking pixels), so `engagement_summary.human_opens` filters out likely-MPP events. Raw open rate is captured but flagged noisy.
+
+### Per-talent sender domain (deliverability + authenticity)
+Each talent has their own sending domain (e.g. `pitches@janedoetalent.com`). Set up during onboarding via 3 DNS records (SPF, DKIM, DMARC). 2-4 week warmup via Smartlead's peer-to-peer network before first cold send. Per-talent reputation = no cross-contamination, brand recognises the talent's identity, fully Gmail/Yahoo 2024 compliant.
+
+### Vendor stack (Phase 3b v0.1)
+- **Smartlead** — send + sequence + warmup + reply detection (~$94/mo Pro per talent mailbox)
+- **Claude (Anthropic SDK)** — content generation + reply classification (~$0.027 per full sequence)
+
+That's the entire vendor footprint for Phase 3b. Resend was considered but rejected — their ToS prohibits cold outreach (transactional API). Hunter.io / Clay.com / RocketReach deferred to v2 if Apollo coverage gaps emerge.
+
+### Analytics — every email tracked, every angle measured
+[`scripts/analyze_outreach.py`](scripts/analyze_outreach.py) rolls every step record into A/B sliceable aggregates:
+
+| Slice | What it answers |
+|---|---|
+| by_angle | Which angles have the best reply rate |
+| by_angle_pair | Whether primary+supporting combinations beat singletons |
+| by_decision_role | Which angles work for buyers vs influencers vs champions |
+| by_template | Which templates convert best |
+| by_step_number | When in the sequence replies happen |
+| by_brand_tier / brand_industry | Which brand profiles respond |
+| by_talent | Which of our roster's talents convert best |
+| by_send_dow / send_hour | Day-of-week / time-of-day effects |
+| by_subject_pattern | Length / question / emoji effects |
+| by_sender_domain | Per-domain inbox placement |
+
+Each slice computes: sent, delivered, reply rate, positive reply rate, human open rate (MPP-filtered), click rate, bounce rate, mean time-to-reply, total cost, cost per positive reply.
+
+**v0.1 explicit non-goal:** the analyzer does NOT auto-update `pitch_angles.json` `authored_strength_score`. Output is for human review only. Users edit angles manually as they learn. Closed-loop auto-tuning is a v2 deliverable.

@@ -1,0 +1,170 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://nativ2/schemas/pitch_angle.schema.json",
+  "title": "Pitch Angle Library",
+  "description": "Curated library of pitch angles (hooks) the AI generation pipeline draws from when composing per-contact outreach emails. Each angle has trigger conditions (when it applies), role/step applicability, a strength score, and example phrasing the LLM adapts. Live data lives at `data/pitch_angles.json`. See `docs/outreach_workflow.md` for how angles plug into the generation step.",
+  "type": "object",
+  "required": ["version", "angles"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+    "version": { "type": "string" },
+    "updated": { "type": "string", "format": "date" },
+    "$comment": { "type": "string" },
+    "angles": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/angle" },
+      "description": "All authored angles. Order doesn't matter — orchestrator filters and sorts by strength_score at runtime."
+    }
+  },
+
+  "$defs": {
+    "angle": {
+      "type": "object",
+      "required": ["angle_id", "category", "name", "trigger", "applicable_to_decision_roles", "applicable_to_steps", "authored_strength_score", "example_phrasing"],
+      "additionalProperties": false,
+      "properties": {
+
+        "angle_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9_]*$",
+          "description": "Stable snake_case identifier. Used in `pitch_enrollment.steps[].generation_meta.angles_used` for A/B analytics."
+        },
+        "category": {
+          "type": "string",
+          "enum": [
+            "competitive_proof",
+            "similar_talent_precedent",
+            "demographic_match",
+            "niche_fit",
+            "brand_momentum",
+            "geographic_alignment",
+            "mutual_connection",
+            "values_alignment",
+            "re_engagement",
+            "performance_proof",
+            "timeliness",
+            "creative_concept",
+            "insider_observation",
+            "role_default",
+            "counter_positioning"
+          ],
+          "description": "Grouping for UI + analytics aggregation."
+        },
+        "name": {
+          "type": "string",
+          "description": "Short human-readable label."
+        },
+        "description": {
+          "type": "string",
+          "description": "One-paragraph explanation of when and why this angle works."
+        },
+
+        "trigger": {
+          "type": "object",
+          "required": ["type"],
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "talent_worked_with_competitor",
+                "talent_worked_in_same_industry",
+                "talent_worked_in_tertiary_industry",
+                "similar_talent_partnered_with_brand",
+                "multiple_similar_talents_with_brand",
+                "similar_talent_at_competitor",
+                "iab_demographic_overlap",
+                "gender_skew_match",
+                "age_band_match",
+                "niche_primary_affinity",
+                "niche_specific_content_series",
+                "brand_recent_funding",
+                "brand_new_product_launch",
+                "brand_trending_30d",
+                "brand_market_expansion",
+                "brand_recent_press_award",
+                "geo_top_country_match",
+                "brand_hq_matches_audience",
+                "champion_contact_at_brand",
+                "aor_prior_relationship",
+                "event_attended_together",
+                "values_aligned_search",
+                "past_brand_eligible_reengagement",
+                "same_contact_positive_history",
+                "recent_high_performing_post",
+                "case_study_available",
+                "seasonal_window_match",
+                "talent_upcoming_launch",
+                "ai_creative_concept",
+                "brand_creator_gap_in_niche",
+                "brand_content_format_gap",
+                "talent_is_customer",
+                "always_for_buyer",
+                "always_for_influencer",
+                "always_for_gatekeeper",
+                "always_for_champion",
+                "active_exclusivity_workaround"
+              ],
+              "description": "Type of trigger condition. The orchestrator has a Python function per type that returns {fires: bool, merge_field_values: {...}} given the (talent, contact, brand) context. New trigger types require both a code update and an enum extension."
+            },
+            "config": {
+              "type": "object",
+              "description": "Trigger-specific configuration. Free-form by design; each trigger type's evaluator interprets it.",
+              "additionalProperties": true
+            }
+          }
+        },
+
+        "applicable_to_decision_roles": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "enum": ["buyer", "influencer", "gatekeeper", "champion", "unknown"]
+          },
+          "description": "Which `decision_role` values this angle can be used for. The 5-value taxonomy matches `schemas/brand_contact.schema.json`."
+        },
+        "applicable_to_steps": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "integer", "minimum": 1, "maximum": 10 },
+          "description": "Which step numbers in a sequence this angle suits. Step 1 = first touch (strongest angles); later steps reserved for different angles to avoid repetition."
+        },
+
+        "authored_strength_score": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Hand-authored expected effectiveness. Used by the orchestrator when ranking candidate angles for an email. Updated manually as the user learns what works (v0.1); auto-tuned from observed reply data in v2."
+        },
+
+        "example_phrasing": {
+          "type": "string",
+          "description": "Template sentence pattern the LLM adapts. Merge fields in `{curly_braces}`. The LLM rewrites for tone/context, not copy-pastes."
+        },
+        "merge_fields_required": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Dot-path data fields the trigger evaluator must return for this angle to be usable (e.g. `competitor_brand`, `campaign_metric`). If any required field is null after evaluation, the angle is skipped."
+        },
+
+        "pair_well_with": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^[a-z0-9][a-z0-9_]*$" },
+          "description": "Other `angle_id`s that work well as a supporting angle when this is the primary. The LLM may use one supporting angle alongside the primary."
+        },
+        "avoid_combining_with": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^[a-z0-9][a-z0-9_]*$" },
+          "description": "Other `angle_id`s that would feel redundant or clash. The orchestrator never picks both."
+        },
+
+        "notes": {
+          "type": "string",
+          "description": "Free-text guidance for human review (rationale, edge cases, tone guidance)."
+        }
+      }
+    }
+  }
+}

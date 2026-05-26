@@ -5,6 +5,7 @@
 **Pairs with:**
 - `docs/brand_discovery.md` — produces the brands this workflow enriches contacts for.
 - `docs/brand_enrichment_workflow.md` — same shape and honesty policy, applied to brand records instead of people.
+- `docs/outreach_workflow.md` (Phase 3b) — consumes the contacts this workflow produces. Qualified contacts auto-enrol into AI-generated outreach sequences via Smartlead.
 - `docs/vendor_roadmap.md` — the external services this workflow uses.
 - `schemas/brand_contact.schema.json` — the contract for the output.
 
