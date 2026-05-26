@@ -14,7 +14,7 @@ For every active brand in the candidate pool, build a list of named contacts wit
 - LinkedIn URL (primary identifier)
 - Verified email where possible
 - Title + function + seniority
-- `decision_role` classification + rationale (CMO at $50B+ brand is *not* the buyer; the IM Manager 2 levels down is)
+- `decision_role` classification + rationale — 5 values: `buyer` / `influencer` / `gatekeeper` / `champion` / `unknown`. A CMO at a $50B+ brand is an `influencer`, NOT a `buyer`; the IM Manager 2 levels down is the actual buyer.
 - Geographic location
 - Tenure context
 
@@ -22,7 +22,7 @@ Plus placeholder records for known-important roles where the person hasn't been 
 
 **Honesty floor:** never fabricate. Emails carry `verification_status` (`verified` / `catchall` / `guessed_pattern` / `unverified` / `bounced`). Unknown fields are omitted. Apollo data is licensed and stays in the gitignored output folder.
 
-**Privacy floor:** GDPR/CCPA-compliant by design. Contacts can request removal (`opt_out_at` set; record kept for audit, never used in outreach again). Per-talent pitch isolation prevents double-pitching the same person across two talents in a configurable window (default 14 days).
+**Outreach hygiene:** CAN-SPAM-compliant by design (US project). Contacts who unsubscribe or ask to be removed get `do_not_contact: true` + `opt_out_at` set and are excluded from all outreach across all talents going forward. Per-talent pitch isolation prevents double-pitching the same person across two talents in a configurable 14-day window — basic anti-spam hygiene, not legal requirement.
 
 ---
 
@@ -133,23 +133,32 @@ Contact:
 
 Classify this contact's likely role in approving a creator-marketing deal
 in the {talent_rate_card_band} range. Choose ONE of:
-  decision_maker | budget_holder | influencer | champion | gatekeeper |
-  end_user | recommender | blocker | unknown
+  buyer | influencer | gatekeeper | champion | unknown
 
 Provide a one-line rationale.
 
+Definitions:
+- buyer = can say yes AND holds the budget for this deal size (sign-off + spend).
+- influencer = has input but no authority. Includes CMOs/VPs at megabrands
+  (too senior to approve individual deals), brand managers (run the
+  campaign), procurement/finance reviewers.
+- gatekeeper = controls access to the buyer. EAs, agency-of-record account
+  managers.
+- champion = internal advocate / known fan of this talent or talent type.
+- unknown = not enough signal to classify confidently.
+
 Heuristic guidance:
-- CMOs / VPs at $1B+ revenue brands → typically `influencer` or
-  `recommender`, NOT `decision_maker`. Real sign-off happens 2-3 levels
-  below at large brands.
-- Influencer Marketing Manager / Director of Creator Partnerships at
-  any brand size → typically `decision_maker` for individual deals.
-- Founders / CEOs at <500-person brands → often `decision_maker` and
-  `budget_holder` combined.
-- Brand Manager / Senior Brand Manager → typically `recommender` or
-  `end_user` (will run the campaign day-to-day).
+- CMOs / VPs at $1B+ revenue brands → `influencer`, NOT `buyer`. Real
+  sign-off happens 2-3 levels below at large brands.
+- Influencer Marketing Manager / Director of Creator Partnerships at any
+  brand size → typically `buyer` for deals within their authority band.
+- Founders / CEOs at <500-person brands → typically `buyer` (sign-off
+  and budget combined).
+- Brand Manager / Senior Brand Manager → typically `influencer` (will
+  run the campaign day-to-day but doesn't approve spend).
 - Agency-of-record account directors → `gatekeeper` for the brand.
-- Procurement / Finance → `budget_holder`.
+- Procurement / Finance reviewers → `influencer` (sign-off on contract
+  terms, but the marketing-side buyer drives the spend decision).
 ```
 
 **Output:** `decision_role` + `decision_role_rationale` per contact.
@@ -213,17 +222,18 @@ Failed gates → record goes to an `enrichment_review.json` queue (mirrors brand
 
 ---
 
-## GDPR / privacy compliance
+## Outreach hygiene & vendor terms
 
-| Requirement | How we handle it |
+US project; CAN-SPAM is the primary legal frame. The structures below are standard CRM/email-marketing good practice, not foreign-jurisdiction compliance.
+
+| Practice | How we handle it |
 |---|---|
-| **Right to access** | Contact can request all data we hold; export their record as JSON on demand. |
-| **Right to be forgotten** | Set `opt_out_at` + `do_not_contact: true`. Record stays in file for audit (compliance trail) but is excluded from all outreach across all talents forever. We do NOT delete entirely — that would let us re-enrich them later. |
-| **Lawful basis** | Legitimate-interest for B2B brand-side contacts (the standard basis for outreach in advertising/marketing roles). Each pitch is on behalf of a specific named talent (a brand), not anonymous mass marketing. |
-| **Data minimisation** | Don't enrich fields we don't need. Phone numbers, alternate emails, social handles — opt-in per-brand, not default. |
-| **Source disclosure** | If a contact asks "how did you get my email", `verification_sources[]` lets us answer accurately. |
-| **Vendor licensing** | Apollo data is licensed; don't redistribute outside our app. Data folder is gitignored. |
-| **Per-talent pitch isolation** | Default 14-day cooldown between pitches to the same contact across different talents in our roster — prevents the contact from feeling spammed. Configurable per-agency. |
+| **Opt-out / unsubscribe** | Set `do_not_contact: true` + `opt_out_at`. Record stays in the file (audit trail + so we don't accidentally re-enrich and re-pitch them later) but is excluded from all outreach across all talents forever. CAN-SPAM requires honouring opt-out within 10 business days; we honour immediately. |
+| **Source disclosure** | If a contact asks "how did you get my email", `verification_sources[]` records every vendor + date + fields they contributed — answerable in seconds. |
+| **Vendor terms** | Apollo data is licensed under their terms; we don't redistribute outside our app. The `data/brand_contacts/` folder is gitignored, so vendor data never enters version control. Same for LinkedIn-derived data. |
+| **Per-talent pitch isolation** | Default 14-day cooldown between pitches to the same contact across different talents in our roster. Prevents the contact from feeling spammed by us across multiple of our creators — protects deliverability + sender reputation. Configurable per-agency. |
+| **Data quality** | Don't enrich fields we don't need on the first pass. Phone numbers, alternate emails, and personal social handles are opt-in per-brand at enrichment time — not pulled by default. Cleaner data + fewer storage costs. |
+| **Bounce handling** | Hard bounces flip `email.verification_status` to `bounced` permanently for that address. No retry. Soft bounces tracked separately; 3 in a row → treated as hard. |
 
 ---
 
@@ -370,6 +380,6 @@ These feed into:
 3. **Contact-to-talent fit overlay** — should we score a contact specifically *for a given talent* (e.g. this contact has previously approved deals with similar-tier creators)? My recommendation: keep the contact's absolute qualification stable; compute per-talent overlay at pitch time from `pitch_history` and `champion_for_talents`.
 4. **Email-deliverability infrastructure** — once we have verified emails, who actually sends? Resend / SendGrid / Postmark / direct SMTP from the creator's own domain? Direct from the creator's domain is best for deliverability but operationally complex. Phase 3.5 decision.
 5. **Cross-talent contact-fatigue protection** — beyond the 14-day cooldown, should we cap total contacts pitched per week per talent (deliverability + agency reputation)? Probably yes; tunable per-talent.
-6. **Manual override layer** — if a user manually corrects a contact's `decision_role` (e.g. flips an LLM-assigned `influencer` to `decision_maker` because they have inside knowledge), the next enrichment cycle must respect that. Propose: `field_overrides[]` array similar to the brand-enrichment v0.2 proposal.
+6. **Manual override layer** — if a user manually corrects a contact's `decision_role` (e.g. flips an LLM-assigned `influencer` to `buyer` because they have inside knowledge), the next enrichment cycle must respect that. Propose: `field_overrides[]` array similar to the brand-enrichment v0.2 proposal.
 7. **Champion-detection automation** — when a talent has a verified prior campaign with a contact, auto-set `champion_for_talents` to include that talent_id. Today this requires manual tagging; should be derived from `pitch_history` where `outcome: meeting_booked` or later.
 8. **AOR (Agency of Record) handling** — when a brand has `creator_program_presence: ["agency_of_record"]`, contacts at the AOR are gatekeepers. Currently captured as separate contacts at the AOR brand_id. Worth modelling AOR relationships explicitly (e.g. `agency_of_record_for: ["nike", "adidas"]` on a contact at the AOR).

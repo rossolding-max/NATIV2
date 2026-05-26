@@ -107,21 +107,17 @@
         "decision_role": {
           "type": "string",
           "enum": [
-            "decision_maker",
-            "budget_holder",
+            "buyer",
             "influencer",
-            "champion",
             "gatekeeper",
-            "end_user",
-            "recommender",
-            "blocker",
+            "champion",
             "unknown"
           ],
-          "description": "Likely role this person plays in a creator-deal decision. Per the decision-role taxonomy — note: a CMO of a multibillion brand is typically `influencer` or `recommender`, not `decision_maker`, because creator-deal sign-off happens 2-3 levels below."
+          "description": "Likely role this person plays in a creator-deal decision. Simplified 5-value taxonomy: `buyer` = can say yes and holds the budget for this deal size; `influencer` = has input but no authority (CMOs at megabrands, senior brand managers, end-users who'd run the campaign); `gatekeeper` = controls access to the buyer (EAs, agency-of-record account managers); `champion` = internal advocate / known fan; `unknown` = default until classified. Note: a CMO of a multibillion brand is typically `influencer`, NOT `buyer` — creator-deal sign-off happens at the IM Manager level 2 levels down."
         },
         "decision_role_rationale": {
           "type": "string",
-          "description": "LLM-generated one-line explanation of why this `decision_role` was assigned. e.g. 'VP Marketing at Nike ($51B revenue) — too senior to approve individual £5k Reel deals; useful for warm intros to the IM Manager 2 levels down.'"
+          "description": "LLM-generated one-line explanation of why this `decision_role` was assigned. e.g. 'VP Marketing at Nike ($51B revenue) — too senior to approve individual £5k Reel deals; useful for warm intros to the IM Manager 2 levels down (who is the actual buyer).'"
         },
         "decision_authority_size_band": {
           "type": "string",
@@ -277,7 +273,7 @@
         "opt_out_at": {
           "type": "string",
           "format": "date-time",
-          "description": "When the contact requested removal (GDPR right-to-be-forgotten). Record is kept (for audit) but never included in outreach lists going forward."
+          "description": "When the contact unsubscribed or asked to be removed from outreach (CAN-SPAM honour-opt-out hygiene). Record is kept (so we don't accidentally re-enrich and re-pitch them later) but never included in outreach lists going forward."
         },
 
         "first_discovered_at": { "type": "string", "format": "date-time" },
@@ -326,7 +322,7 @@
           "type": "string",
           "enum": [
             "has_verified_email",
-            "holds_decision_role",
+            "holds_buyer_role",
             "tenure_at_least_1y",
             "recent_linkedin_activity",
             "champion_for_other_talents",
@@ -341,7 +337,7 @@
             "no_linkedin_url",
             "stale_data"
           ],
-          "description": "Identifier of the contact-qualification signal. Positives first, then negatives."
+          "description": "Identifier of the contact-qualification signal. Positives first, then negatives. `holds_buyer_role` fires when decision_role == 'buyer'."
         },
         "weight": {
           "type": "number",

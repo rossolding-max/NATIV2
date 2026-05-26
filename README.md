@@ -127,7 +127,7 @@ The fields below were not in the original request but were added because later p
 - `docs/brand_discovery.md` — draft spec for the long-list generator. **16 independent searches** runnable today (re-engagement, network expansion, affinity expansion, geo, life-stage, constraint-aware, graph, recently-funded via web search, **trending/rising brands via the [`last30days` skill](https://github.com/mvanhorn/last30days-skill) — multi-source social momentum signal across Reddit/X/TikTok/YouTube/HN/etc., run as a monthly cron**) merged with multi-source scoring. Monthly cron drives re-engagement with per-brand cool-downs. Future-versions section lists 12 more searches that need external data (Crunchbase API as a structured upgrade to Search 15, live `#ad` scraping, affiliate networks, creator marketplaces, EMV reports, etc.). Both structural enrichments (`brand_industry_map` metadata + `brand_competitors` graph) are now shipped and used by Searches 3, 4, 10, 14.
 - `docs/vendor_roadmap.md` — single source of truth for external-service decisions. Confirms **Exa** as the v0.1 web-search provider (Search 15). Catalogues deferred vendors with criteria for when to add each: ScrapeCreators (Search 16 visual platforms), Owler (competitor maintenance), Modash/HypeAuditor (brand DB bulk import), Exploding Topics (pre-trend detection), Product Hunt API (day-of launches), Tribe Dynamics EMV (top-spending brands per category), SimilarWeb (audience-overlap competitors), Crunchbase (structured funding data), Apollo (Phase 3 outreach contact discovery), plus alternatives for each. Includes the env-var inventory for all current + deferred services.
 - `docs/brand_enrichment_workflow.md` — draft spec for the 9-step pipeline that takes a brand from name-only to fully-populated record in `brand_industry_map.json`. Covers identity resolution, domain resolution, industry classification, HQ/markets, company stage, campaign tier, creator-program presence, revenue + headcount, social follower counts. Three triggers (seed expansion / in-flight discovery writeback / annual refresh), tool-per-step mapping, honesty-floor policy, validation gates, and a state machine. Pairs with brand_discovery.md (consumer) and vendor_roadmap.md (external services).
-- `docs/contact_enrichment_workflow.md` — Phase 3a spec for the 9-step pipeline that turns a primary-tier brand candidate into a list of named contacts with verified emails, LinkedIn URLs, location, tenure, and decision-role classification. Covers target-role identification (scaled to brand size), Apollo employee lookup, LinkedIn API enrichment, web-search backup via Exa, email verification, LLM-driven decision-role classification (the CMO-of-megabrand vs. IM-Manager-2-levels-down distinction), placeholder generation for known-but-unfilled roles, cross-source dedup, GDPR-compliant opt-out handling, and the shared-roster-pool / per-talent-pitch-history model.
+- `docs/contact_enrichment_workflow.md` — Phase 3a spec for the 9-step pipeline that turns a primary-tier brand candidate into a list of named contacts with verified emails, LinkedIn URLs, location, tenure, and decision-role classification. Covers target-role identification (scaled to brand size), Apollo employee lookup, LinkedIn API enrichment, web-search backup via Exa, email verification, LLM-driven decision-role classification with the simplified 5-value taxonomy (`buyer` / `influencer` / `gatekeeper` / `champion` / `unknown`), placeholder generation for known-but-unfilled roles, cross-source dedup, CAN-SPAM-aligned opt-out handling, and the shared-roster-pool / per-talent-pitch-history model.
 - `.gitignore` — ensures any `*.local.json` or `.env` files containing real keys are never committed.
 
 ### Reference taxonomies
@@ -279,21 +279,17 @@ One contact pool serves the whole roster (no double-paying Apollo for the same p
 | **Enrichment meta** | `first_discovered_at`, `last_verified_at`, `verification_sources[]`, `confidence` |
 
 ### Decision-role taxonomy
-A CMO at a $50B+ brand has the title but not the sign-off authority for a £5k Reel deal. The Influencer Marketing Manager 2 levels down is the real `decision_maker`. The taxonomy captures both, with explicit role:
+A CMO at a $50B+ brand has the title but not the sign-off authority for a $5k Reel deal. The Influencer Marketing Manager 2 levels down is the real `buyer`. The simplified 5-value taxonomy captures who matters for the decision:
 
-| `decision_role` | Typical at |
-|---|---|
-| `decision_maker` | IM Manager at mid+ brand; founder/CEO at startup |
-| `budget_holder` | Finance director, AOR account director |
-| `influencer` (decision-shaping, not the creator role) | Senior brand manager, creative director, *CMO at megabrand* |
-| `champion` | Internal advocate / known fan |
-| `gatekeeper` | EA, AOR account manager |
-| `end_user` | Brand manager, social media manager |
-| `recommender` | Brand-side creatives, junior staff |
-| `blocker` | Captured from past outreach failures |
-| `unknown` | Default until classified |
+| `decision_role` | What they do | Typical at |
+|---|---|---|
+| `buyer` | Can say yes AND holds the budget for this deal size | IM Manager at mid+ brand; founder/CEO at startup |
+| `influencer` (decision-shaping, not the creator role) | Has input but no authority | CMO at megabrand, senior brand manager, brand manager (runs the campaign), procurement/finance reviewer |
+| `gatekeeper` | Controls access to the buyer | EA, agency-of-record account manager |
+| `champion` | Internal advocate / known fan of this talent or talent type | Junior fan, friend-of-talent inside the company |
+| `unknown` | Default until classified | New contacts pending LLM classification |
 
-LLM-driven classification at Step 6 of the enrichment pipeline outputs `decision_role` + a one-line rationale visible to the user.
+LLM-driven classification at Step 6 of the enrichment pipeline outputs `decision_role` + a one-line rationale visible to the user. The `decision_authority_size_band` field (separate from role) captures *what deal size* this person can sign off on (`micro` <$5k → `enterprise` $500k+). Blockers and dead-end contacts are captured via free-form `tags[]` rather than a primary role.
 
 ### Contact-qualification signals
 Ranks contacts *within* a brand (separate from brand-level qualification in Phase 2):
@@ -317,13 +313,14 @@ Three confirmed for v0.1:
 
 Deferred to Phase 3 v2: **Hunter.io**, **Clay.com**, **RocketReach** — see `docs/vendor_roadmap.md` for criteria.
 
-### Privacy / GDPR
-- Folder gitignored — contact PII never committed
-- Right to be forgotten: `opt_out_at` + `do_not_contact` keep record (audit) but exclude from all future outreach
-- Lawful basis: legitimate-interest for B2B marketing-role contacts; outreach on behalf of named talent
-- Data minimisation: phone/personal-email opt-in per-brand, not default
-- Vendor licensing: Apollo data stays in the gitignored folder, never redistributed
-- Per-talent cooldown: 14 days between pitches to the same contact across different talents in our roster
+### Outreach hygiene & data handling
+US project — CAN-SPAM is the primary legal frame. The structures below are standard CRM/email-marketing good practice:
+- Folder gitignored — contact PII + licensed vendor data never committed.
+- Opt-out / unsubscribe: `opt_out_at` + `do_not_contact: true` keep record (so we don't accidentally re-enrich and re-pitch them later) but exclude from all future outreach across the roster.
+- Source disclosure: `verification_sources[]` records every vendor + date + fields they contributed — answerable in seconds if a contact asks how we got their email.
+- Vendor terms: Apollo data is licensed; stays in the gitignored folder, never redistributed.
+- Per-talent cooldown: 14 days between pitches to the same contact across different talents in our roster — protects deliverability and sender reputation.
+- Bounce handling: hard bounces → `verification_status: bounced` permanently for that address; no retry.
 
 ### Placeholder contacts
 When a target role is known to exist at a brand (e.g. "Nike must have an IM Manager") but no person is found, the pipeline writes a placeholder record (`is_placeholder: true`, name like "Unknown — Influencer Marketing Manager"). Surfaces coverage gaps as a dashboard signal so they can be filled later. Placeholders are filtered from default outreach lists but counted in the per-brand contact coverage stat.
