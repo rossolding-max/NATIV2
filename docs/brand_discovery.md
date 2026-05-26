@@ -6,8 +6,10 @@ Reads: `talents/{id}.json` + the full `data/` directory (including the enriched 
 Writes: `data/brand_candidates/{talent_id}.json` (one per talent, rebuilt on schedule + on profile change).
 
 Pairs with:
-- `docs/recommendation_algorithm.md` — once an industry is recommended, this doc finds the *brands* within it.
-- `docs/onboarding_workflow.md` — produces the input this doc reads.
+- `docs/recommendation_algorithm.md` — runs first on the talent profile and ranks **industries**; the recommended industries feed Searches 5–9 here.
+- `docs/onboarding_workflow.md` — produces the talent profile this doc reads. Step 9B of onboarding triggers the first Brand Discovery run automatically.
+- `docs/brand_enrichment_workflow.md` — Searches 15 and 16 surface novel brands and call this pipeline to enrich them before adding to the candidates file.
+- `docs/vendor_roadmap.md` — the external services these searches use (Exa confirmed; `last30days` skill via its own sub-services).
 
 ---
 
@@ -307,7 +309,7 @@ Once integrated, replaces the LLM-search step with structured Crunchbase queries
 
 ### Merge
 
-After all 14 searches run, merge by `(brand, industry_id)` tuple. A brand surfacing from multiple searches accumulates `sources[]` entries.
+After all 16 searches run, merge by `(brand, industry_id)` tuple. A brand surfacing from multiple searches accumulates `sources[]` entries.
 
 ### Score
 
@@ -405,7 +407,7 @@ A brand can appear under multiple names (Lulu / Lululemon / Lululemon Athletica)
 
 | Trigger | What runs |
 |---|---|
-| Talent profile saved/updated | Full re-run of all 14 searches; replace `data/brand_candidates/{talent_id}.json` |
+| Talent profile saved/updated | Full re-run of all 16 searches; replace `data/brand_candidates/current/{talent_id}.json` |
 | Monthly cron (1st of month) | Full re-run for every active talent; primarily catches: newly-eligible re-engagements (Search 1), newly-added similar talents enriched in the interim (Search 2), industry/affinity edits to JSON (Searches 5–9), **newly-funded brands via web search (Search 15), and rising/trending brands surfaced by the `last30days` skill (Search 16) over the past 30-day window** |
 | `data/brand_industry_map.json` changes (new brands added) | Re-run Searches 3, 4, 5, 6, 7 only (the searches that read brand_industry_map) — incremental, doesn't need full re-run |
 | Manual trigger by user ("refresh candidates") | Full re-run on demand |
@@ -489,7 +491,7 @@ JSON shape:
 1. **Search-result freshness.** Should candidate lists carry a freshness TTL per source? E.g. `primary_industry` matches are valid 30 days; `demographic_bridge` matches re-evaluate weekly if the talent's audience demos shift.
 2. **Multi-talent cross-pollination.** If we manage 10 talents, brand candidates surface across them — that's a roster-level dashboard view, not just per-talent. Should we expose "brands in our roster's collective candidate pool ranked by total fit" as a separate view?
 3. **Negative learning loop.** When a brand candidate gets rejected ("talent passed on this") or pitched-and-failed, do we down-weight similar brands going forward? Requires a feedback capture mechanism in the outreach flow.
-4. **Per-search confidence calibration.** All 14 searches currently use fixed weights. Once we have outcome data (which sources actually produced closed deals), tune weights against real conversion rates rather than guessing.
+4. **Per-search confidence calibration.** All 16 searches currently use fixed weights. Once we have outcome data (which sources actually produced closed deals), tune weights against real conversion rates rather than guessing.
 5. **Brand-level "next action hint".** Today `next_action_hint` is a free-text string. Could be templated: cold-outreach copy / re-engagement copy / marketplace-apply / agency-pitch / agency-of-record contact / etc. Tightly couples to the outreach phase.
 6. **Pitch readiness scoring.** Beyond fit, score each candidate on "how ready are we to pitch?" — do we have the brand's marketing contact? do we have a media kit tailored to the brand's category? — and surface gaps in the dashboard.
 7. **Multi-niche talent edge cases.** A talent with 5+ niches risks search 5 returning a flood of low-confidence primaries. Cap per-niche contribution or boost cross-niche overlaps?

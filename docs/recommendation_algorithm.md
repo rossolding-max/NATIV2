@@ -2,6 +2,12 @@
 
 **Status:** Draft v0.1 — written before the app exists, to be the contract the app implements. Authored 2026-05-26.
 
+**Where this sits in the pipeline:**
+1. `docs/onboarding_workflow.md` produces a validated talent profile.
+2. **This doc — ranks industries** for that talent.
+3. `docs/brand_discovery.md` takes the recommended industries (plus the same talent profile) and ranks **brands** within them.
+4. Phase 3 (TBD) takes the ranked brands and runs outreach.
+
 ## Goal
 
 Given one talent profile (`talents/{id}.json`), produce a **ranked list of brand industries to target**, with explanations.
@@ -219,12 +225,17 @@ Set `research.status = "enriched"` and `last_researched_at` to the time of the r
 
 ---
 
+## Resolved since v0.1 draft (cross-references)
+
+- **Brand-level recommendations** — shipped in `docs/brand_discovery.md`. Industries from this algorithm feed Searches 5–9 of Brand Discovery directly; the 16-search merge produces the actual ranked brand list.
+- **Geo affinity at brand level** — `brand_industry_map.json` now carries `hq_country` and `sells_in_countries`, used by Brand Discovery Search 10. Industry-level rec (this doc) still doesn't have geo; brands do.
+- **`values_red_lines` positive operationalisation** — Brand Discovery Search 13 covers the positive case (surfacing aligned brands) on top of Layer 5 here covering the negative case (filtering). LLM-per-brand evaluation is specced.
+
 ## Open questions / TODOs for v0.2
 
-- **Geo affinity.** Talent country shares (e.g. 54% GB, 21% US) are currently unused. IAB has no country segments. Suggest a separate `geo_affinity` layer that uses brand HQ country + `talent.audience_demographics.top_countries` once we add a brand_country to `brand_industry_map.json`.
-- **`audience.interests` as a slug-validated field.** Currently free-form. Could be slug-validated against either `niches.json` or IAB Interest IDs to add a fourth signal.
-- **`values_red_lines` operationalisation.** Today a free-form list. Suggest LLM evaluation per candidate industry against each red line, with the LLM returning `{conflict: true|false, evidence: "..."}`.
+- **Industry-level geo affinity.** This doc still ignores `talent.audience_demographics.top_countries`. Brand Discovery handles it at brand level, but industry ranking could weight industries with strong presence in the talent's audience countries (e.g. demote `gambling` industry for a talent with 95% UK audience until UK-legal gambling brands surface).
+- **`audience.interests` as a slug-validated field.** Currently free-form. Could be slug-validated against either `niches.json` or IAB Interest IDs to add a fourth signal to Layer 2.
+- **`values_red_lines` per-industry LLM eval.** Layer 5 today applies red lines as a soft warning. Specify the LLM prompt + output schema for the per-candidate evaluation; specified positively in Brand Discovery Search 13 but not yet here.
 - **Per-platform routing.** A talent with strong IG-fashion + strong TikTok-comedy audiences may want different industry recommendations per platform. Use `platforms[].audience_demographics_override` to compute per-platform scores, then merge.
 - **Live-learn weights.** Once the app has accumulated real deal-closing data, the layer weights (60/25/5/10) should be tuned against actual conversion. Start hand-set, end ML-tuned.
-- **Brand-level recommendations.** This spec ranks *industries*. Next phase ranks specific brands within an industry, using `brand_industry_map.json` + per-brand activity signals (recent campaign volume, RFP listings, etc.).
 - **Confidence intervals.** Each layer should eventually carry confidence in addition to score (e.g. layer-1 direct is high confidence; layer-2 bridge with sparse demos is lower confidence).

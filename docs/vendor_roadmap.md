@@ -92,21 +92,21 @@ Each deferred vendor has the same template: what it unlocks, cost, when to add, 
 
 ---
 
-## Phase 2 vendors (outreach, not discovery)
+## Phase 3 vendors (outreach, not discovery)
 
-These don't belong in Brand Discovery but are noted here so they're not forgotten when the outreach phase begins.
+Phase numbering across this codebase: **Phase 1** = Talent Profile, **Phase 2** = Brand Discovery (what this roadmap mainly serves), **Phase 3** = Outreach. The vendors below don't belong in Brand Discovery but are noted here so they're not forgotten when the outreach phase begins.
 
 ### Apollo.io — contact discovery for outreach
 - **Unlocks:** verified email addresses for marketing / PR / partnerships / brand contacts at target brands. ~275M+ contact records, ~73M+ companies.
 - **Cost:** $99 – $500+/mo by volume.
-- **When to add:** **Phase 2** — the moment Brand Discovery hands a target brand to the outreach engine, Apollo is the first call.
+- **When to add:** **Phase 3** — the moment Brand Discovery hands a target brand to the outreach engine, Apollo is the first call.
 - **Why NOT for competitor discovery:** Apollo's "similar companies" is algorithmic by industry + size + tech-stack. That doesn't capture marketing-positioning competitive sets (Tesla vs Rivian) any better than our curated `brand_competitors.json`. And Apollo skews B2B SaaS — D2C consumer brands like Gymshark or Liquid Death are thinly covered. Save it for outreach where it's best-in-class.
 
 ### Hunter.io / RocketReach / Clay — Apollo alternatives for contact discovery
-- Briefly: these are competitive with Apollo on different price/coverage tradeoffs. Decide closer to Phase 2.
+- Briefly: these are competitive with Apollo on different price/coverage tradeoffs. Decide closer to Phase 3.
 
 ### Smartlead / Instantly / Outreach.io — outreach automation
-- Email sequencing, deliverability, reply detection. Phase 2 concerns.
+- Email sequencing, deliverability, reply detection. Phase 3 concerns.
 
 ---
 
@@ -136,7 +136,7 @@ This is what the orchestrator will need configured by v0.1:
 | `MODASH_API_KEY` *or* `HYPEAUDITOR_API_KEY` | Brand database bulk import | No (deferred) |
 | `EXPLODING_TOPICS_API_KEY` | Pre-trend brand detection | No (deferred) |
 | `PRODUCT_HUNT_DEVELOPER_TOKEN` | Daily launch feed | No (deferred — but free when added) |
-| `APOLLO_API_KEY` | Outreach contact discovery | No (Phase 2) |
+| `APOLLO_API_KEY` | Outreach contact discovery | No (Phase 3) |
 
 This inventory is the source of truth — when adding a new vendor, append to this table.
 

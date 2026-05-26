@@ -6,11 +6,61 @@ Build an AI-powered assistant that helps an influencer (or a roster of influence
 
 ## Phases
 
-| # | Phase | Purpose |
-|---|-------|---------|
-| 1 | **Talent Profile** | Capture everything the system needs to know about the creator(s) — who they are, who their audience is, what they've done, what they cost, who they look like in the market. This is the foundation every later phase reads from. |
-| 2 | _TBD_ | (To be defined by the user.) |
-| 3 | _TBD_ | (To be defined by the user.) |
+| # | Phase | Status | Purpose |
+|---|-------|--------|---------|
+| 1 | **Talent Profile** | v0.1 spec + data shipped | Capture everything the system needs about the creator(s) — identity, audience, history, rates, similar talents. The foundation every later phase reads from. |
+| 2 | **Brand Discovery & Targeting** | v0.1 spec + data shipped | For a given talent, produce a ranked list of industries to pitch and a ranked long-list of specific brands within them — with qualification filtering, sensitive-vertical warnings, and re-engagement on a monthly cron. |
+| 3 | **Outreach** | TBD | Take the ranked brand list, find the right contact (Apollo et al.), draft + send personalised pitches, track replies, hand off to negotiation. |
+| 4 | **Deal admin** | TBD | Contracts, invoicing, usage-rights tracking, exclusivity-clock management, post-campaign reporting. |
+
+## End-to-end data flow
+
+```
+┌────────────────────────────────────────────────────────────────────┐
+│ Phase 1  TALENT PROFILE                                            │
+│   docs/onboarding_workflow.md     ← how a talent gets in           │
+│   schemas/talent.schema.json      ← what the data looks like       │
+│   talents/{id}.json               ← per-talent file                 │
+└────────────────────────────┬───────────────────────────────────────┘
+                             │
+                             ▼
+┌────────────────────────────────────────────────────────────────────┐
+│ Phase 2A  INDUSTRY RECOMMENDATION                                  │
+│   docs/recommendation_algorithm.md                                 │
+│     5-layer score: direct(60%)+bridge(25%)+past(5%)+pref(10%)+pol  │
+│     reads: niches.json, industries.json, *_affinity.json, IAB taxo │
+│     output: ranked industry list with `why[]`                      │
+└────────────────────────────┬───────────────────────────────────────┘
+                             │
+                             ▼
+┌────────────────────────────────────────────────────────────────────┐
+│ Phase 2B  BRAND DISCOVERY (16 parallel searches)                   │
+│   docs/brand_discovery.md                                          │
+│     reads: talent profile + every data/*.json + Exa + last30days   │
+│     output: data/brand_candidates/current/{talent_id}.json         │
+│     schema: schemas/brand_candidates.schema.json                   │
+│   monthly cron + on-profile-change + on-demand                     │
+└────────────────────────────┬───────────────────────────────────────┘
+                             │
+        (background, continuous)
+                             │
+                             ▼
+┌────────────────────────────────────────────────────────────────────┐
+│ Phase 2C  BRAND ENRICHMENT (writeback loop)                        │
+│   docs/brand_enrichment_workflow.md                                │
+│     9-step pipeline: identity → domain → industry → HQ/markets →   │
+│     stage → tier → creator program → financials → social followers │
+│     output: data/brand_industry_map.json grows over time           │
+└────────────────────────────┬───────────────────────────────────────┘
+                             │
+                             ▼
+┌────────────────────────────────────────────────────────────────────┐
+│ Phase 3  OUTREACH (TBD)                                            │
+│   Apollo for contact discovery → personalised pitch → reply track  │
+└────────────────────────────────────────────────────────────────────┘
+
+   Cross-cutting:  docs/vendor_roadmap.md  ← external services + env vars
+```
 
 ---
 
@@ -61,7 +111,7 @@ The fields below were not in the original request but were added because later p
 - `docs/recommendation_algorithm.md` — draft spec for how the app combines all of the above into a ranked list of industries to target for a given talent. Forward-looking contract for when the app is built.
 - `docs/onboarding_workflow.md` — draft spec for how a user adds a new talent: web wizard with OAuth platform connections (paste-fallback), media-pack extraction by LLM, adaptive questionnaire for gaps, hybrid similar-talent seeding (user + AI suggestions), and a background AI research pass that populates similar-talent records.
 - `docs/brand_discovery.md` — draft spec for the long-list generator. **16 independent searches** runnable today (re-engagement, network expansion, affinity expansion, geo, life-stage, constraint-aware, graph, recently-funded via web search, **trending/rising brands via the [`last30days` skill](https://github.com/mvanhorn/last30days-skill) — multi-source social momentum signal across Reddit/X/TikTok/YouTube/HN/etc., run as a monthly cron**) merged with multi-source scoring. Monthly cron drives re-engagement with per-brand cool-downs. Future-versions section lists 12 more searches that need external data (Crunchbase API as a structured upgrade to Search 15, live `#ad` scraping, affiliate networks, creator marketplaces, EMV reports, etc.). Both structural enrichments (`brand_industry_map` metadata + `brand_competitors` graph) are now shipped and used by Searches 3, 4, 10, 14.
-- `docs/vendor_roadmap.md` — single source of truth for external-service decisions. Confirms **Exa** as the v0.1 web-search provider (Search 15). Catalogues deferred vendors with criteria for when to add each: ScrapeCreators (Search 16 visual platforms), Owler (competitor maintenance), Modash/HypeAuditor (brand DB bulk import), Exploding Topics (pre-trend detection), Product Hunt API (day-of launches), Tribe Dynamics EMV (top-spending brands per category), SimilarWeb (audience-overlap competitors), Crunchbase (structured funding data), Apollo (Phase 2 outreach contact discovery), plus alternatives for each. Includes the env-var inventory for all current + deferred services.
+- `docs/vendor_roadmap.md` — single source of truth for external-service decisions. Confirms **Exa** as the v0.1 web-search provider (Search 15). Catalogues deferred vendors with criteria for when to add each: ScrapeCreators (Search 16 visual platforms), Owler (competitor maintenance), Modash/HypeAuditor (brand DB bulk import), Exploding Topics (pre-trend detection), Product Hunt API (day-of launches), Tribe Dynamics EMV (top-spending brands per category), SimilarWeb (audience-overlap competitors), Crunchbase (structured funding data), Apollo (Phase 3 outreach contact discovery), plus alternatives for each. Includes the env-var inventory for all current + deferred services.
 - `docs/brand_enrichment_workflow.md` — draft spec for the 9-step pipeline that takes a brand from name-only to fully-populated record in `brand_industry_map.json`. Covers identity resolution, domain resolution, industry classification, HQ/markets, company stage, campaign tier, creator-program presence, revenue + headcount, social follower counts. Three triggers (seed expansion / in-flight discovery writeback / annual refresh), tool-per-step mapping, honesty-floor policy, validation gates, and a state machine. Pairs with brand_discovery.md (consumer) and vendor_roadmap.md (external services).
 - `.gitignore` — ensures any `*.local.json` or `.env` files containing real keys are never committed.
 
@@ -130,3 +180,62 @@ Talent audience demographics are **IAB-aligned by schema** (the 13 IAB Age Range
 
 ### Recommendation algorithm
 The full recipe — how the app combines direct affinity + IAB bridge + past deals + brand preferences + the sensitive flag into a ranked list of industries with `why[]` explanations and `warnings[]` — lives in `docs/recommendation_algorithm.md`. That document is the contract the app will implement.
+
+---
+
+## Phase 2 — Brand Discovery & Targeting
+
+### Output
+A per-talent ranked long-list of brand candidates at `data/brand_candidates/current/{talent_id}.json`, validated against `schemas/brand_candidates.schema.json`. Folder is gitignored — the schema and spec are tracked; generated data is not.
+
+### How it works
+Two layers, both spec'd before code:
+
+1. **Industry recommendation** (`docs/recommendation_algorithm.md`) — 5-layer score (direct affinity 60% + IAB bridge 25% + past deals 5% + preference boost 10% + policy filters) turns the talent profile into a ranked list of `industry_id`s with `why[]`.
+2. **Brand discovery** (`docs/brand_discovery.md`) — 16 independent searches run in parallel, results merged by `brand_id`. A brand surfacing from multiple searches scores higher — count itself is the signal.
+
+The 16 searches cover:
+
+| Group | Searches | Reads |
+|---|---|---|
+| **Re-engagement** | 1. Previous brands eligible after cool-down | `talent.previous_brands` + dates |
+| **Network expansion** | 2. Similar talents' brands<br>3. Competitors of own brands<br>4. Competitors of similar talents' brands<br>5-7. Primary / secondary / tertiary industries | `talent.similar_talent`, `brand_competitors.json`, `brand_industry_map.json`, `niche_industry_affinity.json` |
+| **Affinity expansion** | 8. Parent/sibling niches<br>9. Bridged-affinity via IAB demos | `niches.json` parent chain, `niche_audience_affinity.json` + `industry_audience_affinity.json` |
+| **Audience-geographic** | 10. Geographic alignment<br>11. Audience life-stage signal | `talent.audience_demographics`, `brand_industry_map.hq_country / sells_in_countries` |
+| **Constraint-aware** | 12. Complementary to exclusivities<br>13. Values-aligned brands | `talent.brand_preferences.active_exclusivities`, `values_red_lines` |
+| **Graph expansion** | 14. 2nd-degree network | `brand_competitors.json` traversal + roster data |
+| **Momentum** | 15. Recently funded (via Exa web search)<br>16. Trending brands (via `last30days` skill) | Exa API + `last30days` skill across Reddit/X/TikTok/YouTube/HN/etc. |
+
+### Qualification filtering
+Every candidate carries a `qualification` block with score + signals (positive: active creator program, macro tier, public company, recent funding, high own-brand followers; negative: micro tier, bootstrapped, low followers, B2B vertical). Candidates below score 0.30 are kept in the file but hidden from default view.
+
+### Brand metadata feeds qualification
+`brand_industry_map.json` has been enriched with structured metadata that powers both filtering and ranking:
+
+| Field | Coverage | Used by |
+|---|---|---|
+| `hq_country`, `sells_in_countries` | 290/290 | Search 10 (geo), qualification |
+| `company_stage` (`bootstrapped`..`public`..`subsidiary`..`state_owned`) | 290/290 | Qualification, Search 6 inference |
+| `typical_campaign_tier` (`nano`..`micro`..`mid`..`macro`..`premium`) | 290/290 | Qualification, future rate-card match |
+| `creator_program_presence` (`direct`/`aspire`/`grin`/`ltk`/`shopmy`/`agency_of_record`) | 290/290 | Qualification primary signal |
+| `revenue` (USD + as_of_year + source) | 181/290 (62%) | Qualification (enterprise/significant/minimal) |
+| `headcount` (LinkedIn-standard bands + source) | 203/290 (70%) | Qualification |
+| `social_followers` (per-platform integer counts + as_of_year) | 180/290 (62%) | Qualification (high/moderate/low own-brand follower count) |
+
+Honest-gaps policy: fields are absent when not confident — never null, never fabricated. The full enrichment pipeline for new brands lives in `docs/brand_enrichment_workflow.md`.
+
+### Schedule
+- **Monthly cron** (1st of month, per talent): full re-run; catches new re-engagement eligibility, newly-enriched similar talents, freshly-funded brands (Search 15), and 30-day trending brands (Search 16).
+- **On talent-profile save/update:** full re-run for that talent.
+- **On `brand_industry_map` changes:** incremental re-run of Searches 3, 4, 5, 6, 7.
+- **On-demand:** user can trigger from the UI.
+
+### Output preservation
+The orchestrator merges fresh discovery output with the previous run's workflow state. Discovery-output fields (`score`, `tier`, `sources`, etc.) are rebuilt every run; workflow-state fields (`status`, `assigned_to`, `user_notes`, `pitch_history`, `first_surfaced_at`) are **preserved**. A user-set `status: "shortlisted"` survives next month's discovery re-run intact. Immutable monthly snapshots are kept under `data/brand_candidates/runs/{talent_id}/run_{date}.json` — needed for the rising-delta / mention-velocity enhancements specced for Search 16.
+
+### Vendor stack (v0.1)
+Only two paid dependencies:
+- **Exa** — semantic web search for Search 15 + brand enrichment lookups.
+- **Anthropic SDK (Claude Haiku 4.5)** — classification + extraction throughout.
+
+Everything else (Reddit / HN / YouTube / X / GitHub / Wikipedia / Yahoo Finance for the `last30days` and enrichment pipelines) uses free public APIs or scrapes. Deferred vendors with criteria-for-adding live in `docs/vendor_roadmap.md`.

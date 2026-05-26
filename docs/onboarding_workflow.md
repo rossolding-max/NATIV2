@@ -88,9 +88,10 @@ For each social platform, present a card:
 **Paste fallback** (collapsible "I have a token already" link):
 - Token field, expiry date, scopes — for platforms without OAuth setup yet (X/Twitter limited tier, Substack, podcast hosts) or for users who already have tokens.
 
-**Token storage:**
-- Never in the JSON. Tokens go to the secret manager (Vault / AWS Secrets Manager / `.env` in dev).
-- `talents[].platforms[].api_credentials.access_token_ref` stores the reference path (e.g. `vault:nativ2/instagram/jane-doe`).
+**Token storage — reference-only, two supported conventions** (per `schemas/talent.schema.json` § `access_token_ref`):
+- **Dev / single-user:** `env:INSTAGRAM_TOKEN_<TALENT_ID>` — the orchestrator reads the value from environment variables. Simplest for development; no secret manager dependency.
+- **Production / multi-tenant:** `vault:nativ2/instagram/<talent_id>` — the orchestrator dereferences via the configured secret manager (HashiCorp Vault, AWS Secrets Manager, GCP Secret Manager, or equivalent).
+- Never write the raw token to JSON. The `talents/{id}.json` file only ever stores the reference string.
 
 **After each connection:**
 1. Pull live stats → populate `platforms[N].stats` (followers, ER, avg views/likes/comments, `last_updated`).
@@ -280,9 +281,12 @@ Full schema validation runs against `schemas/talent.schema.json`. Two outcomes:
 
 ---
 
-## Step 9 — AI research (background, after save)
+## Step 9 — AI research + Brand Discovery kickoff (background, after save)
 
-Triggered automatically on profile save. For each `similarTalent` with `research.status = "seed"`:
+Two parallel background jobs trigger automatically on profile save:
+
+### 9A — Similar-talent enrichment
+For each `similarTalent` with `research.status = "seed"`:
 
 1. Set `research.status = "researching"`.
 2. AI scrapes/searches public sources (their handles, press, recent #ad posts) to find recent brand collaborations.
@@ -295,6 +299,13 @@ Triggered automatically on profile save. For each `similarTalent` with `research
 **Failure path:** `research.status = "failed"` with a reason; user can manually fill the record or retry.
 
 **Refresh cadence:** after 90 days, status flips to `stale`; user is prompted to refresh.
+
+### 9B — Brand Discovery first run
+The orchestrator immediately triggers a full **Brand Discovery** run for the new talent — runs all 16 searches per `docs/brand_discovery.md` and writes the first `data/brand_candidates/current/{talent_id}.json`. Two sequencing notes:
+- Searches 2 and 4 (similar-talent-driven) wait for Step 9A to complete first, then re-run as a delta — without similar-talent enrichment they'd surface nothing.
+- All other searches run immediately on whatever talent-profile fields are populated; they don't block on AI research.
+
+User is notified when the first candidate list is ready (typically within 5–10 minutes of save). After this initial run, the standard monthly cron and on-profile-update triggers from `docs/brand_discovery.md` take over.
 
 ---
 
