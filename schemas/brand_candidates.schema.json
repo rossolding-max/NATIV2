@@ -1,0 +1,506 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://nativ2/schemas/brand_candidates.schema.json",
+  "title": "Brand Candidates File",
+  "description": "Per-talent output of the Brand Discovery long-list generator (docs/brand_discovery.md). One file per talent under data/brand_candidates/current/{talent_id}.json (latest view; rewritten on each discovery run with workflow state preserved by merge) plus immutable per-run snapshots under data/brand_candidates/runs/{talent_id}/run_{date}.json. The folder is gitignored — generated artifact, not source.",
+  "type": "object",
+  "required": ["talent_id", "version", "generated_at", "search_run_id", "candidates"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+    "talent_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]*$",
+      "description": "Slug matching the `id` in the source talents/{id}.json file."
+    },
+    "version": {
+      "type": "string",
+      "description": "Schema version of this file. Bump when the shape changes."
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Wall-clock time of this run."
+    },
+    "search_run_id": {
+      "type": "string",
+      "description": "Stable identifier for this discovery run. Used to correlate run metadata with the per-run snapshot file."
+    },
+    "candidates": {
+      "type": "array",
+      "description": "Ranked brand candidates. Sorted by score descending then tier.",
+      "items": { "$ref": "#/$defs/candidate" }
+    },
+    "blocked": {
+      "type": "array",
+      "description": "Brands excluded by the policy layer (blocked industries, active exclusivities, do_not_recontact). Kept for transparency — the user can see what was filtered.",
+      "items": { "$ref": "#/$defs/blockedBrand" }
+    },
+    "stats": { "$ref": "#/$defs/stats" },
+    "run_metadata": { "$ref": "#/$defs/runMetadata" }
+  },
+
+  "$defs": {
+
+    "candidate": {
+      "type": "object",
+      "description": "One brand candidate. Discovery-output fields are rebuilt every run; workflow-state fields (status, pitch_history, user_notes, assigned_to) are preserved across runs by the orchestrator's merge logic.",
+      "required": [
+        "brand", "brand_id", "industry_id", "score", "tier",
+        "found_in_searches", "sources", "status", "first_surfaced_at", "last_surfaced_at"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "brand": {
+          "type": "string",
+          "description": "Display name of the brand (e.g. 'Lululemon')."
+        },
+        "brand_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]*$",
+          "description": "Stable slug derived from `brand`. Used as the merge key across discovery runs. Matches the brand's canonical `name` in data/brand_industry_map.json after normalization (lowercase, kebab-case, suffixes stripped)."
+        },
+        "industry_id": {
+          "$ref": "#/$defs/industryId"
+        },
+        "niche_signals": {
+          "type": "array",
+          "description": "Which of the talent's content_niches rolled this brand up. Helps the UI explain *why* this brand surfaced for this talent.",
+          "items": {
+            "type": "object",
+            "required": ["niche_id", "tier"],
+            "additionalProperties": false,
+            "properties": {
+              "niche_id": { "$ref": "#/$defs/nicheId" },
+              "tier": { "type": "string", "enum": ["primary", "secondary", "tertiary"] }
+            }
+          }
+        },
+
+        "score": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Capped sum of source weights, normalised 0-1. Multi-source candidates hit the ceiling fast by design."
+        },
+        "tier": {
+          "type": "string",
+          "enum": ["re-engage", "primary", "secondary", "tertiary"],
+          "description": "Tier assignment based on score + presence of re-engagement source. Used to group the UI."
+        },
+        "found_in_searches": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Count of distinct sources that surfaced this candidate this run. Denormalised from sources[].length for fast UI."
+        },
+        "sources": {
+          "type": "array",
+          "minItems": 1,
+          "description": "Provenance: which of the 16 in-scope (or future-version) searches surfaced this brand, with the contribution weight and a free-form note explaining the match.",
+          "items": { "$ref": "#/$defs/source" }
+        },
+        "brand_snapshot": {
+          "$ref": "#/$defs/brandSnapshot",
+          "description": "Snapshotted enrichment fields from brand_industry_map.json at discovery time. Makes the candidate self-contained so downstream consumers don't need to re-resolve the brand."
+        },
+
+        "qualification": { "$ref": "#/$defs/qualification" },
+        "qualification_filtered": {
+          "type": "boolean",
+          "default": false,
+          "description": "If true, qualification.score is below threshold (default 0.30). The UI hides these by default but they stay in the file for transparency and so a user can override."
+        },
+
+        "warnings": {
+          "type": "array",
+          "description": "Policy-layer flags. Candidate stays in the list (unless `blocked: true`), UI surfaces these.",
+          "items": { "$ref": "#/$defs/warning" }
+        },
+        "blocked": {
+          "type": "boolean",
+          "default": false,
+          "description": "Hard-excluded by the policy layer. Should not appear in `candidates[]` — gets moved to top-level `blocked[]`. Kept in the schema for symmetry so a partial extraction can carry the flag."
+        },
+        "blocked_reason": {
+          "type": ["string", "null"],
+          "enum": [null, "blocked_industry", "active_exclusivity", "do_not_recontact", "qualification_below_floor"],
+          "description": "Reason category if blocked. Free-text explanation lives in `next_action_hint` or top-level `blocked[].details`."
+        },
+        "next_action_hint": {
+          "type": "string",
+          "description": "Free-text suggested next step for the UI. e.g. 'Re-engage with existing contact; reference last campaign performance' or 'Cold outreach; no prior contact'."
+        },
+
+        "status": {
+          "type": "string",
+          "enum": ["new", "shortlisted", "pitched", "responded", "negotiating", "closed_won", "closed_lost", "parked"],
+          "default": "new",
+          "description": "Workflow state. PRESERVED across discovery re-runs — the orchestrator must not overwrite this when it merges a fresh run."
+        },
+        "assigned_to": {
+          "type": ["string", "null"],
+          "description": "User id of the person responsible for moving this candidate forward. Null for unassigned. For agency roster views."
+        },
+        "user_notes": {
+          "type": "string",
+          "default": "",
+          "description": "Free-form annotations from the user. Preserved across runs."
+        },
+        "pitch_history": {
+          "type": "array",
+          "description": "Append-only log of outreach attempts. Populated by the Outreach phase (Phase 2). Preserved across discovery re-runs.",
+          "items": { "$ref": "#/$defs/pitchHistoryEntry" }
+        },
+
+        "first_surfaced_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When this brand first appeared as a candidate for this talent. Set on creation, never modified."
+        },
+        "last_surfaced_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Most recent discovery run that surfaced this brand. Updated on each run."
+        },
+        "last_seen_in_searches": {
+          "type": "array",
+          "description": "Sources from the most recent run only. If this candidate exists in the file but `last_seen_in_searches` is empty, this brand dropped out of discovery this cycle — useful signal for stale-pipeline detection.",
+          "items": { "type": "string" }
+        }
+      }
+    },
+
+    "source": {
+      "type": "object",
+      "required": ["search", "weight"],
+      "additionalProperties": false,
+      "properties": {
+        "search": {
+          "type": "string",
+          "enum": [
+            "previous_brand_reengage",
+            "similar_talent_worked_with",
+            "competitor_of_previous",
+            "competitor_of_similar_talent",
+            "primary_industry",
+            "secondary_industry",
+            "tertiary_industry",
+            "parent_sibling_niche",
+            "demographic_bridge",
+            "geographic_alignment",
+            "life_stage_signal",
+            "complementary_to_exclusivity",
+            "values_aligned",
+            "graph_expansion_2nd_degree",
+            "recently_funded",
+            "trending_30d",
+            "preferred_industry",
+            "currently_running_creator_campaign",
+            "active_affiliate_program",
+            "rate_card_tier_match_live",
+            "trade_show_exhibitor",
+            "retail_accelerator_alumni",
+            "recent_influencer_agency_appointment",
+            "seasonal_product_launch",
+            "creator_marketplace_listed",
+            "emv_top_performer",
+            "audience_lookalike",
+            "values_commitment_match"
+          ],
+          "description": "Identifier of the search that surfaced this brand. The first 16 are in-scope today (Searches 1-16 in docs/brand_discovery.md); the rest correspond to future-version searches and may appear once those are wired up. `preferred_industry` is an additive boost source — applied to every candidate whose industry_id is in talent.brand_preferences.preferred_industries."
+        },
+        "weight": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Contribution to the candidate's score from this source. Per `docs/brand_discovery.md` source-weight table."
+        },
+        "note": {
+          "type": "string",
+          "description": "Free-form, human-readable explanation of this match (e.g. 'fitness primary -> activewear; well-documented creator program'). UI shows this verbatim."
+        }
+      }
+    },
+
+    "brandSnapshot": {
+      "type": "object",
+      "description": "Fields copied from brand_industry_map.json at discovery time. Absence of a field means it was missing in the source.",
+      "additionalProperties": false,
+      "properties": {
+        "domain": { "type": "string" },
+        "hq_country": { "type": "string", "pattern": "^[A-Z]{2}$" },
+        "sells_in_countries": {
+          "oneOf": [
+            { "type": "string", "enum": ["global"] },
+            { "type": "array", "items": { "type": "string", "pattern": "^[A-Z]{2}$" } }
+          ]
+        },
+        "company_stage": {
+          "type": "string",
+          "enum": ["bootstrapped", "seed", "series_a", "series_b", "series_c", "series_d", "private_growth", "public", "subsidiary", "state_owned", "unknown"]
+        },
+        "typical_campaign_tier": {
+          "type": "string",
+          "enum": ["nano", "micro", "mid", "macro", "premium", "unknown"]
+        },
+        "creator_program_presence": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["direct", "aspire", "grin", "ltk", "shopmy", "agency_of_record"]
+          }
+        }
+      }
+    },
+
+    "qualification": {
+      "type": "object",
+      "description": "Likelihood this brand is an active creator-marketing buyer. Used to filter out candidates unlikely to convert before they clutter the UI. Surfaces both positive and negative signals so a user can override the auto-filter when context warrants.",
+      "required": ["score", "tier", "signals"],
+      "additionalProperties": false,
+      "properties": {
+        "score": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "0-1, likelihood this brand actively buys creator marketing. Capped sum of qualification signals. Default filter threshold: 0.30 (candidates below get qualification_filtered: true)."
+        },
+        "tier": {
+          "type": "string",
+          "enum": ["qualified", "speculative", "unqualified"],
+          "description": "qualified: score >= 0.60; speculative: 0.30-0.60; unqualified: < 0.30."
+        },
+        "signals": {
+          "type": "array",
+          "description": "Individual signals contributing to the qualification score. Positive weights add; negative weights subtract.",
+          "items": { "$ref": "#/$defs/qualificationSignal" }
+        },
+        "threshold_applied": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "The threshold used for qualification_filtered determination on this run. Logged so user-set overrides are auditable."
+        }
+      }
+    },
+
+    "qualificationSignal": {
+      "type": "object",
+      "required": ["signal", "weight"],
+      "additionalProperties": false,
+      "properties": {
+        "signal": {
+          "type": "string",
+          "enum": [
+            "active_creator_program",
+            "macro_or_premium_campaign_tier",
+            "mid_campaign_tier",
+            "micro_or_nano_campaign_tier",
+            "established_company",
+            "bootstrapped_or_early_stage",
+            "subsidiary_of_major_parent",
+            "active_paid_partnerships_observed",
+            "recent_funding_round",
+            "high_own_brand_follower_count",
+            "low_own_brand_follower_count",
+            "b2b_vertical",
+            "no_creator_partnerships_observed",
+            "high_emv_in_category",
+            "sensitive_vertical_warning"
+          ],
+          "description": "Identifier of the qualification signal. New signals can be added — keep the enum sorted by direction (positives first, then negatives) for review-ability."
+        },
+        "weight": {
+          "type": "number",
+          "minimum": -1,
+          "maximum": 1,
+          "description": "Contribution to qualification score. Positive = stronger likelihood-to-buy; negative = weaker. Typical magnitudes: 0.05-0.30."
+        },
+        "details": {
+          "type": "string",
+          "description": "Human-readable explanation. e.g. 'creator_program_presence: [direct, aspire]' or 'IG followers: 8.2k (below 50k threshold for active creator-marketing buyers)'."
+        }
+      }
+    },
+
+    "warning": {
+      "type": "object",
+      "required": ["type", "details"],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "sensitive_category",
+            "exclusivity_adjacent",
+            "values_red_line_neutral",
+            "low_qualification",
+            "stale_in_pipeline"
+          ],
+          "description": "Warning category. UI renders an appropriate badge per type."
+        },
+        "details": {
+          "type": "string",
+          "description": "Free-text explanation shown next to the badge."
+        }
+      }
+    },
+
+    "pitchHistoryEntry": {
+      "type": "object",
+      "required": ["pitched_at", "channel", "outcome"],
+      "additionalProperties": false,
+      "properties": {
+        "pitched_at": { "type": "string", "format": "date-time" },
+        "channel": {
+          "type": "string",
+          "enum": ["email", "instagram_dm", "linkedin_message", "creator_marketplace_apply", "agency_intro", "other"]
+        },
+        "template_id": { "type": "string" },
+        "recipient_contact": {
+          "type": "string",
+          "description": "Identifier of the contact pitched (email or handle). Format depends on channel."
+        },
+        "outcome": {
+          "type": "string",
+          "enum": ["sent", "delivered", "opened", "replied", "interested", "declined", "no_response", "bounced"]
+        },
+        "next_followup_at": { "type": "string", "format": "date-time" },
+        "notes": { "type": "string" }
+      }
+    },
+
+    "blockedBrand": {
+      "type": "object",
+      "required": ["brand", "reason"],
+      "additionalProperties": false,
+      "properties": {
+        "brand": { "type": "string" },
+        "brand_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+        "industry_id": { "$ref": "#/$defs/industryId" },
+        "reason": {
+          "type": "string",
+          "enum": ["blocked_industry", "active_exclusivity", "do_not_recontact", "qualification_below_floor"]
+        },
+        "details": {
+          "type": "string",
+          "description": "Free-text explanation (e.g. 'Active exclusivity in sportswear until 2026-12-31')."
+        }
+      }
+    },
+
+    "stats": {
+      "type": "object",
+      "description": "Summary statistics across this run. Pre-computed so the UI doesn't need to scan candidates[] for every render.",
+      "additionalProperties": false,
+      "properties": {
+        "total_candidates": { "type": "integer", "minimum": 0 },
+        "total_blocked": { "type": "integer", "minimum": 0 },
+        "total_qualification_filtered": { "type": "integer", "minimum": 0 },
+        "by_tier": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "re-engage": { "type": "integer", "minimum": 0 },
+            "primary": { "type": "integer", "minimum": 0 },
+            "secondary": { "type": "integer", "minimum": 0 },
+            "tertiary": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "by_source_count": {
+          "type": "object",
+          "description": "Distribution of candidates by how many searches surfaced them. Keys '1','2','3','4','5+'.",
+          "patternProperties": {
+            "^([1-4]|5\\+)$": { "type": "integer", "minimum": 0 }
+          },
+          "additionalProperties": false
+        },
+        "by_status": {
+          "type": "object",
+          "description": "Distribution of workflow statuses across the candidates.",
+          "additionalProperties": false,
+          "properties": {
+            "new": { "type": "integer", "minimum": 0 },
+            "shortlisted": { "type": "integer", "minimum": 0 },
+            "pitched": { "type": "integer", "minimum": 0 },
+            "responded": { "type": "integer", "minimum": 0 },
+            "negotiating": { "type": "integer", "minimum": 0 },
+            "closed_won": { "type": "integer", "minimum": 0 },
+            "closed_lost": { "type": "integer", "minimum": 0 },
+            "parked": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "by_qualification_tier": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "qualified": { "type": "integer", "minimum": 0 },
+            "speculative": { "type": "integer", "minimum": 0 },
+            "unqualified": { "type": "integer", "minimum": 0 }
+          }
+        }
+      }
+    },
+
+    "runMetadata": {
+      "type": "object",
+      "description": "Orchestrator-side telemetry for this run. Useful for monitoring scheduled-job health and vendor-quota consumption.",
+      "additionalProperties": false,
+      "properties": {
+        "search_durations_ms": {
+          "type": "object",
+          "description": "Per-search wall-clock duration in milliseconds.",
+          "additionalProperties": { "type": "integer", "minimum": 0 }
+        },
+        "search_errors": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["search", "error"],
+            "additionalProperties": false,
+            "properties": {
+              "search": { "type": "string" },
+              "error": { "type": "string" },
+              "fatal": {
+                "type": "boolean",
+                "description": "If true, the run is considered degraded and the user is notified. If false, the search silently failed but the overall run completed."
+              }
+            }
+          }
+        },
+        "vendor_usage": {
+          "type": "object",
+          "description": "Per-vendor quota usage on this run. Keys are vendor identifiers; values are vendor-specific usage records.",
+          "additionalProperties": true
+        },
+        "writebacks": {
+          "type": "object",
+          "description": "Records mutated outside this file as a side effect of the run (e.g. new brands added to brand_industry_map.json via the Search 15/16 growth loop).",
+          "additionalProperties": false,
+          "properties": {
+            "brand_industry_map_additions": {
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "brand_competitors_additions": {
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+
+    "nicheId": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]*$",
+      "description": "Kebab-case slug that MUST match an `id` in data/niches.json."
+    },
+
+    "industryId": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]*$",
+      "description": "Kebab-case slug that MUST match an `id` in data/industries.json."
+    }
+  }
+}

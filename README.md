@@ -45,7 +45,8 @@ The fields below were not in the original request but were added because later p
 - Free-form `other_stats` bag for anything bespoke.
 
 ### Files
-- `schemas/talent.schema.json` — JSON Schema (Draft 2020-12) describing the profile.
+- `schemas/talent.schema.json` — JSON Schema (Draft 2020-12) describing the talent profile.
+- `schemas/brand_candidates.schema.json` — JSON Schema for the per-talent Brand Discovery output. Validates every file written by the orchestrator under `data/brand_candidates/` (the folder itself is gitignored — generated artifact, not source).
 - `talents/example-talent.json` — template instance, partially filled.
 - `data/niches.json` — canonical creator content-niche taxonomy (145 entries).
 - `data/industries.json` — canonical brand-industry taxonomy (178 entries).

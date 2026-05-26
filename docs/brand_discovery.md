@@ -17,9 +17,47 @@ Produce an **exhaustive** ranked list of brand-deal candidates for a given talen
 
 ---
 
+## Output: schema, storage, merge semantics
+
+**Schema:** [`schemas/brand_candidates.schema.json`](../schemas/brand_candidates.schema.json) (JSON Schema Draft 2020-12). This is the authoritative shape of every candidates file. Validate on every write.
+
+**Folder layout:**
+```
+data/brand_candidates/             ← gitignored (generated artifact)
+├── current/
+│   ├── jane-doe.json              ← latest view per talent (rewritten on each run)
+│   └── ...
+└── runs/
+    ├── jane-doe/
+    │   ├── run_2026-05-26.json    ← immutable monthly snapshots
+    │   ├── run_2026-06-01.json    ← (kept indefinitely — needed for rising-delta /
+    │   └── run_2026-07-01.json    ←  mention-velocity enhancements; storage tiny)
+    └── ...
+```
+
+The folder is gitignored — these are app-generated, rewritten monthly, and would create unmanageable commit churn. The schema lives in the repo; the generated data does not.
+
+**Merge semantics — preserving workflow state across re-runs.**
+Each candidate has two halves:
+- **Discovery-output fields** (`score`, `tier`, `sources`, `niche_signals`, `brand_snapshot`, `qualification`, `warnings`, `next_action_hint`, `found_in_searches`, `last_seen_in_searches`, `last_surfaced_at`) — **rebuilt every run**.
+- **Workflow-state fields** (`status`, `assigned_to`, `user_notes`, `pitch_history`, `first_surfaced_at`) — **preserved across runs**.
+
+On each run, the orchestrator:
+1. Loads the previous `current/{talent_id}.json` if it exists; indexes existing candidates by `brand_id`.
+2. Runs all 16 searches → produces fresh candidate records.
+3. **Merge per candidate by `brand_id`:**
+   - **Exists in previous + present in this run** → carry forward workflow-state fields; overwrite discovery-output fields.
+   - **New brand** → `status: "new"`, `first_surfaced_at: now`.
+   - **Existed in previous but not in this run** → keep on file, set `last_seen_in_searches: []` and add `warning: stale_in_pipeline`. (Useful signal — a brand that's dropped out of discovery may indicate the relationship has cooled or our affinity edges have drifted.)
+4. Write `current/{talent_id}.json` and an immutable snapshot under `runs/{talent_id}/run_{date}.json`.
+
+This guarantees a user-set `status: "shortlisted"` survives next month's discovery run intact.
+
 ## Output shape
 
-`data/brand_candidates/{talent_id}.json`:
+The full canonical example below conforms to `schemas/brand_candidates.schema.json`. Original file path:
+
+`data/brand_candidates/current/{talent_id}.json`:
 
 ```jsonc
 {
@@ -311,6 +349,38 @@ Scores then capped at 1.0 (multi-source brands hit the ceiling fast — by desig
 | `tertiary` | 0.10–0.25 | Long tail; review and cherry-pick |
 | omit | < 0.10 | Drop from default view |
 
+### Qualification filtering (applied before policy)
+
+Filters out brands unlikely to be active creator-marketing buyers — keeps the list focused on candidates that can plausibly convert. Every candidate carries a `qualification` block with a `score` (0–1), `tier` (`qualified` / `speculative` / `unqualified`), and a `signals[]` log of positive and negative contributions.
+
+**Signals contributing to qualification score:**
+
+| Signal | Direction | Typical weight | Source |
+|---|---|---|---|
+| `active_creator_program` | + | 0.30 | `brand_industry_map.creator_program_presence` non-empty |
+| `macro_or_premium_campaign_tier` | + | 0.20 | `typical_campaign_tier` in `[macro, premium]` |
+| `mid_campaign_tier` | + | 0.10 | `typical_campaign_tier == "mid"` |
+| `established_company` | + | 0.10 | `company_stage` in `[public, private_growth, subsidiary]` |
+| `subsidiary_of_major_parent` | + | 0.05 | `company_stage == "subsidiary"` (known parent has marketing budget) |
+| `recent_funding_round` | + | 0.10 | Brand surfaced via Search 15 with funding signal |
+| `active_paid_partnerships_observed` | + | 0.15 | Last30days (Search 16) or external `#ad` scrape shows recent creator deals |
+| `high_emv_in_category` | + | 0.20 | Future: Tribe Dynamics EMV data once integrated |
+| `high_own_brand_follower_count` | + | 0.05 | Brand's own social account ≥ 100k followers (marketing-active proxy) |
+| `micro_or_nano_campaign_tier` | − | −0.15 | Brand budgets too small to plausibly pay this talent's rate |
+| `bootstrapped_or_early_stage` | − | −0.10 | `company_stage` in `[bootstrapped, seed]` |
+| `low_own_brand_follower_count` | − | −0.10 | Brand's own IG/TT < 10k followers (rarely runs paid creator deals) |
+| `no_creator_partnerships_observed` | − | −0.05 | No prior creator activity surfaced in any signal source |
+| `b2b_vertical` | − | −0.20 | Industry is B2B-only (`consulting`, `accounting`, `legal-services`, `professional-services`, etc.) |
+| `sensitive_vertical_warning` | − | varies | Sensitive industry without talent opt-in |
+
+**Tier and filtering:**
+- Score `≥ 0.60` → `qualified` (always shown)
+- Score `0.30 – 0.60` → `speculative` (shown; UI may collapse by default)
+- Score `< 0.30` → `unqualified` → `qualification_filtered: true` (hidden from default view; user can reveal)
+- Threshold is configurable per talent (e.g. agency users handling enterprise brands may want lower threshold to surface B2B candidates the default rules suppress).
+
+**Why this matters:** Without a qualification floor, the long-list is flooded with brands that have no realistic chance of running a creator campaign (e.g. a B2B consultancy that surfaced because its IAB Purchase Intent segments overlap with the talent's demographic profile). The qualification filter is what makes "exhaustive" useful rather than overwhelming.
+
 ### Policy filters (applied last)
 
 Re-applies the policy layer from `recommendation_algorithm.md`:
@@ -318,6 +388,7 @@ Re-applies the policy layer from `recommendation_algorithm.md`:
 - Brand's `industry_id` matches an `active_exclusivity` window → exclude, list in `blocked[]`.
 - Brand's `industry_id` is `sensitive: true` and not in `preferred_industries` → keep, attach `warning: sensitive_category` to the result.
 - `previous_brands[].do_not_recontact == true` → exclude.
+- `qualification_filtered == true` → kept in file but hidden from default view (see Qualification filtering above).
 
 ### Deduplication beyond simple name-matching
 

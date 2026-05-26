@@ -6,3 +6,8 @@ talents/*.local.json
 node_modules/
 .DS_Store
 scripts/__pycache__/
+
+# Brand Discovery generated output: rewritten on every monthly run.
+# The schema (schemas/brand_candidates.schema.json) and the spec
+# (docs/brand_discovery.md) are tracked; the generated data is not.
+data/brand_candidates/
