@@ -628,7 +628,7 @@ Trigger: substage → initial_call_scheduled
 
 ### The 3 outputs
 
-**Agenda** (`agenda.md` artefact) — single-page, default 45-min structure, LLM-customised per deal (drops "brand context check" if formal brief already received; adds "questions you raised" section if reply contained specific questions).
+**Agenda** (`agenda.md` artefact) — single-page, 45-min default with 6 sections: **Introductions → Brand overview → Talent overview → Objectives → Opportunities → Next steps**. LLM-customised per deal (durations rebalanced, talking points tailored). The **Objectives** section internally maps to SPICED's situation/pain/impact/critical-event from B2B sales discovery — but those framework terms never surface in any client-facing artefact; the section is framed plainly as "what you're trying to achieve, current friction, why now." Briefing notes carry the agent's structured discovery questions for this section.
 
 **Briefing notes** (`briefing-notes.md` artefact, agent-only) — multi-section markdown:
 - Deal summary (citing originating reply verbatim)

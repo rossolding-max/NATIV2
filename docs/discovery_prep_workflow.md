@@ -31,13 +31,24 @@ Ultimate objective: the agent never has to do prep research from a blank page. T
 ## The 3 outputs
 
 ### Agenda
-Single-page markdown rendered from `agenda.sections[]`. Default 45-minute discovery structure, customised per deal:
+Single-page markdown rendered from `agenda.sections[]`. Default 45-minute structure with 6 fixed sections, LLM-customised per deal (durations rebalanced; talking points tailored):
 
-- Brief already received? → drop "brand context check", expand "open exploration"
-- Brand asked specific questions in reply? → add a "questions you raised" section near the top
-- Deal high commercial range? → add a "process for next steps" section near the end
+| # | Section | Default duration | Purpose |
+|---|---|---|---|
+| 1 | **Introductions** | 2 min | Rapport, confirm logistics, set expectations for the call |
+| 2 | **Brand overview** | 5 min | Walk through what we understand about the brand from our research; confirm + correct. If a formal brief was already received, this section is lighter (5 → 3 min) and rolls into Objectives. |
+| 3 | **Talent overview** | 8 min | Talent positioning, audience snapshot, recent work — the strongest 2-3 case studies for context |
+| 4 | **Objectives** | 15 min | What the brand is trying to achieve, current friction, why now. Discovery moment — the agent listens. Internally this section captures the brand's situation, pain, impact, and critical event (SPICED framework adapted from B2B sales discovery — but the framework's terms are **never** surfaced in any client-facing artefact). Briefing notes carry the agent's structured questions for this section. |
+| 5 | **Opportunities** | 12 min | Where we see fit — float 1-2 angle ideas tailored to what was just heard in Objectives. Open-ended discussion of scope, timing, budget signals. |
+| 6 | **Next steps** | 3 min | Proposal timeline, info we still need, who else from the brand needs to weigh in |
 
-Each section has `title` + `duration_min` + `purpose` + `talking_points[]`.
+**Per-deal LLM customisation:**
+- Brief already received in writing? → trim Brand overview, expand Objectives
+- Brand asked specific questions in reply? → surface them as opening of Objectives section
+- High commercial range deal → expand Next steps to cover decision process + stakeholder mapping
+- Repeat brand (have done a deal before) → trim Brand overview to "what's changed since last time", trim Talent overview, expand Opportunities
+
+Each section in `agenda.sections[]` has `title` + `duration_min` + `purpose` + `talking_points[]`. The Objectives section's talking_points are framed as questions the agent will ask (e.g. "What does success look like for this campaign in 6 months?", "What's not working with current creator partnerships?", "Why now — what's the trigger to act?") — not as topics the agent presents.
 
 ### Briefing notes
 Multi-section markdown, internal/agent-only. Renders from `briefing_notes` structured fields:
@@ -51,9 +62,11 @@ Multi-section markdown, internal/agent-only. Renders from `briefing_notes` struc
 | Fit hypothesis | LLM synthesis from top-scoring `pitch_angles` for this brand × niche |
 | Likely objections + responses | Patterns from past `objection`-classified outcomes in `scripts/analyze_outreach.py` |
 | Red flags | Cross-check talent's `red_lines` against brand data |
-| Questions to ask THEM | LLM-generated discovery questions for scope/budget/timing |
+| Questions to ask THEM | LLM-generated discovery questions for the **Objectives** agenda section — situation, pain, impact, critical-event probes (using plain language, not SPICED terms) |
 | Questions FROM them + prepared answers | Anticipated buyer questions with prepared answers |
 | **Commercial range** | Computed from comparable past `brand_deals` fees × similar deliverable scope. Surface in briefing **only** — not shown to brand on call unless they ask. |
+
+The briefing notes are agent-only, so they CAN reference the SPICED framework explicitly for the agent's mental model — but no rendered slide or agenda artefact ever uses those terms.
 
 Every non-obvious claim carries provenance per honesty-floor: source + as_of.
 
@@ -66,20 +79,22 @@ Source: `slides[]` array of structured slide objects. Each slide has:
 - `speaker_notes` — what the agent says
 - `sources[]` — citations for any factual claim
 
-**Default deck structure (10 slides live mode; ~15 with leave-behind extensions enabled):**
+**Default deck structure (10 slides live mode; ~15 with leave-behind extensions enabled) — ordered to match the agenda flow:**
 
-| # | Type | Live content | Leave-behind extension |
-|---|---|---|---|
-| 1 | title | Talent name × Brand name; date | Agency tagline footer |
-| 2 | context | Why we're here, in one sentence | Background paragraph |
-| 3 | talent_overview | Headshot, niche, positioning statement | Bio paragraph + content philosophy |
-| 4 | audience_snapshot | 4-6 KPI tiles (followers, engagement, demo splits) — sourced | Methodology note + audience-research provenance |
-| 5 | recent_work | 2-3 case study tiles auto-pulled from brand_deals | Outcome paragraphs with KPI deltas |
-| 6 | brand_observation | "What we love about [Brand]" — 1 short paragraph or callout | Detailed observation block |
-| 7 | fit_angle | Top-1 angle headline + 2-3 supporting bullets | Full angle rationale + supporting data |
-| 8 | proof_point | Best comparable case study with the headline KPI | Full case study writeup |
-| 9 | process | How we work — 3-step flow | Detailed process + timelines |
-| 10 | next_steps | What we need to build a proposal | Sample proposal timeline |
+| # | Agenda section | Type | Live content | Leave-behind extension |
+|---|---|---|---|---|
+| 1 | Introductions | title | Talent name × Brand name; date; agent name | Agency tagline footer |
+| 2 | Brand overview | brand_observation | "What we see at [Brand]" — 3-4 observations from research with sourced callout | Detailed observation block + recent campaign context |
+| 3 | Talent overview | talent_overview | Headshot, niche, positioning statement | Bio paragraph + content philosophy |
+| 4 | Talent overview | audience_snapshot | 4-6 KPI tiles (followers, engagement, demo splits) — sourced | Methodology note + audience-research provenance |
+| 5 | Talent overview | recent_work | 2-3 case study tiles auto-pulled from brand_deals | Outcome paragraphs with KPI deltas |
+| 6 | **Objectives** | context | Single prompt slide: "Your objectives" with 3-4 discussion prompts (e.g. "What does success look like?", "What's the trigger to act now?") — the agent listens, doesn't present. Slide is wallpaper for the conversation. | (Empty — this section is conversation, not content. Speaker notes carry the agent's question playbook.) |
+| 7 | Opportunities | fit_angle | Top-1 angle headline + 2-3 supporting bullets | Full angle rationale + supporting data |
+| 8 | Opportunities | proof_point | Best comparable case study with the headline KPI | Full case study writeup |
+| 9 | Opportunities | process | How we work — 3-step flow | Detailed process + timelines |
+| 10 | Next steps | next_steps | What we need to build a proposal | Sample proposal timeline |
+
+The `context` slide type (slide 6) acts as the Objectives section's visual anchor. The agent doesn't present this slide — they leave it up while the brand talks, using the speaker_notes as their structured question playbook. Slide 7's `fit_angle` content is the agent's response to what they heard in Objectives — so this slide is often the one most heavily edited via natural-language feedback after the agent sees v1.
 
 **Three rendered exports from one source:**
 
