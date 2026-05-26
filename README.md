@@ -57,6 +57,7 @@ The fields below were not in the original request but were added because later p
 - `scripts/build_affinity.py` — builder script with all authored data and inline validation. Single source of truth for the three affinity files; re-run to regenerate them.
 - `docs/recommendation_algorithm.md` — draft spec for how the app combines all of the above into a ranked list of industries to target for a given talent. Forward-looking contract for when the app is built.
 - `docs/onboarding_workflow.md` — draft spec for how a user adds a new talent: web wizard with OAuth platform connections (paste-fallback), media-pack extraction by LLM, adaptive questionnaire for gaps, hybrid similar-talent seeding (user + AI suggestions), and a background AI research pass that populates similar-talent records.
+- `docs/brand_discovery.md` — draft spec for the long-list generator. 14 independent searches (re-engagement, network expansion, affinity expansion, geo, life-stage, constraint-aware, graph) merged with multi-source scoring. Monthly cron drives re-engagement with per-brand cool-downs. Future-versions section lists 12 more searches that need external data (Crunchbase, affiliate networks, creator marketplaces, etc.) plus two structural moves (brand metadata enrichment + brand_competitors graph) that unlock more in-house coverage.
 - `.gitignore` — ensures any `*.local.json` or `.env` files containing real keys are never committed.
 
 ### Reference taxonomies
