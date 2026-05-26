@@ -1,0 +1,2283 @@
+{
+  "$comment": "Bridge leg 1: niche -> IAB Audience Taxonomy segments (Interest + Demographic). Used to compute niche<->industry affinity via shared IAB segments and to factor in a specific talent's real audience_demographics. IAB segment IDs reference data/iab_audience_taxonomy_v1.1.json.",
+  "version": "1.0.0",
+  "updated": "2026-05-26",
+  "iab_source_file": "iab_audience_taxonomy_v1.1.json",
+  "fallback_behavior": "Sub-niches with no entry inherit their parent niche's segments.",
+  "groups": [
+    {
+      "niche_id": "beauty",
+      "interest_segments": [
+        677,
+        676,
+        684
+      ],
+      "demographic_segments": [
+        49,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "evidence": "IAB Style & Fashion > Beauty; female-skewed 18-44 audience per HypeAuditor 2024 beauty."
+    },
+    {
+      "niche_id": "makeup",
+      "interest_segments": [
+        677,
+        681,
+        684
+      ],
+      "demographic_segments": [
+        49,
+        3,
+        4,
+        5
+      ],
+      "evidence": "Direct IAB match; younger skew."
+    },
+    {
+      "niche_id": "skincare",
+      "interest_segments": [
+        677,
+        684,
+        406,
+        415
+      ],
+      "demographic_segments": [
+        49,
+        4,
+        5,
+        6,
+        7
+      ],
+      "evidence": "Wider age skew than makeup per HypeAuditor."
+    },
+    {
+      "niche_id": "haircare",
+      "interest_segments": [
+        677,
+        684
+      ],
+      "demographic_segments": [
+        49,
+        3,
+        4,
+        5,
+        6
+      ],
+      "evidence": "Beauty subset."
+    },
+    {
+      "niche_id": "nails",
+      "interest_segments": [
+        677,
+        684,
+        678
+      ],
+      "demographic_segments": [
+        49,
+        3,
+        4,
+        5
+      ],
+      "evidence": "Beauty + body-art proximity."
+    },
+    {
+      "niche_id": "fragrance",
+      "interest_segments": [
+        677,
+        682,
+        680
+      ],
+      "demographic_segments": [
+        4,
+        5,
+        6,
+        7
+      ],
+      "evidence": "Luxury-adjacent demo."
+    },
+    {
+      "niche_id": "fashion",
+      "interest_segments": [
+        676,
+        681,
+        686,
+        683,
+        606
+      ],
+      "demographic_segments": [
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "evidence": "Direct IAB; broad gender."
+    },
+    {
+      "niche_id": "streetwear",
+      "interest_segments": [
+        676,
+        685,
+        681
+      ],
+      "demographic_segments": [
+        50,
+        3,
+        4,
+        5
+      ],
+      "evidence": "Younger male skew per HypeAuditor street/sneaker reports."
+    },
+    {
+      "niche_id": "luxury-fashion",
+      "interest_segments": [
+        682,
+        680,
+        681
+      ],
+      "demographic_segments": [
+        5,
+        6,
+        7,
+        8,
+        191
+      ],
+      "evidence": "High-net-worth audience."
+    },
+    {
+      "niche_id": "sustainable-fashion",
+      "interest_segments": [
+        676,
+        681,
+        406
+      ],
+      "demographic_segments": [
+        49,
+        4,
+        5,
+        6,
+        7
+      ],
+      "evidence": "Eco-conscious female-skewed."
+    },
+    {
+      "niche_id": "modest-fashion",
+      "interest_segments": [
+        676,
+        686
+      ],
+      "demographic_segments": [
+        49,
+        3,
+        4,
+        5,
+        6
+      ],
+      "evidence": "Modest creator audiences in MENA/SEA per HypeAuditor regional."
+    },
+    {
+      "niche_id": "plus-size-fashion",
+      "interest_segments": [
+        676,
+        686
+      ],
+      "demographic_segments": [
+        49,
+        4,
+        5,
+        6,
+        7
+      ],
+      "evidence": "Inclusive sub-segment."
+    },
+    {
+      "niche_id": "sneakers",
+      "interest_segments": [
+        676,
+        685,
+        607
+      ],
+      "demographic_segments": [
+        50,
+        3,
+        4,
+        5,
+        6
+      ],
+      "evidence": "Male-skewed; streetwear adjacent."
+    },
+    {
+      "niche_id": "accessories",
+      "interest_segments": [
+        676,
+        682,
+        680
+      ],
+      "demographic_segments": [
+        5,
+        6,
+        7,
+        8
+      ],
+      "evidence": "Cross-gender; premium tilt."
+    },
+    {
+      "niche_id": "menswear",
+      "interest_segments": [
+        683,
+        676,
+        680
+      ],
+      "demographic_segments": [
+        50,
+        5,
+        6,
+        7,
+        8
+      ],
+      "evidence": "Direct IAB match."
+    },
+    {
+      "niche_id": "fitness",
+      "interest_segments": [
+        406,
+        408,
+        415,
+        412,
+        607
+      ],
+      "demographic_segments": [
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "evidence": "Direct IAB Healthy Living > Fitness; balanced gender."
+    },
+    {
+      "niche_id": "bodybuilding",
+      "interest_segments": [
+        616,
+        408,
+        674,
+        412,
+        411
+      ],
+      "demographic_segments": [
+        50,
+        4,
+        5,
+        6,
+        7
+      ],
+      "evidence": "Direct IAB match; male skew."
+    },
+    {
+      "niche_id": "weightlifting",
+      "interest_segments": [
+        674,
+        408,
+        616,
+        412
+      ],
+      "demographic_segments": [
+        4,
+        5,
+        6,
+        7
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "niche_id": "running",
+      "interest_segments": [
+        670,
+        408,
+        406,
+        415
+      ],
+      "demographic_segments": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11
+      ],
+      "evidence": "Direct IAB Sports > Track & Field; wide age range."
+    },
+    {
+      "niche_id": "yoga",
+      "interest_segments": [
+        408,
+        415,
+        406,
+        421
+      ],
+      "demographic_segments": [
+        49,
+        5,
+        6,
+        7,
+        8
+      ],
+      "evidence": "Female skew per HypeAuditor wellness."
+    },
+    {
+      "niche_id": "pilates",
+      "interest_segments": [
+        408,
+        415,
+        421
+      ],
+      "demographic_segments": [
+        49,
+        5,
+        6,
+        7
+      ],
+      "evidence": "Premium female audience."
+    },
+    {
+      "niche_id": "crossfit",
+      "interest_segments": [
+        408,
+        616,
+        412,
+        674
+      ],
+      "demographic_segments": [
+        5,
+        6,
+        7
+      ],
+      "evidence": "Functional fitness demo."
+    },
+    {
+      "niche_id": "hiit",
+      "interest_segments": [
+        408,
+        406,
+        412
+      ],
+      "demographic_segments": [
+        5,
+        6,
+        7
+      ],
+      "evidence": "Time-poor working-adult demo."
+    },
+    {
+      "niche_id": "calisthenics",
+      "interest_segments": [
+        408,
+        616
+      ],
+      "demographic_segments": [
+        50,
+        3,
+        4,
+        5
+      ],
+      "evidence": "Young male skew."
+    },
+    {
+      "niche_id": "cycling",
+      "interest_segments": [
+        625,
+        408,
+        406,
+        607
+      ],
+      "demographic_segments": [
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "evidence": "Direct IAB Sports > Cycling; wide age, male-skewed."
+    },
+    {
+      "niche_id": "health-wellness",
+      "interest_segments": [
+        406,
+        415,
+        412,
+        381
+      ],
+      "demographic_segments": [
+        5,
+        6,
+        7,
+        8
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "niche_id": "nutrition",
+      "interest_segments": [
+        412,
+        406,
+        376,
+        375
+      ],
+      "demographic_segments": [
+        5,
+        6,
+        7
+      ],
+      "evidence": "Direct IAB Healthy Living > Nutrition."
+    },
+    {
+      "niche_id": "supplements",
+      "interest_segments": [
+        412,
+        406,
+        415,
+        381
+      ],
+      "demographic_segments": [
+        4,
+        5,
+        6,
+        7
+      ],
+      "evidence": "Wellness + fitness overlap."
+    },
+    {
+      "niche_id": "biohacking",
+      "interest_segments": [
+        406,
+        415,
+        687,
+        412
+      ],
+      "demographic_segments": [
+        50,
+        6,
+        7,
+        8,
+        9,
+        191
+      ],
+      "evidence": "Affluent male skew per Whoop/Oura/Eight Sleep buyer profiles."
+    },
+    {
+      "niche_id": "sleep",
+      "interest_segments": [
+        406,
+        415
+      ],
+      "demographic_segments": [
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "evidence": "Wide adult age range."
+    },
+    {
+      "niche_id": "mental-health",
+      "interest_segments": [
+        550,
+        406,
+        415
+      ],
+      "demographic_segments": [
+        3,
+        4,
+        5,
+        6
+      ],
+      "evidence": "Younger skew per Calm/Headspace 2024 user data."
+    },
+    {
+      "niche_id": "meditation",
+      "interest_segments": [
+        415,
+        406
+      ],
+      "demographic_segments": [
+        5,
+        6,
+        7,
+        8
+      ],
+      "evidence": "Wellness-adjacent."
+    },
+    {
+      "niche_id": "food-drink",
+      "interest_segments": [
+        368,
+        371,
+        373,
+        380
+      ],
+      "demographic_segments": [
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "niche_id": "cooking",
+      "interest_segments": [
+        371,
+        368,
+        376,
+        380
+      ],
+      "demographic_segments": [
+        5,
+        6,
+        7,
+        8
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "niche_id": "baking",
+      "interest_segments": [
+        372,
+        371,
+        368
+      ],
+      "demographic_segments": [
+        49,
+        5,
+        6,
+        7,
+        8
+      ],
+      "evidence": "Female skew per HypeAuditor food vertical."
+    },
+    {
+      "niche_id": "restaurants",
+      "interest_segments": [
+        373,
+        368,
+        380
+      ],
+      "demographic_segments": [
+        5,
+        6,
+        7
+      ],
+      "evidence": "Dining-out segment."
+    },
+    {
+      "niche_id": "vegan",
+      "interest_segments": [
+        378,
+        375,
+        376,
+        406
+      ],
+      "demographic_segments": [
+        49,
+        4,
+        5,
+        6
+      ],
+      "evidence": "Direct IAB; female-skewed."
+    },
+    {
+      "niche_id": "keto",
+      "interest_segments": [
+        375,
+        376,
+        412,
+        414
+      ],
+      "demographic_segments": [
+        5,
+        6,
+        7,
+        8
+      ],
+      "evidence": "Adult diet demo."
+    },
+    {
+      "niche_id": "coffee",
+      "interest_segments": [
+        377,
+        368
+      ],
+      "demographic_segments": [
+        4,
+        5,
+        6,
+        7
+      ],
+      "evidence": "Daily-driver coffee buyer demo."
+    },
+    {
+      "niche_id": "cocktails",
+      "interest_segments": [
+        369,
+        368
+      ],
+      "demographic_segments": [
+        5,
+        6,
+        7,
+        8
+      ],
+      "evidence": "Adult-only."
+    },
+    {
+      "niche_id": "wine",
+      "interest_segments": [
+        369,
+        373
+      ],
+      "demographic_segments": [
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13
+      ],
+      "evidence": "Wide adult age range."
+    },
+    {
+      "niche_id": "travel",
+      "interest_segments": [
+        719,
+        720,
+        724,
+        728
+      ],
+      "demographic_segments": [
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "niche_id": "luxury-travel",
+      "interest_segments": [
+        719,
+        682,
+        680
+      ],
+      "demographic_segments": [
+        7,
+        8,
+        9,
+        10,
+        191
+      ],
+      "evidence": "HNW audience."
+    },
+    {
+      "niche_id": "budget-travel",
+      "interest_segments": [
+        719,
+        720,
+        535
+      ],
+      "demographic_segments": [
+        3,
+        4,
+        5,
+        6
+      ],
+      "evidence": "Younger/backpacker demo."
+    },
+    {
+      "niche_id": "solo-travel",
+      "interest_segments": [
+        719,
+        720
+      ],
+      "demographic_segments": [
+        4,
+        5,
+        6,
+        7,
+        162
+      ],
+      "evidence": "Solo audience."
+    },
+    {
+      "niche_id": "family-travel",
+      "interest_segments": [
+        728,
+        719,
+        348
+      ],
+      "demographic_segments": [
+        6,
+        7,
+        8,
+        161,
+        125
+      ],
+      "evidence": "Direct IAB Family Travel."
+    },
+    {
+      "niche_id": "adventure-travel",
+      "interest_segments": [
+        720,
+        719,
+        631
+      ],
+      "demographic_segments": [
+        4,
+        5,
+        6,
+        7
+      ],
+      "evidence": "Direct IAB Adventure Travel."
+    },
+    {
+      "niche_id": "digital-nomad",
+      "interest_segments": [
+        719,
+        342,
+        338
+      ],
+      "demographic_segments": [
+        5,
+        6,
+        7
+      ],
+      "evidence": "Direct IAB Remote Working + Travel overlap."
+    },
+    {
+      "niche_id": "lifestyle",
+      "interest_segments": [
+        676,
+        368,
+        719,
+        457
+      ],
+      "demographic_segments": [
+        4,
+        5,
+        6,
+        7
+      ],
+      "evidence": "Broad; limited to top adjacent interests."
+    },
+    {
+      "niche_id": "productivity",
+      "interest_segments": [
+        338,
+        340,
+        268,
+        342
+      ],
+      "demographic_segments": [
+        4,
+        5,
+        6,
+        7
+      ],
+      "evidence": "Working-adult demo."
+    },
+    {
+      "niche_id": "minimalism",
+      "interest_segments": [
+        457,
+        461,
+        535
+      ],
+      "demographic_segments": [
+        5,
+        6,
+        7
+      ],
+      "evidence": "Adult homebuilder demo."
+    },
+    {
+      "niche_id": "day-in-the-life",
+      "interest_segments": [
+        676,
+        368,
+        457
+      ],
+      "demographic_segments": [
+        3,
+        4,
+        5
+      ],
+      "evidence": "Younger vlog audience."
+    },
+    {
+      "niche_id": "family-parenting",
+      "interest_segments": [
+        350,
+        348,
+        407,
+        728
+      ],
+      "demographic_segments": [
+        5,
+        6,
+        7,
+        8,
+        125,
+        161
+      ],
+      "evidence": "Direct IAB Parenting."
+    },
+    {
+      "niche_id": "pregnancy",
+      "interest_segments": [
+        350,
+        421,
+        406
+      ],
+      "demographic_segments": [
+        49,
+        5,
+        6,
+        7
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "niche_id": "newborn-baby",
+      "interest_segments": [
+        350,
+        407,
+        348
+      ],
+      "demographic_segments": [
+        5,
+        6,
+        7,
+        125
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "niche_id": "toddler",
+      "interest_segments": [
+        350,
+        407,
+        348
+      ],
+      "demographic_segments": [
+        5,
+        6,
+        7,
+        125
+      ],
+      "evidence": "Same as newborn."
+    },
+    {
+      "niche_id": "mom-life",
+      "interest_segments": [
+        350,
+        348,
+        421,
+        376
+      ],
+      "demographic_segments": [
+        49,
+        5,
+        6,
+        7,
+        8,
+        125,
+        161
+      ],
+      "evidence": "Direct IAB; female-skewed."
+    },
+    {
+      "niche_id": "dad-life",
+      "interest_segments": [
+        350,
+        348,
+        411,
+        370,
+        460
+      ],
+      "demographic_segments": [
+        50,
+        5,
+        6,
+        7,
+        8,
+        125,
+        161,
+        137
+      ],
+      "evidence": "Direct IAB Parenting + BBQ + Home Improvement; homeowner skew."
+    },
+    {
+      "niche_id": "home-interiors",
+      "interest_segments": [
+        457,
+        461,
+        460,
+        464
+      ],
+      "demographic_segments": [
+        5,
+        6,
+        7,
+        8,
+        137
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "niche_id": "interior-design",
+      "interest_segments": [
+        461,
+        457,
+        459
+      ],
+      "demographic_segments": [
+        49,
+        5,
+        6,
+        7
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "niche_id": "home-renovation",
+      "interest_segments": [
+        460,
+        464,
+        457
+      ],
+      "demographic_segments": [
+        6,
+        7,
+        8,
+        9,
+        137
+      ],
+      "evidence": "Homeowner demo."
+    },
+    {
+      "niche_id": "gardening",
+      "interest_segments": [
+        458,
+        457,
+        462,
+        463
+      ],
+      "demographic_segments": [
+        7,
+        8,
+        9,
+        10,
+        11,
+        137
+      ],
+      "evidence": "Older homeowner skew."
+    },
+    {
+      "niche_id": "organisation",
+      "interest_segments": [
+        457,
+        461
+      ],
+      "demographic_segments": [
+        49,
+        5,
+        6,
+        7
+      ],
+      "evidence": "Female-skewed lifestyle."
+    },
+    {
+      "niche_id": "tech",
+      "interest_segments": [
+        687,
+        703,
+        690,
+        688
+      ],
+      "demographic_segments": [
+        50,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "evidence": "Direct IAB; male skew."
+    },
+    {
+      "niche_id": "consumer-electronics",
+      "interest_segments": [
+        703,
+        687
+      ],
+      "demographic_segments": [
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "niche_id": "ai",
+      "interest_segments": [
+        688,
+        687,
+        690
+      ],
+      "demographic_segments": [
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "niche_id": "software-reviews",
+      "interest_segments": [
+        687,
+        690
+      ],
+      "demographic_segments": [
+        4,
+        5,
+        6,
+        7
+      ],
+      "evidence": "Tech audience."
+    },
+    {
+      "niche_id": "pc-building",
+      "interest_segments": [
+        690,
+        703,
+        733
+      ],
+      "demographic_segments": [
+        50,
+        3,
+        4,
+        5,
+        6
+      ],
+      "evidence": "Male enthusiast skew."
+    },
+    {
+      "niche_id": "mobile-phones",
+      "interest_segments": [
+        703,
+        687
+      ],
+      "demographic_segments": [
+        3,
+        4,
+        5,
+        6
+      ],
+      "evidence": "Younger upgrade-cycle demo."
+    },
+    {
+      "niche_id": "gaming",
+      "interest_segments": [
+        733,
+        734,
+        737,
+        736,
+        735
+      ],
+      "demographic_segments": [
+        3,
+        4,
+        5,
+        6
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "niche_id": "pc-gaming",
+      "interest_segments": [
+        737,
+        733,
+        690
+      ],
+      "demographic_segments": [
+        50,
+        3,
+        4,
+        5
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "niche_id": "console-gaming",
+      "interest_segments": [
+        734,
+        733
+      ],
+      "demographic_segments": [
+        3,
+        4,
+        5,
+        6
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "niche_id": "mobile-gaming",
+      "interest_segments": [
+        736,
+        733
+      ],
+      "demographic_segments": [
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "evidence": "Wider demo than console."
+    },
+    {
+      "niche_id": "esports",
+      "interest_segments": [
+        735,
+        733,
+        737
+      ],
+      "demographic_segments": [
+        50,
+        3,
+        4,
+        5
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "niche_id": "streaming",
+      "interest_segments": [
+        733,
+        440
+      ],
+      "demographic_segments": [
+        3,
+        4,
+        5,
+        6
+      ],
+      "evidence": "Twitch/Kick demo."
+    },
+    {
+      "niche_id": "entertainment",
+      "interest_segments": [
+        581,
+        706,
+        467,
+        582
+      ],
+      "demographic_segments": [
+        3,
+        4,
+        5,
+        6
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "niche_id": "comedy",
+      "interest_segments": [
+        582,
+        470,
+        709
+      ],
+      "demographic_segments": [
+        3,
+        4,
+        5
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "niche_id": "sketch-comedy",
+      "interest_segments": [
+        582,
+        581
+      ],
+      "demographic_segments": [
+        3,
+        4,
+        5
+      ],
+      "evidence": "Same as comedy."
+    },
+    {
+      "niche_id": "memes",
+      "interest_segments": [
+        582,
+        581
+      ],
+      "demographic_segments": [
+        3,
+        4,
+        5
+      ],
+      "evidence": "Youngest skew."
+    },
+    {
+      "niche_id": "reactions",
+      "interest_segments": [
+        581,
+        706,
+        467,
+        733
+      ],
+      "demographic_segments": [
+        3,
+        4,
+        5
+      ],
+      "evidence": "Pop-culture overlap."
+    },
+    {
+      "niche_id": "storytime",
+      "interest_segments": [
+        581,
+        258
+      ],
+      "demographic_segments": [
+        49,
+        3,
+        4,
+        5
+      ],
+      "evidence": "Female-skewed per BookTok overlap."
+    },
+    {
+      "niche_id": "asmr",
+      "interest_segments": [
+        406,
+        415,
+        581
+      ],
+      "demographic_segments": [
+        3,
+        4,
+        5,
+        6
+      ],
+      "evidence": "Sleep + wellness adjacency."
+    },
+    {
+      "niche_id": "music",
+      "interest_segments": [
+        481,
+        581
+      ],
+      "demographic_segments": [
+        3,
+        4,
+        5,
+        6
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "niche_id": "artist-musician",
+      "interest_segments": [
+        481,
+        581,
+        681
+      ],
+      "demographic_segments": [
+        3,
+        4,
+        5
+      ],
+      "evidence": "Pop-culture overlap."
+    },
+    {
+      "niche_id": "dj-producer",
+      "interest_segments": [
+        481,
+        687
+      ],
+      "demographic_segments": [
+        50,
+        3,
+        4,
+        5,
+        6
+      ],
+      "evidence": "Producer demo."
+    },
+    {
+      "niche_id": "music-reviews",
+      "interest_segments": [
+        481,
+        581
+      ],
+      "demographic_segments": [
+        3,
+        4,
+        5,
+        6
+      ],
+      "evidence": "Music-fan demo."
+    },
+    {
+      "niche_id": "art-design",
+      "interest_segments": [
+        359,
+        362,
+        363,
+        424
+      ],
+      "demographic_segments": [
+        3,
+        4,
+        5,
+        6
+      ],
+      "evidence": "Direct IAB Fine Art."
+    },
+    {
+      "niche_id": "illustration",
+      "interest_segments": [
+        362,
+        363,
+        359
+      ],
+      "demographic_segments": [
+        3,
+        4,
+        5
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "niche_id": "graphic-design",
+      "interest_segments": [
+        362,
+        687,
+        363
+      ],
+      "demographic_segments": [
+        4,
+        5,
+        6
+      ],
+      "evidence": "Pro-creative demo."
+    },
+    {
+      "niche_id": "digital-art",
+      "interest_segments": [
+        363,
+        362,
+        688
+      ],
+      "demographic_segments": [
+        3,
+        4,
+        5
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "niche_id": "painting",
+      "interest_segments": [
+        359,
+        424
+      ],
+      "demographic_segments": [
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13
+      ],
+      "evidence": "Wide adult demo."
+    },
+    {
+      "niche_id": "photography",
+      "interest_segments": [
+        364,
+        359,
+        719
+      ],
+      "demographic_segments": [
+        4,
+        5,
+        6,
+        7
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "niche_id": "education",
+      "interest_segments": [
+        344,
+        347,
+        207
+      ],
+      "demographic_segments": [
+        3,
+        4,
+        5,
+        6
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "niche_id": "science",
+      "interest_segments": [
+        207,
+        344
+      ],
+      "demographic_segments": [
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "evidence": "STEM demo."
+    },
+    {
+      "niche_id": "history",
+      "interest_segments": [
+        258,
+        344,
+        472
+      ],
+      "demographic_segments": [
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13
+      ],
+      "evidence": "Older adult skew."
+    },
+    {
+      "niche_id": "languages",
+      "interest_segments": [
+        346,
+        344,
+        719
+      ],
+      "demographic_segments": [
+        3,
+        4,
+        5,
+        6
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "niche_id": "study-tips",
+      "interest_segments": [
+        344,
+        347,
+        338
+      ],
+      "demographic_segments": [
+        3,
+        4,
+        5
+      ],
+      "evidence": "Student demo."
+    },
+    {
+      "niche_id": "business-finance",
+      "interest_segments": [
+        268,
+        534,
+        538
+      ],
+      "demographic_segments": [
+        5,
+        6,
+        7,
+        8,
+        191
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "niche_id": "entrepreneurship",
+      "interest_segments": [
+        268,
+        338
+      ],
+      "demographic_segments": [
+        4,
+        5,
+        6,
+        7
+      ],
+      "evidence": "Founder demo."
+    },
+    {
+      "niche_id": "personal-finance",
+      "interest_segments": [
+        534,
+        535,
+        538
+      ],
+      "demographic_segments": [
+        4,
+        5,
+        6,
+        7
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "niche_id": "investing",
+      "interest_segments": [
+        538,
+        534
+      ],
+      "demographic_segments": [
+        50,
+        5,
+        6,
+        7,
+        8
+      ],
+      "evidence": "Male-skewed per Robinhood demos."
+    },
+    {
+      "niche_id": "crypto-web3",
+      "interest_segments": [
+        538,
+        687
+      ],
+      "demographic_segments": [
+        50,
+        4,
+        5,
+        6
+      ],
+      "evidence": "Younger male per Coinbase demos."
+    },
+    {
+      "niche_id": "career",
+      "interest_segments": [
+        338,
+        340,
+        342
+      ],
+      "demographic_segments": [
+        4,
+        5,
+        6,
+        7
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "niche_id": "sports",
+      "interest_segments": [
+        607,
+        718,
+        640
+      ],
+      "demographic_segments": [
+        50,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "evidence": "Direct IAB; male skew."
+    },
+    {
+      "niche_id": "football-soccer",
+      "interest_segments": [
+        663,
+        607,
+        718
+      ],
+      "demographic_segments": [
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "niche_id": "american-football",
+      "interest_segments": [
+        608,
+        607,
+        718,
+        640
+      ],
+      "demographic_segments": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "niche_id": "basketball",
+      "interest_segments": [
+        614,
+        607,
+        718
+      ],
+      "demographic_segments": [
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "niche_id": "tennis",
+      "interest_segments": [
+        669,
+        607,
+        718
+      ],
+      "demographic_segments": [
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13
+      ],
+      "evidence": "Affluent demo."
+    },
+    {
+      "niche_id": "golf",
+      "interest_segments": [
+        644,
+        607,
+        718
+      ],
+      "demographic_segments": [
+        50,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        191
+      ],
+      "evidence": "High-income male skew."
+    },
+    {
+      "niche_id": "motorsport",
+      "interest_segments": [
+        256,
+        607,
+        718
+      ],
+      "demographic_segments": [
+        50,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "evidence": "Male auto-enthusiast demo."
+    },
+    {
+      "niche_id": "combat-sports",
+      "interest_segments": [
+        618,
+        650,
+        675,
+        718
+      ],
+      "demographic_segments": [
+        50,
+        3,
+        4,
+        5,
+        6
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "niche_id": "outdoors",
+      "interest_segments": [
+        720,
+        725,
+        631
+      ],
+      "demographic_segments": [
+        5,
+        6,
+        7,
+        8
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "niche_id": "hiking",
+      "interest_segments": [
+        720,
+        725,
+        672
+      ],
+      "demographic_segments": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11
+      ],
+      "evidence": "Wide adult demo."
+    },
+    {
+      "niche_id": "camping",
+      "interest_segments": [
+        725,
+        720,
+        728
+      ],
+      "demographic_segments": [
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "niche_id": "climbing",
+      "interest_segments": [
+        631,
+        720
+      ],
+      "demographic_segments": [
+        4,
+        5,
+        6
+      ],
+      "evidence": "Young adventure demo."
+    },
+    {
+      "niche_id": "surfing",
+      "interest_segments": [
+        631,
+        724
+      ],
+      "demographic_segments": [
+        3,
+        4,
+        5,
+        6
+      ],
+      "evidence": "Beach demo."
+    },
+    {
+      "niche_id": "snowsports",
+      "interest_segments": [
+        661,
+        631,
+        720
+      ],
+      "demographic_segments": [
+        5,
+        6,
+        7,
+        8,
+        191
+      ],
+      "evidence": "Affluent winter demo."
+    },
+    {
+      "niche_id": "fishing",
+      "interest_segments": [
+        643,
+        607,
+        720
+      ],
+      "demographic_segments": [
+        50,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10
+      ],
+      "evidence": "Direct IAB; male skew."
+    },
+    {
+      "niche_id": "automotive",
+      "interest_segments": [
+        243,
+        244,
+        246,
+        248
+      ],
+      "demographic_segments": [
+        50,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "niche_id": "car-reviews",
+      "interest_segments": [
+        244,
+        243,
+        246
+      ],
+      "demographic_segments": [
+        50,
+        5,
+        6,
+        7,
+        8
+      ],
+      "evidence": "Buying-intent demo."
+    },
+    {
+      "niche_id": "ev",
+      "interest_segments": [
+        253,
+        246,
+        243,
+        687
+      ],
+      "demographic_segments": [
+        6,
+        7,
+        8,
+        9,
+        191
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "niche_id": "motorcycles",
+      "interest_segments": [
+        255,
+        243
+      ],
+      "demographic_segments": [
+        50,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "niche_id": "classic-cars",
+      "interest_segments": [
+        249,
+        243,
+        248
+      ],
+      "demographic_segments": [
+        50,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "evidence": "Older male demo."
+    },
+    {
+      "niche_id": "car-modding",
+      "interest_segments": [
+        256,
+        248,
+        246
+      ],
+      "demographic_segments": [
+        50,
+        3,
+        4,
+        5,
+        6
+      ],
+      "evidence": "Young male enthusiast."
+    },
+    {
+      "niche_id": "pets",
+      "interest_segments": [
+        541
+      ],
+      "demographic_segments": [
+        5,
+        6,
+        7,
+        8
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "niche_id": "dogs",
+      "interest_segments": [
+        544,
+        541
+      ],
+      "demographic_segments": [
+        5,
+        6,
+        7,
+        8
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "niche_id": "cats",
+      "interest_segments": [
+        543,
+        541
+      ],
+      "demographic_segments": [
+        4,
+        5,
+        6,
+        7
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "niche_id": "exotic-pets",
+      "interest_segments": [
+        549,
+        541,
+        542
+      ],
+      "demographic_segments": [
+        4,
+        5,
+        6
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "niche_id": "sustainability",
+      "interest_segments": [
+        375,
+        406,
+        253
+      ],
+      "demographic_segments": [
+        4,
+        5,
+        6,
+        7
+      ],
+      "evidence": "Eco-conscious demo."
+    },
+    {
+      "niche_id": "zero-waste",
+      "interest_segments": [
+        406,
+        375
+      ],
+      "demographic_segments": [
+        49,
+        4,
+        5,
+        6
+      ],
+      "evidence": "Female eco demo."
+    },
+    {
+      "niche_id": "ethical-living",
+      "interest_segments": [
+        406,
+        375
+      ],
+      "demographic_segments": [
+        49,
+        5,
+        6,
+        7
+      ],
+      "evidence": "Conscious-consumer demo."
+    },
+    {
+      "niche_id": "spirituality",
+      "interest_segments": [
+        415,
+        581
+      ],
+      "demographic_segments": [
+        49,
+        4,
+        5,
+        6
+      ],
+      "evidence": "Female-skewed wellness adjacency."
+    },
+    {
+      "niche_id": "astrology",
+      "interest_segments": [
+        415,
+        581
+      ],
+      "demographic_segments": [
+        49,
+        3,
+        4,
+        5
+      ],
+      "evidence": "Younger female demo."
+    },
+    {
+      "niche_id": "tarot",
+      "interest_segments": [
+        415,
+        581
+      ],
+      "demographic_segments": [
+        49,
+        3,
+        4,
+        5
+      ],
+      "evidence": "Same as astrology."
+    },
+    {
+      "niche_id": "news-politics",
+      "interest_segments": [
+        522
+      ],
+      "demographic_segments": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13
+      ],
+      "evidence": "Direct IAB; wide adult demo."
+    },
+    {
+      "niche_id": "social-commentary",
+      "interest_segments": [
+        522,
+        581
+      ],
+      "demographic_segments": [
+        4,
+        5,
+        6
+      ],
+      "evidence": "Adult commentary demo."
+    },
+    {
+      "niche_id": "dance",
+      "interest_segments": [
+        361,
+        408,
+        481
+      ],
+      "demographic_segments": [
+        49,
+        3,
+        4,
+        5
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "niche_id": "film-tv",
+      "interest_segments": [
+        467,
+        706,
+        581
+      ],
+      "demographic_segments": [
+        4,
+        5,
+        6,
+        7
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "niche_id": "books",
+      "interest_segments": [
+        258,
+        581
+      ],
+      "demographic_segments": [
+        49,
+        3,
+        4,
+        5,
+        6
+      ],
+      "evidence": "BookTok female skew."
+    },
+    {
+      "niche_id": "diy-crafts",
+      "interest_segments": [
+        424,
+        422,
+        457
+      ],
+      "demographic_segments": [
+        49,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "evidence": "Direct IAB Arts & Crafts."
+    },
+    {
+      "niche_id": "wedding",
+      "interest_segments": [
+        682,
+        680,
+        719
+      ],
+      "demographic_segments": [
+        5,
+        6,
+        162
+      ],
+      "evidence": "Pre-marital demo."
+    },
+    {
+      "niche_id": "lgbtq",
+      "interest_segments": [
+        581,
+        676
+      ],
+      "demographic_segments": [
+        3,
+        4,
+        5,
+        51
+      ],
+      "evidence": "LGBTQ+ audience."
+    },
+    {
+      "niche_id": "body-positivity",
+      "interest_segments": [
+        415,
+        406,
+        676
+      ],
+      "demographic_segments": [
+        49,
+        3,
+        4,
+        5,
+        6
+      ],
+      "evidence": "Female-skewed wellness."
+    },
+    {
+      "niche_id": "disability-advocacy",
+      "interest_segments": [
+        406,
+        522
+      ],
+      "demographic_segments": [
+        4,
+        5,
+        6,
+        7
+      ],
+      "evidence": "Advocacy demo."
+    },
+    {
+      "niche_id": "veterans-military",
+      "interest_segments": [
+        522,
+        607
+      ],
+      "demographic_segments": [
+        50,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "evidence": "Male-skewed adult."
+    }
+  ]
+}

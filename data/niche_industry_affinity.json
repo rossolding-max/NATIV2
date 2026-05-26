@@ -1,0 +1,2476 @@
+{
+  "$comment": "Direct niche -> industry affinity with 3-tier strength. Symmetric edges. Sub-niches inherit parent edges via app-side fallback unless overridden. Quality-floored: an edge appears only with a citable source or non-generic logical reason. Evidence at group level; per-edge overrides in optional `overrides[]`. Niche IDs reference data/niches.json; industry IDs reference data/industries.json.",
+  "version": "1.0.0",
+  "updated": "2026-05-26",
+  "strength_scale": [
+    "primary",
+    "secondary",
+    "tertiary"
+  ],
+  "fallback_behavior": "Sub-niches with no entry inherit their parent niche's edges (resolved at app load time using data/niches.json parent links).",
+  "evidence_sources": {
+    "iab": "IAB Tech Lab Audience Taxonomy 1.1 alignment",
+    "imh": "Influencer Marketing Hub annual benchmark reports",
+    "hypeauditor": "HypeAuditor State of Influencer Marketing reports",
+    "case-study": "Documented brand-creator campaign or partnership history",
+    "logic": "Reasoned mapping with no specific public citation (non-generic only)"
+  },
+  "groups": [
+    {
+      "niche_id": "beauty",
+      "evidence": "IAB Purchase Intent: Beauty Services + Cosmetic Medical; Style & Fashion > Beauty Interest. Largest single influencer-spend category per IMH 2024.",
+      "primary": [
+        "cosmetics",
+        "skincare-brands",
+        "haircare-brands",
+        "fragrance-brands",
+        "specialty-retail"
+      ],
+      "secondary": [
+        "beauty-personal-care",
+        "oral-care",
+        "personal-hygiene",
+        "femtech",
+        "jewellery"
+      ],
+      "tertiary": [
+        "d2c-subscription",
+        "supplements-brands",
+        "dental-services",
+        "vision-care",
+        "telehealth"
+      ]
+    },
+    {
+      "niche_id": "makeup",
+      "evidence": "Direct match to IAB Style & Fashion > Beauty. Cosmetics brands dominate influencer spend per HypeAuditor 2024 beauty report.",
+      "primary": [
+        "cosmetics",
+        "specialty-retail"
+      ],
+      "secondary": [
+        "skincare-brands",
+        "beauty-personal-care"
+      ]
+    },
+    {
+      "niche_id": "skincare",
+      "evidence": "Skincare brands are the fastest-growing beauty sub-segment per IMH 2024.",
+      "primary": [
+        "skincare-brands",
+        "cosmetics"
+      ],
+      "secondary": [
+        "specialty-retail",
+        "supplements-brands",
+        "femtech",
+        "dental-services",
+        "telehealth"
+      ]
+    },
+    {
+      "niche_id": "haircare",
+      "evidence": "IAB Purchase Intent: Hair Salons + Hair Loss Treatments map cleanly.",
+      "primary": [
+        "haircare-brands",
+        "specialty-retail"
+      ],
+      "secondary": [
+        "cosmetics",
+        "mens-grooming",
+        "beauty-personal-care"
+      ]
+    },
+    {
+      "niche_id": "nails",
+      "evidence": "Nail brands and salon services per IAB Beauty Services > Nail Salons.",
+      "primary": [
+        "cosmetics",
+        "specialty-retail"
+      ],
+      "secondary": [
+        "beauty-personal-care",
+        "jewellery"
+      ]
+    },
+    {
+      "niche_id": "fragrance",
+      "evidence": "Fragrance is a luxury-adjacent vertical with heavy influencer launch use (Dior, Tom Ford case studies).",
+      "primary": [
+        "fragrance-brands",
+        "luxury-goods"
+      ],
+      "secondary": [
+        "cosmetics",
+        "specialty-retail",
+        "beauty-personal-care"
+      ]
+    },
+    {
+      "niche_id": "fashion",
+      "evidence": "IAB Style & Fashion + Clothing and Accessories. Fashion is the #2 influencer-spend category after beauty per IMH 2024.",
+      "primary": [
+        "womenswear",
+        "menswear-brands",
+        "footwear",
+        "fast-fashion",
+        "jewellery",
+        "watches",
+        "eyewear",
+        "bags-luggage",
+        "specialty-retail",
+        "marketplaces-ecom"
+      ],
+      "secondary": [
+        "luxury-goods",
+        "activewear",
+        "intimates",
+        "swimwear",
+        "department-stores",
+        "d2c-subscription"
+      ],
+      "tertiary": [
+        "fragrance-brands",
+        "cosmetics",
+        "watches",
+        "home-decor-brands",
+        "luggage-travel-gear"
+      ]
+    },
+    {
+      "niche_id": "streetwear",
+      "evidence": "Streetwear collabs are a documented case-study category (Nike SB, Supreme, Off-White creator partnerships).",
+      "primary": [
+        "footwear",
+        "sportswear",
+        "fashion-apparel",
+        "specialty-retail"
+      ],
+      "secondary": [
+        "luxury-goods",
+        "marketplaces-ecom",
+        "gaming-hardware",
+        "audio-equipment"
+      ]
+    },
+    {
+      "niche_id": "luxury-fashion",
+      "evidence": "High-net-worth audience; luxury maisons run creator programs (Vogue Business 2024).",
+      "primary": [
+        "luxury-goods",
+        "jewellery",
+        "watches",
+        "fragrance-brands"
+      ],
+      "secondary": [
+        "hotels",
+        "cruises",
+        "airlines",
+        "financial-services",
+        "cosmetics"
+      ]
+    },
+    {
+      "niche_id": "sustainable-fashion",
+      "evidence": "Sustainability-aligned brands explicitly target eco-conscious creators (Allbirds, Patagonia case studies).",
+      "primary": [
+        "fashion-apparel",
+        "footwear",
+        "outdoor-gear"
+      ],
+      "secondary": [
+        "plant-based-food",
+        "beauty-personal-care",
+        "d2c-subscription"
+      ]
+    },
+    {
+      "niche_id": "modest-fashion",
+      "evidence": "Modest-fashion creators command premium CPMs in MENA/SEA markets per HypeAuditor 2024 regional report.",
+      "primary": [
+        "womenswear",
+        "fashion-apparel",
+        "specialty-retail"
+      ],
+      "secondary": [
+        "cosmetics",
+        "jewellery",
+        "luxury-goods"
+      ]
+    },
+    {
+      "niche_id": "plus-size-fashion",
+      "evidence": "Body-inclusive brand sub-segment with dedicated influencer programs (Aerie #AerieREAL).",
+      "primary": [
+        "womenswear",
+        "intimates",
+        "fashion-apparel"
+      ],
+      "secondary": [
+        "swimwear",
+        "cosmetics",
+        "specialty-retail"
+      ]
+    },
+    {
+      "niche_id": "sneakers",
+      "evidence": "Sneaker culture has the densest creator-brand ecosystem outside beauty (Nike, Jordan, New Balance, Hoka campaigns).",
+      "primary": [
+        "footwear",
+        "sportswear",
+        "specialty-retail",
+        "marketplaces-ecom"
+      ],
+      "secondary": [
+        "activewear",
+        "watches",
+        "luxury-goods"
+      ]
+    },
+    {
+      "niche_id": "accessories",
+      "evidence": "Jewellery/watches/bags are a high-conversion influencer category per Tribe Dynamics EMV reports.",
+      "primary": [
+        "jewellery",
+        "watches",
+        "bags-luggage",
+        "eyewear"
+      ],
+      "secondary": [
+        "luxury-goods",
+        "fashion-apparel",
+        "specialty-retail"
+      ]
+    },
+    {
+      "niche_id": "menswear",
+      "evidence": "Menswear creators frequently work with grooming + watches alongside apparel (Hodinkee, MR PORTER programs).",
+      "primary": [
+        "menswear-brands",
+        "footwear",
+        "watches",
+        "mens-grooming",
+        "fragrance-brands"
+      ],
+      "secondary": [
+        "fashion-apparel",
+        "luxury-goods",
+        "eyewear",
+        "specialty-retail"
+      ]
+    },
+    {
+      "niche_id": "fitness",
+      "evidence": "IAB Interest: Healthy Living > Fitness; Purchase Intent: Recreation and Fitness + Sporting Goods. Athleisure and supplements are top categories per IMH 2024 wellness report.",
+      "primary": [
+        "activewear",
+        "sportswear",
+        "sports-nutrition",
+        "supplements-brands",
+        "fitness-equipment",
+        "gyms-studios",
+        "wearables"
+      ],
+      "secondary": [
+        "footwear",
+        "sports-outdoor",
+        "meal-kits",
+        "plant-based-food",
+        "soft-drinks",
+        "telehealth"
+      ],
+      "tertiary": [
+        "fashion-apparel",
+        "consumer-electronics-brands",
+        "health-pharma",
+        "mental-health-services"
+      ]
+    },
+    {
+      "niche_id": "bodybuilding",
+      "evidence": "IAB Sports > Bodybuilding. Supplement deals dominate per Athletic Greens / Bulk / MyProtein creator programs.",
+      "primary": [
+        "sports-nutrition",
+        "supplements-brands",
+        "activewear",
+        "fitness-equipment"
+      ],
+      "secondary": [
+        "gyms-studios",
+        "sportswear",
+        "wearables",
+        "mens-grooming"
+      ]
+    },
+    {
+      "niche_id": "weightlifting",
+      "evidence": "Powerlifting + strength niche is a long-tail commercial vertical (Rogue, Eleiko case studies).",
+      "primary": [
+        "sports-nutrition",
+        "fitness-equipment",
+        "activewear"
+      ],
+      "secondary": [
+        "supplements-brands",
+        "gyms-studios",
+        "sportswear",
+        "wearables"
+      ]
+    },
+    {
+      "niche_id": "running",
+      "evidence": "IAB Sports > Track and Field. Running shoe market drives heavy creator spend (Hoka, On, Brooks).",
+      "primary": [
+        "footwear",
+        "sportswear",
+        "activewear",
+        "wearables",
+        "sports-nutrition"
+      ],
+      "secondary": [
+        "fitness-equipment",
+        "soft-drinks",
+        "no-low-alcohol",
+        "travel-hospitality"
+      ]
+    },
+    {
+      "niche_id": "yoga",
+      "evidence": "IAB Purchase Intent: Yoga Studios. Athleisure and wellness adjacent.",
+      "primary": [
+        "activewear",
+        "gyms-studios",
+        "supplements-brands",
+        "sportswear"
+      ],
+      "secondary": [
+        "mental-health-services",
+        "plant-based-food",
+        "meal-kits",
+        "femtech",
+        "wearables"
+      ]
+    },
+    {
+      "niche_id": "pilates",
+      "evidence": "Premium boutique fitness audience; activewear and wellness brands dominate.",
+      "primary": [
+        "activewear",
+        "sportswear",
+        "gyms-studios"
+      ],
+      "secondary": [
+        "fitness-equipment",
+        "supplements-brands",
+        "wearables",
+        "femtech"
+      ]
+    },
+    {
+      "niche_id": "crossfit",
+      "evidence": "IAB Sports + CrossFit-specific brand ecosystem (Reebok, Nobull, Rogue).",
+      "primary": [
+        "sports-nutrition",
+        "fitness-equipment",
+        "activewear",
+        "sportswear"
+      ],
+      "secondary": [
+        "supplements-brands",
+        "gyms-studios",
+        "wearables",
+        "footwear"
+      ]
+    },
+    {
+      "niche_id": "hiit",
+      "evidence": "Functional fitness audience tracks closely with CrossFit/bodybuilding commercial pattern.",
+      "primary": [
+        "activewear",
+        "sports-nutrition",
+        "fitness-equipment"
+      ],
+      "secondary": [
+        "supplements-brands",
+        "gyms-studios",
+        "sportswear",
+        "wearables"
+      ]
+    },
+    {
+      "niche_id": "calisthenics",
+      "evidence": "Equipment-light niche; apps + apparel + supplements lead.",
+      "primary": [
+        "activewear",
+        "sports-nutrition",
+        "consumer-software"
+      ],
+      "secondary": [
+        "supplements-brands",
+        "sportswear",
+        "fitness-equipment",
+        "wearables"
+      ]
+    },
+    {
+      "niche_id": "cycling",
+      "evidence": "IAB Sports > Cycling. Bike, kit, and endurance-nutrition brands lead (Rapha, Castelli, Maurten).",
+      "primary": [
+        "bicycles",
+        "sports-outdoor",
+        "sports-nutrition",
+        "activewear"
+      ],
+      "secondary": [
+        "wearables",
+        "sportswear",
+        "no-low-alcohol",
+        "travel-hospitality"
+      ]
+    },
+    {
+      "niche_id": "health-wellness",
+      "evidence": "IAB Healthy Living + Health and Medical Services. Wellness is a $1.8T market with rapid creator-led D2C growth (McKinsey 2024).",
+      "primary": [
+        "supplements-brands",
+        "mental-health-services",
+        "femtech",
+        "telehealth",
+        "plant-based-food"
+      ],
+      "secondary": [
+        "fitness-equipment",
+        "activewear",
+        "beauty-personal-care",
+        "meal-kits",
+        "wearables",
+        "dental-services"
+      ],
+      "tertiary": [
+        "skincare-brands",
+        "sports-nutrition",
+        "health-pharma",
+        "dental-services",
+        "vision-care"
+      ]
+    },
+    {
+      "niche_id": "nutrition",
+      "evidence": "IAB Healthy Living > Nutrition. Meal kits, supplements, RD-creators commercial pattern (HelloFresh, AG1).",
+      "primary": [
+        "supplements-brands",
+        "meal-kits",
+        "plant-based-food",
+        "sports-nutrition"
+      ],
+      "secondary": [
+        "femtech",
+        "telehealth",
+        "wearables",
+        "grocery",
+        "mental-health-services"
+      ]
+    },
+    {
+      "niche_id": "supplements",
+      "evidence": "Direct match.",
+      "primary": [
+        "supplements-brands",
+        "sports-nutrition"
+      ],
+      "secondary": [
+        "telehealth",
+        "femtech",
+        "plant-based-food",
+        "wearables"
+      ]
+    },
+    {
+      "niche_id": "biohacking",
+      "evidence": "Tech-forward wellness audience; wearables + sleep tech + supplements lead (Whoop, Eight Sleep case studies).",
+      "primary": [
+        "wearables",
+        "supplements-brands",
+        "bedding-bath",
+        "consumer-electronics-brands"
+      ],
+      "secondary": [
+        "femtech",
+        "sports-nutrition",
+        "telehealth",
+        "mental-health-services",
+        "smart-home"
+      ]
+    },
+    {
+      "niche_id": "sleep",
+      "evidence": "Mattress + sleep tech is a saturated influencer category (Casper, Eight Sleep, Hatch).",
+      "primary": [
+        "bedding-bath",
+        "wearables",
+        "supplements-brands"
+      ],
+      "secondary": [
+        "mental-health-services",
+        "consumer-electronics-brands",
+        "home-living",
+        "femtech"
+      ]
+    },
+    {
+      "niche_id": "mental-health",
+      "evidence": "IAB Pharmaceuticals + Healthy Living. Sensitive: requires creator opt-in; BetterHelp partnership backlash widely documented.",
+      "primary": [
+        "mental-health-services",
+        "telehealth",
+        "supplements-brands"
+      ],
+      "secondary": [
+        "femtech",
+        "mental-health-services",
+        "consumer-software",
+        "online-courses"
+      ],
+      "overrides": [
+        {
+          "industry_id": "mental-health-services",
+          "strength": "primary",
+          "evidence": {
+            "source": "case-study",
+            "note": "BetterHelp creator program is one of the largest influencer spends in the category; also one of the most contested (FTC settlement 2023)"
+          }
+        }
+      ]
+    },
+    {
+      "niche_id": "meditation",
+      "evidence": "Mindfulness app category (Calm, Headspace) is a documented top-spend app vertical per Mediakix.",
+      "primary": [
+        "mental-health-services",
+        "consumer-software"
+      ],
+      "secondary": [
+        "supplements-brands",
+        "femtech",
+        "online-courses",
+        "wearables"
+      ]
+    },
+    {
+      "niche_id": "food-drink",
+      "evidence": "IAB Food & Drink Interest + Food and Beverage Services PI. CPG and QSR are top categories for creator spend.",
+      "primary": [
+        "food-beverage",
+        "restaurants-qsr",
+        "grocery",
+        "food-delivery",
+        "snacks",
+        "meal-kits",
+        "soft-drinks",
+        "coffee-tea",
+        "kitchenware"
+      ],
+      "secondary": [
+        "plant-based-food",
+        "dairy",
+        "condiments-sauces",
+        "alcohol-beer",
+        "alcohol-wine",
+        "alcohol-spirits",
+        "frozen-food",
+        "specialty-retail"
+      ],
+      "tertiary": [
+        "supplements-brands",
+        "home-appliances",
+        "no-low-alcohol"
+      ]
+    },
+    {
+      "niche_id": "cooking",
+      "evidence": "Home-cook creator vertical drives kitchenware + grocery + meal kits (Half Baked Harvest, Bon Appétit).",
+      "primary": [
+        "kitchenware",
+        "meal-kits",
+        "grocery",
+        "food-beverage",
+        "home-appliances"
+      ],
+      "secondary": [
+        "condiments-sauces",
+        "restaurants-qsr",
+        "specialty-retail",
+        "snacks",
+        "plant-based-food"
+      ]
+    },
+    {
+      "niche_id": "baking",
+      "evidence": "King Arthur, Le Creuset, KitchenAid case studies.",
+      "primary": [
+        "kitchenware",
+        "home-appliances",
+        "food-beverage"
+      ],
+      "secondary": [
+        "grocery",
+        "specialty-retail",
+        "condiments-sauces"
+      ]
+    },
+    {
+      "niche_id": "restaurants",
+      "evidence": "Restaurant + food-tour creators land OpenTable, Resy, hospitality group deals.",
+      "primary": [
+        "restaurants-qsr",
+        "food-delivery",
+        "hotels",
+        "tourism-boards",
+        "grocery"
+      ],
+      "secondary": [
+        "alcohol-wine",
+        "alcohol-spirits",
+        "specialty-retail",
+        "airlines",
+        "otas"
+      ]
+    },
+    {
+      "niche_id": "vegan",
+      "evidence": "Plant-based brand category aligns 1:1 (Oatly, Beyond Meat, Impossible).",
+      "primary": [
+        "plant-based-food",
+        "food-beverage",
+        "grocery"
+      ],
+      "secondary": [
+        "supplements-brands",
+        "meal-kits",
+        "restaurants-qsr",
+        "specialty-retail"
+      ]
+    },
+    {
+      "niche_id": "keto",
+      "evidence": "Keto product market is a documented D2C category (Perfect Keto, HighKey, Quest).",
+      "primary": [
+        "food-beverage",
+        "supplements-brands",
+        "sports-nutrition",
+        "grocery"
+      ],
+      "secondary": [
+        "meal-kits",
+        "plant-based-food",
+        "specialty-retail",
+        "weight-management"
+      ]
+    },
+    {
+      "niche_id": "coffee",
+      "evidence": "Coffee creators land equipment + bean + cafe deals (Breville, Trade, Blue Bottle).",
+      "primary": [
+        "coffee-tea",
+        "kitchenware",
+        "home-appliances",
+        "restaurants-qsr"
+      ],
+      "secondary": [
+        "food-beverage",
+        "grocery",
+        "specialty-retail"
+      ]
+    },
+    {
+      "niche_id": "cocktails",
+      "evidence": "Mixology vertical drives spirits + glassware deals (Diageo Reserve, Liquor.com).",
+      "primary": [
+        "alcohol-spirits",
+        "alcohol-wine",
+        "no-low-alcohol",
+        "kitchenware"
+      ],
+      "secondary": [
+        "restaurants-qsr",
+        "food-beverage",
+        "specialty-retail",
+        "grocery"
+      ]
+    },
+    {
+      "niche_id": "wine",
+      "evidence": "Wine creators land winery + retailer deals (Vivino, Bright Cellars, direct winery).",
+      "primary": [
+        "alcohol-wine",
+        "restaurants-qsr",
+        "specialty-retail"
+      ],
+      "secondary": [
+        "kitchenware",
+        "grocery",
+        "tourism-boards",
+        "hotels"
+      ]
+    },
+    {
+      "niche_id": "travel",
+      "evidence": "IAB Travel + Travel and Tourism. Tourism boards + airlines + hotels are dominant spenders per Skift 2024.",
+      "primary": [
+        "airlines",
+        "hotels",
+        "short-term-rentals",
+        "otas",
+        "tourism-boards",
+        "luggage-travel-gear"
+      ],
+      "secondary": [
+        "car-rental",
+        "cruises",
+        "consumer-electronics-brands",
+        "outdoor-gear",
+        "fashion-apparel",
+        "specialty-retail",
+        "telecom-utilities"
+      ],
+      "tertiary": [
+        "restaurants-qsr",
+        "cosmetics",
+        "wearables",
+        "financial-services",
+        "insurance"
+      ]
+    },
+    {
+      "niche_id": "luxury-travel",
+      "evidence": "High-end audience; luxury hotels + cruise + private aviation programs.",
+      "primary": [
+        "hotels",
+        "cruises",
+        "airlines",
+        "luxury-goods"
+      ],
+      "secondary": [
+        "luggage-travel-gear",
+        "financial-services",
+        "watches",
+        "jewellery",
+        "fragrance-brands"
+      ]
+    },
+    {
+      "niche_id": "budget-travel",
+      "evidence": "Hostelworld, Skyscanner, budget-airline programs are documented.",
+      "primary": [
+        "otas",
+        "airlines",
+        "short-term-rentals"
+      ],
+      "secondary": [
+        "luggage-travel-gear",
+        "hotels",
+        "consumer-software",
+        "telecom-utilities"
+      ]
+    },
+    {
+      "niche_id": "solo-travel",
+      "evidence": "Solo-travel-tour operators and safety-tech are growth categories per Skift.",
+      "primary": [
+        "hotels",
+        "short-term-rentals",
+        "otas",
+        "tourism-boards"
+      ],
+      "secondary": [
+        "airlines",
+        "luggage-travel-gear",
+        "consumer-electronics-brands",
+        "telecom-utilities",
+        "financial-services"
+      ]
+    },
+    {
+      "niche_id": "family-travel",
+      "evidence": "Family-travel creators command premium CPMs in 30-44 parent audience per HypeAuditor 2024.",
+      "primary": [
+        "hotels",
+        "cruises",
+        "tourism-boards",
+        "short-term-rentals",
+        "airlines"
+      ],
+      "secondary": [
+        "toys",
+        "luggage-travel-gear",
+        "car-rental",
+        "restaurants-qsr",
+        "specialty-retail"
+      ]
+    },
+    {
+      "niche_id": "adventure-travel",
+      "evidence": "Outdoor gear + adventure operators (REI, Patagonia, GoPro).",
+      "primary": [
+        "outdoor-gear",
+        "tourism-boards",
+        "airlines",
+        "consumer-electronics-brands"
+      ],
+      "secondary": [
+        "hotels",
+        "luggage-travel-gear",
+        "wearables",
+        "automotive-industry",
+        "insurance"
+      ]
+    },
+    {
+      "niche_id": "digital-nomad",
+      "evidence": "Remote-work tech + coworking + neobank programs (Wise, Revolut, SafetyWing).",
+      "primary": [
+        "fintech-neobanks",
+        "telecom-utilities",
+        "consumer-software",
+        "saas",
+        "short-term-rentals"
+      ],
+      "secondary": [
+        "airlines",
+        "insurance",
+        "luggage-travel-gear",
+        "cybersecurity",
+        "wearables"
+      ]
+    },
+    {
+      "niche_id": "lifestyle",
+      "evidence": "Broad-audience niche. Edges restricted to documented top-spend categories with case-study evidence.",
+      "primary": [
+        "fashion-apparel",
+        "beauty-personal-care",
+        "home-living",
+        "food-delivery"
+      ],
+      "secondary": [
+        "hotels",
+        "restaurants-qsr",
+        "specialty-retail",
+        "d2c-subscription",
+        "consumer-electronics-brands",
+        "home-decor-brands"
+      ],
+      "tertiary": [
+        "fintech-neobanks",
+        "telecom-utilities",
+        "meal-kits",
+        "soft-drinks"
+      ]
+    },
+    {
+      "niche_id": "productivity",
+      "evidence": "SaaS + neobank + EdTech creator programs (Notion, Brilliant, Skillshare case studies).",
+      "primary": [
+        "saas",
+        "consumer-software",
+        "online-courses"
+      ],
+      "secondary": [
+        "fintech-neobanks",
+        "productivity-apps",
+        "wearables",
+        "coffee-tea"
+      ]
+    },
+    {
+      "niche_id": "minimalism",
+      "evidence": "Minimalist creators land smart-home + fewer-but-better D2C brands.",
+      "primary": [
+        "home-decor-brands",
+        "furniture",
+        "fashion-apparel"
+      ],
+      "secondary": [
+        "smart-home",
+        "kitchenware",
+        "d2c-subscription",
+        "specialty-retail"
+      ]
+    },
+    {
+      "niche_id": "day-in-the-life",
+      "evidence": "Broad-audience format. Edges limited to lifestyle CPG categories with documented spend.",
+      "primary": [
+        "food-delivery",
+        "beauty-personal-care",
+        "fashion-apparel"
+      ],
+      "secondary": [
+        "coffee-tea",
+        "home-living",
+        "d2c-subscription",
+        "soft-drinks"
+      ]
+    },
+    {
+      "niche_id": "family-parenting",
+      "evidence": "IAB Family and Parenting PI + Life Events. Top-3 CPG niche per HypeAuditor 2024.",
+      "primary": [
+        "baby-food",
+        "diapers-nappies",
+        "baby-gear",
+        "toys",
+        "kids-edutainment",
+        "grocery"
+      ],
+      "secondary": [
+        "insurance",
+        "financial-services",
+        "auto-oems",
+        "home-improvement",
+        "home-appliances",
+        "snacks",
+        "vision-care"
+      ],
+      "tertiary": [
+        "restaurants-qsr",
+        "tourism-boards",
+        "hotels",
+        "meal-kits",
+        "dental-services"
+      ]
+    },
+    {
+      "niche_id": "pregnancy",
+      "evidence": "Pre-baby + maternity-wear + femtech (Bumpsuit, Hatch, Flo Health).",
+      "primary": [
+        "diapers-nappies",
+        "baby-gear",
+        "femtech",
+        "baby-food"
+      ],
+      "secondary": [
+        "skincare-brands",
+        "supplements-brands",
+        "insurance",
+        "telehealth",
+        "grocery"
+      ]
+    },
+    {
+      "niche_id": "newborn-baby",
+      "evidence": "Direct match.",
+      "primary": [
+        "diapers-nappies",
+        "baby-food",
+        "baby-gear",
+        "toys"
+      ],
+      "secondary": [
+        "skincare-brands",
+        "femtech",
+        "furniture",
+        "insurance",
+        "grocery"
+      ]
+    },
+    {
+      "niche_id": "toddler",
+      "evidence": "Toy + edutainment + family-meal sweet spot.",
+      "primary": [
+        "toys",
+        "kids-edutainment",
+        "baby-food",
+        "baby-gear"
+      ],
+      "secondary": [
+        "kidswear",
+        "grocery",
+        "snacks",
+        "insurance",
+        "tourism-boards"
+      ]
+    },
+    {
+      "niche_id": "mom-life",
+      "evidence": "Mom-creator vertical is the single largest parenting sub-niche by spend per HypeAuditor.",
+      "primary": [
+        "baby-food",
+        "diapers-nappies",
+        "baby-gear",
+        "toys",
+        "kids-edutainment",
+        "grocery",
+        "femtech"
+      ],
+      "secondary": [
+        "cosmetics",
+        "skincare-brands",
+        "fashion-apparel",
+        "meal-kits",
+        "snacks",
+        "insurance",
+        "home-appliances"
+      ]
+    },
+    {
+      "niche_id": "dad-life",
+      "evidence": "Dad-creator audience is 25-44 male homeowner-skewed; case studies cover BBQ, lawn, family auto, life insurance (Allstate, Toyota, Lowes case studies).",
+      "primary": [
+        "baby-gear",
+        "toys",
+        "baby-food",
+        "diapers-nappies",
+        "home-improvement",
+        "auto-oems",
+        "grocery"
+      ],
+      "secondary": [
+        "insurance",
+        "financial-services",
+        "sports-teams-leagues",
+        "restaurants-qsr",
+        "consumer-electronics-brands",
+        "snacks",
+        "soft-drinks",
+        "alcohol-beer"
+      ],
+      "tertiary": [
+        "gardening-brands",
+        "home-improvement",
+        "outdoor-gear",
+        "tyres"
+      ]
+    },
+    {
+      "niche_id": "home-interiors",
+      "evidence": "IAB Home & Garden + Home and Garden Services PI. Big-ticket purchase audience; Wayfair, IKEA, RH case studies.",
+      "primary": [
+        "furniture",
+        "home-decor-brands",
+        "home-appliances",
+        "home-improvement",
+        "kitchenware",
+        "bedding-bath"
+      ],
+      "secondary": [
+        "cleaning-household",
+        "smart-home",
+        "gardening-brands",
+        "specialty-retail",
+        "d2c-subscription"
+      ],
+      "tertiary": [
+        "mortgages",
+        "residential-real-estate",
+        "insurance"
+      ]
+    },
+    {
+      "niche_id": "interior-design",
+      "evidence": "Direct match. RH, West Elm, Article case studies.",
+      "primary": [
+        "furniture",
+        "home-decor-brands",
+        "bedding-bath",
+        "kitchenware"
+      ],
+      "secondary": [
+        "home-appliances",
+        "smart-home",
+        "specialty-retail",
+        "d2c-subscription"
+      ]
+    },
+    {
+      "niche_id": "home-renovation",
+      "evidence": "Home Depot, Lowes, B&Q maker-creator programs.",
+      "primary": [
+        "home-improvement",
+        "furniture",
+        "home-appliances"
+      ],
+      "secondary": [
+        "kitchenware",
+        "bedding-bath",
+        "mortgages",
+        "home-decor-brands",
+        "home-improvement"
+      ]
+    },
+    {
+      "niche_id": "gardening",
+      "evidence": "Garden + tool + outdoor-furniture vertical (Burpee, Greenhouse Megastore, Stihl case studies).",
+      "primary": [
+        "gardening-brands",
+        "home-improvement",
+        "outdoor-gear"
+      ],
+      "secondary": [
+        "home-decor-brands",
+        "furniture",
+        "plant-based-food",
+        "pets-industry"
+      ]
+    },
+    {
+      "niche_id": "organisation",
+      "evidence": "Container Store + IKEA + Marie Kondo brand category.",
+      "primary": [
+        "home-decor-brands",
+        "furniture",
+        "specialty-retail"
+      ],
+      "secondary": [
+        "cleaning-household",
+        "home-appliances",
+        "kitchenware",
+        "d2c-subscription"
+      ]
+    },
+    {
+      "niche_id": "tech",
+      "evidence": "IAB Tech & Computing + Consumer Electronics PI. Top influencer-spend category in male 25-44 demo per HypeAuditor 2024 tech report.",
+      "primary": [
+        "consumer-electronics-brands",
+        "mobile-devices",
+        "computing-hardware",
+        "audio-equipment",
+        "wearables",
+        "saas",
+        "ai-products"
+      ],
+      "secondary": [
+        "gaming-hardware",
+        "smart-home",
+        "cybersecurity",
+        "mobile-carriers",
+        "internet-providers",
+        "consumer-software"
+      ],
+      "tertiary": [
+        "ev-brands",
+        "streaming-services",
+        "financial-services",
+        "online-courses"
+      ]
+    },
+    {
+      "niche_id": "consumer-electronics",
+      "evidence": "Direct match.",
+      "primary": [
+        "consumer-electronics-brands",
+        "audio-equipment",
+        "mobile-devices",
+        "computing-hardware",
+        "wearables"
+      ],
+      "secondary": [
+        "smart-home",
+        "gaming-hardware",
+        "specialty-retail",
+        "marketplaces-ecom"
+      ]
+    },
+    {
+      "niche_id": "ai",
+      "evidence": "AI tools category (OpenAI, Anthropic, Midjourney, Perplexity creator programs).",
+      "primary": [
+        "ai-products",
+        "saas",
+        "consumer-software"
+      ],
+      "secondary": [
+        "online-courses",
+        "productivity-apps",
+        "cybersecurity",
+        "computing-hardware"
+      ]
+    },
+    {
+      "niche_id": "software-reviews",
+      "evidence": "SaaS + consumer-app reviews (Tom's Guide, Wirecutter style).",
+      "primary": [
+        "saas",
+        "consumer-software",
+        "productivity-apps"
+      ],
+      "secondary": [
+        "cybersecurity",
+        "ai-products",
+        "marketplaces-ecom",
+        "online-courses"
+      ]
+    },
+    {
+      "niche_id": "pc-building",
+      "evidence": "Hardware deep-dive niche (Linus Tech Tips ecosystem).",
+      "primary": [
+        "computing-hardware",
+        "gaming-hardware",
+        "consumer-electronics-brands"
+      ],
+      "secondary": [
+        "saas",
+        "cybersecurity",
+        "audio-equipment",
+        "specialty-retail"
+      ]
+    },
+    {
+      "niche_id": "mobile-phones",
+      "evidence": "Phone + accessory + carrier programs (Samsung, Apple, OnePlus).",
+      "primary": [
+        "mobile-devices",
+        "consumer-electronics-brands",
+        "mobile-carriers"
+      ],
+      "secondary": [
+        "audio-equipment",
+        "wearables",
+        "cybersecurity",
+        "telecom-utilities"
+      ]
+    },
+    {
+      "niche_id": "gaming",
+      "evidence": "IAB Video Gaming. Console, hardware, energy drinks, gaming chairs - documented vertical.",
+      "primary": [
+        "game-publishers",
+        "gaming-hardware",
+        "indie-games",
+        "mobile-games-publishers",
+        "creator-tools",
+        "consumer-electronics-brands"
+      ],
+      "secondary": [
+        "esports-orgs",
+        "audio-equipment",
+        "soft-drinks",
+        "snacks",
+        "streaming-services",
+        "cybersecurity",
+        "furniture"
+      ],
+      "tertiary": [
+        "mens-grooming",
+        "telecom-utilities",
+        "crypto-exchanges"
+      ]
+    },
+    {
+      "niche_id": "pc-gaming",
+      "evidence": "Hardware-heavy vertical (Nvidia, Razer, Logitech, Corsair).",
+      "primary": [
+        "gaming-hardware",
+        "computing-hardware",
+        "game-publishers"
+      ],
+      "secondary": [
+        "audio-equipment",
+        "creator-tools",
+        "soft-drinks",
+        "furniture",
+        "consumer-electronics-brands"
+      ]
+    },
+    {
+      "niche_id": "console-gaming",
+      "evidence": "Sony/MS/Nintendo + first-party publisher programs.",
+      "primary": [
+        "game-publishers",
+        "gaming-hardware",
+        "consumer-electronics-brands"
+      ],
+      "secondary": [
+        "streaming-services",
+        "audio-equipment",
+        "soft-drinks",
+        "snacks"
+      ]
+    },
+    {
+      "niche_id": "mobile-gaming",
+      "evidence": "Mobile publisher CPI campaigns are a huge category (Genshin, Royal Match).",
+      "primary": [
+        "mobile-games-publishers",
+        "game-publishers",
+        "consumer-electronics-brands"
+      ],
+      "secondary": [
+        "mobile-devices",
+        "soft-drinks",
+        "snacks",
+        "streaming-services"
+      ]
+    },
+    {
+      "niche_id": "esports",
+      "evidence": "Esports orgs + peripheral brands + energy drinks (Red Bull, G FUEL).",
+      "primary": [
+        "esports-orgs",
+        "gaming-hardware",
+        "game-publishers",
+        "soft-drinks"
+      ],
+      "secondary": [
+        "audio-equipment",
+        "sportswear",
+        "creator-tools",
+        "telecom-utilities",
+        "snacks"
+      ]
+    },
+    {
+      "niche_id": "streaming",
+      "evidence": "Twitch/YouTube/Kick streamer ecosystem.",
+      "primary": [
+        "creator-tools",
+        "gaming-hardware",
+        "audio-equipment",
+        "game-publishers"
+      ],
+      "secondary": [
+        "soft-drinks",
+        "snacks",
+        "streaming-services",
+        "consumer-software",
+        "mens-grooming"
+      ]
+    },
+    {
+      "niche_id": "entertainment",
+      "evidence": "Broad-audience niche. Limited to documented top-spend lifestyle CPG categories.",
+      "primary": [
+        "streaming-services",
+        "snacks",
+        "soft-drinks",
+        "food-delivery"
+      ],
+      "secondary": [
+        "dating-apps",
+        "restaurants-qsr",
+        "fashion-apparel",
+        "gambling",
+        "telecom-utilities"
+      ]
+    },
+    {
+      "niche_id": "comedy",
+      "evidence": "Comedy creators land soft drinks + dating apps + streaming + snacks (Pepsi, Tinder, Netflix case studies).",
+      "primary": [
+        "soft-drinks",
+        "snacks",
+        "dating-apps",
+        "streaming-services",
+        "food-delivery"
+      ],
+      "secondary": [
+        "restaurants-qsr",
+        "fashion-apparel",
+        "alcohol-beer",
+        "mobile-games-publishers",
+        "telecom-utilities"
+      ]
+    },
+    {
+      "niche_id": "sketch-comedy",
+      "evidence": "Same commercial pattern as comedy.",
+      "primary": [
+        "soft-drinks",
+        "snacks",
+        "streaming-services",
+        "dating-apps"
+      ],
+      "secondary": [
+        "restaurants-qsr",
+        "food-delivery",
+        "fashion-apparel",
+        "mobile-games-publishers"
+      ]
+    },
+    {
+      "niche_id": "memes",
+      "evidence": "Meme accounts skew younger; mobile games + dating + fashion are dominant (per Klear meme creator report).",
+      "primary": [
+        "mobile-games-publishers",
+        "dating-apps",
+        "fast-fashion"
+      ],
+      "secondary": [
+        "food-delivery",
+        "soft-drinks",
+        "snacks",
+        "streaming-services"
+      ]
+    },
+    {
+      "niche_id": "reactions",
+      "evidence": "Reaction creators land streaming + game-publisher previews + snack brands.",
+      "primary": [
+        "streaming-services",
+        "game-publishers",
+        "snacks"
+      ],
+      "secondary": [
+        "soft-drinks",
+        "mobile-games-publishers",
+        "food-delivery",
+        "dating-apps"
+      ]
+    },
+    {
+      "niche_id": "storytime",
+      "evidence": "Storytime creators (true crime adjacent) land subscription + snack + lifestyle (BetterHelp, Audible historically).",
+      "primary": [
+        "streaming-services",
+        "publishing",
+        "snacks"
+      ],
+      "secondary": [
+        "mental-health-services",
+        "dating-apps",
+        "d2c-subscription",
+        "food-delivery"
+      ]
+    },
+    {
+      "niche_id": "asmr",
+      "evidence": "ASMR-specific brand pattern: skincare, sleep, audio tech.",
+      "primary": [
+        "skincare-brands",
+        "bedding-bath",
+        "audio-equipment"
+      ],
+      "secondary": [
+        "mental-health-services",
+        "cosmetics",
+        "d2c-subscription",
+        "consumer-electronics-brands"
+      ]
+    },
+    {
+      "niche_id": "music",
+      "evidence": "IAB Music and Audio + Music DSP PI.",
+      "primary": [
+        "music-dsps",
+        "music-labels",
+        "live-events",
+        "ticketing",
+        "audio-equipment"
+      ],
+      "secondary": [
+        "fashion-apparel",
+        "soft-drinks",
+        "alcohol-spirits",
+        "ticketing",
+        "mobile-carriers"
+      ]
+    },
+    {
+      "niche_id": "artist-musician",
+      "evidence": "Artists land their own brand deals (sneakers, spirits, watches case studies).",
+      "primary": [
+        "music-labels",
+        "music-dsps",
+        "live-events",
+        "fashion-apparel",
+        "footwear"
+      ],
+      "secondary": [
+        "alcohol-spirits",
+        "luxury-goods",
+        "watches",
+        "soft-drinks",
+        "audio-equipment"
+      ]
+    },
+    {
+      "niche_id": "dj-producer",
+      "evidence": "DJ creator ecosystem (Pioneer DJ, Native Instruments, Splice).",
+      "primary": [
+        "audio-equipment",
+        "consumer-software",
+        "live-events"
+      ],
+      "secondary": [
+        "music-dsps",
+        "alcohol-spirits",
+        "soft-drinks",
+        "fashion-apparel"
+      ]
+    },
+    {
+      "niche_id": "music-reviews",
+      "evidence": "Audio gear + DSP + record label PR (Anthony Fantano model).",
+      "primary": [
+        "music-dsps",
+        "music-labels",
+        "audio-equipment"
+      ],
+      "secondary": [
+        "streaming-services",
+        "consumer-electronics-brands",
+        "live-events"
+      ]
+    },
+    {
+      "niche_id": "art-design",
+      "evidence": "IAB Fine Art + Hobbies > Arts & Crafts.",
+      "primary": [
+        "specialty-retail",
+        "online-courses",
+        "consumer-software"
+      ],
+      "secondary": [
+        "ai-products",
+        "publishing",
+        "d2c-subscription",
+        "specialty-retail"
+      ]
+    },
+    {
+      "niche_id": "illustration",
+      "evidence": "Procreate, Wacom, Adobe creator programs.",
+      "primary": [
+        "consumer-software",
+        "ai-products",
+        "online-courses"
+      ],
+      "secondary": [
+        "publishing",
+        "specialty-retail",
+        "computing-hardware"
+      ]
+    },
+    {
+      "niche_id": "graphic-design",
+      "evidence": "Adobe, Figma, Canva creator programs.",
+      "primary": [
+        "saas",
+        "consumer-software",
+        "ai-products"
+      ],
+      "secondary": [
+        "online-courses",
+        "computing-hardware",
+        "publishing"
+      ]
+    },
+    {
+      "niche_id": "digital-art",
+      "evidence": "Same pattern as illustration.",
+      "primary": [
+        "consumer-software",
+        "ai-products",
+        "computing-hardware"
+      ],
+      "secondary": [
+        "online-courses",
+        "publishing",
+        "specialty-retail"
+      ]
+    },
+    {
+      "niche_id": "painting",
+      "evidence": "Traditional art supply brands + classes (Blick, Winsor & Newton).",
+      "primary": [
+        "specialty-retail",
+        "online-courses"
+      ],
+      "secondary": [
+        "publishing",
+        "consumer-software"
+      ]
+    },
+    {
+      "niche_id": "photography",
+      "evidence": "Camera + lens + editing software (Sony, Canon, Adobe).",
+      "primary": [
+        "consumer-electronics-brands",
+        "consumer-software",
+        "saas"
+      ],
+      "secondary": [
+        "online-courses",
+        "specialty-retail",
+        "ai-products",
+        "travel-hospitality"
+      ]
+    },
+    {
+      "niche_id": "education",
+      "evidence": "IAB Education and Careers PI. Online courses + EdTech + university programs.",
+      "primary": [
+        "online-courses",
+        "tutoring",
+        "language-learning-brands",
+        "k12",
+        "higher-ed"
+      ],
+      "secondary": [
+        "publishing",
+        "saas",
+        "consumer-software",
+        "ai-products"
+      ]
+    },
+    {
+      "niche_id": "science",
+      "evidence": "Science creators (Veritasium, Kurzgesagt) land brand programs from Brilliant, Henson, hardware brands.",
+      "primary": [
+        "online-courses",
+        "language-learning-brands",
+        "publishing"
+      ],
+      "secondary": [
+        "ai-products",
+        "consumer-electronics-brands",
+        "saas",
+        "computing-hardware"
+      ]
+    },
+    {
+      "niche_id": "history",
+      "evidence": "History creators land subscription edutainment (Curiosity Stream, Nebula) + book publishers.",
+      "primary": [
+        "streaming-services",
+        "publishing",
+        "online-courses"
+      ],
+      "secondary": [
+        "language-learning-brands",
+        "tourism-boards",
+        "specialty-retail"
+      ]
+    },
+    {
+      "niche_id": "languages",
+      "evidence": "Duolingo, Babbel, Pimsleur creator programs.",
+      "primary": [
+        "language-learning-brands",
+        "online-courses",
+        "tutoring"
+      ],
+      "secondary": [
+        "publishing",
+        "tourism-boards",
+        "saas",
+        "consumer-software"
+      ]
+    },
+    {
+      "niche_id": "study-tips",
+      "evidence": "EdTech + productivity SaaS (Notion, Quizlet, Anki).",
+      "primary": [
+        "online-courses",
+        "saas",
+        "consumer-software",
+        "tutoring"
+      ],
+      "secondary": [
+        "publishing",
+        "language-learning-brands",
+        "productivity-apps",
+        "higher-ed"
+      ]
+    },
+    {
+      "niche_id": "business-finance",
+      "evidence": "IAB Business and Finance + Personal Finance + Finance and Insurance PI.",
+      "primary": [
+        "retail-banking",
+        "fintech-neobanks",
+        "investing-platforms",
+        "credit-cards",
+        "insurance",
+        "online-courses",
+        "saas"
+      ],
+      "secondary": [
+        "accounting",
+        "crypto-exchanges",
+        "buy-now-pay-later",
+        "tax-services",
+        "consulting"
+      ],
+      "tertiary": [
+        "marketing-agencies",
+        "recruitment-hr-tech",
+        "professional-services"
+      ]
+    },
+    {
+      "niche_id": "entrepreneurship",
+      "evidence": "Founder-creator + SaaS + finance + course audience.",
+      "primary": [
+        "saas",
+        "online-courses",
+        "fintech-neobanks",
+        "consulting"
+      ],
+      "secondary": [
+        "marketing-agencies",
+        "recruitment-hr-tech",
+        "credit-cards",
+        "accounting",
+        "cybersecurity"
+      ]
+    },
+    {
+      "niche_id": "personal-finance",
+      "evidence": "FinTok + neobanks + budgeting apps.",
+      "primary": [
+        "fintech-neobanks",
+        "credit-cards",
+        "investing-platforms",
+        "buy-now-pay-later"
+      ],
+      "secondary": [
+        "retail-banking",
+        "insurance",
+        "tax-services",
+        "online-courses",
+        "consumer-software"
+      ]
+    },
+    {
+      "niche_id": "investing",
+      "evidence": "Brokerage + crypto exchange creator programs (sensitive: SEC/FCA scrutiny).",
+      "primary": [
+        "investing-platforms",
+        "fintech-neobanks",
+        "crypto-exchanges"
+      ],
+      "secondary": [
+        "retail-banking",
+        "credit-cards",
+        "insurance",
+        "online-courses",
+        "accounting"
+      ],
+      "overrides": [
+        {
+          "industry_id": "investing-platforms",
+          "strength": "primary",
+          "evidence": {
+            "source": "case-study",
+            "note": "Robinhood/eToro creator programs are top spenders; SEC FY2023 enforcement actions documented"
+          }
+        }
+      ]
+    },
+    {
+      "niche_id": "crypto-web3",
+      "evidence": "Crypto exchanges + Web3 brands. Sensitive vertical with platform restrictions.",
+      "primary": [
+        "crypto-exchanges",
+        "fintech-neobanks"
+      ],
+      "secondary": [
+        "investing-platforms",
+        "cybersecurity",
+        "consumer-software",
+        "online-courses"
+      ]
+    },
+    {
+      "niche_id": "career",
+      "evidence": "Career creators land LinkedIn, Indeed, recruitment-platform deals.",
+      "primary": [
+        "recruitment-hr-tech",
+        "online-courses",
+        "professional-services"
+      ],
+      "secondary": [
+        "saas",
+        "language-learning-brands",
+        "consulting",
+        "consumer-software"
+      ]
+    },
+    {
+      "niche_id": "sports",
+      "evidence": "IAB Sports + Sports Teams. Wide commercial coverage.",
+      "primary": [
+        "sportswear",
+        "sports-teams-leagues",
+        "sports-nutrition",
+        "sporting-equipment",
+        "soft-drinks",
+        "footwear"
+      ],
+      "secondary": [
+        "gambling",
+        "streaming-services",
+        "fitness-equipment",
+        "wearables",
+        "automotive-industry",
+        "alcohol-beer"
+      ],
+      "tertiary": [
+        "credit-cards",
+        "insurance",
+        "telecom-utilities",
+        "restaurants-qsr"
+      ]
+    },
+    {
+      "niche_id": "football-soccer",
+      "evidence": "World's largest sport audience. Boots, jerseys, sportsbook (sensitive).",
+      "primary": [
+        "sportswear",
+        "sports-teams-leagues",
+        "footwear",
+        "soft-drinks"
+      ],
+      "secondary": [
+        "gambling",
+        "streaming-services",
+        "alcohol-beer",
+        "sports-nutrition",
+        "fitness-equipment"
+      ]
+    },
+    {
+      "niche_id": "american-football",
+      "evidence": "NFL audience - QSR, beer, gambling, auto, insurance dominate ad spend.",
+      "primary": [
+        "sports-teams-leagues",
+        "sportswear",
+        "soft-drinks",
+        "alcohol-beer",
+        "restaurants-qsr",
+        "gambling"
+      ],
+      "secondary": [
+        "insurance",
+        "auto-oems",
+        "snacks",
+        "streaming-services",
+        "financial-services"
+      ]
+    },
+    {
+      "niche_id": "basketball",
+      "evidence": "Sneaker + apparel + sportsbook.",
+      "primary": [
+        "footwear",
+        "sportswear",
+        "sports-teams-leagues",
+        "gambling"
+      ],
+      "secondary": [
+        "soft-drinks",
+        "snacks",
+        "streaming-services",
+        "watches"
+      ]
+    },
+    {
+      "niche_id": "tennis",
+      "evidence": "Premium apparel + racquet + watches (Rolex, Wilson, Babolat).",
+      "primary": [
+        "sportswear",
+        "sporting-equipment",
+        "watches",
+        "footwear"
+      ],
+      "secondary": [
+        "luxury-goods",
+        "tourism-boards",
+        "wearables",
+        "alcohol-wine"
+      ]
+    },
+    {
+      "niche_id": "golf",
+      "evidence": "High-affluence audience; clubs, apparel, luxury, financial services.",
+      "primary": [
+        "sporting-equipment",
+        "sportswear",
+        "luxury-goods"
+      ],
+      "secondary": [
+        "watches",
+        "tourism-boards",
+        "automotive-industry",
+        "financial-services",
+        "alcohol-spirits",
+        "insurance"
+      ]
+    },
+    {
+      "niche_id": "motorsport",
+      "evidence": "F1 + NASCAR audience - watches, energy drinks, tech, auto, sportsbook.",
+      "primary": [
+        "watches",
+        "soft-drinks",
+        "automotive-industry",
+        "sports-teams-leagues",
+        "gambling"
+      ],
+      "secondary": [
+        "ev-brands",
+        "consumer-electronics-brands",
+        "luxury-goods",
+        "telecom-utilities",
+        "alcohol-spirits"
+      ]
+    },
+    {
+      "niche_id": "combat-sports",
+      "evidence": "UFC + boxing - energy drinks, supplements, betting, apparel.",
+      "primary": [
+        "sports-nutrition",
+        "supplements-brands",
+        "soft-drinks",
+        "gambling"
+      ],
+      "secondary": [
+        "sportswear",
+        "sports-teams-leagues",
+        "footwear",
+        "streaming-services",
+        "mens-grooming"
+      ]
+    },
+    {
+      "niche_id": "outdoors",
+      "evidence": "IAB Travel > Adventure + Outdoor Recreation Equipment PI.",
+      "primary": [
+        "outdoor-gear",
+        "sports-outdoor",
+        "footwear",
+        "sportswear",
+        "automotive-industry"
+      ],
+      "secondary": [
+        "ev-brands",
+        "consumer-electronics-brands",
+        "tourism-boards",
+        "airlines",
+        "insurance",
+        "wearables"
+      ]
+    },
+    {
+      "niche_id": "hiking",
+      "evidence": "Direct match. Patagonia, REI, Hoka, Salomon.",
+      "primary": [
+        "outdoor-gear",
+        "footwear",
+        "sportswear",
+        "sports-nutrition"
+      ],
+      "secondary": [
+        "tourism-boards",
+        "wearables",
+        "consumer-electronics-brands",
+        "insurance"
+      ]
+    },
+    {
+      "niche_id": "camping",
+      "evidence": "IAB Camping. RV + tent + cooler brands (Yeti, Coleman, Thule).",
+      "primary": [
+        "outdoor-gear",
+        "automotive-industry",
+        "sports-outdoor"
+      ],
+      "secondary": [
+        "ev-brands",
+        "tourism-boards",
+        "food-beverage",
+        "consumer-electronics-brands",
+        "insurance"
+      ]
+    },
+    {
+      "niche_id": "climbing",
+      "evidence": "Specialty gear brands (Black Diamond, Petzl, La Sportiva).",
+      "primary": [
+        "outdoor-gear",
+        "footwear",
+        "sports-outdoor"
+      ],
+      "secondary": [
+        "sportswear",
+        "tourism-boards",
+        "wearables",
+        "sports-nutrition"
+      ]
+    },
+    {
+      "niche_id": "surfing",
+      "evidence": "Board + wetsuit + surf-travel brands.",
+      "primary": [
+        "outdoor-gear",
+        "swimwear",
+        "sportswear"
+      ],
+      "secondary": [
+        "tourism-boards",
+        "hotels",
+        "skincare-brands",
+        "soft-drinks"
+      ]
+    },
+    {
+      "niche_id": "snowsports",
+      "evidence": "Ski/snowboard + resort + apparel.",
+      "primary": [
+        "outdoor-gear",
+        "sportswear",
+        "tourism-boards"
+      ],
+      "secondary": [
+        "hotels",
+        "airlines",
+        "wearables",
+        "consumer-electronics-brands",
+        "automotive-industry"
+      ]
+    },
+    {
+      "niche_id": "fishing",
+      "evidence": "Fishing-tackle + boat + truck-brand category (Yeti, Shimano, Ford F-150).",
+      "primary": [
+        "outdoor-gear",
+        "sports-outdoor",
+        "automotive-industry"
+      ],
+      "secondary": [
+        "food-beverage",
+        "insurance",
+        "tourism-boards",
+        "alcohol-beer"
+      ]
+    },
+    {
+      "niche_id": "automotive",
+      "evidence": "IAB Automotive Interest + Automotive Ownership PI.",
+      "primary": [
+        "auto-oems",
+        "ev-brands",
+        "auto-aftermarket",
+        "tyres",
+        "motorcycle-brands",
+        "auto-dealers"
+      ],
+      "secondary": [
+        "insurance",
+        "financial-services",
+        "consumer-electronics-brands",
+        "car-rental",
+        "energy-utilities"
+      ],
+      "tertiary": [
+        "watches",
+        "outdoor-gear",
+        "luxury-goods"
+      ]
+    },
+    {
+      "niche_id": "car-reviews",
+      "evidence": "OEM + aftermarket creator programs (Doug DeMuro model).",
+      "primary": [
+        "auto-oems",
+        "ev-brands",
+        "auto-aftermarket",
+        "tyres"
+      ],
+      "secondary": [
+        "insurance",
+        "auto-dealers",
+        "consumer-electronics-brands",
+        "watches",
+        "wearables"
+      ]
+    },
+    {
+      "niche_id": "ev",
+      "evidence": "EV-specific creator ecosystem (Tesla, Rivian, Lucid, charging brands).",
+      "primary": [
+        "ev-brands",
+        "energy-utilities",
+        "consumer-electronics-brands"
+      ],
+      "secondary": [
+        "auto-oems",
+        "smart-home",
+        "insurance",
+        "tyres",
+        "wearables"
+      ]
+    },
+    {
+      "niche_id": "motorcycles",
+      "evidence": "Motorcycle + gear + insurance.",
+      "primary": [
+        "motorcycle-brands",
+        "auto-aftermarket",
+        "outdoor-gear"
+      ],
+      "secondary": [
+        "insurance",
+        "watches",
+        "consumer-electronics-brands",
+        "tourism-boards"
+      ]
+    },
+    {
+      "niche_id": "classic-cars",
+      "evidence": "Niche audience; insurance, restoration, watches, auction houses.",
+      "primary": [
+        "auto-oems",
+        "auto-aftermarket",
+        "watches"
+      ],
+      "secondary": [
+        "insurance",
+        "luxury-goods",
+        "home-improvement",
+        "specialty-retail"
+      ]
+    },
+    {
+      "niche_id": "car-modding",
+      "evidence": "Aftermarket parts + tools + automotive electronics.",
+      "primary": [
+        "auto-aftermarket",
+        "tyres",
+        "home-improvement"
+      ],
+      "secondary": [
+        "auto-oems",
+        "consumer-electronics-brands",
+        "insurance",
+        "energy-utilities"
+      ]
+    },
+    {
+      "niche_id": "pets",
+      "evidence": "IAB Pets Interest + Pet Services PI.",
+      "primary": [
+        "pet-food",
+        "pet-supplies",
+        "vet-services",
+        "pet-tech",
+        "pet-insurance"
+      ],
+      "secondary": [
+        "specialty-retail",
+        "d2c-subscription",
+        "marketplaces-ecom",
+        "toys"
+      ]
+    },
+    {
+      "niche_id": "dogs",
+      "evidence": "Direct match. Largest pet creator sub-niche.",
+      "primary": [
+        "pet-food",
+        "pet-supplies",
+        "vet-services",
+        "pet-insurance",
+        "pet-tech"
+      ],
+      "secondary": [
+        "d2c-subscription",
+        "specialty-retail",
+        "marketplaces-ecom",
+        "outdoor-gear"
+      ]
+    },
+    {
+      "niche_id": "cats",
+      "evidence": "Direct match. Premium food + litter + tech (Litter-Robot).",
+      "primary": [
+        "pet-food",
+        "pet-supplies",
+        "pet-tech",
+        "vet-services"
+      ],
+      "secondary": [
+        "pet-insurance",
+        "specialty-retail",
+        "d2c-subscription",
+        "marketplaces-ecom"
+      ]
+    },
+    {
+      "niche_id": "exotic-pets",
+      "evidence": "Specialised supplies + vet + insurance.",
+      "primary": [
+        "pet-supplies",
+        "pet-food",
+        "vet-services"
+      ],
+      "secondary": [
+        "pet-insurance",
+        "specialty-retail",
+        "marketplaces-ecom"
+      ]
+    },
+    {
+      "niche_id": "sustainability",
+      "evidence": "Eco-aligned brand category (Patagonia, Allbirds, Oatly, Tesla).",
+      "primary": [
+        "plant-based-food",
+        "outdoor-gear",
+        "ev-brands",
+        "fashion-apparel"
+      ],
+      "secondary": [
+        "energy-utilities",
+        "d2c-subscription",
+        "beauty-personal-care",
+        "meal-kits",
+        "home-living"
+      ]
+    },
+    {
+      "niche_id": "zero-waste",
+      "evidence": "D2C refill + reusable goods category.",
+      "primary": [
+        "d2c-subscription",
+        "beauty-personal-care",
+        "cleaning-household",
+        "plant-based-food"
+      ],
+      "secondary": [
+        "kitchenware",
+        "specialty-retail",
+        "fashion-apparel",
+        "home-living"
+      ]
+    },
+    {
+      "niche_id": "ethical-living",
+      "evidence": "Same commercial pattern as zero-waste + sustainable fashion.",
+      "primary": [
+        "plant-based-food",
+        "fashion-apparel",
+        "beauty-personal-care",
+        "d2c-subscription"
+      ],
+      "secondary": [
+        "outdoor-gear",
+        "home-living",
+        "meal-kits",
+        "specialty-retail"
+      ]
+    },
+    {
+      "niche_id": "spirituality",
+      "evidence": "Wellness + app + jewellery (Insight Timer, Sanctuary).",
+      "primary": [
+        "mental-health-services",
+        "jewellery",
+        "specialty-retail"
+      ],
+      "secondary": [
+        "consumer-software",
+        "online-courses",
+        "femtech",
+        "publishing"
+      ]
+    },
+    {
+      "niche_id": "astrology",
+      "evidence": "App category (Co-Star, The Pattern) + jewellery + lifestyle.",
+      "primary": [
+        "consumer-software",
+        "jewellery",
+        "mental-health-services"
+      ],
+      "secondary": [
+        "publishing",
+        "specialty-retail",
+        "femtech"
+      ]
+    },
+    {
+      "niche_id": "tarot",
+      "evidence": "Same pattern as astrology.",
+      "primary": [
+        "consumer-software",
+        "jewellery"
+      ],
+      "secondary": [
+        "publishing",
+        "specialty-retail",
+        "mental-health-services"
+      ]
+    },
+    {
+      "niche_id": "news-politics",
+      "evidence": "News creators land subscription media + financial + civic categories. Sensitive vertical.",
+      "primary": [
+        "publishing",
+        "streaming-services"
+      ],
+      "secondary": [
+        "financial-services",
+        "online-courses",
+        "consumer-software",
+        "political-advocacy"
+      ]
+    },
+    {
+      "niche_id": "social-commentary",
+      "evidence": "Long-form essay/comment creators land publisher + course + lifestyle deals.",
+      "primary": [
+        "publishing",
+        "online-courses",
+        "streaming-services"
+      ],
+      "secondary": [
+        "mental-health-services",
+        "d2c-subscription",
+        "consumer-software"
+      ]
+    },
+    {
+      "niche_id": "dance",
+      "evidence": "Dance creators land activewear + footwear + music DSPs.",
+      "primary": [
+        "activewear",
+        "footwear",
+        "music-dsps"
+      ],
+      "secondary": [
+        "sportswear",
+        "consumer-electronics-brands",
+        "live-events",
+        "cosmetics"
+      ]
+    },
+    {
+      "niche_id": "film-tv",
+      "evidence": "Film/TV criticism + appointment-viewing creators land streamer + ticketing + publisher deals.",
+      "primary": [
+        "streaming-services",
+        "ticketing",
+        "film-tv-studios",
+        "publishing"
+      ],
+      "secondary": [
+        "audio-equipment",
+        "specialty-retail",
+        "consumer-electronics-brands"
+      ]
+    },
+    {
+      "niche_id": "books",
+      "evidence": "BookTok/Bookstagram drives publisher sales + Audible + Kindle (NPD BookScan documented).",
+      "primary": [
+        "publishing",
+        "specialty-retail",
+        "streaming-services"
+      ],
+      "secondary": [
+        "online-courses",
+        "consumer-electronics-brands",
+        "d2c-subscription",
+        "coffee-tea"
+      ]
+    },
+    {
+      "niche_id": "diy-crafts",
+      "evidence": "Michaels, Joann, Cricut creator programs.",
+      "primary": [
+        "specialty-retail",
+        "home-improvement",
+        "d2c-subscription"
+      ],
+      "secondary": [
+        "consumer-software",
+        "home-decor-brands",
+        "kitchenware"
+      ]
+    },
+    {
+      "niche_id": "wedding",
+      "evidence": "IAB Life Events > Wedding. Big-ticket purchase audience.",
+      "primary": [
+        "jewellery",
+        "luxury-goods",
+        "hotels",
+        "tourism-boards"
+      ],
+      "secondary": [
+        "fashion-apparel",
+        "cosmetics",
+        "specialty-retail",
+        "financial-services",
+        "airlines",
+        "insurance"
+      ]
+    },
+    {
+      "niche_id": "lgbtq",
+      "evidence": "LGBTQ+ creators have dedicated brand programs (Pride campaigns, Heaps Normal, Bumble).",
+      "primary": [
+        "fashion-apparel",
+        "beauty-personal-care",
+        "dating-apps",
+        "alcohol-beer"
+      ],
+      "secondary": [
+        "cosmetics",
+        "streaming-services",
+        "mental-health-services",
+        "specialty-retail"
+      ]
+    },
+    {
+      "niche_id": "body-positivity",
+      "evidence": "Inclusive brand category (Aerie, Savage X Fenty, Dove).",
+      "primary": [
+        "intimates",
+        "beauty-personal-care",
+        "cosmetics",
+        "fashion-apparel"
+      ],
+      "secondary": [
+        "swimwear",
+        "femtech",
+        "mental-health-services",
+        "specialty-retail"
+      ]
+    },
+    {
+      "niche_id": "disability-advocacy",
+      "evidence": "Accessibility-aligned brand programs (Microsoft, Nike GO FlyEase, Tommy Adaptive).",
+      "primary": [
+        "fashion-apparel",
+        "footwear",
+        "consumer-electronics-brands"
+      ],
+      "secondary": [
+        "mental-health-services",
+        "telehealth",
+        "consumer-software",
+        "vision-care"
+      ]
+    },
+    {
+      "niche_id": "veterans-military",
+      "evidence": "Military-creator audience; insurance + auto + apparel (USAA, GovX case studies).",
+      "primary": [
+        "insurance",
+        "automotive-industry",
+        "fashion-apparel",
+        "sportswear"
+      ],
+      "secondary": [
+        "fitness-equipment",
+        "home-improvement",
+        "financial-services",
+        "outdoor-gear"
+      ]
+    }
+  ]
+}

@@ -47,9 +47,14 @@ The fields below were not in the original request but were added because later p
 ### Files
 - `schemas/talent.schema.json` — JSON Schema (Draft 2020-12) describing the profile.
 - `talents/example-talent.json` — template instance, partially filled.
-- `data/niches.json` — canonical creator content-niche taxonomy.
-- `data/industries.json` — canonical brand-industry taxonomy.
+- `data/niches.json` — canonical creator content-niche taxonomy (145 entries).
+- `data/industries.json` — canonical brand-industry taxonomy (178 entries).
 - `data/brand_industry_map.json` — seed lookup of well-known brand names → `industry_id`. Used by the app's auto-complete and grows over time.
+- `data/iab_audience_taxonomy_v1.1.json` — official IAB Tech Lab Audience Taxonomy v1.1 (1,558 segments), used as the audience-profile bridge between niches and industries.
+- `data/niche_industry_affinity.json` — direct authored niche↔industry affinity matrix (1,246 edges across 145 niches).
+- `data/niche_audience_affinity.json` — bridge leg 1: niche → IAB audience segments.
+- `data/industry_audience_affinity.json` — bridge leg 2: industry → IAB audience segments.
+- `scripts/build_affinity.py` — builder script with all authored data and inline validation. Single source of truth for the three affinity files; re-run to regenerate them.
 - `.gitignore` — ensures any `*.local.json` or `.env` files containing real keys are never committed.
 
 ### Reference taxonomies
@@ -87,3 +92,26 @@ When the user types a brand into `previous_brands[].brand`, the app resolves `in
 4. **AI inference fallback** (later phase) — the assistant reads the brand's website / first-page search results and classifies it against `data/industries.json`. The result is then **written back** to `data/brand_industry_map.json` so future lookups are instant and the seed grows.
 
 If multiple matches tie (rare), the app prefers the entry with the more specific (child) `industry_id` over a parent sector.
+
+### Niche ↔ Industry affinity (which industries resonate with which niches)
+Two complementary models, both kept in sync by `scripts/build_affinity.py`.
+
+**1. Direct model (`niche_industry_affinity.json`)**
+Hand-authored edge list. Each niche has up to three tiers of matched industries (`primary` / `secondary` / `tertiary`) and a group-level `evidence` field citing the source of the mapping. Per-edge `overrides[]` can carry edge-specific evidence (case studies, sensitive-vertical flags).
+
+- Edges are **symmetric**: one strength per pair.
+- Edges are **quality-floored**: present only if there is either a citable source or a non-generic logical reason. Broad-audience niches (`comedy`, `lifestyle`, `entertainment`) ship with fewer edges by design, not more.
+- Sub-niches **inherit** their parent's edges via app-side fallback unless they have their own entry.
+
+Evidence sources used: `iab`, `imh` (Influencer Marketing Hub), `hypeauditor`, `case-study`, `logic`.
+
+**2. Bridged model (via IAB Audience Taxonomy v1.1)**
+Uses the official IAB taxonomy as a shared vocabulary between creators and advertisers — the same crosswalk that ad platforms (Meta, Google, TikTok Ads) build internally.
+
+- `niche_audience_affinity.json` — every niche links to relevant IAB **Interest** + **Demographic** segments (what its audience consumes + who they are).
+- `industry_audience_affinity.json` — every industry links to relevant IAB **Purchase Intent** + **Demographic** segments (what its target customer is in-market to buy + who they are).
+- Niche↔industry affinity is then **computed at runtime** as the overlap of their IAB segment vectors.
+
+The bridged model is more compositional than direct: when a specific talent's `audience_demographics` are layered in, the system can compute "best industries for *this* talent" rather than the niche baseline. Direct stays authoritative for ranking; bridged adds explainability ("matched because both target IAB segment [1377] Family and Parenting").
+
+**Why two models?** Direct is fast and trustworthy for v0 ranking. Bridged adds extensibility — a new niche or industry only needs *its* IAB links, not N new direct edges. Keeping both lets the app cross-check: large divergence between direct and bridged scores is a signal that either the direct edge needs review or the IAB mapping is incomplete.

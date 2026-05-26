@@ -1,0 +1,2899 @@
+{
+  "$comment": "Bridge leg 2: industry -> IAB Audience Taxonomy segments (Purchase Intent + Demographic). Pairs with niche_audience_affinity.json to produce the bridged niche<->industry affinity.",
+  "version": "1.0.0",
+  "updated": "2026-05-26",
+  "iab_source_file": "iab_audience_taxonomy_v1.1.json",
+  "fallback_behavior": "Sub-industries with no entry inherit their parent industry's segments.",
+  "groups": [
+    {
+      "industry_id": "beauty-personal-care",
+      "purchase_intent_segments": [
+        865,
+        1453,
+        1466
+      ],
+      "demographic_segments": [
+        49
+      ],
+      "evidence": "Direct IAB Beauty Services."
+    },
+    {
+      "industry_id": "cosmetics",
+      "purchase_intent_segments": [
+        865,
+        866
+      ],
+      "demographic_segments": [
+        49,
+        3,
+        4,
+        5,
+        6
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "industry_id": "skincare-brands",
+      "purchase_intent_segments": [
+        1466,
+        1453,
+        865
+      ],
+      "demographic_segments": [
+        49,
+        4,
+        5,
+        6,
+        7
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "industry_id": "haircare-brands",
+      "purchase_intent_segments": [
+        867,
+        1458,
+        865
+      ],
+      "demographic_segments": [
+        3,
+        4,
+        5,
+        6
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "industry_id": "fragrance-brands",
+      "purchase_intent_segments": [
+        865,
+        866
+      ],
+      "demographic_segments": [
+        4,
+        5,
+        6,
+        7
+      ],
+      "evidence": "Beauty Services umbrella."
+    },
+    {
+      "industry_id": "oral-care",
+      "purchase_intent_segments": [
+        1454,
+        1455
+      ],
+      "demographic_segments": [
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "evidence": "Direct IAB Dental Care."
+    },
+    {
+      "industry_id": "mens-grooming",
+      "purchase_intent_segments": [
+        865,
+        867,
+        1455
+      ],
+      "demographic_segments": [
+        50,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "evidence": "Beauty Services + male skew."
+    },
+    {
+      "industry_id": "personal-hygiene",
+      "purchase_intent_segments": [
+        1455,
+        865
+      ],
+      "demographic_segments": [
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11
+      ],
+      "evidence": "Daily-driver CPG."
+    },
+    {
+      "industry_id": "fashion-apparel",
+      "purchase_intent_segments": [
+        920,
+        919,
+        930
+      ],
+      "demographic_segments": [
+        3,
+        4,
+        5,
+        6
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "industry_id": "womenswear",
+      "purchase_intent_segments": [
+        920,
+        919
+      ],
+      "demographic_segments": [
+        49,
+        3,
+        4,
+        5,
+        6
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "industry_id": "menswear-brands",
+      "purchase_intent_segments": [
+        920,
+        919
+      ],
+      "demographic_segments": [
+        50,
+        4,
+        5,
+        6,
+        7
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "industry_id": "kidswear",
+      "purchase_intent_segments": [
+        920,
+        1382
+      ],
+      "demographic_segments": [
+        5,
+        6,
+        7,
+        125
+      ],
+      "evidence": "Parent buyer."
+    },
+    {
+      "industry_id": "footwear",
+      "purchase_intent_segments": [
+        930,
+        919
+      ],
+      "demographic_segments": [
+        3,
+        4,
+        5,
+        6
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "industry_id": "luxury-goods",
+      "purchase_intent_segments": [
+        920,
+        933,
+        932
+      ],
+      "demographic_segments": [
+        5,
+        6,
+        7,
+        8,
+        191
+      ],
+      "evidence": "HNW demo."
+    },
+    {
+      "industry_id": "fast-fashion",
+      "purchase_intent_segments": [
+        920
+      ],
+      "demographic_segments": [
+        49,
+        3,
+        4,
+        5
+      ],
+      "evidence": "Young value-conscious female."
+    },
+    {
+      "industry_id": "jewellery",
+      "purchase_intent_segments": [
+        933,
+        932
+      ],
+      "demographic_segments": [
+        49,
+        4,
+        5,
+        6,
+        7
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "industry_id": "watches",
+      "purchase_intent_segments": [
+        933
+      ],
+      "demographic_segments": [
+        50,
+        5,
+        6,
+        7,
+        8
+      ],
+      "evidence": "Male affluent demo."
+    },
+    {
+      "industry_id": "eyewear",
+      "purchase_intent_segments": [
+        934,
+        1470
+      ],
+      "demographic_segments": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "industry_id": "bags-luggage",
+      "purchase_intent_segments": [
+        932,
+        919
+      ],
+      "demographic_segments": [
+        4,
+        5,
+        6,
+        7
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "industry_id": "activewear",
+      "purchase_intent_segments": [
+        920,
+        930,
+        1633
+      ],
+      "demographic_segments": [
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "evidence": "Fitness + clothing overlap."
+    },
+    {
+      "industry_id": "intimates",
+      "purchase_intent_segments": [
+        920
+      ],
+      "demographic_segments": [
+        49,
+        3,
+        4,
+        5,
+        6
+      ],
+      "evidence": "Female apparel."
+    },
+    {
+      "industry_id": "swimwear",
+      "purchase_intent_segments": [
+        920
+      ],
+      "demographic_segments": [
+        3,
+        4,
+        5,
+        6
+      ],
+      "evidence": "Seasonal apparel."
+    },
+    {
+      "industry_id": "sports-outdoor",
+      "purchase_intent_segments": [
+        1618,
+        1635,
+        1619
+      ],
+      "demographic_segments": [
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "industry_id": "sportswear",
+      "purchase_intent_segments": [
+        920,
+        930,
+        1619
+      ],
+      "demographic_segments": [
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "evidence": "Wide adult demo."
+    },
+    {
+      "industry_id": "sporting-equipment",
+      "purchase_intent_segments": [
+        1619,
+        1618
+      ],
+      "demographic_segments": [
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "industry_id": "outdoor-gear",
+      "purchase_intent_segments": [
+        1635,
+        1618
+      ],
+      "demographic_segments": [
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "industry_id": "bicycles",
+      "purchase_intent_segments": [
+        1618,
+        1619,
+        1635
+      ],
+      "demographic_segments": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11
+      ],
+      "evidence": "Cycling buyer."
+    },
+    {
+      "industry_id": "fitness-equipment",
+      "purchase_intent_segments": [
+        1633,
+        1618
+      ],
+      "demographic_segments": [
+        5,
+        6,
+        7,
+        8
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "industry_id": "gyms-studios",
+      "purchase_intent_segments": [
+        1593,
+        1595,
+        1598
+      ],
+      "demographic_segments": [
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "industry_id": "sports-teams-leagues",
+      "purchase_intent_segments": [
+        803,
+        799,
+        940
+      ],
+      "demographic_segments": [
+        50,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "evidence": "Sports fan demo."
+    },
+    {
+      "industry_id": "food-beverage",
+      "purchase_intent_segments": [
+        972,
+        973
+      ],
+      "demographic_segments": [
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13
+      ],
+      "evidence": "Direct IAB CPG."
+    },
+    {
+      "industry_id": "snacks",
+      "purchase_intent_segments": [
+        972,
+        973
+      ],
+      "demographic_segments": [
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "evidence": "CPG."
+    },
+    {
+      "industry_id": "frozen-food",
+      "purchase_intent_segments": [
+        972,
+        973
+      ],
+      "demographic_segments": [
+        5,
+        6,
+        7,
+        8
+      ],
+      "evidence": "CPG."
+    },
+    {
+      "industry_id": "dairy",
+      "purchase_intent_segments": [
+        972,
+        973
+      ],
+      "demographic_segments": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11
+      ],
+      "evidence": "CPG."
+    },
+    {
+      "industry_id": "plant-based-food",
+      "purchase_intent_segments": [
+        972,
+        973
+      ],
+      "demographic_segments": [
+        49,
+        4,
+        5,
+        6
+      ],
+      "evidence": "Younger female skew."
+    },
+    {
+      "industry_id": "meal-kits",
+      "purchase_intent_segments": [
+        972,
+        973,
+        1405
+      ],
+      "demographic_segments": [
+        5,
+        6,
+        7
+      ],
+      "evidence": "Working-adult demo."
+    },
+    {
+      "industry_id": "ready-meals",
+      "purchase_intent_segments": [
+        972,
+        973
+      ],
+      "demographic_segments": [
+        4,
+        5,
+        6
+      ],
+      "evidence": "CPG."
+    },
+    {
+      "industry_id": "condiments-sauces",
+      "purchase_intent_segments": [
+        972,
+        973
+      ],
+      "demographic_segments": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11
+      ],
+      "evidence": "CPG."
+    },
+    {
+      "industry_id": "coffee-tea",
+      "purchase_intent_segments": [
+        972,
+        973,
+        1401
+      ],
+      "demographic_segments": [
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11
+      ],
+      "evidence": "Daily-driver CPG."
+    },
+    {
+      "industry_id": "soft-drinks",
+      "purchase_intent_segments": [
+        972,
+        973
+      ],
+      "demographic_segments": [
+        3,
+        4,
+        5,
+        6
+      ],
+      "evidence": "CPG."
+    },
+    {
+      "industry_id": "bottled-water",
+      "purchase_intent_segments": [
+        972,
+        973
+      ],
+      "demographic_segments": [
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "evidence": "CPG."
+    },
+    {
+      "industry_id": "alcohol-beer",
+      "purchase_intent_segments": [
+        1402,
+        972,
+        973
+      ],
+      "demographic_segments": [
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "evidence": "Adult-only."
+    },
+    {
+      "industry_id": "alcohol-wine",
+      "purchase_intent_segments": [
+        1402,
+        972,
+        973
+      ],
+      "demographic_segments": [
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13
+      ],
+      "evidence": "Wide adult."
+    },
+    {
+      "industry_id": "alcohol-spirits",
+      "purchase_intent_segments": [
+        1402,
+        972
+      ],
+      "demographic_segments": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11
+      ],
+      "evidence": "Adult-only."
+    },
+    {
+      "industry_id": "no-low-alcohol",
+      "purchase_intent_segments": [
+        972,
+        973,
+        1402
+      ],
+      "demographic_segments": [
+        5,
+        6,
+        7,
+        8
+      ],
+      "evidence": "Mindful-drinking demo."
+    },
+    {
+      "industry_id": "restaurants-qsr",
+      "purchase_intent_segments": [
+        1404,
+        1406,
+        1400
+      ],
+      "demographic_segments": [
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "industry_id": "grocery",
+      "purchase_intent_segments": [
+        972,
+        973
+      ],
+      "demographic_segments": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13
+      ],
+      "evidence": "Grocery shopper."
+    },
+    {
+      "industry_id": "food-delivery",
+      "purchase_intent_segments": [
+        1405,
+        760
+      ],
+      "demographic_segments": [
+        3,
+        4,
+        5,
+        6,
+        7,
+        146
+      ],
+      "evidence": "Urban younger demo."
+    },
+    {
+      "industry_id": "health-pharma",
+      "purchase_intent_segments": [
+        1448,
+        1455,
+        1555
+      ],
+      "demographic_segments": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "industry_id": "supplements-brands",
+      "purchase_intent_segments": [
+        1448,
+        1455,
+        1449
+      ],
+      "demographic_segments": [
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "industry_id": "sports-nutrition",
+      "purchase_intent_segments": [
+        1448,
+        1633,
+        1455
+      ],
+      "demographic_segments": [
+        3,
+        4,
+        5,
+        6
+      ],
+      "evidence": "Fitness audience."
+    },
+    {
+      "industry_id": "otc-medicine",
+      "purchase_intent_segments": [
+        1455,
+        1555,
+        1448
+      ],
+      "demographic_segments": [
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13
+      ],
+      "evidence": "Adult buyer."
+    },
+    {
+      "industry_id": "prescription-pharma",
+      "purchase_intent_segments": [
+        1555,
+        1448,
+        1459
+      ],
+      "demographic_segments": [
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13
+      ],
+      "evidence": "Adult patient demo."
+    },
+    {
+      "industry_id": "telehealth",
+      "purchase_intent_segments": [
+        1448,
+        1459,
+        765
+      ],
+      "demographic_segments": [
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "evidence": "Digital-native patient."
+    },
+    {
+      "industry_id": "mental-health-services",
+      "purchase_intent_segments": [
+        1448,
+        1459,
+        765
+      ],
+      "demographic_segments": [
+        3,
+        4,
+        5,
+        6
+      ],
+      "evidence": "Younger user per Calm/BetterHelp demos."
+    },
+    {
+      "industry_id": "weight-management",
+      "purchase_intent_segments": [
+        1448,
+        1455,
+        1459
+      ],
+      "demographic_segments": [
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "evidence": "Adult diet demo."
+    },
+    {
+      "industry_id": "sexual-wellness",
+      "purchase_intent_segments": [
+        1448,
+        1455
+      ],
+      "demographic_segments": [
+        3,
+        4,
+        5,
+        6
+      ],
+      "evidence": "Younger adult demo."
+    },
+    {
+      "industry_id": "femtech",
+      "purchase_intent_segments": [
+        1448,
+        765,
+        1459
+      ],
+      "demographic_segments": [
+        49,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "evidence": "Female health-tech."
+    },
+    {
+      "industry_id": "dental-services",
+      "purchase_intent_segments": [
+        1454,
+        1448
+      ],
+      "demographic_segments": [
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "industry_id": "vision-care",
+      "purchase_intent_segments": [
+        1470,
+        1448
+      ],
+      "demographic_segments": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "industry_id": "technology",
+      "purchase_intent_segments": [
+        942,
+        953,
+        1599
+      ],
+      "demographic_segments": [
+        50,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "industry_id": "consumer-electronics-brands",
+      "purchase_intent_segments": [
+        942,
+        944,
+        966,
+        947
+      ],
+      "demographic_segments": [
+        3,
+        4,
+        5,
+        6
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "industry_id": "mobile-devices",
+      "purchase_intent_segments": [
+        961,
+        960,
+        942
+      ],
+      "demographic_segments": [
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "industry_id": "wearables",
+      "purchase_intent_segments": [
+        942,
+        762
+      ],
+      "demographic_segments": [
+        4,
+        5,
+        6,
+        7
+      ],
+      "evidence": "Tech + fitness overlap."
+    },
+    {
+      "industry_id": "audio-equipment",
+      "purchase_intent_segments": [
+        944,
+        942
+      ],
+      "demographic_segments": [
+        3,
+        4,
+        5,
+        6
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "industry_id": "computing-hardware",
+      "purchase_intent_segments": [
+        953,
+        942
+      ],
+      "demographic_segments": [
+        50,
+        3,
+        4,
+        5,
+        6
+      ],
+      "evidence": "Male enthusiast skew."
+    },
+    {
+      "industry_id": "saas",
+      "purchase_intent_segments": [
+        1600,
+        756,
+        770
+      ],
+      "demographic_segments": [
+        4,
+        5,
+        6,
+        7
+      ],
+      "evidence": "Working-adult demo."
+    },
+    {
+      "industry_id": "consumer-software",
+      "purchase_intent_segments": [
+        1600,
+        763
+      ],
+      "demographic_segments": [
+        3,
+        4,
+        5,
+        6
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "industry_id": "ai-products",
+      "purchase_intent_segments": [
+        1600,
+        770
+      ],
+      "demographic_segments": [
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "evidence": "Working-adult tech adopter."
+    },
+    {
+      "industry_id": "cybersecurity",
+      "purchase_intent_segments": [
+        1600
+      ],
+      "demographic_segments": [
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "evidence": "Working-adult security demo."
+    },
+    {
+      "industry_id": "smart-home",
+      "purchase_intent_segments": [
+        942,
+        1478
+      ],
+      "demographic_segments": [
+        5,
+        6,
+        7,
+        8,
+        137
+      ],
+      "evidence": "Homeowner tech adopter."
+    },
+    {
+      "industry_id": "gaming-industry",
+      "purchase_intent_segments": [
+        971,
+        970,
+        761
+      ],
+      "demographic_segments": [
+        3,
+        4,
+        5,
+        6
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "industry_id": "game-publishers",
+      "purchase_intent_segments": [
+        971,
+        761
+      ],
+      "demographic_segments": [
+        3,
+        4,
+        5,
+        6
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "industry_id": "indie-games",
+      "purchase_intent_segments": [
+        971,
+        761,
+        1617
+      ],
+      "demographic_segments": [
+        3,
+        4,
+        5,
+        6
+      ],
+      "evidence": "Gamer demo."
+    },
+    {
+      "industry_id": "mobile-games-publishers",
+      "purchase_intent_segments": [
+        761,
+        1617
+      ],
+      "demographic_segments": [
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "evidence": "Wider casual demo."
+    },
+    {
+      "industry_id": "gaming-hardware",
+      "purchase_intent_segments": [
+        970,
+        971,
+        942,
+        953
+      ],
+      "demographic_segments": [
+        50,
+        3,
+        4,
+        5,
+        6
+      ],
+      "evidence": "Male enthusiast."
+    },
+    {
+      "industry_id": "esports-orgs",
+      "purchase_intent_segments": [
+        971,
+        803
+      ],
+      "demographic_segments": [
+        50,
+        3,
+        4,
+        5
+      ],
+      "evidence": "Young male."
+    },
+    {
+      "industry_id": "creator-tools",
+      "purchase_intent_segments": [
+        1600,
+        944,
+        970
+      ],
+      "demographic_segments": [
+        3,
+        4,
+        5,
+        6
+      ],
+      "evidence": "Streamer/creator demo."
+    },
+    {
+      "industry_id": "media-entertainment",
+      "purchase_intent_segments": [
+        804,
+        800,
+        803
+      ],
+      "demographic_segments": [
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "industry_id": "streaming-services",
+      "purchase_intent_segments": [
+        800,
+        758,
+        804
+      ],
+      "demographic_segments": [
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "industry_id": "film-tv-studios",
+      "purchase_intent_segments": [
+        804,
+        803,
+        800
+      ],
+      "demographic_segments": [
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "industry_id": "music-labels",
+      "purchase_intent_segments": [
+        800,
+        803
+      ],
+      "demographic_segments": [
+        3,
+        4,
+        5,
+        6
+      ],
+      "evidence": "Music fan."
+    },
+    {
+      "industry_id": "music-dsps",
+      "purchase_intent_segments": [
+        800,
+        766
+      ],
+      "demographic_segments": [
+        3,
+        4,
+        5,
+        6
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "industry_id": "podcasts-networks",
+      "purchase_intent_segments": [
+        802,
+        800
+      ],
+      "demographic_segments": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "industry_id": "publishing",
+      "purchase_intent_segments": [
+        755,
+        801
+      ],
+      "demographic_segments": [
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13
+      ],
+      "evidence": "Reader demo."
+    },
+    {
+      "industry_id": "live-events",
+      "purchase_intent_segments": [
+        803,
+        782
+      ],
+      "demographic_segments": [
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "industry_id": "ticketing",
+      "purchase_intent_segments": [
+        803,
+        782
+      ],
+      "demographic_segments": [
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "industry_id": "travel-hospitality",
+      "purchase_intent_segments": [
+        1649,
+        1666,
+        1651
+      ],
+      "demographic_segments": [
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "industry_id": "airlines",
+      "purchase_intent_segments": [
+        1651,
+        1649,
+        1674
+      ],
+      "demographic_segments": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "industry_id": "hotels",
+      "purchase_intent_segments": [
+        1666,
+        1649
+      ],
+      "demographic_segments": [
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "industry_id": "short-term-rentals",
+      "purchase_intent_segments": [
+        1666,
+        1654,
+        1674,
+        776
+      ],
+      "demographic_segments": [
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "evidence": "Younger family demo."
+    },
+    {
+      "industry_id": "otas",
+      "purchase_intent_segments": [
+        1674,
+        776,
+        1651,
+        1666
+      ],
+      "demographic_segments": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "industry_id": "cruises",
+      "purchase_intent_segments": [
+        1661,
+        1649
+      ],
+      "demographic_segments": [
+        9,
+        10,
+        11,
+        12,
+        13
+      ],
+      "evidence": "Older affluent demo."
+    },
+    {
+      "industry_id": "tourism-boards",
+      "purchase_intent_segments": [
+        1649,
+        1671
+      ],
+      "demographic_segments": [
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "industry_id": "luggage-travel-gear",
+      "purchase_intent_segments": [
+        932,
+        1649
+      ],
+      "demographic_segments": [
+        4,
+        5,
+        6,
+        7
+      ],
+      "evidence": "Travel buyer."
+    },
+    {
+      "industry_id": "car-rental",
+      "purchase_intent_segments": [
+        1652,
+        1649
+      ],
+      "demographic_segments": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "industry_id": "automotive-industry",
+      "purchase_intent_segments": [
+        805,
+        806,
+        861
+      ],
+      "demographic_segments": [
+        50,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "industry_id": "auto-oems",
+      "purchase_intent_segments": [
+        806,
+        805
+      ],
+      "demographic_segments": [
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "industry_id": "ev-brands",
+      "purchase_intent_segments": [
+        806,
+        805
+      ],
+      "demographic_segments": [
+        6,
+        7,
+        8,
+        9,
+        191
+      ],
+      "evidence": "Affluent EV buyer."
+    },
+    {
+      "industry_id": "auto-aftermarket",
+      "purchase_intent_segments": [
+        854,
+        852
+      ],
+      "demographic_segments": [
+        50,
+        4,
+        5,
+        6,
+        7
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "industry_id": "motorcycle-brands",
+      "purchase_intent_segments": [
+        805,
+        806
+      ],
+      "demographic_segments": [
+        50,
+        5,
+        6,
+        7,
+        8
+      ],
+      "evidence": "Male rider demo."
+    },
+    {
+      "industry_id": "tyres",
+      "purchase_intent_segments": [
+        854,
+        861
+      ],
+      "demographic_segments": [
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "industry_id": "auto-dealers",
+      "purchase_intent_segments": [
+        806,
+        829,
+        805
+      ],
+      "demographic_segments": [
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "industry_id": "financial-services",
+      "purchase_intent_segments": [
+        1383,
+        1385,
+        1389
+      ],
+      "demographic_segments": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "industry_id": "retail-banking",
+      "purchase_intent_segments": [
+        1385
+      ],
+      "demographic_segments": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "industry_id": "fintech-neobanks",
+      "purchase_intent_segments": [
+        1385,
+        759
+      ],
+      "demographic_segments": [
+        3,
+        4,
+        5,
+        6
+      ],
+      "evidence": "Younger digital-native."
+    },
+    {
+      "industry_id": "investing-platforms",
+      "purchase_intent_segments": [
+        1397,
+        759
+      ],
+      "demographic_segments": [
+        50,
+        4,
+        5,
+        6,
+        7
+      ],
+      "evidence": "Younger male per brokerage demos."
+    },
+    {
+      "industry_id": "credit-cards",
+      "purchase_intent_segments": [
+        1388,
+        1385
+      ],
+      "demographic_segments": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "industry_id": "buy-now-pay-later",
+      "purchase_intent_segments": [
+        1388,
+        759
+      ],
+      "demographic_segments": [
+        3,
+        4,
+        5,
+        6
+      ],
+      "evidence": "Younger Klarna/Afterpay demo."
+    },
+    {
+      "industry_id": "insurance",
+      "purchase_intent_segments": [
+        1389,
+        1383
+      ],
+      "demographic_segments": [
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "industry_id": "crypto-exchanges",
+      "purchase_intent_segments": [
+        1617,
+        1397,
+        759
+      ],
+      "demographic_segments": [
+        50,
+        4,
+        5,
+        6
+      ],
+      "evidence": "Younger male per Coinbase demos."
+    },
+    {
+      "industry_id": "tax-services",
+      "purchase_intent_segments": [
+        1399,
+        1384,
+        1383
+      ],
+      "demographic_segments": [
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13
+      ],
+      "evidence": "Adult filer."
+    },
+    {
+      "industry_id": "telecom-utilities",
+      "purchase_intent_segments": [
+        911,
+        960
+      ],
+      "demographic_segments": [
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "industry_id": "mobile-carriers",
+      "purchase_intent_segments": [
+        960,
+        961,
+        911
+      ],
+      "demographic_segments": [
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "industry_id": "internet-providers",
+      "purchase_intent_segments": [
+        1678,
+        1676,
+        911
+      ],
+      "demographic_segments": [
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "industry_id": "energy-utilities",
+      "purchase_intent_segments": [
+        1476,
+        1478
+      ],
+      "demographic_segments": [
+        5,
+        6,
+        7,
+        8,
+        9,
+        137
+      ],
+      "evidence": "Homeowner."
+    },
+    {
+      "industry_id": "home-living",
+      "purchase_intent_segments": [
+        1407,
+        1476,
+        1483
+      ],
+      "demographic_segments": [
+        5,
+        6,
+        7,
+        8,
+        137
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "industry_id": "furniture",
+      "purchase_intent_segments": [
+        1407,
+        1410,
+        1416
+      ],
+      "demographic_segments": [
+        5,
+        6,
+        7,
+        8
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "industry_id": "home-decor-brands",
+      "purchase_intent_segments": [
+        1407,
+        1476
+      ],
+      "demographic_segments": [
+        49,
+        5,
+        6,
+        7
+      ],
+      "evidence": "Female homemaker."
+    },
+    {
+      "industry_id": "home-appliances",
+      "purchase_intent_segments": [
+        1477,
+        1407
+      ],
+      "demographic_segments": [
+        5,
+        6,
+        7,
+        8,
+        137
+      ],
+      "evidence": "Homeowner."
+    },
+    {
+      "industry_id": "kitchenware",
+      "purchase_intent_segments": [
+        1407,
+        972
+      ],
+      "demographic_segments": [
+        5,
+        6,
+        7,
+        8
+      ],
+      "evidence": "Home cook."
+    },
+    {
+      "industry_id": "bedding-bath",
+      "purchase_intent_segments": [
+        1410,
+        1407
+      ],
+      "demographic_segments": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "industry_id": "cleaning-household",
+      "purchase_intent_segments": [
+        1484,
+        1179
+      ],
+      "demographic_segments": [
+        5,
+        6,
+        7,
+        8
+      ],
+      "evidence": "Household buyer."
+    },
+    {
+      "industry_id": "home-improvement",
+      "purchase_intent_segments": [
+        1483,
+        1428,
+        1446
+      ],
+      "demographic_segments": [
+        6,
+        7,
+        8,
+        9,
+        137
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "industry_id": "gardening-brands",
+      "purchase_intent_segments": [
+        1486,
+        1485
+      ],
+      "demographic_segments": [
+        7,
+        8,
+        9,
+        10,
+        137
+      ],
+      "evidence": "Older homeowner."
+    },
+    {
+      "industry_id": "baby-kids",
+      "purchase_intent_segments": [
+        1377,
+        1378,
+        1382,
+        1408
+      ],
+      "demographic_segments": [
+        5,
+        6,
+        7,
+        125
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "industry_id": "baby-food",
+      "purchase_intent_segments": [
+        1377,
+        972,
+        973
+      ],
+      "demographic_segments": [
+        5,
+        6,
+        7,
+        125
+      ],
+      "evidence": "Parent buyer."
+    },
+    {
+      "industry_id": "diapers-nappies",
+      "purchase_intent_segments": [
+        1377,
+        972
+      ],
+      "demographic_segments": [
+        5,
+        6,
+        7,
+        125
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "industry_id": "baby-gear",
+      "purchase_intent_segments": [
+        1377,
+        1408
+      ],
+      "demographic_segments": [
+        5,
+        6,
+        7,
+        125
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "industry_id": "toys",
+      "purchase_intent_segments": [
+        1382,
+        1377
+      ],
+      "demographic_segments": [
+        5,
+        6,
+        7,
+        8,
+        125
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "industry_id": "kids-edutainment",
+      "purchase_intent_segments": [
+        1382,
+        757,
+        1377
+      ],
+      "demographic_segments": [
+        6,
+        7,
+        8,
+        125
+      ],
+      "evidence": "Parent of school-age."
+    },
+    {
+      "industry_id": "pets-industry",
+      "purchase_intent_segments": [
+        1549,
+        1553,
+        1554
+      ],
+      "demographic_segments": [
+        5,
+        6,
+        7,
+        8
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "industry_id": "pet-food",
+      "purchase_intent_segments": [
+        1553,
+        1549,
+        972
+      ],
+      "demographic_segments": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13
+      ],
+      "evidence": "Pet owner."
+    },
+    {
+      "industry_id": "pet-supplies",
+      "purchase_intent_segments": [
+        1553,
+        1549
+      ],
+      "demographic_segments": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "industry_id": "pet-tech",
+      "purchase_intent_segments": [
+        1553,
+        942
+      ],
+      "demographic_segments": [
+        5,
+        6,
+        7,
+        8
+      ],
+      "evidence": "Pet-owner tech adopter."
+    },
+    {
+      "industry_id": "vet-services",
+      "purchase_intent_segments": [
+        1554,
+        1549
+      ],
+      "demographic_segments": [
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "industry_id": "pet-insurance",
+      "purchase_intent_segments": [
+        1389,
+        1549
+      ],
+      "demographic_segments": [
+        5,
+        6,
+        7,
+        8
+      ],
+      "evidence": "Insurance + pet overlap."
+    },
+    {
+      "industry_id": "education-industry",
+      "purchase_intent_segments": [
+        1368,
+        1374,
+        1371
+      ],
+      "demographic_segments": [
+        3,
+        4,
+        5,
+        6
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "industry_id": "online-courses",
+      "purchase_intent_segments": [
+        1374,
+        757,
+        1368
+      ],
+      "demographic_segments": [
+        4,
+        5,
+        6,
+        7
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "industry_id": "tutoring",
+      "purchase_intent_segments": [
+        1374,
+        757
+      ],
+      "demographic_segments": [
+        3,
+        4,
+        5,
+        125
+      ],
+      "evidence": "Student + parent."
+    },
+    {
+      "industry_id": "language-learning-brands",
+      "purchase_intent_segments": [
+        1373,
+        757
+      ],
+      "demographic_segments": [
+        3,
+        4,
+        5,
+        6
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "industry_id": "k12",
+      "purchase_intent_segments": [
+        1368
+      ],
+      "demographic_segments": [
+        6,
+        7,
+        8,
+        125
+      ],
+      "evidence": "Parent of school-age."
+    },
+    {
+      "industry_id": "higher-ed",
+      "purchase_intent_segments": [
+        1371,
+        1368
+      ],
+      "demographic_segments": [
+        3,
+        4,
+        5
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "industry_id": "coding-bootcamps",
+      "purchase_intent_segments": [
+        1374,
+        1370
+      ],
+      "demographic_segments": [
+        3,
+        4,
+        5,
+        6
+      ],
+      "evidence": "Tech-career switcher."
+    },
+    {
+      "industry_id": "apps-platforms",
+      "purchase_intent_segments": [
+        753,
+        763,
+        774
+      ],
+      "demographic_segments": [
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "industry_id": "dating-apps",
+      "purchase_intent_segments": [
+        763,
+        774
+      ],
+      "demographic_segments": [
+        3,
+        4,
+        5,
+        6,
+        162
+      ],
+      "evidence": "Single-adult demo."
+    },
+    {
+      "industry_id": "social-platforms",
+      "purchase_intent_segments": [
+        774
+      ],
+      "demographic_segments": [
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "industry_id": "productivity-apps",
+      "purchase_intent_segments": [
+        770,
+        756
+      ],
+      "demographic_segments": [
+        4,
+        5,
+        6,
+        7
+      ],
+      "evidence": "Working-adult."
+    },
+    {
+      "industry_id": "language-translation-apps",
+      "purchase_intent_segments": [
+        1373,
+        757
+      ],
+      "demographic_segments": [
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "industry_id": "marketplaces",
+      "purchase_intent_segments": [
+        773
+      ],
+      "demographic_segments": [
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11
+      ],
+      "evidence": "Wide buyer demo."
+    },
+    {
+      "industry_id": "ride-share-mobility",
+      "purchase_intent_segments": [
+        767,
+        1652
+      ],
+      "demographic_segments": [
+        3,
+        4,
+        5,
+        6,
+        146
+      ],
+      "evidence": "Urban younger demo."
+    },
+    {
+      "industry_id": "retail-ecommerce",
+      "purchase_intent_segments": [
+        773,
+        972,
+        920
+      ],
+      "demographic_segments": [
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "industry_id": "department-stores",
+      "purchase_intent_segments": [
+        920,
+        1407,
+        972
+      ],
+      "demographic_segments": [
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13
+      ],
+      "evidence": "Wide buyer."
+    },
+    {
+      "industry_id": "specialty-retail",
+      "purchase_intent_segments": [
+        920,
+        865
+      ],
+      "demographic_segments": [
+        3,
+        4,
+        5,
+        6
+      ],
+      "evidence": "Younger speciality demo."
+    },
+    {
+      "industry_id": "marketplaces-ecom",
+      "purchase_intent_segments": [
+        773
+      ],
+      "demographic_segments": [
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "industry_id": "d2c-subscription",
+      "purchase_intent_segments": [
+        773,
+        972
+      ],
+      "demographic_segments": [
+        4,
+        5,
+        6,
+        7
+      ],
+      "evidence": "Subscription buyer."
+    },
+    {
+      "industry_id": "discount-resale",
+      "purchase_intent_segments": [
+        773,
+        920
+      ],
+      "demographic_segments": [
+        3,
+        4,
+        5
+      ],
+      "evidence": "Younger thrift demo."
+    },
+    {
+      "industry_id": "real-estate",
+      "purchase_intent_segments": [
+        1585,
+        1590,
+        1588
+      ],
+      "demographic_segments": [
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "industry_id": "residential-real-estate",
+      "purchase_intent_segments": [
+        1590,
+        1588
+      ],
+      "demographic_segments": [
+        5,
+        6,
+        7,
+        8
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "industry_id": "rental-platforms",
+      "purchase_intent_segments": [
+        1587,
+        1585
+      ],
+      "demographic_segments": [
+        4,
+        5,
+        6
+      ],
+      "evidence": "Renter demo."
+    },
+    {
+      "industry_id": "mortgages",
+      "purchase_intent_segments": [
+        1394,
+        1383
+      ],
+      "demographic_segments": [
+        5,
+        6,
+        7,
+        8
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "industry_id": "professional-services",
+      "purchase_intent_segments": [
+        871,
+        1493,
+        1384
+      ],
+      "demographic_segments": [
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13
+      ],
+      "evidence": "Adult professional."
+    },
+    {
+      "industry_id": "legal-services",
+      "purchase_intent_segments": [
+        1493,
+        1494
+      ],
+      "demographic_segments": [
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "industry_id": "consulting",
+      "purchase_intent_segments": [
+        871,
+        872
+      ],
+      "demographic_segments": [
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "evidence": "B2B."
+    },
+    {
+      "industry_id": "accounting",
+      "purchase_intent_segments": [
+        1384,
+        1386,
+        1399
+      ],
+      "demographic_segments": [
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "industry_id": "recruitment-hr-tech",
+      "purchase_intent_segments": [
+        1372,
+        756,
+        882
+      ],
+      "demographic_segments": [
+        4,
+        5,
+        6,
+        7
+      ],
+      "evidence": "Working-adult."
+    },
+    {
+      "industry_id": "marketing-agencies",
+      "purchase_intent_segments": [
+        872,
+        871
+      ],
+      "demographic_segments": [
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11
+      ],
+      "evidence": "B2B."
+    },
+    {
+      "industry_id": "non-profit-government",
+      "purchase_intent_segments": [
+        1538,
+        1539,
+        1540
+      ],
+      "demographic_segments": [
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "industry_id": "charities",
+      "purchase_intent_segments": [
+        1539,
+        1538,
+        1543
+      ],
+      "demographic_segments": [
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13
+      ],
+      "evidence": "Direct IAB."
+    },
+    {
+      "industry_id": "government-public-sector",
+      "purchase_intent_segments": [
+        1540,
+        1538
+      ],
+      "demographic_segments": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13
+      ],
+      "evidence": "Civic engagement."
+    },
+    {
+      "industry_id": "political-advocacy",
+      "purchase_intent_segments": [
+        1540,
+        1538
+      ],
+      "demographic_segments": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13
+      ],
+      "evidence": "Sensitive vertical."
+    },
+    {
+      "industry_id": "sensitive-restricted",
+      "evidence": "Parent category for restricted industries. Sub-industries have specific IAB mappings; this parent intentionally has none."
+    },
+    {
+      "industry_id": "tobacco-vape",
+      "purchase_intent_segments": [
+        1467
+      ],
+      "demographic_segments": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11
+      ],
+      "evidence": "Adult-only; SMOKING_CESSATION is the closest IAB segment - sensitive."
+    },
+    {
+      "industry_id": "cannabis-cbd",
+      "purchase_intent_segments": [
+        1449,
+        1455
+      ],
+      "demographic_segments": [
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "evidence": "Adult-only; alt-medicine adjacency."
+    },
+    {
+      "industry_id": "gambling",
+      "purchase_intent_segments": [
+        799
+      ],
+      "demographic_segments": [
+        50,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "evidence": "Adult male sports-fan demo. Sensitive."
+    },
+    {
+      "industry_id": "lottery",
+      "purchase_intent_segments": [
+        799
+      ],
+      "demographic_segments": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13
+      ],
+      "evidence": "Adult-only."
+    },
+    {
+      "industry_id": "adult-industry",
+      "evidence": "Adult-only; no clean IAB Purchase Intent mapping. Sensitive vertical - typically blocked on mainstream creator platforms."
+    },
+    {
+      "industry_id": "firearms",
+      "evidence": "Adult-only; no clean IAB Purchase Intent mapping. Sensitive vertical - restricted on most mainstream creator platforms."
+    }
+  ]
+}
