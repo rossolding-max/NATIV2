@@ -31,6 +31,23 @@
 **Env var:** `LINKEDIN_API_KEY` (or per the provided access mechanism).
 **v0.1 scope is enrichment only — NOT outreach.** The LinkedIn API in v0.1 is used to read profile data, last-activity dates, and search. Sending LinkedIn messages / InMails / connection requests as part of an outreach sequence is **deferred to v2** — see `docs/outreach_workflow.md` § "Email-only in v0.1". When v2 ships LinkedIn-channel sending, we'll evaluate sender vendors (Sales Navigator API vs third-party platforms like Closely / Expandi / La Growth Machine) against LinkedIn's automation-policy enforcement.
 
+### Phase 4.6 proposal pack — file parsing (v0.1 in-process)
+**Role:** Phase 4.6 (`docs/proposal_pack_workflow.md`) lets the agent upload brand briefs, discovery call notes, transcripts, and reference material to augment proposal generation context. Each file is parsed to text + LLM-summarised in-process; no external vendor for v0.1.
+**Libraries:**
+- `pypdf` — PDF text extraction
+- `python-docx` — Word (.docx) text extraction
+- Built-in text/markdown reader for .txt + .md
+**Why in-process:** simple file types, no auth needed, no vendor cost, fully deterministic. Audio transcription + image OCR are deferred to v2 (different vendor profile).
+**Limits:** 25MB per file, 100MB total per deal in v0.1. Files exceeding the limit can be referenced via external URL (the `external_url` field on `context_artefact`).
+**Env vars:** none.
+
+### Phase 4.6 proposal pack — call transcript links (deferred — v2)
+**Role:** v2 adds support for referencing external call-recording transcripts in the proposal context — agent pastes a URL to their Otter.ai / Fireflies.ai / Grain / Zoom transcript, system stores the reference but does NOT fetch the transcript content in v0.1.
+**v2 evaluation candidates:** Otter.ai (~$17/mo, real-time transcription, API), Fireflies.ai ($10-19/mo, AI-summary built in, robust API), Grain ($15-45/mo, sales-focused with deal-level analytics, API), Zoom Cloud Recording (built into Zoom Business+, native transcript API).
+**v2 trade-offs:** authentication patterns differ (OAuth vs API-key); transcript-quality differences for nuanced influencer-marketing language; per-meeting cost; whether we fetch transcript content (requires storage + parsing) or only store the URL as a reference (agent reads it externally).
+**v0.1 placeholder:** schema field `context_artefact.parser: "external_transcript_link"` + `external_url` exist and accept manual URL paste; the LLM is informed of the link but cannot read it.
+**Env vars when wired:** `OTTER_API_KEY` / `FIREFLIES_API_KEY` / `GRAIN_API_KEY` / `ZOOM_CLIENT_ID` (whichever is chosen).
+
 ### Phase 4 vendor integrations (deferred — v2)
 **Role:** Phase 4 deal lifecycle (`docs/deal_lifecycle_workflow.md`) currently tracks contracts + invoices manually in v0.1 (PDF upload + dates). v2 adds API integrations for the high-friction operations:
 

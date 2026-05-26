@@ -262,6 +262,7 @@ All gitignored — commercial data + research summaries + agency branded artefac
 | **Phase 3b outreach analyzer** | Past `objection`-classified outcomes mined for "likely objections" section. |
 | **`data/pitch_angles.json`** | Top-scoring angles for this brand × niche feed `fit_angle` slide + briefing fit hypothesis. |
 | **Phase 4 deal record** | `lead.discovery_prep_pack_ids[]` + `lead.latest_prep_pack_id` are FK references. `deal.lead.discovery_call_notes` post-call can reference the prep pack version that was used. |
+| **Phase 4.6 proposal pack** | The downstream artefact. Proposal pack's `context_snapshot.forked_from_prep_pack_id` references this prep pack's version; its `slides[*].forked_from_prep_slide_id` references individual slides that carry over. Briefing's `commercial_range` seeds the LLM's fee proposal in the proposal pack's Stage C. The Objectives recap slide in the proposal lifts `deal.lead.discovery_debrief.objectives_heard` — closes the loop: brand sees we heard what they said. See `docs/proposal_pack_workflow.md`. |
 
 ## Failure handling
 

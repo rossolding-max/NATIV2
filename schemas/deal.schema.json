@@ -177,16 +177,126 @@
           "type": "string",
           "pattern": "^prep_[a-z0-9_-]+_v[0-9]+$",
           "description": "Pointer to the current `is_latest: true` prep pack version. Updates whenever a new version is generated. The agent's UI surfaces this version; older versions are accessed via the audit log."
+        },
+        "discovery_debrief": {
+          "type": "object",
+          "description": "Structured debrief of what was learned in the discovery call. Populated via the hybrid extraction flow in Phase 4.6 Stage B: agent dumps free-form notes (or uploads transcript file), LLM extracts structured fields, agent reviews + edits inline + confirms. Each field carries a confidence level. Cross-version anchor — multiple proposal pack versions can share the same debrief; if debrief evolves (e.g. follow-up call adds context), each proposal_pack version snapshots its state in `context_snapshot.discovery_debrief_snapshot`. See `docs/proposal_pack_workflow.md`.",
+          "additionalProperties": false,
+          "properties": {
+            "extracted_at": { "type": "string", "format": "date-time" },
+            "extracted_from_artefact_ids": {
+              "type": "array",
+              "items": { "type": "string", "pattern": "^ctx_[a-z0-9]+$" },
+              "description": "FKs to `proposal_pack.context_artefacts[]` entries the LLM used as source material (discovery_call_notes, call_transcript, etc.)."
+            },
+            "confirmed_at": {
+              "type": "string",
+              "format": "date-time",
+              "description": "When the agent reviewed + confirmed the extracted debrief. Required before proposal generation Stage C can fire."
+            },
+            "confirmed_by_agent_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+            "objectives_heard": {
+              "type": "array",
+              "description": "What the brand stated they want to achieve.",
+              "items": { "$ref": "#/$defs/debriefSignal" }
+            },
+            "pain_points": {
+              "type": "array",
+              "description": "Current friction the brand surfaced (e.g. 'past creator partnerships felt transactional, no continuity').",
+              "items": { "$ref": "#/$defs/debriefSignal" }
+            },
+            "critical_event": {
+              "$ref": "#/$defs/debriefSignal",
+              "description": "Why now — what's triggering the brand to act (e.g. 'spring launch in 6 weeks', 'CMO pressure to show creator-driven growth')."
+            },
+            "scope_signal": {
+              "$ref": "#/$defs/debriefSignal",
+              "description": "Campaign size / ambition hints from the call."
+            },
+            "timing_signal": {
+              "$ref": "#/$defs/debriefSignal",
+              "description": "When brand needs to act / launch."
+            },
+            "budget_signal": {
+              "type": "object",
+              "additionalProperties": false,
+              "description": "Budget hints from the call. Numeric range optional — sometimes only qualitative signal ('flexible', 'tight') is captured.",
+              "properties": {
+                "statement": { "type": "string" },
+                "confidence": { "type": "string", "enum": ["high", "medium", "low"] },
+                "range_usd_low": { "type": "number", "minimum": 0 },
+                "range_usd_high": { "type": "number", "minimum": 0 }
+              }
+            },
+            "exclusivity_signals": {
+              "type": "array",
+              "description": "Competing-creator concerns, category exclusivity expectations.",
+              "items": { "$ref": "#/$defs/debriefSignal" }
+            },
+            "usage_rights_signals": {
+              "type": "array",
+              "description": "Paid social / whitelisting / broadcast hints from the call.",
+              "items": { "$ref": "#/$defs/debriefSignal" }
+            },
+            "decision_process": {
+              "type": "object",
+              "additionalProperties": false,
+              "description": "Who else needs to weigh in + how + when.",
+              "properties": {
+                "stakeholders": { "type": "array", "items": { "type": "string" }, "description": "Roles or names of other approvers (legal, finance, CMO, etc.)." },
+                "process_description": { "type": "string" },
+                "timeline": { "type": "string" },
+                "confidence": { "type": "string", "enum": ["high", "medium", "low"] }
+              }
+            },
+            "red_flags_surfaced": {
+              "type": "array",
+              "description": "Anything from the call that conflicts with talent's red_lines or values.",
+              "items": { "$ref": "#/$defs/debriefSignal" }
+            },
+            "agent_edits_post_extraction": {
+              "type": "array",
+              "description": "Audit log of agent edits to LLM-extracted fields during the review-and-confirm step. Captures what the agent changed before clicking Confirm.",
+              "items": {
+                "type": "object",
+                "required": ["edited_at", "field", "from", "to"],
+                "additionalProperties": false,
+                "properties": {
+                  "edited_at": { "type": "string", "format": "date-time" },
+                  "field": { "type": "string" },
+                  "from": {},
+                  "to": {},
+                  "note": { "type": "string" }
+                }
+              }
+            }
+          }
         }
       }
     },
 
     "proposalStage": {
       "type": "object",
-      "description": "Captured during PROPOSAL stage. Mirrors brand_deal.deliverables/commercials shape — when archived, these fields carry into the brand_deal record.",
+      "description": "Captured during PROPOSAL stage. Mirrors brand_deal.deliverables/commercials shape — when archived, these fields carry into the brand_deal record. Generated by the Phase 4.6 proposal pack pipeline (`docs/proposal_pack_workflow.md`): the LLM proposes commercials, the agent confirms (passing the commercial gate), and confirmed values write into the fields below. `proposal_pack_ids[]` references all versions of the proposal pack generated for this deal.",
       "additionalProperties": false,
       "properties": {
-        "proposal_attachment_id": { "type": "string", "description": "FK to attachments[] for the formal proposal PDF." },
+        "proposal_pack_ids": {
+          "type": "array",
+          "description": "FK list to all versions of the proposal pack generated for this deal (Phase 4.6). Each version is a file at `data/deals/{deal_id}/proposal_packs/v{N}.json`. Append-only — v1, v2, v3... all retained as history including negotiation-response regens.",
+          "items": { "type": "string", "pattern": "^pp_[a-z0-9_-]+_v[0-9]+$" }
+        },
+        "latest_proposal_pack_id": {
+          "type": "string",
+          "pattern": "^pp_[a-z0-9_-]+_v[0-9]+$",
+          "description": "Pointer to the current `is_latest: true` proposal pack version."
+        },
+        "commercial_confirmed_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When the agent passed the Phase 4.6 commercial gate — confirmed the LLM-proposed deliverables + fee + usage_rights + exclusivity etc. Setting this triggers slide generation. The commercial fields below (deliverables, fee_usd, etc.) are populated from the confirmed values."
+        },
+        "commercial_confirmed_by_agent_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+        "proposal_attachment_id": { "type": "string", "description": "FK to attachments[] for the formal proposal PDF — typically the leave-behind PDF from the latest proposal pack version." },
         "proposal_sent_at": { "type": "string", "format": "date-time" },
         "deliverables": {
           "type": "array",
@@ -240,7 +350,7 @@
         },
         "negotiation_log": {
           "type": "array",
-          "description": "Chronological back-and-forth during negotiation.",
+          "description": "Chronological back-and-forth during negotiation. Each entry bidirectionally links to a Phase 4.6 proposal pack version: `proposal_pack_version` captures which version this pushback was on; the responding proposal pack version's `generation.negotiation_log_entry_ref` (an ISO timestamp matching `at`) points back here. Closes the audit loop between negotiation events and proposal artefacts.",
           "items": {
             "type": "object",
             "required": ["at", "direction", "summary"],
@@ -251,7 +361,12 @@
               "channel": { "type": "string", "enum": ["email", "call", "meeting", "message", "other"] },
               "summary": { "type": "string" },
               "terms_changed": { "type": "string", "description": "Description of what changed in the proposal as a result of this exchange." },
-              "attachment_ids": { "type": "array", "items": { "type": "string" } }
+              "attachment_ids": { "type": "array", "items": { "type": "string" } },
+              "proposal_pack_version": {
+                "type": "integer",
+                "minimum": 1,
+                "description": "Which proposal pack version this negotiation event refers to. For `received_from_brand` entries: the version they pushed back on. For `sent_to_brand` entries: the version that was sent. Forms the bidirectional link with `proposal_pack.generation.negotiation_log_entry_ref`."
+              }
             }
           }
         },
@@ -403,6 +518,19 @@
           "description": "FK to the created entry in `data/brand_deals/{talent_id}.json` after auto-archive fires. Closes the loop — anyone looking at this deal can navigate forward to its archived historical record."
         },
         "archived_at": { "type": "string", "format": "date-time" }
+      }
+    },
+
+    "debriefSignal": {
+      "type": "object",
+      "required": ["statement"],
+      "additionalProperties": false,
+      "description": "A single signal extracted from the discovery call (an objective heard, a pain point surfaced, a critical event mentioned, etc.). Each signal carries a confidence level reflecting how clearly the brand stated it — used downstream to weight LLM-driven proposal generation.",
+      "properties": {
+        "statement": { "type": "string", "description": "The signal in plain language, ideally close to the brand's own words." },
+        "confidence": { "type": "string", "enum": ["high", "medium", "low"], "default": "medium", "description": "high = brand stated explicitly; medium = brand implied / agent inferred from context; low = LLM extracted weakly, agent should verify." },
+        "source_quote": { "type": "string", "description": "Optional verbatim quote from the source artefact (call notes, transcript)." },
+        "source_artefact_id": { "type": "string", "pattern": "^ctx_[a-z0-9]+$", "description": "FK to the proposal_pack.context_artefacts[] entry this signal came from." }
       }
     },
 

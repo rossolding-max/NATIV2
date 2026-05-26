@@ -16,6 +16,7 @@ Build an AI-powered assistant that helps an influencer (or a roster of influence
 | 3b | **Outreach** | v0.1 spec + schemas + angles library shipped | AI-generated personalised email sequences per contact + decision_role, sent via Smartlead from per-talent domains, with reply detection, kill-on-reply, and full per-email analytics provenance. |
 | 4 | **Deal Lifecycle** | v0.1 spec + schema shipped | Moves a deal through 5 stages — LEAD → PROPOSAL → CONTRACT → DELIVERY → CLOSE — from a Phase 3b `interested` reply through to a paid + archived deal. Auto-archives won deals into Phase 1.5 brand_deals. Structured loss-reason enum + funnel analytics. v0.1 tracks contracts/invoices manually; v2 adds DocuSign + Stripe + Xero API integrations. |
 | 4.5 | **Discovery Call Prep** | v0.1 spec + schema shipped | Auto-drafts agenda + briefing notes + slide deck (live + leave-behind variants + speaker notes) when a LEAD-stage deal hits `initial_call_scheduled`. 3-pass Claude Sonnet pipeline + Exa external research. Pre-generation guidance + natural-language feedback loop creates versioned regenerations. Slide skill (provided separately) handles HTML/PDF/PPT export with direct user editing + NL feedback per slide. Agency branding from Phase 0. |
+| 4.6 | **Proposal Pack** | v0.1 spec + schema shipped | Agent-initiated commercial proposal builder for PROPOSAL substage. Forks discovery deck content + adds proposal-specific sections (executive summary, objectives recap, deliverables, fee, usage rights, exclusivity, timeline, exclusions). 5-stage pipeline: context augmentation (upload briefs/notes/transcripts → parse + summarise) → hybrid discovery debrief extraction → commercial gate (LLM proposes, agent must confirm before render) → 3-pass Sonnet slide generation → render. Bidirectional link to `deal.proposal.negotiation_log[]` for brand pushback handling. v0.1 file parsing: pypdf + python-docx. v2 adds external transcript-link references (Otter / Fireflies / Grain). |
 
 ## End-to-end data flow
 
@@ -139,6 +140,31 @@ Build an AI-powered assistant that helps an influencer (or a roster of influence
 │   schemas/discovery_prep_pack.schema.json  │   │
 │   output: data/deals/{deal_id}/prep_packs/ │   │
 │   v{N}.json (gitignored)                   │   │
+└──────────┬─────────────────────────────────┘   │
+           │ deal.substage → proposal_drafting   │
+           ▼                                     │
+┌────────────────────────────────────────────┐   │
+│ Phase 4.6  PROPOSAL PACK                   │   │
+│   docs/proposal_pack_workflow.md           │   │
+│     5-stage pipeline:                      │   │
+│     A. Context augmentation                │   │
+│        (upload PDF/Word/text/notes)        │   │
+│     B. Hybrid debrief extraction           │   │
+│        (LLM → agent reviews → confirms)    │   │
+│     C. Commercial gate                     │   │
+│        (LLM proposes; agent MUST confirm   │   │
+│         before slides render)              │   │
+│     D. 3-pass Sonnet slide generation      │   │
+│        (forks discovery slides + adds      │   │
+│         exec summary / objectives recap /  │   │
+│         deliverables / investment / etc.)  │   │
+│     E. Render (HTML / PDF / PPTX)          │   │
+│     Bidirectional link to deal.proposal    │   │
+│     .negotiation_log[] for brand pushback. │   │
+│   schemas/proposal_pack.schema.json        │   │
+│   output: data/deals/{deal_id}/            │   │
+│     proposal_packs/v{N}.json + uploads     │   │
+│     (gitignored)                           │   │
 └────────────────────────────────────────────┘   │
                                                  ▼
                                   ┌─────────────────────────┐
@@ -185,6 +211,7 @@ The fields below were not in the original request but were added because later p
 - `schemas/agency_profile.schema.json` — JSON Schema for the Phase 0 agency identity. Captures agency name/domain, the primary agent's identity, sending mailbox + warmup state, default signature template, CAN-SPAM-required company address. v0.1 enforces single-agent constraint via `agents` `maxItems: 1`. Validates `data/agency_profile.json` (gitignored).
 - `schemas/deal.schema.json` — JSON Schema for Phase 4 deal pipeline records. 5-stage lifecycle (LEAD → PROPOSAL → CONTRACT → DELIVERY → CLOSE) + substages + state machine + per-stage data blocks + attachments + notes + audit trail. Structured loss-reason enum. `lead.discovery_prep_pack_ids[]` + `lead.latest_prep_pack_id` link to Phase 4.5 prep packs. v0.1 = manual contracts/invoices; v2 fields ready for DocuSign / Stripe / Xero / QuickBooks API integration. Validates files under `data/deals/` (gitignored — commercial data + contracts + invoice amounts).
 - `schemas/discovery_prep_pack.schema.json` — JSON Schema for Phase 4.5 discovery-call prep packs. Versioned (v1, v2, v3…) bundles of briefing notes (multi-section markdown, agent-only, includes commercial range), agenda (sections + durations + talking points), and slides[] (structured JSON: live_body + leave_behind_extension + speaker_notes + sources per slide). Generation block captures pre-generation guidance + regeneration feedback + LLM provenance (model + token usage + cached tokens + cost). Context snapshot freezes upstream data including Exa external research (queries + summaries + URLs). agent_edits[] audit log for direct edits. export_artifacts[] tracks rendered HTML/PDF/PPT files. Validates files under `data/deals/{deal_id}/prep_packs/` (gitignored).
+- `schemas/proposal_pack.schema.json` — JSON Schema for Phase 4.6 proposal packs. Versioned commercial proposals with five layered sections: (1) generation provenance (5 trigger types including `negotiation_response` with bidirectional log ref); (2) context snapshot (forked_from_prep_pack_id + discovery_debrief_snapshot + optional Exa research refresh); (3) context_artefacts[] (uploaded files with parser metadata, parsed text, LLM summary, extracted signals, relevance tags, exclude toggle); (4) commercial_proposal (LLM-proposed deliverables/fee/usage_rights/exclusivity/timeline/exclusions/payment_terms with rationale per field, plus the gate: confirmed_at + confirmed_by_agent_id + confirmed_overrides[]); (5) slides[] (16-value type enum including forked types from discovery + proposal-specific: executive_summary, objectives_recap, recommendation, deliverables, timeline, investment, usage_rights, exclusivity, exclusions, agency_process, next_steps_proposal; live_body adds `table` for deliverables/timeline/investment). export_artifacts[].status enum includes `blocked_by_commercial_gate`. agent_edits[] includes `commercial_override` and `context_artefact_*` types. Validates files under `data/deals/{deal_id}/proposal_packs/` (gitignored).
 - `schemas/talent.schema.json` — JSON Schema (Draft 2020-12) describing the talent profile.
 - `schemas/brand_candidates.schema.json` — JSON Schema for the per-talent Brand Discovery output. Validates every file written by the orchestrator under `data/brand_candidates/` (the folder itself is gitignored — generated artifact, not source).
 - `schemas/brand_contact.schema.json` — JSON Schema for per-brand contact records (Phase 3a). Validates every file under `data/brand_contacts/` (gitignored — contacts are PII and vendor data is licensed).
@@ -208,6 +235,7 @@ The fields below were not in the original request but were added because later p
 - `docs/agency_setup_workflow.md` — Phase 0 one-time setup before any talent onboards. 8-step process: agency identity, visual branding (logo + colors + fonts — feeds every downstream agency artefact), primary agent, DNS records (SPF/DKIM/DMARC), sending mailbox provisioning via Smartlead, signature template (CAN-SPAM-compliant), 2-4 week warmup, final validation. v0.1 single-agent constraint documented; v2 expansion plan for multi-agent rosters.
 - `docs/deal_lifecycle_workflow.md` — Phase 4 spec for the deal pipeline. Defines the 5-stage lifecycle (LEAD → PROPOSAL → CONTRACT → DELIVERY → CLOSE), per-stage substages and data blocks, full state machine with valid transitions, structured loss reasons (budget / timing / competitor_won / internal_pivot / talent_no_fit / terms_disagreed / unresponsive / compliance_block / other), auto-archive on close into Phase 1.5 brand_deals, integration touchpoints with Phase 3b outreach (interested reply triggers deal creation) and Phase 1.5 (close triggers archive), notifications + reminders driven by `next_action_due_at`, failure handling, and the v2 vendor-integration roadmap (DocuSign / PandaDoc / HelloSign for e-sign; Stripe / Xero / QuickBooks for invoicing).
 - `docs/discovery_prep_workflow.md` — Phase 4.5 spec for the discovery-call prep generator. Defines the trigger (`substage = initial_call_scheduled`), 3-pass Sonnet generation pipeline with prompt-caching across briefing/agenda/slides passes, Exa external research integration, default 10-slide deck structure mapped to slide-type layouts, three rendered output variants from one source (live deck + leave-behind deck + speaker notes), versioning model with pre-generation guidance + natural-language feedback regeneration loop (v1 stays locked unless agent asks; agent can target whole-pack / section / per-slide regen), direct slide editing via the slide skill, slide-skill integration contract (input/output shape + on_edit/on_feedback callbacks), failure handling, storage layout, v0.1 explicit non-goals, and 7 open questions for v0.2.
+- `docs/proposal_pack_workflow.md` — Phase 4.6 spec for the commercial proposal pack generator. Defines the agent-initiated trigger (substage = `proposal_drafting`), 5-stage generation pipeline (context augmentation → hybrid debrief extraction → commercial gate → 3-pass Sonnet slide generation → render), file upload + parsing (pypdf / python-docx / text reader for v0.1; external transcript-link references for v2), the commercial gate mechanics (LLM proposes, agent must confirm before slides render, confirmed values copy into canonical `deal.proposal.*`), default 15-slide deck structure with 4 slides forked from the discovery prep pack, negotiation tie-in (bidirectional link to `deal.proposal.negotiation_log[].proposal_pack_version`), storage layout, integration touchpoints, 9 failure handling scenarios, and 7 open questions for v0.2 including counter-offer detection, win/loss pricing-model calibration, auto-contract-draft seeding.
 - `docs/onboarding_workflow.md` — draft spec for how a user adds a new talent: web wizard with OAuth platform connections (paste-fallback), media-pack extraction by LLM, adaptive questionnaire for gaps, hybrid similar-talent seeding (user + AI suggestions), and a background AI research pass that populates similar-talent records. The per-talent sender-domain section was removed: outreach now uses the agency's pre-warmed mailbox from Phase 0.
 - `docs/brand_discovery.md` — draft spec for the long-list generator. **16 independent searches** runnable today (re-engagement, network expansion, affinity expansion, geo, life-stage, constraint-aware, graph, recently-funded via web search, **trending/rising brands via the [`last30days` skill](https://github.com/mvanhorn/last30days-skill) — multi-source social momentum signal across Reddit/X/TikTok/YouTube/HN/etc., run as a monthly cron**) merged with multi-source scoring. Monthly cron drives re-engagement with per-brand cool-downs. Future-versions section lists 12 more searches that need external data (Crunchbase API as a structured upgrade to Search 15, live `#ad` scraping, affiliate networks, creator marketplaces, EMV reports, etc.). Both structural enrichments (`brand_industry_map` metadata + `brand_competitors` graph) are now shipped and used by Searches 3, 4, 10, 14.
 - `docs/vendor_roadmap.md` — single source of truth for external-service decisions. Confirms **Exa** as the v0.1 web-search provider (Search 15). Catalogues deferred vendors with criteria for when to add each: ScrapeCreators (Search 16 visual platforms), Owler (competitor maintenance), Modash/HypeAuditor (brand DB bulk import), Exploding Topics (pre-trend detection), Product Hunt API (day-of launches), Tribe Dynamics EMV (top-spending brands per category), SimilarWeb (audience-overlap competitors), Crunchbase (structured funding data), Apollo (Phase 3 outreach contact discovery), plus alternatives for each. Includes the env-var inventory for all current + deferred services.
@@ -677,3 +705,82 @@ data/deals/{deal_id}/
     v2_artifacts/...
 ```
 All gitignored.
+
+---
+
+## Phase 4.6 — Proposal Pack
+
+### Output
+A versioned commercial proposal per deal at `data/deals/{deal_id}/proposal_packs/v{N}.json` (gitignored). Each version bundles the agent-uploaded context artefacts, the LLM's commercial proposal + agent's confirmation event, and the rendered slide deck (live + leave-behind + speaker notes). Validated against `schemas/proposal_pack.schema.json`.
+
+### Trigger + locked-in decisions
+- **Fires on:** agent clicks "Draft proposal" while deal is in `proposal_drafting` substage. Manual trigger (not auto-fire on substage change) — higher commercial stakes than discovery prep.
+- **Uploads in v0.1:** PDF (pypdf), Word (python-docx), text/markdown. **v2** adds external transcript-link references (Otter/Fireflies/Grain — URL refs only, no in-house transcription).
+- **Hybrid discovery → proposal bridge:** agent dumps notes (or uploads transcript file) → LLM extracts structured `discovery_debrief` → agent reviews + edits + confirms → proposal generation fires from confirmed debrief.
+- **Commercial gate (HARD):** LLM proposes deliverables + fee + usage rights + exclusivity + timeline + payment terms with rationale per field. Agent must explicitly confirm before slides render. On confirm, values copy into `deal.proposal.*` (canonical commercial source-of-truth).
+- **Three output variants:** live HTML + leave-behind HTML + speaker notes (same as discovery prep). Proposals are usually sent for review but walked through in follow-up calls.
+- **Forks from discovery:** talent_overview, audience_snapshot, recent_work, fit_angle slides lift from `deal.lead.latest_prep_pack_id`. Each forked slide carries `forked_from_prep_slide_id` for traceability.
+- **Negotiation tie-in:** brand pushback → entry in `deal.proposal.negotiation_log[]` with `proposal_pack_version` → agent triggers `negotiation_response` regen → new version's `generation.negotiation_log_entry_ref` points back. Bidirectional.
+
+### 5-stage generation pipeline
+```
+Trigger: agent clicks "Draft proposal" (substage = proposal_drafting)
+  │
+  ▼ A. Context augmentation: uploads parsed (pypdf/python-docx) +
+  │    LLM-summarised + relevance-tagged as context_artefact entries
+  ▼ B. Hybrid debrief extraction: LLM extracts 10 structured fields
+  │    (objectives_heard, pain_points, critical_event, scope/timing/budget
+  │    signals, exclusivity_signals, usage_rights_signals, decision_process,
+  │    red_flags_surfaced) — each with confidence. Agent reviews + confirms.
+  │    Writes to deal.lead.discovery_debrief.
+  ▼ C. Commercial gate (HARD): LLM proposes deliverables + fee + usage_rights
+  │    + exclusivity + timeline + payment_terms + exclusions with rationale.
+  │    Agent confirms (or overrides). On confirm, values copy into
+  │    deal.proposal.*. ─── SLIDES CANNOT RENDER UNTIL CONFIRMED ───
+  ▼ D. 3-pass Sonnet slide generation: executive summary → slides[]
+  │    (forks discovery slides + adds proposal-specific) → speaker notes.
+  ▼ E. Render: live HTML + leave-behind HTML + PDFs + speaker-notes.md
+  │    + commercial-summary.md + PPTX (via slide skill).
+  ▼ Write data/deals/{deal_id}/proposal_packs/v{N}.json + v{N}_artifacts/
+  ▼ NL feedback regen loop (v2, v3, ...)
+  ▼ Agent marks "ready to send" → deal.proposal.proposal_attachment_id +
+    proposal_sent_at; substage → proposal_sent
+```
+
+### Default slide structure (15 slides live; ~22-25 leave-behind)
+
+| # | Section | Type | Forked? |
+|---|---|---|---|
+| 1 | Title | title | New |
+| 2 | Executive summary | executive_summary | New |
+| 3 | **Objectives recap** (lifts `discovery_debrief.objectives_heard` verbatim — "here's what we heard you say") | objectives_recap | New |
+| 4 | Talent overview | talent_overview | **Forked from prep** |
+| 5 | Audience snapshot | audience_snapshot | **Forked from prep** |
+| 6 | Recent work | recent_work | **Forked from prep** |
+| 7 | Our recommendation | recommendation | New |
+| 8 | Deliverables | deliverables | New |
+| 9 | Timeline | timeline | New |
+| 10 | Investment | investment | New |
+| 11 | Usage rights | usage_rights | New |
+| 12 | Exclusivity | exclusivity | New |
+| 13 | What's not included | exclusions | New |
+| 14 | How we work | agency_process | New |
+| 15 | Next steps | next_steps_proposal | New |
+
+### Storage
+```
+data/deals/{deal_id}/
+  prep_packs/                # Phase 4.5
+  proposal_packs/            # Phase 4.6
+    v1.json
+    v1_artifacts/{proposal-live.html, proposal-leave-behind.html, proposal-live.pdf, proposal-leave-behind.pdf, speaker-notes.md, commercial-summary.md, proposal.pptx}
+    v2.json
+    v2_artifacts/...
+  context_uploads/           # Phase 4.6 raw uploads
+    ctx_abc_brand_brief.pdf
+    ctx_def_discovery_notes.docx
+```
+All gitignored. File caps v0.1: 25MB/file, 100MB/deal. Larger files → external URL reference via `context_artefact.external_url`.
+
+### Cost profile
+Per-pack: 4-5 Sonnet passes (artefact summary + debrief extraction + commercial proposal + executive summary + slides + speaker notes), heavily cached. ~25-35k input tokens + ~12-15k output tokens. Estimated $0.30-0.60 per generation. Iteration cost scales with negotiation rounds.

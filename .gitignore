@@ -37,12 +37,15 @@ data/agency_profile.json
 # commercial data (fees, signed contracts, invoice amounts, payment
 # records), brand briefs, content drafts, AND discovery-call prep
 # packs (Phase 4.5: versioned briefing notes, agendas, slide decks
-# with rendered HTML/PDF/PPT artefacts). Schemas
-# (schemas/deal.schema.json + schemas/discovery_prep_pack.schema.json)
-# and specs (docs/deal_lifecycle_workflow.md + docs/discovery_prep_workflow.md)
-# are tracked; the per-deal data is NEVER committed. On successful close,
-# the deal auto-archives into data/brand_deals/{talent_id}.json (also
-# gitignored).
+# with rendered HTML/PDF/PPT artefacts), AND proposal packs
+# (Phase 4.6: versioned commercial proposals with LLM rationale,
+# context-artefact uploads, slide decks). Schemas
+# (schemas/deal.schema.json + schemas/discovery_prep_pack.schema.json
+# + schemas/proposal_pack.schema.json) and specs
+# (docs/deal_lifecycle_workflow.md + docs/discovery_prep_workflow.md
+# + docs/proposal_pack_workflow.md) are tracked; the per-deal data
+# is NEVER committed. On successful close, the deal auto-archives
+# into data/brand_deals/{talent_id}.json (also gitignored).
 data/deals/
 
 # Outreach enrollments: per-(talent, contact) running sequence

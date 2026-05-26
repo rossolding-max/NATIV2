@@ -136,13 +136,27 @@ Agent can iterate before the call via natural-language feedback ("tone down slid
 - `lost` — terminal
 
 **Data captured (`deal.proposal`):**
-- `proposal_attachment_id` (the PDF)
+- `proposal_pack_ids[]` + `latest_proposal_pack_id` — FK references to the Phase 4.6 proposal packs generated for this deal (see below)
+- `commercial_confirmed_at` + `commercial_confirmed_by_agent_id` — the commercial gate event (agent confirmed LLM-proposed deliverables + fee + terms)
+- `proposal_attachment_id` — FK to the leave-behind PDF (typically of the latest proposal pack version)
 - `proposal_sent_at`
-- Deliverables (same shape as brand_deal.deliverables — carries cleanly to Phase 1.5 on archive)
+- Deliverables (same shape as brand_deal.deliverables — carries cleanly to Phase 1.5 on archive). Populated from `commercial_proposal.confirmed_*` on gate-pass.
 - `fee_usd` + currency + original amount
 - `usage_rights_granted[]` + `exclusivity{}` + `additional_compensation[]`
-- `negotiation_log[]` — chronological back-and-forth with what changed at each round
+- `negotiation_log[]` — chronological back-and-forth. Each entry's `proposal_pack_version` field bidirectionally links to the proposal pack version that received the pushback or was sent.
 - `terms_agreed_at` + `agreed_final_terms_summary` — the verbal/written agreement that the contract will codify
+
+**Proposal pack generation (Phase 4.6):**
+
+The proposal is built by the Phase 4.6 pipeline (`docs/proposal_pack_workflow.md`) — agent-initiated when ready:
+
+1. **Stage A — Context augmentation:** Agent uploads brand brief, discovery call notes, transcript file (v0.1: PDF/Word/text; v2: external transcript link), reference material. Each parsed (pypdf/python-docx) + LLM-summarised + relevance-tagged.
+2. **Stage B — Discovery debrief extraction (hybrid):** LLM extracts structured fields from notes/transcript (objectives_heard, pain_points, critical_event, scope/timing/budget signals, decision_process, exclusivity_signals, usage_rights_signals, red_flags_surfaced). Agent reviews + edits inline + confirms → writes to `deal.lead.discovery_debrief`.
+3. **Stage C — Commercial gate (HARD GATE):** LLM proposes deliverables + fee + usage_rights + exclusivity + timeline + payment_terms + exclusions with rationale per field. Agent must explicitly confirm before slides can render. Confirmed values copy into `deal.proposal.*` (canonical). Overrides captured in `commercial_proposal.confirmed_overrides[]`.
+4. **Stage D — Slide generation:** 3 Sonnet passes (executive summary → slides → speaker notes). Forks talent_overview / audience_snapshot / recent_work / fit_angle slides from the source discovery prep pack; adds proposal-specific slides.
+5. **Stage E — Render:** Live HTML + leave-behind HTML + speaker notes + PDFs + PPTX (via slide skill).
+
+Agent iterates via NL feedback → v2, v3, ... Brand pushback recorded in `negotiation_log[]` triggers a `negotiation_response` regen targeting affected sections.
 
 **Exits:**
 - Transition to CONTRACT on `terms_agreed`
