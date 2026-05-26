@@ -91,7 +91,7 @@ Produce an **exhaustive** ranked list of brand-deal candidates for a given talen
 
 ---
 
-## The 15 searches (runnable today on current JSON)
+## The 16 searches (runnable today on current JSON)
 
 Each search is independent; all run in parallel; results merge by brand name + industry.
 
@@ -216,7 +216,48 @@ Same as search 5 but using `tertiary[]`. Lowest weight; surfaces non-obvious mat
 - **De-dup is critical** — the same brand will surface from many queries; merge by normalized name.
 
 **Future enhancement — Crunchbase API integration (deferred):**
-Once integrated, replaces the LLM-search step with structured Crunchbase queries by `industry_keywords + funded_after + stage_in [seed, series_a-c]`. Gives precise filters, freshness within 24h, and structured metadata (founding date, total raised, last round size) that the search-only path can only approximate. Tracked in `External-data future searches § #16` below.
+Once integrated, replaces the LLM-search step with structured Crunchbase queries by `industry_keywords + funded_after + stage_in [seed, series_a-c]`. Gives precise filters, freshness within 24h, and structured metadata (founding date, total raised, last round size) that the search-only path can only approximate. Tracked in `External-data future searches § #17` below.
+
+#### Search 16 — Trending / rising brands via the `last30days` skill
+**Reads:** `talent.content_niches[]` + derived top industries via `niche_industry_affinity.json` + the [`last30days` skill](https://github.com/mvanhorn/last30days-skill).
+
+**What the skill does (summary):** multi-source social research — Reddit, X, YouTube, TikTok, Hacker News, Bluesky, GitHub, Polymarket, plus Brave/Perplexity web search — with entity resolution (figures out *where* to look first), parallel multi-query expansion, engagement-weighted scoring (upvotes, likes, views), cross-platform clustering with deduplication, and a per-author cap (max 3 items per voice) so no single account dominates. Outputs a markdown synthesis with inline citations and source attribution.
+
+**Logic:**
+1. For each of the talent's top 3–5 niches (and their primary industries), invoke `last30days` with a small fan-out of trending-brand queries:
+   - `"new <industry> brands"`
+   - `"trending <niche> brand"`
+   - `"viral <industry> launch"`
+   - `"<industry> brands to watch"`
+   - `"<niche> creator partnership"`
+2. The skill returns multi-source synthesis with engagement-weighted, deduplicated clusters of brand mentions.
+3. LLM post-processor extracts brand names from the synthesis, capturing per brand:
+   - Canonical brand name
+   - Source platforms with engagement metrics (e.g. `Reddit r/MaleFashionAdvice 320 upvotes, TikTok 1.2M views, HN 84 comments`)
+   - **Engagement signal strength**: `low` (1 source / modest engagement) → `medium` (2–3 sources / decent engagement) → `high` (4+ sources / viral metrics)
+   - Source URLs and the saved synthesis file path
+4. Each extracted brand becomes a candidate with `trending_30d` source tag; weight scales with engagement signal strength (low 0.10 / medium 0.15 / high 0.20).
+5. **Writeback:** brands not yet in `brand_industry_map.json` get AI-classified into an industry and added — same growth loop as Search 15. Synthesis file path stored on the candidate for traceability.
+
+**Why it matters:** unlike Search 15 (funding-driven; biased toward brands with PR teams), Search 16 surfaces brands generating organic social momentum — arguably the strongest creator-marketing signal available. A brand with 4 Reddit threads + viral TikToks + HN discussion is the one creators should be pitching *this month*, regardless of whether they've raised institutional capital. Catches creator-economy momentum that none of the other 15 searches will see.
+
+**Cadence:** monthly cron job per talent, naturally aligned to the skill's 30-day rolling window. Default schedule: 1st of each month, batch all active talents. Results merge into the standard `brand_candidates/{talent_id}.json` output with `tier` and `score` computed alongside every other search.
+
+**Cost/quota:**
+- Reddit / HN / Polymarket / GitHub / Bluesky / YouTube (via `yt-dlp`): free.
+- X / Brave Search: free tiers (Brave: 2,000 queries/month).
+- TikTok / Instagram / Threads / Pinterest: requires `SCRAPECREATORS_API_KEY` (100 free credits/month, then pay-as-you-go).
+- Perplexity Sonar: optional, requires `OPENROUTER_API_KEY` (paid).
+- **Budget per talent per run:** ~3–5 niches × ~5 queries ≈ 15–25 queries. For a 50-talent roster: ~1,000 queries/month, comfortably within Brave's free tier. ScrapeCreators credits should be conserved for the highest-signal niches (e.g. niches where TikTok is the dominant platform — beauty, fashion, fitness).
+
+**Quality control:**
+- LLM brand extractions tagged with confidence; low-confidence brands flagged for user review before writeback to `brand_industry_map.json`.
+- Per-author cap (3 items per voice) is built into the skill — prevents one viral creator's stack of mentions inflating the signal.
+- Brand name disambiguation: same brand may be referenced across sources with slight variants (e.g. "Liquid Death" vs "@liquiddeath" vs "liquiddeath.com"). LLM normalises before merge.
+
+**Future enhancement (deferred, no new tools needed — just persistence):**
+- **Rising delta:** compare this month's extracted brand list against last month's; brands *new to the trending list this run* get an additional `newly_trending` boost. Requires keeping the last N months of run output.
+- **Mention velocity:** track each brand's appearance across consecutive monthly runs → distinguish brands sustaining momentum (3+ months on the trending list) from one-hit-wonder spikes. Sustained signal is far more valuable for creator partnerships than a one-week viral moment.
 
 ---
 
@@ -243,6 +284,7 @@ Source weights (default; tunable):
 | `demographic_bridge` | 0.15–0.25 (scales with overlap count) |
 | `similar_talent_worked_with` | 0.10–0.20 (scales with how many similar talents) |
 | `recently_funded` | 0.10–0.15 (scales with stage signal strength) |
+| `trending_30d` | 0.10–0.20 (low/medium/high engagement signal via last30days skill) |
 | `preferred_industry` | 0.10 |
 | `competitor_of_similar_talent` | 0.10 |
 | `parent_sibling_niche` | 0.08 |
@@ -289,7 +331,7 @@ A brand can appear under multiple names (Lulu / Lululemon / Lululemon Athletica)
 | Trigger | What runs |
 |---|---|
 | Talent profile saved/updated | Full re-run of all 14 searches; replace `data/brand_candidates/{talent_id}.json` |
-| Monthly cron (1st of month) | Full re-run for every active talent; primarily catches: newly-eligible re-engagements (Search 1), newly-added similar talents enriched in the interim (Search 2), industry/affinity edits to JSON (Searches 5–9) |
+| Monthly cron (1st of month) | Full re-run for every active talent; primarily catches: newly-eligible re-engagements (Search 1), newly-added similar talents enriched in the interim (Search 2), industry/affinity edits to JSON (Searches 5–9), **newly-funded brands via web search (Search 15), and rising/trending brands surfaced by the `last30days` skill (Search 16) over the past 30-day window** |
 | `data/brand_industry_map.json` changes (new brands added) | Re-run Searches 3, 4, 5, 6, 7 only (the searches that read brand_industry_map) — incremental, doesn't need full re-run |
 | Manual trigger by user ("refresh candidates") | Full re-run on demand |
 
@@ -305,22 +347,22 @@ A brand can appear under multiple names (Lulu / Lululemon / Lululemon Athletica)
 
 ## Searches that need external data (future versions)
 
-These would meaningfully extend coverage but require integrations beyond the current JSON. Prioritised by impact-vs-effort. Search 15 was upgraded to in-scope (web-search-driven) — its API-backed version is #16 here.
+These would meaningfully extend coverage but require integrations beyond the current JSON. Prioritised by impact-vs-effort. Searches 15 (web-search-driven funding signal) and 16 (last30days social-momentum signal) were both upgraded to in-scope. The API-backed enhancement of Search 15 is #17 below.
 
 | # | Search | What it adds | External dependency | Priority |
 |---|---|---|---|---|
-| 16 | **API-backed enhancement of Search 15** (recently funded brands with structured metadata) | Precise filters by funding stage / round / date; freshness within 24h; structured `total_raised`, `last_round_size` | Crunchbase API + filter by `industry_id` keywords | **HIGH** |
-| 17 | Brands **currently running creator campaigns** in talent's niche | Live signal: who has budget on the table this week | Scrape `#ad` / "Paid partnership" tags on IG/TikTok for creators in same niche + LLM extract brand names; OR Modash / HypeAuditor / Tribe Dynamics API | **HIGH** |
-| 18 | Brands with **active affiliate programs** | Pre-qualified for creator deals; lower barrier to entry | ShareASale / Awin / Impact / Rakuten / LTK / ShopMy APIs | **HIGH** |
-| 19 | Brands by **rate card tier compatibility** (live signal) | Sharper than the static `typical_campaign_tier` field — adds real-time budget signal from actual recent campaign fees | Aggregated creator-economy data (CreatorIQ / Aspire ledger / paid-post fee aggregators) | **MEDIUM** |
-| 20 | **Trade show exhibitors** in talent's category | Brands actively spending marketing budget in this vertical | Scraped exhibitor lists per show (Beautycon, Cosmoprof, FIBO, ISPO, etc.) | **MEDIUM** |
-| 21 | **Retail accelerator alumni** in talent's category | Emerging brands at major retailers with marketing momentum | Target Accelerators, Sephora Accelerate, Macy's Holiday Marketplace, Whole Foods Local | **MEDIUM** |
-| 22 | Brands with **recent influencer-agency appointments** | Strong signal that creator budget just landed | Adweek / Drum / PRWeek / Campaign press releases | **MEDIUM** |
-| 23 | **Seasonal product launches** in talent's category | Time-sensitive briefs aligned to launch windows | PR Newswire / PRWeb feeds; LLM categorisation | **MEDIUM** |
-| 24 | Brands on **creator marketplaces** | Brands self-listing = actively looking | Aspire / Grin / BrandSnob / Creator.co marketplace APIs | **MEDIUM** |
-| 25 | **EMV / influencer-ROI top performers** in talent's category | Brands historically getting strong creator-ROI keep investing | HypeAuditor / Tribe Dynamics / CreatorIQ EMV reports | **LOW** |
-| 26 | Brands whose **audience overlaps** with talent's audience (look-alike) | Cross-industry signal: "people who buy X also buy Y" | Resonate / Comscore / Nielsen-style audience-overlap data — expensive | **LOW** |
-| 27 | Brands matching talent's **personal values commitments** (positive D&I, sustainability, etc.) | Authenticity-driven matching beyond LLM evaluation | ESG databases (Sustainalytics, MSCI ESG); manual curation | **LOW** |
+| 17 | **API-backed enhancement of Search 15** (recently funded brands with structured metadata) | Precise filters by funding stage / round / date; freshness within 24h; structured `total_raised`, `last_round_size` | Crunchbase API + filter by `industry_id` keywords | **HIGH** |
+| 18 | Brands **currently running creator campaigns** in talent's niche | Live signal: who has budget on the table this week (overlaps with last30days but more targeted at paid-partnership detection specifically) | Scrape `#ad` / "Paid partnership" tags on IG/TikTok for creators in same niche + LLM extract brand names; OR Modash / HypeAuditor / Tribe Dynamics API | **HIGH** |
+| 19 | Brands with **active affiliate programs** | Pre-qualified for creator deals; lower barrier to entry | ShareASale / Awin / Impact / Rakuten / LTK / ShopMy APIs | **HIGH** |
+| 20 | Brands by **rate card tier compatibility** (live signal) | Sharper than the static `typical_campaign_tier` field — adds real-time budget signal from actual recent campaign fees | Aggregated creator-economy data (CreatorIQ / Aspire ledger / paid-post fee aggregators) | **MEDIUM** |
+| 21 | **Trade show exhibitors** in talent's category | Brands actively spending marketing budget in this vertical | Scraped exhibitor lists per show (Beautycon, Cosmoprof, FIBO, ISPO, etc.) | **MEDIUM** |
+| 22 | **Retail accelerator alumni** in talent's category | Emerging brands at major retailers with marketing momentum | Target Accelerators, Sephora Accelerate, Macy's Holiday Marketplace, Whole Foods Local | **MEDIUM** |
+| 23 | Brands with **recent influencer-agency appointments** | Strong signal that creator budget just landed | Adweek / Drum / PRWeek / Campaign press releases | **MEDIUM** |
+| 24 | **Seasonal product launches** in talent's category | Time-sensitive briefs aligned to launch windows | PR Newswire / PRWeb feeds; LLM categorisation | **MEDIUM** |
+| 25 | Brands on **creator marketplaces** | Brands self-listing = actively looking | Aspire / Grin / BrandSnob / Creator.co marketplace APIs | **MEDIUM** |
+| 26 | **EMV / influencer-ROI top performers** in talent's category | Brands historically getting strong creator-ROI keep investing | HypeAuditor / Tribe Dynamics / CreatorIQ EMV reports | **LOW** |
+| 27 | Brands whose **audience overlaps** with talent's audience (look-alike) | Cross-industry signal: "people who buy X also buy Y" | Resonate / Comscore / Nielsen-style audience-overlap data — expensive | **LOW** |
+| 28 | Brands matching talent's **personal values commitments** (positive D&I, sustainability, etc.) | Authenticity-driven matching beyond LLM evaluation | ESG databases (Sustainalytics, MSCI ESG); manual curation | **LOW** |
 
 ---
 
