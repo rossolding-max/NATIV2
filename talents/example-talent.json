@@ -8,7 +8,7 @@
   "timezone": "Europe/London",
   "languages": ["en-GB"],
   "bio": "Lifestyle + fitness creator focused on sustainable training and everyday wellness.",
-  "content_niches": ["fitness", "wellness", "lifestyle"],
+  "content_niches": ["fitness", "running", "health-wellness", "lifestyle"],
 
   "contact": {
     "email": "talent@example.com",
@@ -63,7 +63,7 @@
   "previous_brands": [
     {
       "brand": "Example Sportswear Co",
-      "industry": "sportswear",
+      "industry_id": "sportswear",
       "campaign_date": "2025-09-01",
       "platforms": ["instagram", "tiktok"],
       "deliverables": ["1x reel", "3x stories"],
@@ -80,8 +80,8 @@
         { "platform": "instagram", "handle": "@othercreator", "url": "https://instagram.com/othercreator" }
       ],
       "previous_brands": [
-        { "brand": "Big Athleisure Brand", "industry": "sportswear" },
-        { "brand": "Protein Co", "industry": "supplements" }
+        { "brand": "Gymshark", "industry_id": "activewear" },
+        { "brand": "Myprotein", "industry_id": "sports-nutrition" }
       ]
     }
   ],
@@ -107,9 +107,9 @@
   },
 
   "brand_preferences": {
-    "preferred_industries": ["sportswear", "wellness", "healthy food", "travel"],
-    "blocked_industries": ["gambling", "fast fashion", "tobacco", "alcohol"],
-    "values_red_lines": ["no diet culture / weight-loss products"],
+    "preferred_industries": ["sportswear", "activewear", "supplements-brands", "plant-based-food", "travel-hospitality"],
+    "blocked_industries": ["gambling", "fast-fashion", "tobacco-vape", "alcohol-spirits", "weight-management"],
+    "values_red_lines": ["no diet culture messaging"],
     "active_exclusivities": []
   },
 

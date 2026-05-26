@@ -47,8 +47,9 @@ The fields below were not in the original request but were added because later p
 ### Files
 - `schemas/talent.schema.json` — JSON Schema (Draft 2020-12) describing the profile.
 - `talents/example-talent.json` — template instance, partially filled.
-- `data/niches.json` — canonical creator content-niche taxonomy. Use the `id` values when populating `content_niches`.
-- `data/industries.json` — canonical brand-industry taxonomy. Use the `id` values when populating `previous_brands[].industry`, `brand_preferences.preferred_industries`, and `brand_preferences.blocked_industries`.
+- `data/niches.json` — canonical creator content-niche taxonomy.
+- `data/industries.json` — canonical brand-industry taxonomy.
+- `data/brand_industry_map.json` — seed lookup of well-known brand names → `industry_id`. Used by the app's auto-complete and grows over time.
 - `.gitignore` — ensures any `*.local.json` or `.env` files containing real keys are never committed.
 
 ### Reference taxonomies
@@ -62,3 +63,27 @@ Both taxonomy files follow the same shape:
 }
 ```
 Top-level entries have `parent: null`; sub-entries reference their parent's `id`. `industries.json` additionally flags `sensitive: true` for categories that are commonly restricted on social platforms or require explicit creator opt-in (alcohol, gambling, tobacco, crypto, etc.).
+
+### How the talent profile links to the taxonomies
+The talent profile stores **only `id` slugs**, never display names — that way display labels, translations, and re-namings can change in the taxonomy files without touching any talent record.
+
+| Profile field | References | Validated by |
+|---|---|---|
+| `content_niches[]` | `data/niches.json` `id` | Schema pattern (`#/$defs/nicheId`) + app load-time check against taxonomy |
+| `previous_brands[].industry_id` | `data/industries.json` `id` | Schema pattern (`#/$defs/industryId`) + app load-time check |
+| `brand_preferences.preferred_industries[]` | `data/industries.json` `id` | Same |
+| `brand_preferences.blocked_industries[]` | `data/industries.json` `id` | Same |
+| `brand_preferences.active_exclusivities[].industry_id` | `data/industries.json` `id` | Same |
+| `similar_talent[].previous_brands[].industry_id` | `data/industries.json` `id` | Same |
+
+JSON Schema validates the **slug format** (kebab-case). The app validates **slug membership** in the taxonomy on load, since JSON Schema can't dereference external JSON for `enum`.
+
+### Auto-completing `industry_id` from a brand name
+When the user types a brand into `previous_brands[].brand`, the app resolves `industry_id` automatically. Resolution order:
+
+1. **Exact match** on `name` in `data/brand_industry_map.json` (case-insensitive).
+2. **Alias match** on the `aliases[]` of each entry.
+3. **Domain match** if the user pasted a URL or `@domain`.
+4. **AI inference fallback** (later phase) — the assistant reads the brand's website / first-page search results and classifies it against `data/industries.json`. The result is then **written back** to `data/brand_industry_map.json` so future lookups are instant and the seed grows.
+
+If multiple matches tie (rare), the app prefers the entry with the more specific (child) `industry_id` over a parent sector.

@@ -34,8 +34,8 @@
     "bio": { "type": "string", "description": "Short pitch — 1–3 sentences." },
     "content_niches": {
       "type": "array",
-      "description": "Primary content categories, e.g. 'fitness', 'beauty', 'gaming'.",
-      "items": { "type": "string" },
+      "description": "Primary content categories. Each value MUST be an `id` from `data/niches.json` (kebab-case slug, e.g. 'fitness', 'skincare', 'pc-gaming').",
+      "items": { "$ref": "#/$defs/nicheId" },
       "uniqueItems": true
     },
 
@@ -214,22 +214,35 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "preferred_industries": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
-        "blocked_industries": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+        "preferred_industries": {
+          "type": "array",
+          "description": "Industry IDs from `data/industries.json` the talent actively wants to work with.",
+          "items": { "$ref": "#/$defs/industryId" },
+          "uniqueItems": true
+        },
+        "blocked_industries": {
+          "type": "array",
+          "description": "Industry IDs from `data/industries.json` the talent will not work with.",
+          "items": { "$ref": "#/$defs/industryId" },
+          "uniqueItems": true
+        },
         "values_red_lines": {
           "type": "array",
-          "description": "Hard nos — e.g. 'fast fashion', 'crypto', 'gambling'.",
+          "description": "Free-form hard nos beyond industry-level blocks (e.g. 'diet culture messaging').",
           "items": { "type": "string" }
         },
         "active_exclusivities": {
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["category"],
+            "required": ["industry_id"],
             "additionalProperties": false,
             "properties": {
-              "category": { "type": "string", "description": "e.g. 'protein powder', 'running shoes'." },
-              "brand": { "type": "string" },
+              "industry_id": {
+                "$ref": "#/$defs/industryId",
+                "description": "Industry the talent is exclusive in. Must match an `id` in `data/industries.json`."
+              },
+              "brand": { "type": "string", "description": "The brand the exclusivity is with." },
               "ends_on": { "type": "string", "format": "date" }
             }
           }
@@ -353,11 +366,14 @@
 
     "brandDeal": {
       "type": "object",
-      "required": ["brand", "industry"],
+      "required": ["brand", "industry_id"],
       "additionalProperties": false,
       "properties": {
-        "brand": { "type": "string" },
-        "industry": { "type": "string", "description": "e.g. 'beauty', 'fintech', 'sportswear'." },
+        "brand": { "type": "string", "description": "Brand/company name as commonly written." },
+        "industry_id": {
+          "$ref": "#/$defs/industryId",
+          "description": "Industry ID from `data/industries.json`. The app auto-suggests this from `brand` via `data/brand_industry_map.json` (exact + alias + domain match) and falls back to AI inference."
+        },
         "campaign_date": { "type": "string", "format": "date" },
         "platforms": {
           "type": "array",
@@ -410,16 +426,31 @@
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["brand", "industry"],
+            "required": ["brand", "industry_id"],
             "additionalProperties": false,
             "properties": {
               "brand": { "type": "string" },
-              "industry": { "type": "string" }
+              "industry_id": {
+                "$ref": "#/$defs/industryId",
+                "description": "Industry ID from `data/industries.json`."
+              }
             }
           }
         },
         "notes": { "type": "string" }
       }
+    },
+
+    "nicheId": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]*$",
+      "description": "Kebab-case slug that MUST match an `id` in `data/niches.json`. Pattern-validated here; semantic match enforced at load time by the app."
+    },
+
+    "industryId": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]*$",
+      "description": "Kebab-case slug that MUST match an `id` in `data/industries.json`. Pattern-validated here; semantic match enforced at load time by the app."
     }
   }
 }
