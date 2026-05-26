@@ -200,19 +200,23 @@ Same as search 5 but using `tertiary[]`. Lowest weight; surfaces non-obvious mat
 ### Group G — Momentum signals (search-driven, no API yet)
 
 #### Search 15 — Recently funded / newly visible brands in the talent's industries
-**Reads:** `talent.content_niches[]` → primary/secondary industries → LLM-driven web search.
+**Reads:** `talent.content_niches[]` → primary/secondary industries → semantic web search via **Exa** (confirmed v0.1 provider; see `docs/vendor_roadmap.md`).
 **Logic:**
-1. For each of the talent's top industries, run targeted LLM-orchestrated web searches: e.g. `"<industry> D2C brand funding 2025 2026"`, `"<industry> Series A 2026"`, `"<industry> launched startup 2026"`, `"<industry> new brand"`.
-2. LLM extracts brand names from the results and classifies each against `data/industries.json`.
+1. For each of the talent's top industries, run targeted Exa searches:
+   - Neural queries via `/search`: `"<industry> D2C brand Series A 2026"`, `"<industry> launched startup"`, `"<industry> trending brand to watch"`.
+   - For each high-signal result, optionally use Exa's `/findSimilar` to pull lookalike pages and broaden recall.
+   - Use `/contents` to extract structured page text for the LLM extractor.
+2. LLM (Claude Haiku) extracts brand names from the page contents and classifies each against `data/industries.json`.
 3. Each new brand gets:
-   - Added to `data/brand_industry_map.json` (writeback) with `company_stage` from the funding signal where possible (e.g. "Series A").
+   - Added to `data/brand_industry_map.json` (writeback) with `company_stage` inferred from the funding signal where possible (e.g. "Series A").
    - Surfaced as a candidate with the `recently_funded` source tag.
 **Why it matters:** newly-funded / newly-visible D2C brands are the most likely to be launching creator programs and have fresh budget to spend. They're also the most likely to be MISSING from a static seed file. This search is the discovery loop that keeps `brand_industry_map.json` growing.
 **Quality control:** the LLM tags each extracted brand with a confidence + source URL. Low-confidence extractions are surfaced for user review before they're committed to `brand_industry_map.json`.
-**Caveats vs API version:**
-- **No structured filtering** by funding stage / amount / date (search returns whatever is publicly indexed).
-- **Freshness depends on the search engine's indexing lag** — may miss very-recent announcements.
-- **Search quotas** apply per orchestrator run; budget appropriately.
+**Why Exa over alternatives:** purpose-built for AI-agent workflows; neural + keyword hybrid; structured content extraction; `findSimilar` endpoint is uniquely useful for broadening discovery from one seed page. Alternatives (Brave, Tavily, SerpAPI) noted in `docs/vendor_roadmap.md` as fallbacks if Exa free tier becomes constraining.
+**Caveats vs API version (#17 in future-versions):**
+- **No structured filtering** by funding stage / amount / date (search returns whatever Exa surfaces semantically).
+- **Freshness depends on Exa's crawl freshness** — typically within days, but very-recent announcements may lag.
+- **Search quotas** apply per orchestrator run; budget appropriately within Exa's free tier or paid plan.
 - **De-dup is critical** — the same brand will surface from many queries; merge by normalized name.
 
 **Future enhancement — Crunchbase API integration (deferred):**
