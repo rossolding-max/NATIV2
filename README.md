@@ -56,6 +56,7 @@ The fields below were not in the original request but were added because later p
 - `data/industry_audience_affinity.json` — bridge leg 2: industry → IAB audience segments.
 - `scripts/build_affinity.py` — builder script with all authored data and inline validation. Single source of truth for the three affinity files; re-run to regenerate them.
 - `docs/recommendation_algorithm.md` — draft spec for how the app combines all of the above into a ranked list of industries to target for a given talent. Forward-looking contract for when the app is built.
+- `docs/onboarding_workflow.md` — draft spec for how a user adds a new talent: web wizard with OAuth platform connections (paste-fallback), media-pack extraction by LLM, adaptive questionnaire for gaps, hybrid similar-talent seeding (user + AI suggestions), and a background AI research pass that populates similar-talent records.
 - `.gitignore` — ensures any `*.local.json` or `.env` files containing real keys are never committed.
 
 ### Reference taxonomies
