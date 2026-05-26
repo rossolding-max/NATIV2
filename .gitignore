@@ -39,14 +39,26 @@ data/agency_profile.json
 # packs (Phase 4.5: versioned briefing notes, agendas, slide decks
 # with rendered HTML/PDF/PPT artefacts), AND proposal packs
 # (Phase 4.6: versioned commercial proposals with LLM rationale,
-# context-artefact uploads, slide decks). Schemas
-# (schemas/deal.schema.json + schemas/discovery_prep_pack.schema.json
-# + schemas/proposal_pack.schema.json) and specs
+# context-artefact uploads, slide decks), AND contract packs
+# (Phase 4.7: versioned contract drafts with merge field values,
+# clause decisions, narrative sections, legal review gate state,
+# rendered MD/DOCX/PDF). Schemas (schemas/deal.schema.json
+# + schemas/discovery_prep_pack.schema.json + schemas/proposal_pack.
+# schema.json + schemas/contract_pack.schema.json) and specs
 # (docs/deal_lifecycle_workflow.md + docs/discovery_prep_workflow.md
-# + docs/proposal_pack_workflow.md) are tracked; the per-deal data
-# is NEVER committed. On successful close, the deal auto-archives
-# into data/brand_deals/{talent_id}.json (also gitignored).
+# + docs/proposal_pack_workflow.md + docs/contract_pack_workflow.md)
+# are tracked; the per-deal data is NEVER committed. On successful
+# close, the deal auto-archives into data/brand_deals/{talent_id}.json
+# (also gitignored).
 data/deals/
+
+# Phase 4.7 contract template starters: agency-curated reference
+# markdown templates (activewear, CPG, podcast read, etc.) that
+# Phase 1 talent onboarding can copy from. Gitignored because real
+# legal language may be agency-confidential; sample patterns can be
+# documented in docs/contract_pack_workflow.md without committing
+# the actual templates.
+data/contract_template_starters/
 
 # Outreach enrollments: per-(talent, contact) running sequence
 # instances with PII + AI-generated email content. Schema

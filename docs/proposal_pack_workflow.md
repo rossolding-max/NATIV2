@@ -253,6 +253,7 @@ All gitignored. Raw uploads retained for life of deal; purged on archive.
 | **Phase 0 agency branding** | Logo + colors + fonts auto-applied to renderer. Same single-source-of-truth pattern as Phase 4.5. |
 | **Phase 1.5 brand_deals** | Comparable past deals seed commercial proposal rationale + recent_work slides. |
 | **`data/pitch_angles.json`** | Top-scoring angles for this brand × niche seed the recommendation slide. |
+| **Phase 4.7 contract pack** | Downstream artefact. The confirmed commercial values (`deal.proposal.deliverables`, `fee_usd`, `usage_rights_granted`, `exclusivity`, `additional_compensation`, payment terms) become merge fields in the contract template. The latest proposal pack's id is captured in `contract_pack.context_snapshot.proposal_pack_id_at_gen` for traceability. See `docs/contract_pack_workflow.md`. |
 
 ## Failure handling
 

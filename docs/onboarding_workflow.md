@@ -286,6 +286,39 @@ Accepted candidates become `similarTalent` seeds.
 
 ---
 
+## Step 7.5 — Contract template + legal entity
+
+Captures the per-talent contract template used by the Phase 4.7 contract pack pipeline (`docs/contract_pack_workflow.md`). This step is required before any deal can progress to CONTRACT stage for this talent.
+
+**Inputs (mostly pre-populated from earlier steps):**
+- `billing_entity.legal_name` / `country` / `tax_id` / `address` — from Step 5
+- `working_terms.default_usage_rights` / `default_usage_duration_days` / `revisions_included` — from Step 5
+- Talent's preferred governing law + jurisdiction — captured here if not already
+- Optional: external legal reviewer identity (if talent uses outside counsel)
+
+**Captured this step (into `talent.contract_template`):**
+- `markdown_source` — the contract template text. Two paths:
+  - **Starter template adoption** (recommended for v0.1): agency provides curated starter templates in `data/contract_template_starters/` (e.g. activewear default, CPG default, podcast read default). Onboarding flow lists starters; talent picks one; system copies into `markdown_source` for editing. `based_on_starter_template_id` records provenance.
+  - **From scratch / upload existing**: talent (or talent's lawyer) pastes/uploads their preferred template. Markdown ideal; .docx accepted and converted.
+- `merge_field_definitions[]` — declared by the starter template OR derived by scanning `markdown_source` for `{{...}}` patterns. UI shows each field with its expected source; talent confirms or remaps.
+- `clause_applicability_rules[]` — pre-populated from starter; talent can add/edit. Each rule has plain-language condition + `default_decision` enum (include / exclude / llm_decide).
+- `narrative_placeholders[]` — pre-populated from starter; tone guidance editable.
+- `default_governing_law` + `default_jurisdiction` — common defaults: 'England and Wales' / 'State of California' / etc. UI offers preset list + freeform.
+- `legal_reviewer_id` (optional) — if talent uses external counsel, capture their identity here. Defaults absent → falls back to assigned agent at gate time.
+- `template_version` + `template_updated_at` — set automatically on save.
+
+**Validation:**
+- Every `{{merge_field}}` in `markdown_source` must have a matching entry in `merge_field_definitions[]` (or be flagged for agent to declare).
+- Every `{{#if clause_id}}...{{/if}}` block must have a matching `clause_applicability_rules[].clause_id` (or be flagged).
+- Every `{{narrative_*}}` placeholder must have a matching `narrative_placeholders[].placeholder` (or be flagged).
+- Test compose: run a dry-run compose against placeholder context to confirm template renders without unresolved placeholders.
+
+**Output:** `talent.contract_template` block fully populated. Deal contract pack generation can now fire for any deal involving this talent.
+
+**Skip option:** for early-stage agencies still building out their first template, this step can be deferred (talent profile saves without `contract_template`). Deals can progress through LEAD + PROPOSAL stages but block at `contract_drafting` substage with an explicit "Talent contract template not yet configured" message.
+
+---
+
 ## Step 8 — Final review + validation
 
 Full schema validation runs against `schemas/talent.schema.json`. Two outcomes:
@@ -358,6 +391,7 @@ SIMILAR TALENT RESEARCH:
 | 5 Questionnaire | `pronouns`, `age` / `date_of_birth`, `languages`, `contact.*`, `billing_entity.*`, `working_terms.*`, `brand_preferences.*`, `disclosure_defaults.notes`, any rate-card gaps |
 | 6 Brand enrichment | `previous_brands[].industry_id`, `.campaign_date`, `.deliverables`, `.fee`, `.usage_rights_granted`, `.performance_notes`, `.brand_contact` |
 | 7 Similar talent | `similar_talent[].id`, `.name`, `.handles[]`, `.research.status` |
+| 7.5 Contract template | `contract_template.markdown_source`, `.merge_field_definitions[]`, `.clause_applicability_rules[]`, `.narrative_placeholders[]`, `.default_governing_law`, `.default_jurisdiction`, `.legal_reviewer_id`, `.template_version`, `.based_on_starter_template_id` |
 | 8 Validation | (no new fields — commits everything) |
 | 9 AI research | `similar_talent[].previous_brands[]`, `.inferred_niches[]`, `.research.status`, `.research.last_researched_at`, `.research.sources` |
 

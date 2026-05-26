@@ -48,6 +48,16 @@
 **v0.1 placeholder:** schema field `context_artefact.parser: "external_transcript_link"` + `external_url` exist and accept manual URL paste; the LLM is informed of the link but cannot read it.
 **Env vars when wired:** `OTTER_API_KEY` / `FIREFLIES_API_KEY` / `GRAIN_API_KEY` / `ZOOM_CLIENT_ID` (whichever is chosen).
 
+### Phase 4.7 contract pack — markdown → Word + PDF rendering (v0.1 in-process)
+**Role:** Phase 4.7 (`docs/contract_pack_workflow.md`) generates contract drafts from talent-per markdown templates. Renders `composed_markdown` to three artefacts:
+- `contract.md` — markdown source-of-truth (built-in writer)
+- `contract.docx` — editable Word file (via `python-docx`)
+- `contract.pdf` — read-only PDF (via Puppeteer headless Chromium OR pandoc)
+**Why in-process:** same rationale as Phase 4.6 file parsing — simple, deterministic, no vendor cost, full control over output quality.
+**Markdown → Word fidelity caveats:** python-docx handles paragraphs + bold/italic + headings cleanly; tables (deliverables, timeline) need explicit conversion logic; signature blocks rendered as literal placeholder text the agent fills before sending. Agent can edit the .docx output before sending.
+**Markdown → PDF options:** v0.1 default is Puppeteer (consistent with other Phase 4.x renderers). pandoc as alternate if Puppeteer install adds too much weight in some deployment contexts.
+**Env vars:** none.
+
 ### Phase 4 vendor integrations (deferred — v2)
 **Role:** Phase 4 deal lifecycle (`docs/deal_lifecycle_workflow.md`) currently tracks contracts + invoices manually in v0.1 (PDF upload + dates). v2 adds API integrations for the high-friction operations:
 

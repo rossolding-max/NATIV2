@@ -17,6 +17,7 @@ Build an AI-powered assistant that helps an influencer (or a roster of influence
 | 4 | **Deal Lifecycle** | v0.1 spec + schema shipped | Moves a deal through 5 stages — LEAD → PROPOSAL → CONTRACT → DELIVERY → CLOSE — from a Phase 3b `interested` reply through to a paid + archived deal. Auto-archives won deals into Phase 1.5 brand_deals. Structured loss-reason enum + funnel analytics. v0.1 tracks contracts/invoices manually; v2 adds DocuSign + Stripe + Xero API integrations. |
 | 4.5 | **Discovery Call Prep** | v0.1 spec + schema shipped | Auto-drafts agenda + briefing notes + slide deck (live + leave-behind variants + speaker notes) when a LEAD-stage deal hits `initial_call_scheduled`. 3-pass Claude Sonnet pipeline + Exa external research. Pre-generation guidance + natural-language feedback loop creates versioned regenerations. Slide skill (provided separately) handles HTML/PDF/PPT export with direct user editing + NL feedback per slide. Agency branding from Phase 0. |
 | 4.6 | **Proposal Pack** | v0.1 spec + schema shipped | Agent-initiated commercial proposal builder for PROPOSAL substage. Forks discovery deck content + adds proposal-specific sections (executive summary, objectives recap, deliverables, fee, usage rights, exclusivity, timeline, exclusions). 5-stage pipeline: context augmentation (upload briefs/notes/transcripts → parse + summarise) → hybrid discovery debrief extraction → commercial gate (LLM proposes, agent must confirm before render) → 3-pass Sonnet slide generation → render. Bidirectional link to `deal.proposal.negotiation_log[]` for brand pushback handling. v0.1 file parsing: pypdf + python-docx. v2 adds external transcript-link references (Otter / Fireflies / Grain). |
+| 4.7 | **Contract Pack** | v0.1 spec + schema shipped | Agent-initiated contract draft builder for CONTRACT substage. 7-stage pipeline: context augmentation (upload brand legal info, brand-requested clauses, prior contracts) → merge field extraction (talent legal entity from `billing_entity`, commercials from `deal.proposal.*`) → conditional clause evaluation (LLM decides include/exclude per `{{#if}}` block: GDPR, exclusivity, IP, paid social) → narrative drafting (LLM fills `{{narrative_*}}` placeholders) → compose → HARD LEGAL REVIEW GATE → render (markdown source-of-truth + Word .docx + PDF). Per-talent template (captured in Phase 1 onboarding Step 7.5) with markdown + merge fields + conditional sections + narrative placeholders. Brand-redline-response regen type. v0.1 e-sign = manual; v2 = DocuSign / PandaDoc / HelloSign. |
 
 ## End-to-end data flow
 
@@ -165,6 +166,35 @@ Build an AI-powered assistant that helps an influencer (or a roster of influence
 │   output: data/deals/{deal_id}/            │   │
 │     proposal_packs/v{N}.json + uploads     │   │
 │     (gitignored)                           │   │
+└──────────┬─────────────────────────────────┘   │
+           │ deal.substage → contract_drafting   │
+           ▼                                     │
+┌────────────────────────────────────────────┐   │
+│ Phase 4.7  CONTRACT PACK                   │   │
+│   docs/contract_pack_workflow.md           │   │
+│     7-stage pipeline:                      │   │
+│     A. Context augmentation                │   │
+│        (upload brand legal info, prior     │   │
+│         contracts, redlines)               │   │
+│     B. Merge field extraction              │   │
+│        (talent.billing_entity +            │   │
+│         deal.proposal.* → merge values     │   │
+│         with confidence + source)          │   │
+│     C. Conditional clause evaluation       │   │
+│        (LLM decides include/exclude per    │   │
+│         {{#if}}: GDPR, exclusivity, IP)    │   │
+│     D. Narrative drafting                  │   │
+│        ({{narrative_*}} placeholders)      │   │
+│     E. Compose markdown                    │   │
+│     F. HARD LEGAL REVIEW GATE              │   │
+│        (no render until approved)          │   │
+│     G. Render (MD source-of-truth +        │   │
+│        DOCX + PDF)                         │   │
+│     Per-talent template captured in        │   │
+│     Phase 1 onboarding Step 7.5.           │   │
+│   schemas/contract_pack.schema.json        │   │
+│   output: data/deals/{deal_id}/            │   │
+│     contract_packs/v{N}.json (gitignored)  │   │
 └────────────────────────────────────────────┘   │
                                                  ▼
                                   ┌─────────────────────────┐
@@ -212,6 +242,7 @@ The fields below were not in the original request but were added because later p
 - `schemas/deal.schema.json` — JSON Schema for Phase 4 deal pipeline records. 5-stage lifecycle (LEAD → PROPOSAL → CONTRACT → DELIVERY → CLOSE) + substages + state machine + per-stage data blocks + attachments + notes + audit trail. Structured loss-reason enum. `lead.discovery_prep_pack_ids[]` + `lead.latest_prep_pack_id` link to Phase 4.5 prep packs. v0.1 = manual contracts/invoices; v2 fields ready for DocuSign / Stripe / Xero / QuickBooks API integration. Validates files under `data/deals/` (gitignored — commercial data + contracts + invoice amounts).
 - `schemas/discovery_prep_pack.schema.json` — JSON Schema for Phase 4.5 discovery-call prep packs. Versioned (v1, v2, v3…) bundles of briefing notes (multi-section markdown, agent-only, includes commercial range), agenda (sections + durations + talking points), and slides[] (structured JSON: live_body + leave_behind_extension + speaker_notes + sources per slide). Generation block captures pre-generation guidance + regeneration feedback + LLM provenance (model + token usage + cached tokens + cost). Context snapshot freezes upstream data including Exa external research (queries + summaries + URLs). agent_edits[] audit log for direct edits. export_artifacts[] tracks rendered HTML/PDF/PPT files. Validates files under `data/deals/{deal_id}/prep_packs/` (gitignored).
 - `schemas/proposal_pack.schema.json` — JSON Schema for Phase 4.6 proposal packs. Versioned commercial proposals with five layered sections: (1) generation provenance (5 trigger types including `negotiation_response` with bidirectional log ref); (2) context snapshot (forked_from_prep_pack_id + discovery_debrief_snapshot + optional Exa research refresh); (3) context_artefacts[] (uploaded files with parser metadata, parsed text, LLM summary, extracted signals, relevance tags, exclude toggle); (4) commercial_proposal (LLM-proposed deliverables/fee/usage_rights/exclusivity/timeline/exclusions/payment_terms with rationale per field, plus the gate: confirmed_at + confirmed_by_agent_id + confirmed_overrides[]); (5) slides[] (16-value type enum including forked types from discovery + proposal-specific: executive_summary, objectives_recap, recommendation, deliverables, timeline, investment, usage_rights, exclusivity, exclusions, agency_process, next_steps_proposal; live_body adds `table` for deliverables/timeline/investment). export_artifacts[].status enum includes `blocked_by_commercial_gate`. agent_edits[] includes `commercial_override` and `context_artefact_*` types. Validates files under `data/deals/{deal_id}/proposal_packs/` (gitignored).
+- `schemas/contract_pack.schema.json` — JSON Schema for Phase 4.7 contract packs. Versioned contract drafts with eight layered sections: (1) generation provenance (6 trigger types including `brand_redline_response` and `amendment_request`); (2) context snapshot (template_version_used + proposal_pack_id_at_gen + talent_billing_entity_snapshot + brand_legal_entity_at_gen with signatory info); (3) context_artefacts[] with contract-specific types (brand_legal_info / brand_requested_clauses / prior_contract / brand_redline / talent_redline); (4) merge_field_values[] (each with confidence enum high/medium/low/missing + source enum + needs_review flag); (5) conditional_clause_decisions[] (each with decided_by + applicability_rationale + agent_overridden); (6) narrative_sections[] (LLM-drafted with sources[] + word_count); (7) composed_markdown (canonical contract source-of-truth); (8) legal_review (the gate — required flag, reviewer_id, blocking_issues[] auto-populated, approved_at + approved_by_agent_id, previous_approvals[] audit of edit-reset-reapprove cycles). export_artifacts[].status enum includes `blocked_by_legal_gate`. agent_edits[] includes 7 edit types and the `trivial_edit_override` flag for typos. Validates files under `data/deals/{deal_id}/contract_packs/` (gitignored).
 - `schemas/talent.schema.json` — JSON Schema (Draft 2020-12) describing the talent profile.
 - `schemas/brand_candidates.schema.json` — JSON Schema for the per-talent Brand Discovery output. Validates every file written by the orchestrator under `data/brand_candidates/` (the folder itself is gitignored — generated artifact, not source).
 - `schemas/brand_contact.schema.json` — JSON Schema for per-brand contact records (Phase 3a). Validates every file under `data/brand_contacts/` (gitignored — contacts are PII and vendor data is licensed).
@@ -236,6 +267,7 @@ The fields below were not in the original request but were added because later p
 - `docs/deal_lifecycle_workflow.md` — Phase 4 spec for the deal pipeline. Defines the 5-stage lifecycle (LEAD → PROPOSAL → CONTRACT → DELIVERY → CLOSE), per-stage substages and data blocks, full state machine with valid transitions, structured loss reasons (budget / timing / competitor_won / internal_pivot / talent_no_fit / terms_disagreed / unresponsive / compliance_block / other), auto-archive on close into Phase 1.5 brand_deals, integration touchpoints with Phase 3b outreach (interested reply triggers deal creation) and Phase 1.5 (close triggers archive), notifications + reminders driven by `next_action_due_at`, failure handling, and the v2 vendor-integration roadmap (DocuSign / PandaDoc / HelloSign for e-sign; Stripe / Xero / QuickBooks for invoicing).
 - `docs/discovery_prep_workflow.md` — Phase 4.5 spec for the discovery-call prep generator. Defines the trigger (`substage = initial_call_scheduled`), 3-pass Sonnet generation pipeline with prompt-caching across briefing/agenda/slides passes, Exa external research integration, default 10-slide deck structure mapped to slide-type layouts, three rendered output variants from one source (live deck + leave-behind deck + speaker notes), versioning model with pre-generation guidance + natural-language feedback regeneration loop (v1 stays locked unless agent asks; agent can target whole-pack / section / per-slide regen), direct slide editing via the slide skill, slide-skill integration contract (input/output shape + on_edit/on_feedback callbacks), failure handling, storage layout, v0.1 explicit non-goals, and 7 open questions for v0.2.
 - `docs/proposal_pack_workflow.md` — Phase 4.6 spec for the commercial proposal pack generator. Defines the agent-initiated trigger (substage = `proposal_drafting`), 5-stage generation pipeline (context augmentation → hybrid debrief extraction → commercial gate → 3-pass Sonnet slide generation → render), file upload + parsing (pypdf / python-docx / text reader for v0.1; external transcript-link references for v2), the commercial gate mechanics (LLM proposes, agent must confirm before slides render, confirmed values copy into canonical `deal.proposal.*`), default 15-slide deck structure with 4 slides forked from the discovery prep pack, negotiation tie-in (bidirectional link to `deal.proposal.negotiation_log[].proposal_pack_version`), storage layout, integration touchpoints, 9 failure handling scenarios, and 7 open questions for v0.2 including counter-offer detection, win/loss pricing-model calibration, auto-contract-draft seeding.
+- `docs/contract_pack_workflow.md` — Phase 4.7 spec for the contract pack generator. Defines the agent-initiated trigger (substage = `contract_drafting`), 7-stage generation pipeline (context augmentation → merge field extraction → conditional clause evaluation → narrative drafting → compose → HARD legal review gate → render), per-talent template structure (markdown + merge fields + `{{#if}}` conditionals + `{{narrative_*}}` placeholders) captured in Phase 1 onboarding Step 7.5, full example template markdown demonstrating ~20 merge fields + 4 conditional blocks + 4 narrative placeholders, the legal review gate mechanics (blocking_issues auto-populated from low-confidence fields; edits reset gate; trivial_edit_override for typos; previous_approvals[] audit trail), brand-redline-response handling, storage layout, integration touchpoints with `talent.contract_template` + `talent.billing_entity` + Phase 4.6 proposal pack, 10 failure handling scenarios, and 7 open questions for v0.2 including brand-side legal review automation, counter-template handling, structured JSONLogic clause conditions.
 - `docs/onboarding_workflow.md` — draft spec for how a user adds a new talent: web wizard with OAuth platform connections (paste-fallback), media-pack extraction by LLM, adaptive questionnaire for gaps, hybrid similar-talent seeding (user + AI suggestions), and a background AI research pass that populates similar-talent records. The per-talent sender-domain section was removed: outreach now uses the agency's pre-warmed mailbox from Phase 0.
 - `docs/brand_discovery.md` — draft spec for the long-list generator. **16 independent searches** runnable today (re-engagement, network expansion, affinity expansion, geo, life-stage, constraint-aware, graph, recently-funded via web search, **trending/rising brands via the [`last30days` skill](https://github.com/mvanhorn/last30days-skill) — multi-source social momentum signal across Reddit/X/TikTok/YouTube/HN/etc., run as a monthly cron**) merged with multi-source scoring. Monthly cron drives re-engagement with per-brand cool-downs. Future-versions section lists 12 more searches that need external data (Crunchbase API as a structured upgrade to Search 15, live `#ad` scraping, affiliate networks, creator marketplaces, EMV reports, etc.). Both structural enrichments (`brand_industry_map` metadata + `brand_competitors` graph) are now shipped and used by Searches 3, 4, 10, 14.
 - `docs/vendor_roadmap.md` — single source of truth for external-service decisions. Confirms **Exa** as the v0.1 web-search provider (Search 15). Catalogues deferred vendors with criteria for when to add each: ScrapeCreators (Search 16 visual platforms), Owler (competitor maintenance), Modash/HypeAuditor (brand DB bulk import), Exploding Topics (pre-trend detection), Product Hunt API (day-of launches), Tribe Dynamics EMV (top-spending brands per category), SimilarWeb (audience-overlap competitors), Crunchbase (structured funding data), Apollo (Phase 3 outreach contact discovery), plus alternatives for each. Includes the env-var inventory for all current + deferred services.
@@ -784,3 +816,82 @@ All gitignored. File caps v0.1: 25MB/file, 100MB/deal. Larger files → external
 
 ### Cost profile
 Per-pack: 4-5 Sonnet passes (artefact summary + debrief extraction + commercial proposal + executive summary + slides + speaker notes), heavily cached. ~25-35k input tokens + ~12-15k output tokens. Estimated $0.30-0.60 per generation. Iteration cost scales with negotiation rounds.
+
+---
+
+## Phase 4.7 — Contract Pack
+
+### Output
+A versioned contract draft per deal at `data/deals/{deal_id}/contract_packs/v{N}.json` (gitignored). Each version bundles merge field values (with confidence + source per field), conditional clause decisions (with applicability rationale), narrative sections (LLM-drafted), the composed contract markdown, the legal review gate state, and rendered artefacts (markdown source-of-truth + Word .docx + PDF). Validated against `schemas/contract_pack.schema.json`.
+
+### Trigger + locked-in decisions
+- **Fires on:** agent clicks "Draft contract" while deal is in `contract_drafting` substage. Manual trigger (higher legal stakes than proposal — no auto-fire).
+- **Template lives per-talent:** `talent.contract_template` block captured in Phase 1 onboarding **Step 7.5**. Markdown source + merge field definitions + clause applicability rules + narrative placeholders + governing law defaults + optional external `legal_reviewer_id`.
+- **Markdown with merge fields + conditionals + narrative placeholders** as source-of-truth: `{{merge_field}}` for substitution, `{{#if clause_id}}...{{/if}}` for conditional clauses, `{{narrative_*}}` for LLM-drafted bounded sections. Rendered to Word .docx + PDF.
+- **Hard legal review gate:** Word + PDF artefacts cannot render until `legal_review.approved_at` is set. Any edit post-approval resets the gate (re-approval required) unless agent flags `trivial_edit_override`. Strict — contract stakes warrant it.
+- **LLM scope: merge + narrative + conditional clauses; NOT full clause rewriting.** Predictable behaviour, bounded legal risk.
+- **Agency starter templates** (gitignored) in `data/contract_template_starters/` — Phase 1 onboarding flow copies a starter into the talent's `contract_template.markdown_source` for editing; `based_on_starter_template_id` tracks provenance.
+
+### 7-stage generation pipeline
+```
+Trigger: agent clicks "Draft contract" (substage = contract_drafting)
+  │
+  ▼ A. Context augmentation: uploads parsed (pypdf/python-docx) +
+  │    LLM-summarised. Critical: brand legal entity info (W-9 /
+  │    company registration). Optional: brand-requested clauses,
+  │    prior contracts, brand redlines.
+  ▼ B. Merge field extraction: LLM extracts every {{merge_field}}
+  │    from declared sources (talent.billing_entity / agency_profile /
+  │    deal.proposal.* / uploaded artefacts / agent input). Each value
+  │    tagged with confidence + source. Low-confidence on required
+  │    fields surfaces as blocking_issue.
+  ▼ C. Conditional clause evaluation: LLM decides include/exclude
+  │    per {{#if}} block based on context (GDPR if EU brand;
+  │    exclusivity if duration_days > 0; IP-assignment if
+  │    co_created_product in additional_compensation; etc.).
+  ▼ D. Narrative drafting: LLM fills {{narrative_*}} placeholders
+  │    (scope_of_work, approval_process, etc.) from declared context
+  │    paths with tone guidance + word-count caps.
+  ▼ E. Compose: template + merge values + clause decisions +
+  │    narratives → composed_markdown (canonical source-of-truth).
+  ▼ F. HARD LEGAL REVIEW GATE: agent (or legal_reviewer_id) reviews
+  │    every value/decision/narrative; edits log + reset gate; on
+  │    approve, legal_review.approved_at set.
+  │    ─── WORD + PDF CANNOT RENDER UNTIL APPROVED ───
+  ▼ G. Render: composed.md → contract.docx (python-docx) +
+  │    contract.pdf (Puppeteer/pandoc). deal.contract.draft_
+  │    contract_attachment_id auto-set to the PDF.
+  ▼ Agent sends to brand + talent (v0.1 manual; v2 e-sign)
+  ▼ NL feedback regen → v2, v3, ... (incl. brand_redline_response)
+```
+
+### Schema architecture
+- `merge_field_values[]` — every field with `confidence` (high/medium/low/missing), `source` (10-value enum: talent_profile / talent_billing_entity / talent_working_terms / agency_profile / deal_proposal / discovery_debrief / context_artefact / agent_input / computed / default), `needs_review` flag, agent override capture.
+- `conditional_clause_decisions[]` — each `{{#if}}` block's decision with `decided_by` (template_default / llm / agent), `applicability_rationale`, agent override capture.
+- `narrative_sections[]` — LLM-drafted content + `sources[]` (which context paths it drew from) + word count + agent edit tracking.
+- `legal_review.blocking_issues[]` — auto-populated from low-confidence/missing required fields + agent-flagged sections. Gate cannot pass until empty.
+- `legal_review.previous_approvals[]` — full audit trail of approval-edit-reapprove cycles with `reset_reason`.
+
+### Integration
+- **`talent.contract_template`** (Phase 1 Step 7.5) — template source-of-truth: markdown + merge_field_definitions + clause_applicability_rules + narrative_placeholders + governing law defaults + optional external legal_reviewer_id.
+- **`talent.billing_entity`** — legal entity merge fields pull from here (legal_name, country, tax_id, address, company_number). Single source-of-truth.
+- **`deal.proposal.*`** (Phase 4.6) — confirmed commercials seed contract merge fields (fee_usd, deliverables, usage_rights_granted, exclusivity, additional_compensation, payment terms).
+- **`deal.contract.draft_contract_attachment_id`** (Phase 4 deal record) — auto-populated from latest contract pack PDF on Stage G render.
+- **`deal.contract.amendment_log[]`** — post-execution amendments use `trigger: amendment_request` to write here.
+
+### Storage
+```
+data/deals/{deal_id}/
+  prep_packs/                # Phase 4.5
+  proposal_packs/            # Phase 4.6
+  contract_packs/            # Phase 4.7
+    v1.json
+    v1_artifacts/{contract.md, contract.docx, contract.pdf}
+    v2.json
+    v2_artifacts/...
+  context_uploads/           # shared across 4.6 + 4.7
+```
+All gitignored. Same file caps: 25MB/file, 100MB/deal.
+
+### Cost profile
+Per-pack: 4-6 Sonnet passes (artefact summary + merge extract + clause evaluate + narrative draft + compose). Heavily cached from proposal pack context. ~30-40k input tokens + ~10-15k output tokens (less than proposal — contract is more deterministic). Estimated $0.20-0.40 per generation. Typical deal: 1-3 versions (less iteration than proposal — once approved, redlines trigger targeted regen, not full rebuild).

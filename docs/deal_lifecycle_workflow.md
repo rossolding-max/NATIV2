@@ -176,12 +176,29 @@ Agent iterates via NL feedback → v2, v3, ... Brand pushback recorded in `negot
 - `contract_failed` — couldn't agree on terms (terminal)
 
 **Data captured (`deal.contract`):**
-- `draft_contract_attachment_id` + `contract_attachment_id` (final signed)
+- `contract_pack_ids[]` + `latest_contract_pack_id` — FK references to the Phase 4.7 contract packs generated for this deal (see below)
+- `legal_reviewer_id` — identity authorised to pass the contract pack's hard legal review gate (defaulted from `talent.contract_template.legal_reviewer_id` if set, else `deal.assigned_agent_id`; can be per-deal overridden)
+- `draft_contract_attachment_id` — auto-populated from the latest contract pack's rendered PDF on each render
+- `contract_attachment_id` — final signed PDF (v0.1: agent uploads after both sides sign; v2: e-sign provider auto-populates)
 - `e_sign_provider` (v0.1: always `manual`; v2: `docusign` / `pandadoc` / `hellosign`)
 - Timestamps for: drafting started, sent to brand, sent to talent, signed by talent, signed by brand, executed
-- `amendment_log[]` — post-execution scope changes / extensions
+- `amendment_log[]` — post-execution scope changes / extensions (also generated through Phase 4.7 with `trigger: amendment_request`)
 
-**v0.1 manual approach:** agent uploads PDF, manually sets `*_signed_at` timestamps. Attachment lives in `attachments[]` with `type: "contract"`.
+**Contract pack generation (Phase 4.7):**
+
+The contract draft is built by the Phase 4.7 pipeline (`docs/contract_pack_workflow.md`) — agent-initiated:
+
+1. **Stage A — Context augmentation:** Agent uploads brand legal info (W-9 / company registration), brand-requested clauses, prior contracts with this brand. Files parsed (pypdf/python-docx) + LLM-summarised.
+2. **Stage B — Merge field extraction:** LLM extracts every `{{merge_field}}` value from `talent.billing_entity` + `agency_profile` + `deal.proposal.*` + uploaded artefacts + agent input. Each value tagged with confidence + source. Low-confidence on required fields surfaces as blocking_issue.
+3. **Stage C — Conditional clause evaluation:** LLM evaluates each `{{#if clause_id}}` block against context (e.g. GDPR if brand in EU; exclusivity if `deal.proposal.exclusivity.duration_days > 0`; IP assignment if `additional_compensation` includes `co_created_product`). Decisions logged with applicability_rationale.
+4. **Stage D — Narrative drafting:** LLM drafts `{{narrative_*}}` placeholder sections (scope_of_work, approval_process, etc.) from declared context paths with tone guidance.
+5. **Stage E — Compose:** Template + merge values + clause decisions + narratives → `composed_markdown`.
+6. **Stage F — HARD LEGAL REVIEW GATE:** Agent (or `legal_reviewer_id`) reviews every value, decision, narrative. Edits log to `agent_edits[]` (reset the gate). Approves → `legal_review.approved_at` set.
+7. **Stage G — Render:** composed.md → contract.docx (python-docx) + contract.pdf (Puppeteer/pandoc). `deal.contract.draft_contract_attachment_id` auto-set to the PDF.
+
+Agent then sends manually (v0.1) or via e-sign (v2). NL feedback regen creates v2, v3... Brand-redline-response is a special regen type that diffs the brand's redlined version and surfaces structured changes for review.
+
+**v0.1 manual approach:** agent uploads signed PDF, manually sets `*_signed_at` timestamps. Attachment lives in `attachments[]` with `type: "contract"`.
 
 **v2 API integration:** DocuSign/PandaDoc webhook auto-populates `talent_signed_at` + `brand_signed_at` + `contract_executed_at` and uploads the final PDF.
 

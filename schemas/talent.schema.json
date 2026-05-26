@@ -284,6 +284,93 @@
       }
     },
 
+    "contract_template": {
+      "type": "object",
+      "description": "Per-talent contract template used by the Phase 4.7 contract pack generator (`docs/contract_pack_workflow.md`). Captured during Phase 1 talent onboarding. Markdown source with `{{merge_field}}` placeholders, `{{#if condition}}...{{/if}}` conditional sections, and `{{narrative_*}}` LLM-drafted blocks. Party identification (legal entity name, country, tax ID, address) is pulled from `talent.billing_entity` — single source of truth. Working defaults (usage rights, turnaround, revisions) are pulled from `talent.working_terms`. Agencies can ship starter templates in `data/contract_template_starters/` that the onboarding flow copies into this field for editing.",
+      "additionalProperties": false,
+      "properties": {
+        "markdown_source": {
+          "type": "string",
+          "description": "The full contract template text in markdown. Contains `{{merge_field}}` for deterministic substitution, `{{#if condition}}...{{/if}}` for conditional clauses (closes with matching `{{/if}}`), and `{{narrative_*}}` for LLM-drafted sections. The renderer composes this markdown source after merge/condition/narrative passes and emits .md (source-of-truth), .docx (via python-docx), .pdf (via Puppeteer or pandoc)."
+        },
+        "merge_field_definitions": {
+          "type": "array",
+          "description": "Every merge field the template uses, with its expected source. Drives Stage B (merge field extraction) — LLM knows where to pull each value from and can flag low-confidence extractions for agent review.",
+          "items": {
+            "type": "object",
+            "required": ["field", "source"],
+            "additionalProperties": false,
+            "properties": {
+              "field": { "type": "string", "description": "Merge field name (without braces). e.g. 'talent_legal_name', 'brand_legal_name', 'fee_usd', 'campaign_start_date'." },
+              "source": {
+                "type": "string",
+                "enum": ["talent_profile", "talent_billing_entity", "talent_working_terms", "agency_profile", "deal_proposal", "discovery_debrief", "context_artefact", "agent_input", "computed"],
+                "description": "Where the value comes from. `agent_input` = agent must provide (typically brand legal entity info). `computed` = derived from other fields (e.g. signed_date = today)."
+              },
+              "source_path": { "type": "string", "description": "Dotted path within the source (e.g. 'billing_entity.legal_name', 'proposal.fee_usd'). Optional — omit for free-text fields the agent fills." },
+              "required": { "type": "boolean", "default": true, "description": "If true, draft contract cannot pass legal review until value is set. Critical fields (legal names, fees, dates) should be required." },
+              "default": { "description": "Fallback value if source extraction fails or returns null." },
+              "description": { "type": "string", "description": "Human-readable explanation for the agent reviewing in UI." }
+            }
+          }
+        },
+        "clause_applicability_rules": {
+          "type": "array",
+          "description": "Per-conditional-block rule that determines whether the clause fires. Evaluated in Stage C. Each rule has a human-readable description (for agent + audit) AND a structured condition (machine-evaluatable). The LLM evaluates the condition against full deal/proposal/debrief context and decides include/exclude with rationale.",
+          "items": {
+            "type": "object",
+            "required": ["clause_id", "description", "condition"],
+            "additionalProperties": false,
+            "properties": {
+              "clause_id": { "type": "string", "description": "Matches the `{{#if clause_id}}` identifier in markdown_source." },
+              "description": { "type": "string", "description": "What this clause covers (e.g. 'EU GDPR data-processing addendum')." },
+              "condition": { "type": "string", "description": "Plain-language condition the LLM evaluates (e.g. 'brand registered address is in the EU', 'deal.proposal.exclusivity.duration_days > 0'). Structured JSONLogic could replace this in v0.2 for deterministic evaluation; v0.1 lets the LLM interpret natural-language conditions for flexibility." },
+              "default_decision": { "type": "string", "enum": ["include", "exclude", "llm_decide"], "default": "llm_decide", "description": "If `include` / `exclude`, decision is fixed — LLM doesn't evaluate. `llm_decide` runs Stage C evaluation." },
+              "applicability_source": { "type": "string", "enum": ["deal_proposal", "discovery_debrief", "talent_profile", "agency_profile", "context_artefact", "brand_legal_info"], "description": "Hint to LLM about which context block to inspect." }
+            }
+          }
+        },
+        "narrative_placeholders": {
+          "type": "array",
+          "description": "Sections the LLM drafts (Stage D). Each placeholder names what context to draw from + tone guidance.",
+          "items": {
+            "type": "object",
+            "required": ["placeholder", "draws_from"],
+            "additionalProperties": false,
+            "properties": {
+              "placeholder": { "type": "string", "description": "Matches the `{{narrative_*}}` identifier in markdown_source (e.g. 'narrative_scope_of_work')." },
+              "description": { "type": "string", "description": "What the section should cover." },
+              "draws_from": { "type": "array", "items": { "type": "string" }, "description": "List of context sources to draw from (e.g. ['deal.proposal.deliverables', 'discovery_debrief.objectives_heard'])." },
+              "tone": { "type": "string", "description": "Tone guidance (e.g. 'formal legal prose, no marketing language')." },
+              "max_word_count": { "type": "integer", "minimum": 0, "description": "Soft cap — prevents narrative bloat." }
+            }
+          }
+        },
+        "default_governing_law": {
+          "type": "string",
+          "description": "Default governing-law jurisdiction (e.g. 'England and Wales', 'State of California, USA'). Used as merge field default if not overridden per deal."
+        },
+        "default_jurisdiction": {
+          "type": "string",
+          "description": "Default court jurisdiction for disputes."
+        },
+        "legal_reviewer_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]*$",
+          "description": "Optional. If set, only this identity can pass the hard legal review gate (e.g. external legal counsel). Defaults to the deal's assigned_agent_id if absent. The reviewer's identity is captured in `contract_pack.legal_review.approved_by_agent_id` on gate-pass."
+        },
+        "template_version": {
+          "type": "string",
+          "description": "Semver or freeform version label. Updated whenever markdown_source changes. Captured in `contract_pack.context_snapshot.template_version_used` for traceability — if a template changes mid-deal, prior contract packs stay anchored to the version they were generated from."
+        },
+        "template_updated_at": { "type": "string", "format": "date-time" },
+        "based_on_starter_template_id": {
+          "type": "string",
+          "description": "If the template was adopted from one of the agency's starter templates (`data/contract_template_starters/`), the starter's ID is captured here. Provenance — easier to track which talent templates have diverged from which starters."
+        }
+      }
+    },
+
     "press_kit": {
       "type": "object",
       "additionalProperties": false,
