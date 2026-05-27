@@ -122,7 +122,24 @@
       "description": "How the LLM positions agent vs talent in generated emails. v0.1 default per user decision: agent-led on-behalf-of. v2 may add per-talent overrides."
     },
 
-    "billing_entity": { "$ref": "#/$defs/billingEntity" },
+    "billing_entity": {
+      "$ref": "#/$defs/billingEntity",
+      "description": "The agency's OWN legal entity. Used for outreach signature CAN-SPAM compliance (physical address requirement) + as a fallback FROM party on invoices when `commission_model = agency_invoices_brand_pays_talent_net`. Distinguished from `talent.billing_entity` which is the talent's legal entity. Different concept — agency may or may not be the invoicing party depending on the commission model."
+    },
+
+    "default_commission_rate": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "default": 0.20,
+      "description": "Agency-default commission rate as decimal (0.20 = 20%). Applied to every talent unless overridden via `talent.commission_override.commission_rate`. Powers Phase 4.8 invoice flow — when `commission_model = agency_invoices_brand_pays_talent_net`, agency invoices brand for full fee; talent settlement = fee × (1 - commission_rate)."
+    },
+    "default_commission_model": {
+      "type": "string",
+      "enum": ["agency_invoices_brand_pays_talent_net", "talent_invoices_brand_agency_invoices_talent", "talent_invoices_brand_talent_pays_agency"],
+      "default": "agency_invoices_brand_pays_talent_net",
+      "description": "Agency-default money-flow model. agency_invoices_brand_pays_talent_net (most common): agency is the FROM party on brand-facing invoices; agency receives payment; agency settles talent net of commission. talent_invoices_brand_agency_invoices_talent: talent is FROM party; agency auto-generates a separate commission invoice to talent. talent_invoices_brand_talent_pays_agency: talent FROM party + talent manually settles agency. Per-talent override via `talent.commission_override.commission_model`."
+    },
 
     "invoice_template": {
       "type": "object",

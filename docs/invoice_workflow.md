@@ -182,6 +182,24 @@ Trigger fires (cron detects condition met OR agent manually fires)
 
 Per-agency (not per-talent, not per-deal) — numbering is contiguous across the whole agency for accounting integrity.
 
+## Commission split (FROM-party determination)
+
+Before generating the brand-facing invoice, the orchestrator resolves the commission model:
+
+1. **Resolve commission_rate**: `talent.commission_override.commission_rate` if set, else `agency_profile.default_commission_rate` (default 0.20).
+2. **Resolve commission_model**: `talent.commission_override.commission_model` if set, else `agency_profile.default_commission_model` (default `agency_invoices_brand_pays_talent_net`).
+3. **Determine FROM party + sibling invoice behaviour**:
+
+| commission_model | Brand-facing invoice FROM | Sibling commission invoice? |
+|---|---|---|
+| `agency_invoices_brand_pays_talent_net` (default) | `agency_profile.billing_entity` (agency invoices brand for full fee; agency settles talent net of commission separately — talent settlement tracked manually v0.1; auto via Stripe Connect in v2) | No (commission is implicit in agency's retention) |
+| `talent_invoices_brand_agency_invoices_talent` | `talent.billing_entity` | Yes — orchestrator auto-generates a SECOND invoice_pack with `schedule_sequence = sequence + 100` (offset to distinguish), `amount = brand_invoice_amount × commission_rate`, FROM = agency, TO = talent. Both packs travel together in `deal.close.invoice_pack_ids[]`. |
+| `talent_invoices_brand_talent_pays_agency` | `talent.billing_entity` | No (talent settles agency manually) |
+
+The FROM party determines which `billing_entity` block populates the invoice's merge fields. The `payment_instructions_markdown` block resolves similarly: `talent.invoice_payment_override.payment_instructions_markdown` if set, else `agency_profile.invoice_template.payment_instructions_markdown`.
+
+**v0.1 simplification:** sibling commission invoice auto-generation is supported in schema but defers to v0.2 implementation. v0.1 agencies using `talent_invoices_brand_*` models manually create the commission invoice via "Add manual invoice" UI.
+
 ## Layer 3: Payment tracking
 
 ### v0.1 manual tracking
@@ -277,6 +295,17 @@ All gitignored. File naming uses `seq{N}_v{M}` so the schedule sequence + versio
 **Per-deal LLM cost:** one schedule parse on contract execution (~$0.02) + one per invoice pack generation.
 **Platform API costs (v0.1):** Meta Graph free; TikTok Display free.
 **Phyllo (v2):** ~$50-200/creator/month for unified API across YouTube/LinkedIn/X/podcast.
+
+## Currency / FX policy
+
+Multi-currency handling is consistent across all packs:
+
+- **deal.proposal.fee_usd + fee_currency_original + fee_original_amount** — captured at proposal time. fee_usd is USD-normalised for analytics; original currency + amount preserved for the brand-facing rendering.
+- **contract_pack** — same fields carried through merge field extraction; rendered in the contract's original currency.
+- **invoice_pack.amounts.currency + fx_rate_to_usd** — invoice renders in the contract's original currency (matches what brand signed). `fx_rate_to_usd` captured at invoice generation time so accounting can normalise. If brand pays a different USD amount than expected due to FX shift between invoice + payment, `payment_state.payment_amount_received_usd` + `reconciliation_note` capture the variance.
+- **performance_report_pack** — `kpis.cpm_usd` / `cpe_usd` / `cpv_usd` / `sales_attributed_usd` / `emv_usd` always USD-normalised regardless of invoice currency. Cost-per-X metrics use fx_rate_to_usd at report generation time.
+
+**Rule:** every monetary field in the schema is suffixed `_usd` to make USD-normalisation explicit. Non-USD original amounts always carry alongside (`*_currency_original` + `*_original_amount`). No silent unit-mismatch bugs.
 
 ## v0.1 explicit non-goals
 

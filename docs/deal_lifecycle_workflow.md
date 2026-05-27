@@ -220,6 +220,11 @@ Agent then sends manually (v0.1) or via e-sign (v2). NL feedback regen creates v
 - `live` — content posted to platform
 - `performance_window` — 30-day post-launch KPI capture window
 
+**Per-deliverable vs. deal-level state — explicit rule:**
+- Individual deliverable state lives on `content_drafts[]` (review status per draft version) + `posting_schedule[]` (posted_at per deliverable). These are the source-of-truth.
+- The deal-level `substage` field is COMPUTED from per-deliverable states using the "least-progressed wins" rule: if any deliverable is still `pending_brand_approval` while others are `live`, deal-level substage = `pending_brand_approval`. Substage advances to `live` only when ALL deliverables have `posted_at`; to `performance_window` only when all are live AND `performance_capture_window_starts_at` is set.
+- Edge case: parallel revisions on multiple deliverables — substage stays at `revisions_requested` until all revision cycles complete. UI surfaces per-deliverable progress badges to avoid the deal-level state appearing "stuck".
+
 **Data captured (`deal.delivery`):**
 - `production_kickoff_at`, `products_shipped_*_at`
 - `content_drafts[]` — per-deliverable versioned drafts with brand review status

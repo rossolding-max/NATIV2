@@ -109,7 +109,22 @@ What this means at this step: nothing. The talent's onboarding plugs into the ag
 
 **Stale handling:** on every login, if `last_updated > 7 days`, auto-refresh in background.
 
+**Weekly background refresh:** independent of agent login, a weekly cron refreshes `talent.platforms[].stats.*` (followers, ER, avg views/likes/comments) for every active talent using the captured oAuth tokens. Same scopes as Phase 4.8 + 4.9 — no additional permissions. Keeps the talent profile's headline numbers fresh for discovery prep packs (Phase 4.5) + proposal packs (Phase 4.6) without depending on agent activity. If `stats.last_updated` falls behind by >14 days for a talent, the agent's morning summary flags it for manual reconnect.
+
 **Token refresh:** long-lived where possible (Meta = 60d). On expiry, surface a "Reconnect" prompt; never silently lose data.
+
+**Downstream validation — Phase 4.8 + 4.9 dependency:**
+
+The oAuth scopes captured here are read again by:
+- **Phase 4.8 deliverable detection cron** (`docs/invoice_workflow.md`): needs `instagram_basic` (list talent's media) + `instagram_manage_insights` (read insights) for IG; needs `video.list` for TikTok. Without these scopes, detection auto-matching falls back to manual URL entry for that platform.
+- **Phase 4.9 KPI capture cron** (`docs/performance_report_workflow.md`): needs the same scopes plus `instagram_manage_insights` (for `/{ig-media-id}/insights` endpoint) and `video.insights` for TikTok. Without these, KPI snapshots in `deal.delivery.interim_kpi_snapshots[]` fall back to brand-reported or manual entry, and the performance report flags coverage gaps.
+
+**Validation gate at end of Step 2:** for each platform the talent connected, the orchestrator tests one live API call against the connected token:
+- **IG** → call `/me/media?fields=id&limit=1` (lightweight; tests `instagram_basic` + read access)
+- **TikTok** → call `/v2/video/list/?fields=id&max_count=1` (tests `video.list`)
+- **YouTube** → call `channels?part=id&mine=true` (tests `youtube.readonly`)
+
+A platform with a connected token that fails the validation call gets badged `Limited — re-grant scopes to enable detection + KPI capture`. Talent can proceed; downstream pipelines fall back to manual entry but flag the gap.
 
 ---
 
@@ -194,6 +209,22 @@ If brand_preferences.blocked_industries is missing:
 If billing_entity.legal_name is missing:
   "Are you invoicing under your own name or a company?"
   → branches to either personal or company sub-questions
+
+If commission_override needed (talent has non-default agency split):
+  "Standard agency commission is {agency_default_rate}%. Anything
+   different for this talent?"
+  → only shown if talent has a special commission arrangement
+  → captures: commission_rate (decimal) + commission_model enum
+   (agency_invoices_brand_pays_talent_net /
+    talent_invoices_brand_agency_invoices_talent /
+    talent_invoices_brand_talent_pays_agency)
+  → defaults to absence (= use agency defaults)
+
+If invoice_payment_override needed (talent routes payment to own account):
+  "Where should brand payments for this talent's deals land? Agency
+   defaults to {agency_payment_instructions_preview}. Override?"
+  → captures: payment_instructions_markdown + preferred_payment_method
+  → only relevant for commission_model = talent_invoices_brand_*
 
 If active_exclusivities is missing:
   "Any current exclusivity deals that would block competing
@@ -388,7 +419,7 @@ SIMILAR TALENT RESEARCH:
 | 2 Platforms | `platforms[].url`, `.primary`, `.stats.*`, `.api_credentials.access_token_ref`; `audience_demographics.*` (per-platform overrides too) |
 | 3 Media pack | `bio`, `rate_card.*`, `previous_brands[].brand`, `press_kit.media_kit_url`, `press_kit.headshot_urls`, `press_kit.press_mentions`, `press_kit.awards`, `other_stats.*`, supplements `audience_demographics.*` |
 | 4 Reconciliation | confirms/edits everything from 2–3 |
-| 5 Questionnaire | `pronouns`, `age` / `date_of_birth`, `languages`, `contact.*`, `billing_entity.*`, `working_terms.*`, `brand_preferences.*`, `disclosure_defaults.notes`, any rate-card gaps |
+| 5 Questionnaire | `pronouns`, `age` / `date_of_birth`, `languages`, `contact.*`, `billing_entity.*`, `working_terms.*`, `brand_preferences.*`, `disclosure_defaults.notes`, `commission_override.*` (if non-default), `invoice_payment_override.*` (if talent routes payment to own account), any rate-card gaps |
 | 6 Brand enrichment | `previous_brands[].industry_id`, `.campaign_date`, `.deliverables`, `.fee`, `.usage_rights_granted`, `.performance_notes`, `.brand_contact` |
 | 7 Similar talent | `similar_talent[].id`, `.name`, `.handles[]`, `.research.status` |
 | 7.5 Contract template | `contract_template.markdown_source`, `.merge_field_definitions[]`, `.clause_applicability_rules[]`, `.narrative_placeholders[]`, `.default_governing_law`, `.default_jurisdiction`, `.legal_reviewer_id`, `.template_version`, `.based_on_starter_template_id` |

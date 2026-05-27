@@ -61,7 +61,7 @@
 
     "billing_entity": {
       "type": "object",
-      "description": "Legal/tax info needed to invoice brands.",
+      "description": "Legal/tax info needed to invoice brands. Used as the FROM party on every Phase 4.8 invoice generated for deals involving this talent. Distinguished from `agency_profile.billing_entity` which is the agency's own legal entity (used for outreach signature CAN-SPAM compliance, not invoicing). Whether the agency invoices on the talent's behalf or the talent invoices directly is governed by the `commission_split` model on `agency_profile.default_commission_model` + per-talent overrides via `talent.commission_override`.",
       "additionalProperties": false,
       "properties": {
         "legal_name": { "type": "string" },
@@ -74,6 +74,35 @@
           "items": { "type": "string", "enum": ["bank_transfer", "paypal", "stripe", "wise", "crypto", "other"] },
           "uniqueItems": true
         }
+      }
+    },
+
+    "commission_override": {
+      "type": "object",
+      "description": "Per-talent override of agency-default commission terms. When absent, deals for this talent use `agency_profile.default_commission_rate` + `default_commission_model`. When present, these values take precedence. Captured in Phase 1 onboarding Step 5 (typically) or 7.5.",
+      "additionalProperties": false,
+      "properties": {
+        "commission_rate": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Decimal — 0.20 = 20% agency commission. Per-talent override of `agency_profile.default_commission_rate`."
+        },
+        "commission_model": {
+          "type": "string",
+          "enum": ["agency_invoices_brand_pays_talent_net", "talent_invoices_brand_agency_invoices_talent", "talent_invoices_brand_talent_pays_agency"],
+          "description": "How money flows for this talent's deals. agency_invoices_brand_pays_talent_net: agency invoices brand for full fee; agency receives payment; agency pays talent (fee × (1-commission_rate)) net. talent_invoices_brand_agency_invoices_talent: talent invoices brand directly + agency separately invoices talent for commission. talent_invoices_brand_talent_pays_agency: talent invoices brand + manually pays agency commission. v0.1 Phase 4.8 invoicing uses the configured model to determine FROM-party on the brand-facing invoice + whether a sibling commission invoice is auto-generated."
+        }
+      }
+    },
+
+    "invoice_payment_override": {
+      "type": "object",
+      "description": "Per-talent override of agency-wide invoice payment instructions. When the talent's deals route payment to a different account than the agency's default, capture here. Renders into the `payment_instructions` block of invoices for this talent's deals (replaces `agency_profile.invoice_template.payment_instructions_markdown` for those invoices). Captured in Phase 1 onboarding Step 5.",
+      "additionalProperties": false,
+      "properties": {
+        "payment_instructions_markdown": { "type": "string", "description": "Bank details / IBAN / SWIFT / Stripe link / PayPal address. Supports merge fields (e.g. `{{invoice_number}}` as bank reference)." },
+        "preferred_payment_method": { "type": "string", "enum": ["bank_transfer", "wire", "ach", "stripe", "paypal", "wise", "check", "other"] }
       }
     },
 

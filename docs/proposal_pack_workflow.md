@@ -254,6 +254,7 @@ All gitignored. Raw uploads retained for life of deal; purged on archive.
 | **Phase 1.5 brand_deals** | Comparable past deals seed commercial proposal rationale + recent_work slides. |
 | **`data/pitch_angles.json`** | Top-scoring angles for this brand × niche seed the recommendation slide. |
 | **Phase 4.7 contract pack** | Downstream artefact. The confirmed commercial values (`deal.proposal.deliverables`, `fee_usd`, `usage_rights_granted`, `exclusivity`, `additional_compensation`, payment terms) become merge fields in the contract template. The latest proposal pack's id is captured in `contract_pack.context_snapshot.proposal_pack_id_at_gen` for traceability. See `docs/contract_pack_workflow.md`. |
+| **Brand legal entity proactive capture** | If `brand_industry_map.brands[].legal_entity` is absent for this brand AND no `brand_candidate.legal_entity_override` exists, the commercial gate surfaces a warning: "Brand legal entity not captured — required for contract draft. Add now or defer to contract stage?" Capturing here avoids late-stage friction in Phase 4.7 Stage A. Agent can upload W-9 / company registration; LLM extracts; agent confirms; writes to `brand_candidate.legal_entity_override` (or back to canonical `brand_industry_map.brands[].legal_entity` if the agent indicates this is the brand's standard entity, not a deal-specific override). |
 
 ## Failure handling
 

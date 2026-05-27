@@ -176,6 +176,14 @@ days following the final delivery date.
 
 {{narrative_approval_process}}
 
+## 7.5 Disclosure Requirements
+
+Talent shall include the disclosure tag `{{disclosure_style}}` in every piece
+of Content delivered under this Agreement, in compliance with applicable
+advertising-disclosure regulations (FTC Endorsement Guides in the US, ASA /
+CAP Code in the UK, similar jurisdictional rules elsewhere). Required
+hashtags: {{campaign_hashtags_formatted}}.
+
 ## 8. Content Ownership and IP
 
 {{#if ip_assignment}}
@@ -215,7 +223,9 @@ Brand: ____________________  Date: __________
 {{brand_signatory_name}}, {{brand_signatory_title}}
 ```
 
-The example uses ~20 merge fields, 4 conditional blocks (`paid_social_usage`, `exclusivity`, `ip_assignment` + its inverse, `gdpr`), 4 narrative placeholders (`scope_of_work`, `paid_social_terms`, `approval_process`, `ip_assignment`, `gdpr_addendum`).
+The example uses ~22 merge fields (including `disclosure_style` pulled from `talent.disclosure_defaults.style` and `campaign_hashtags_formatted` computed from `deal.delivery.campaign_hashtags[]`), 4 conditional blocks (`paid_social_usage`, `exclusivity`, `ip_assignment` + its inverse, `gdpr`), 5 narrative placeholders (`scope_of_work`, `paid_social_terms`, `approval_process`, `ip_assignment`, `gdpr_addendum`).
+
+**FTC / ASA disclosure wiring:** the disclosure clause (Section 7.5) is a STANDARD clause (not conditional) referencing `disclosure_style` merge field. Merge field source: `talent_profile` → `disclosure_defaults.style`. Set during Phase 1 onboarding (defaulted by country: UK/EU → "Paid partnership"; US → "#ad"). Ensures every contract surfaces the talent's standard disclosure approach in legally-binding form, propagating to both the deliverables expectations + the brand's awareness.
 
 ## Hard legal review gate — detailed behaviour
 

@@ -135,11 +135,29 @@
           "type": "string",
           "enum": ["new", "shortlisted", "pitched", "responded", "negotiating", "closed_won", "closed_lost", "parked"],
           "default": "new",
-          "description": "Workflow state. PRESERVED across discovery re-runs — the orchestrator must not overwrite this when it merges a fresh run."
+          "description": "Workflow state. PRESERVED across discovery re-runs. Sync direction: pre-pitch states (`new`, `shortlisted`, `parked`) are user-driven and live here as source-of-truth. Post-pitch states (`pitched`, `responded`, `negotiating`, `closed_won`, `closed_lost`) are DENORMALISED from upstream canonical sources — the orchestrator updates them on state changes in (a) `pitch_enrollment` (pitched/responded transitions) and (b) Phase 4 `deal.stage` + `deal.is_won` / `is_terminal` (negotiating/closed_won/closed_lost). When this field disagrees with the canonical source, the canonical wins on next sync; this field is for fast UI rendering only."
         },
         "assigned_to": {
           "type": ["string", "null"],
-          "description": "User id of the person responsible for moving this candidate forward. Null for unassigned. For agency roster views."
+          "pattern": "^[a-z0-9][a-z0-9-]*$",
+          "description": "FK to `agency_profile.agents[].agent_id` — agent responsible for moving this candidate forward. Null for unassigned. For agency roster views. v0.1 (single-agent constraint): typically auto-set to the primary agent; v2 multi-agent rosters use this for per-candidate assignment."
+        },
+        "legal_entity_override": {
+          "type": "object",
+          "description": "Per-talent override of `brand_industry_map.brands[].legal_entity` for this brand. Used when the talent/agency has reason to invoice a different legal entity than the canonical brand entity (e.g. brand subsidiary, distributor, agency-of-record). Captured opportunistically during proposal stage; absent = use the canonical entity from brand_industry_map. Same field shape as `brand_industry_map.brands[].legal_entity`.",
+          "additionalProperties": false,
+          "properties": {
+            "legal_name": { "type": "string" },
+            "entity_type": { "type": "string" },
+            "registered_address": { "type": "string" },
+            "registered_country": { "type": "string", "pattern": "^[A-Z]{2}$" },
+            "tax_id": { "type": "string" },
+            "signatory_name": { "type": "string", "description": "Person signing on behalf of the brand for this specific deal. Often differs from primary_contact." },
+            "signatory_title": { "type": "string" },
+            "signatory_email": { "type": "string", "format": "email" },
+            "override_reason": { "type": "string", "description": "Why this brand uses a non-canonical legal entity for this talent (e.g. 'EU subsidiary handles all UK creator deals')." },
+            "captured_at": { "type": "string", "format": "date-time" }
+          }
         },
         "user_notes": {
           "type": "string",

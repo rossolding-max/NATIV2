@@ -116,6 +116,15 @@ Captures the agency-wide invoice template used by the Phase 4.8 invoice pack gen
 
 **v0.1 minimum:** payment_instructions_markdown + invoice_number_prefix + default_payment_terms_days. Everything else has sensible defaults.
 
+**Also captured here — commission defaults:**
+- `default_commission_rate` (decimal; default 0.20 = 20%) — agency-wide commission applied to every talent unless overridden via `talent.commission_override.commission_rate`
+- `default_commission_model` enum (`agency_invoices_brand_pays_talent_net` (default) / `talent_invoices_brand_agency_invoices_talent` / `talent_invoices_brand_talent_pays_agency`) — money-flow model determining who is FROM party on brand-facing invoices and whether sibling commission invoices auto-generate
+
+The commission model determines Phase 4.8 invoice routing:
+- **agency_invoices_brand_pays_talent_net:** agency is FROM party; agency receives full fee; agency separately settles talent (fee × (1 - commission_rate)) net — talent settlement tracked manually in v0.1, auto via Stripe Connect in v2
+- **talent_invoices_brand_agency_invoices_talent:** talent is FROM party on brand invoice; system auto-generates a sibling invoice from agency to talent for commission portion
+- **talent_invoices_brand_talent_pays_agency:** talent FROM party + agency commission settled manually (no auto-invoice)
+
 ### Step 6 — Mailbox warmup (background, 2-4 weeks)
 Smartlead's peer-to-peer warmup network starts gradually building sender reputation:
 - Day 1-7: 5-10 emails/day to other warmed inboxes; replies, opens, marks-as-important

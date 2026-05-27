@@ -354,8 +354,9 @@
 
     "pitchHistoryEntry": {
       "type": "object",
-      "required": ["talent_id", "pitched_at", "channel", "outcome"],
+      "required": ["talent_id", "pitched_at", "channel"],
       "additionalProperties": false,
+      "description": "Denormalised per-(contact, talent) pitch summary for fast contact-record reads. The CANONICAL pitch record lives in `data/pitch_enrollments/{enrollment_id}.json` (`schemas/pitch_enrollment.schema.json`) — this entry is a summary index pointing back via `enrollment_id`. `outcome` enum here is intentionally narrow (high-level state for UI rendering); the rich classification + extracted_signals live on the enrollment's `outcomeClassification` block. Stays preserved across enrichment runs.",
       "properties": {
         "talent_id": {
           "type": "string",
@@ -367,25 +368,17 @@
           "type": "string",
           "enum": ["email", "linkedin_message", "linkedin_inmail", "linkedin_connection", "email_via_aor", "twitter_dm", "instagram_dm", "in_person", "other"]
         },
-        "template_id": { "type": "string", "description": "Reference to a pitch template (defined in a future Phase 3.5 schema)." },
+        "enrollment_id": {
+          "type": "string",
+          "pattern": "^enr_[a-z0-9]+$",
+          "description": "FK to the canonical pitch enrollment record (`data/pitch_enrollments/{enrollment_id}.json`). Anyone needing detailed pitch state — per-step engagement, classified outcome with extracted_signals, generated content — reads from there. This block is a summary index for fast contact-record scans."
+        },
+        "template_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$", "description": "FK to a pitch template (`schemas/pitch_template.schema.json` — shipped in Phase 3b)." },
         "subject": { "type": "string", "description": "Subject line for email pitches; first-message preview for DM pitches." },
         "outcome": {
           "type": "string",
-          "enum": [
-            "queued",
-            "sent",
-            "delivered",
-            "opened",
-            "clicked",
-            "replied",
-            "interested",
-            "meeting_booked",
-            "negotiating",
-            "declined",
-            "no_response",
-            "bounced",
-            "unsubscribed"
-          ]
+          "enum": ["in_flight", "no_response", "replied_interested", "replied_declined", "replied_other", "bounced", "unsubscribed"],
+          "description": "Narrowed high-level outcome for UI rendering — derived from the canonical `pitch_enrollment.outcomeClassification.outcome` (interested → replied_interested; declined → replied_declined; out_of_office / unrelated / needs_more_info / wrong_person_routed → replied_other; unsubscribe_request → unsubscribed). `in_flight` = enrollment.state in [drafted, awaiting_approval, active, paused] without a final outcome. The orchestrator syncs this field on enrollment state transitions; canonical source is the enrollment record."
         },
         "outcome_at": { "type": "string", "format": "date-time" },
         "next_followup_at": { "type": "string", "format": "date-time" },
