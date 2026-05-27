@@ -41,8 +41,6 @@ def _prompt(label: str, default: str | None = None, *, auto: bool = False) -> st
     return typer.prompt(label, default=default)
 
 
-
-
 def _post_json(client: httpx.Client, path: str, payload: dict[str, Any]) -> dict[str, Any]:
     r = client.post(
         path, json=payload, headers={"Idempotency-Key": f"wizard-{int(time.time() * 1000)}"}
