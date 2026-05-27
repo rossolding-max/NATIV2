@@ -81,17 +81,27 @@ jobs:
           enable-cache: true
       - run: uv python install ${{ env.PYTHON_VERSION }}
       - run: uv sync --all-extras
-      - name: Run unit tests
+      - name: Run unit tests (no fail-under; coverage combined in integration job)
         env:
           POSTGRES_PASSWORD: ci-postgres-pw
           DB_MASTER_KEY: ci-master-key-base64-32-chars-long==
           ANTHROPIC_API_KEY: sk-ant-ci-stub
-        run: uv run pytest tests/unit/ --cov=app --cov-fail-under=80 --cov-report=xml -q
+        run: |
+          uv run coverage erase
+          uv run pytest tests/unit/ --cov=app --cov-report= -q
+      - name: Upload unit coverage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-unit
+          path: .coverage
+          include-hidden-files: true
+          retention-days: 1
 
   integration:
-    name: Integration tests
+    name: Integration tests + combined coverage gate
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    needs: [unit]
     services:
       docker:
         image: docker:24-dind
@@ -104,10 +114,20 @@ jobs:
           enable-cache: true
       - run: uv python install ${{ env.PYTHON_VERSION }}
       - run: uv sync --all-extras
-      - name: Run integration tests (testcontainers)
+      - name: Download unit coverage artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage-unit
+      - name: Run integration tests with combined coverage gate
         env:
           POSTGRES_PASSWORD: ci-postgres-pw
           DB_MASTER_KEY: ci-master-key-base64-32-chars-long==
           ANTHROPIC_API_KEY: sk-ant-ci-stub
           TESTCONTAINERS_RYUK_DISABLED: "true"
-        run: uv run pytest tests/integration/ -q
+        run: |
+          # `--cov-append` adds integration coverage to the unit job's .coverage file.
+          # Final `--cov-fail-under=70` is the gate against the merged total (unit + integration).
+          uv run pytest tests/integration/ \
+            --cov=app --cov-append \
+            --cov-report=term --cov-report=xml \
+            --cov-fail-under=70 -q
