@@ -15,8 +15,8 @@ Allowed prefixes: feature/, fix/, chore/, refactor/, test/, spec/, docs/, perf/,
 
 ## Changes
 
-- 
-- 
+-
+-
 
 ## Test plan
 

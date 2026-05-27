@@ -1,0 +1,12 @@
+{
+  "agency_id": "00000000-0000-4000-8000-000000000001",
+  "name": "Acme Talent Agency",
+  "agents": [
+    {
+      "agent_id": "alex-acme",
+      "name": "Alex Acme",
+      "role": "owner"
+    }
+  ],
+  "_note": "Minimal Acme fixture. Full agency_profile (DNS, mailbox, invoice template, commission defaults, branding) populates in M4 alongside the real Phase 0 agency_setup workflow."
+}

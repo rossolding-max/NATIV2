@@ -54,6 +54,8 @@ dev = [
     "schemathesis>=3.27",
     # Schema validation
     "jsonschema>=4.21",
+    # Sync Postgres driver (for Alembic offline + integration smoke tests)
+    "psycopg[binary]>=3.1",
     # Tooling
     "ruff>=0.7.4",
     "pyright>=1.1.389",

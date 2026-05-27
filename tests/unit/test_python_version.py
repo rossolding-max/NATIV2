@@ -1,7 +1,6 @@
 """Smoke: the test harness runs on Python 3.12.
 
-Replaced by the full hardening suite in PR 3; exists in PR 1 only so that
-`pytest tests/unit/` collects at least one test and CI does not exit 5.
+Kept from PR 1 — establishes the harness baseline.
 """
 
 from __future__ import annotations

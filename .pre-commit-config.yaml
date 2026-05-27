@@ -37,11 +37,18 @@ repos:
       - id: ruff-format
 
   # ── pyright: strict type-check ──────────────────────────────────────
-  - repo: https://github.com/RobertCraigie/pyright-python
-    rev: v1.1.389
+  # Local hook so pyright runs inside the project's uv-managed venv and can
+  # resolve all installed deps. The upstream `pyright-python` hook installs a
+  # separate venv that can't see runtime deps (sentry_sdk integrations,
+  # structlog, etc.), producing false-positive missing-import errors.
+  - repo: local
     hooks:
       - id: pyright
-        additional_dependencies: []  # uv-managed via project venv
+        name: pyright
+        entry: uv run pyright
+        language: system
+        types_or: [python, pyi]
+        pass_filenames: false
         exclude: ^(alembic/versions/|app/models/pydantic/)
 
   # ── trufflehog: secret scanning ─────────────────────────────────────
