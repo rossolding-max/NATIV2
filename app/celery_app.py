@@ -25,6 +25,7 @@ def _build_app() -> Celery:
             "app.tasks.echo",
             "app.tasks.pack_generation",
             "app.services.agency_warmup",
+            "app.services.talent_background_research",
         ],
     )
 
