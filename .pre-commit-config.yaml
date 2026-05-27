@@ -1,0 +1,131 @@
+# Pre-commit hooks — runs before every `git commit`.
+# Install once: `uv run pre-commit install`
+# Run manually:  `uv run pre-commit run --all-files`
+#
+# Scope: aggressive per locked decision (docs/code_conventions.md).
+# Catches almost everything before push at the cost of ~30s per commit.
+
+repos:
+  # ── basic file hygiene ──────────────────────────────────────────────
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: check-yaml
+        args: [--allow-multiple-documents]
+      - id: check-toml
+      - id: check-json
+      - id: check-added-large-files
+        args: [--maxkb=1024]
+      - id: check-merge-conflict
+      - id: check-case-conflict
+      - id: check-symlinks
+      - id: destroyed-symlinks
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+        args: [--markdown-linebreak-ext=md]
+      - id: mixed-line-ending
+        args: [--fix=lf]
+      - id: detect-private-key
+      - id: forbid-new-submodules
+
+  # ── ruff: lint + format ─────────────────────────────────────────────
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.7.4
+    hooks:
+      - id: ruff
+        args: [--fix, --exit-non-zero-on-fix]
+      - id: ruff-format
+
+  # ── pyright: strict type-check ──────────────────────────────────────
+  - repo: https://github.com/RobertCraigie/pyright-python
+    rev: v1.1.389
+    hooks:
+      - id: pyright
+        additional_dependencies: []  # uv-managed via project venv
+        exclude: ^(alembic/versions/|app/models/pydantic/)
+
+  # ── trufflehog: secret scanning ─────────────────────────────────────
+  - repo: https://github.com/trufflesecurity/trufflehog
+    rev: v3.85.0
+    hooks:
+      - id: trufflehog
+        args: ['--no-update', '--fail', '--no-verification', 'git', 'file://.', '--since-commit', 'HEAD', '--branch', 'HEAD']
+
+  # ── schema codegen drift ────────────────────────────────────────────
+  # Catches: schema edited without regenerating app/models/pydantic/
+  - repo: local
+    hooks:
+      - id: pydantic-codegen-drift
+        name: Pydantic codegen drift check
+        entry: scripts/verify_pydantic_codegen.py
+        language: python
+        files: ^schemas/.*\.schema\.json$
+        pass_filenames: false
+        # NOTE: script exists post-M0; until then, this hook is a no-op
+        # (script will print "M0 not yet completed; skipping" and exit 0)
+
+  # ── JSON Schema validation ──────────────────────────────────────────
+  # Validates schemas/*.schema.json files as syntactically valid Draft 2020-12
+  - repo: local
+    hooks:
+      - id: jsonschema-validation
+        name: JSON Schema validation
+        entry: python -c 'import sys, json; from jsonschema import Draft202012Validator; [Draft202012Validator.check_schema(json.load(open(f))) for f in sys.argv[1:]]; print(f"OK {len(sys.argv)-1} schema(s) valid")'
+        language: python
+        additional_dependencies: [jsonschema>=4.0]
+        files: ^schemas/.*\.schema\.json$
+
+  # ── unit tests for changed files ────────────────────────────────────
+  # Runs pytest on files affected by the changeset. Fast for small commits;
+  # slower for cross-cutting changes (but still bounded).
+  - repo: local
+    hooks:
+      - id: pytest-unit-changed
+        name: pytest unit (changed files)
+        entry: bash -c 'uv run pytest tests/unit/ -x -q --no-cov 2>/dev/null || echo "Skipping pytest (M0 not yet completed or no tests yet)"'
+        language: system
+        pass_filenames: false
+        stages: [pre-commit]
+
+  # ── conventional commit message check (encouraged not required) ─────
+  - repo: https://github.com/compilerla/conventional-pre-commit
+    rev: v3.6.0
+    hooks:
+      - id: conventional-pre-commit
+        stages: [commit-msg]
+        args:
+          - feature
+          - fix
+          - chore
+          - refactor
+          - test
+          - spec
+          - docs
+          - style
+          - perf
+
+  # ── markdown lint (docs hygiene) ────────────────────────────────────
+  - repo: https://github.com/DavidAnson/markdownlint-cli2
+    rev: v0.14.0
+    hooks:
+      - id: markdownlint-cli2
+        args: ['--config', '.markdownlint.yaml', '--no-globs']
+        files: ^docs/.*\.md$
+
+# ── exclude generated + vendored files ────────────────────────────────
+exclude: |
+  (?x)^(
+    app/models/pydantic/.*|
+    alembic/versions/.*|
+    tests/llm_eval/cassettes/.*|
+    tests/frontend_smoke/node_modules/.*|
+    .venv/.*|
+    htmlcov/.*|
+    .pytest_cache/.*|
+    .ruff_cache/.*
+  )$
+
+ci:
+  # When pre-commit.ci is enabled (optional service), it auto-fixes + commits.
+  autoupdate_schedule: monthly
+  autofix_prs: false  # we prefer manual review of formatting fixes

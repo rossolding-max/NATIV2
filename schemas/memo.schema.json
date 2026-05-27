@@ -57,7 +57,8 @@
     },
     "content_markdown": {
       "type": "string",
-      "description": "The memo body in markdown. Typically 1-5 paragraphs; targets agent consumption (concise, factual, action-oriented). Larger memos may be stored in S3 with `content_markdown_s3_key` field overriding inline content; v0.1 = always inline."
+      "description": "The memo body in markdown. Typically 1-5 paragraphs; targets agent consumption (concise, factual, action-oriented). Inline up to MEMO_INLINE_MAX_KB (default 32kB; see docs/configuration.md). Larger memos in v0.2 may be stored in S3 with `content_markdown_s3_key` field overriding inline content; v0.1 = always inline (writes exceeding threshold are rejected with VALIDATION_ERROR rather than silently offloaded). See docs/data_lineage.md GAP-N6.",
+      "maxLength": 32768
     },
     "structured": {
       "type": "object",

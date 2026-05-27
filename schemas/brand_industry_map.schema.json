@@ -13,11 +13,6 @@
     "$schema": {
       "type": "string"
     },
-    "agency_id": {
-      "type": "string",
-      "format": "uuid",
-      "description": "Multi-tenant scope: FK to agency_profile.agency_id. Optional in v0.1 (single-tenant deploys may omit); required in v2 SaaS. When present, all cross-record queries MUST filter by agency_id to prevent cross-tenant data leakage. See docs/data_lineage.md GAP-01/02 for rationale."
-    },
     "$comment": {
       "type": "string"
     },

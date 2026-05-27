@@ -23,7 +23,7 @@
 | Agent framework | **Claude Agent SDK (Python)** |
 | LLM | **Claude Opus 4.7 everywhere** (quality-optimised; ~$1.50-3 per pack) |
 | File parsing | **pypdf**, **python-docx** |
-| Rendering | **Jinja2** (HTML/markdown templates) + **Puppeteer** via `pyppeteer` (PDF) + **python-docx** (Word output) |
+| Rendering | **Jinja2** (HTML/markdown templates) + **Playwright** via `playwright-python` (PDF rendering — drives headless Chromium) + **python-docx** (Word output) |
 | Email outbound | **Smartlead API** (Phase 3b cold outreach); **Postmark or Resend** for transactional (system notifications to agent) |
 | Vector DB | **None in v0.1** (tag-filter memos only); pgvector deferred to v0.2 |
 | Errors / perf | **Sentry** (Python SDK) |
@@ -61,7 +61,7 @@
     │  ┌────────────┐  ┌────────────┐  ┌────────────┐  ┌────────────────┐ │
     │  │ researcher │  │   writer   │  │ extractor  │  │    renderer    │ │
     │  │  - Exa     │  │  - drafts  │  │  - pypdf   │  │  - Jinja2 HTML │ │
-    │  │  - web     │  │    with    │  │  - python- │  │  - Puppeteer   │ │
+    │  │  - web     │  │    with    │  │  - python- │  │  - Playwright   │ │
     │  │    search  │  │    sources │  │    docx    │  │    PDF         │ │
     │  │  - read    │  │  - cites   │  │  - LLM     │  │  - python-docx │ │
     │  │    brand_  │  │    sources │  │    summary │  │    Word        │ │
@@ -102,7 +102,7 @@
 | **researcher** | Exa search, web fetch, `get_brand_record`, `get_brand_deals_filtered`, `get_top_pitch_angles`, `read_memos(scope=brand_relationship/industry_pattern)` | Brand context for prep pack; debrief extraction prep; case-study selection; benchmark-comparison research |
 | **writer** | `read_memos`, `get_talent`, `get_deal`, `render_template`, `write_memo` (for learnings) | All narrative drafting: briefing notes, agenda, slide bodies, contract narratives, invoice line items, performance report narrative |
 | **extractor** | pypdf, python-docx, text reader, `write_memo` (for extracted patterns) | Parse uploaded briefs/notes/transcripts/redlines; populate context_artefacts; extract structured fields (discovery_debrief, brand legal info, brand redlines) |
-| **renderer** | Jinja2, Puppeteer, python-docx, `get_agency_profile` (for branding) | Compose markdown → HTML / PDF / DOCX. Apply agency branding. No LLM calls — deterministic only. |
+| **renderer** | Jinja2, Playwright, python-docx, `get_agency_profile` (for branding) | Compose markdown → HTML / PDF / DOCX. Apply agency branding. No LLM calls — deterministic only. |
 
 **Why this shape:** the 5 pack types (prep / proposal / contract / invoice / performance report) all share these 4 skills with different compositions. Skill agents stay generic; coordinator + pack-specific prompts make them context-aware.
 
@@ -255,7 +255,7 @@ S3 paths stored as `s3://{bucket}/{key}` strings in Postgres; presigned URLs min
 | `default` | General-purpose | Pack generation kickoff; webhook handlers; CRUD-adjacent jobs |
 | `llm_heavy` | Long-running (timeout=30min) | Multi-pass LLM generation jobs (prep/proposal/contract/perf report packs) |
 | `vendor_apis` | Rate-limited | Meta Graph, TikTok Display, YouTube Insights polling; Apollo enrichment; Exa research |
-| `rendering` | CPU/IO mixed | Puppeteer PDF rendering; python-docx Word rendering; Jinja2 HTML rendering |
+| `rendering` | CPU/IO mixed | Playwright PDF rendering; python-docx Word rendering; Jinja2 HTML rendering |
 
 **Scheduled jobs (Celery Beat):**
 

@@ -1,0 +1,38 @@
+# Markdown lint config — runs as pre-commit hook on docs/*.md.
+# Permissive defaults to avoid fighting legitimate doc patterns
+# (tables, code blocks with mixed indentation, long lines, etc.).
+
+default: true
+
+# Allow longer lines (we use 100-col paragraphs for tables + readability)
+MD013:
+  line_length: 200
+  code_blocks: false  # don't check code block line lengths
+  tables: false       # tables can exceed (wide column tables are unavoidable)
+
+# Inline HTML allowed (we use <br> + tables + the occasional <details>)
+MD033: false
+
+# First line need not be h1 (some docs start with status indicator)
+MD041: false
+
+# Allow duplicate headings (we use ## Examples, ## Acceptance multiple times)
+MD024:
+  siblings_only: true
+
+# Allow bare URLs (we link to schema $ids + workflow docs frequently)
+MD034: false
+
+# Allow trailing punctuation in headings
+MD026:
+  punctuation: ".,;:!"
+
+# Allow emphasis as heading (we use **bold** as section breaks in places)
+MD036: false
+
+# Multiple blank lines OK in places (separating large table sections)
+MD012:
+  maximum: 2
+
+# Code-fence language tag not required (sometimes we use ``` for raw output)
+MD040: false

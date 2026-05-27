@@ -22,7 +22,7 @@
     },
     "id": {
       "type": "string",
-      "description": "Stable slug, e.g. 'jane-doe'. Used as the primary key across phases.",
+      "description": "Stable kebab-case slug, e.g. 'jane-doe'. Used as the primary key across phases. UNIQUENESS SCOPE: v0.1 globally unique (single tenant); v2 agency-scoped via composite UNIQUE `(agency_id, talent.id)` constraint — two agencies may both have `riley-carter`. See docs/id_conventions.md § 4 + GAP-N3.",
       "pattern": "^[a-z0-9][a-z0-9-]*$"
     },
     "name": {
