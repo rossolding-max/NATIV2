@@ -296,15 +296,22 @@ Every phase tolerates missing upstream data with documented degraded behaviour. 
 
 **Vendor wrappers** (one Python module per vendor under `app/vendors/`):
 
-| Vendor | Used by | Auth | Key endpoints |
-|---|---|---|---|
-| **Anthropic** | All agents | `ANTHROPIC_API_KEY` | Messages API + prompt caching |
-| **Smartlead** | Phase 3b | `SMARTLEAD_API_KEY` | campaigns / leads / sequences / webhooks |
-| **Exa** | researcher subagent | `EXA_API_KEY` | /search, /findSimilar, /contents |
-| **Apollo** | Phase 3a | `APOLLO_API_KEY` | people search by domain + filters |
-| **LinkedIn API** | Phase 3a enrichment | `LINKEDIN_API_KEY` | profile + last-activity |
-| **Meta Graph** | Phase 4.8 + 4.9 | per-talent oAuth | /me/media, /{ig-media-id}/insights, /me/stories |
-| **TikTok Display** | Phase 4.8 + 4.9 | per-talent oAuth | /v2/video/list/, /v2/video/query/ |
+| Vendor | Module | Used by | Auth | Key endpoints |
+|---|---|---|---|---|
+| **Anthropic** | `app/agents/llm_client.py` (M2; not under `app/vendors/`) | All agents | `ANTHROPIC_API_KEY` | Messages API + prompt caching |
+| **Smartlead** | `app/vendors/smartlead.py` | Phase 0 + 3b | `SMARTLEAD_API_KEY` (query string, not header) + `SMARTLEAD_WEBHOOK_SECRET` | campaigns / leads / sequences / webhooks |
+| **Exa** | `app/vendors/exa.py` | researcher subagent + Phase 2 | `EXA_API_KEY` | `/search`, `/findSimilar`, `/contents` |
+| **Apollo** | `app/vendors/apollo.py` | Phase 3a | `APOLLO_API_KEY` | people search / match / org enrich |
+| **LinkedIn (RapidAPI)** | `app/vendors/linkedin.py` | Phase 3a enrichment | `RAPIDAPI_KEY` (RapidAPI gateway; host `linkedin-data-api.p.rapidapi.com` hard-coded) | profile / company-by-domain / recent-posts |
+| **Meta Graph** | `app/vendors/meta_graph.py` | Phase 4.8 + 4.9 | `META_APP_ID` + `META_APP_SECRET` + per-talent OAuth (Instagram-Login flow, scopes `instagram_business_*`) | `/me/media`, `/{ig-media-id}/insights`, `/me/stories`; webhooks via `X-Hub-Signature-256` |
+| **TikTok Display** | `app/vendors/tiktok.py` | Phase 4.8 + 4.9 | `TIKTOK_CLIENT_KEY` + `TIKTOK_CLIENT_SECRET` + per-talent OAuth **with PKCE** (S256) | `/v2/video/list/`, `/v2/video/query/`, `/v2/user/info/` |
+
+**M3 implementation notes (build-time decisions):**
+- All vendor clients inherit from `BaseVendorClient` (`app/vendors/_base.py`) which centralises Sentry breadcrumbs + structlog `vendor_call` events + the `IntegrationError` family mapping (timeout / 429 with `Retry-After` / 4xx / 5xx).
+- Retry policy is shared via `app/vendors/_retry.py` (tenacity-based). Retries on connect timeouts, 5xx, and 429 (honours `Retry-After`); skips permanent 4xx.
+- Rate limiting is shared via `app/vendors/_rate_limiter.py` — Redis DB 2 token-bucket Lua script (`REDIS_DB_RATELIMIT=2`, reserved in M0; first used by M3).
+- Webhook HMAC verification (Smartlead + Meta) is shared via `app/vendors/_webhook_signing.py`.
+- OAuth state + PKCE persistence is shared via `app/vendors/_oauth_state.py` — Redis DB 2 with single-use TTL=10min state values. M3 ships the helpers; FastAPI callback routes land in M5 (talent onboarding).
 
 **Webhook receivers** (FastAPI endpoints under `/webhooks/{vendor}`):
 

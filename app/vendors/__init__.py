@@ -12,11 +12,16 @@ on construction instead.
 from app.vendors.apollo import ApolloClient
 from app.vendors.exa import ExaClient
 from app.vendors.linkedin import LinkedInScraperClient
+from app.vendors.meta_graph import MetaGraphClient
 from app.vendors.smartlead import SmartleadClient
+from app.vendors.tiktok import TikTokClient, generate_pkce_pair
 
 __all__ = [
     "ApolloClient",
     "ExaClient",
     "LinkedInScraperClient",
+    "MetaGraphClient",
     "SmartleadClient",
+    "TikTokClient",
+    "generate_pkce_pair",
 ]

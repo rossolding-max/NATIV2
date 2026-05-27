@@ -114,14 +114,21 @@ Each milestone documented below with: inputs (what must exist) + outputs (delive
 **Parallel-with-M2 note:** M3 can start in parallel with M2 once the vendor list is locked. Smartlead / Exa / Apollo / LinkedIn / Meta Graph / TikTok wrappers don't depend on agent infrastructure (researcher / writer / extractor / renderer); they're consumed BY the agents but built independently. Run them on a separate workstream if team has capacity.
 
 **Outputs:**
-- `app/vendors/anthropic_client.py` (centralises Anthropic SDK config + cost tracking)
-- `app/vendors/smartlead.py` — campaigns / leads / sequences / webhook signature validation
-- `app/vendors/exa.py` — search / findSimilar / contents endpoints
-- `app/vendors/apollo.py` — people-by-domain + filters
-- `app/vendors/linkedin.py` — profile + last-activity reads
-- `app/vendors/meta_graph.py` — oAuth flow + /me/media + /{ig-media-id}/insights + /me/stories
-- `app/vendors/tiktok.py` — oAuth flow + /v2/video/list/ + /v2/video/query/
-- Every wrapper: rate-limit policy, retry-with-backoff, `respx` mock support, sentry breadcrumb on each call
+- Anthropic stays at `app/agents/llm_client.py` (M2 location) — M3 explicitly does NOT relocate it to `app/vendors/`, to avoid M2 test churn for no behavioural change.
+- `app/vendors/_base.py` — `BaseVendorClient` (shared Sentry breadcrumb + structlog + error mapping).
+- `app/vendors/_http_client.py` — shared `httpx.AsyncClient` singleton.
+- `app/vendors/_retry.py` — tenacity-based async retry (5xx + 429 honouring `Retry-After`).
+- `app/vendors/_rate_limiter.py` — Redis DB 2 token bucket (Lua-atomic).
+- `app/vendors/_webhook_signing.py` — HMAC-SHA256 verifier (Smartlead bare hex + Meta `sha256=` prefix).
+- `app/vendors/_oauth_state.py` — CSRF state + PKCE storage in Redis DB 2 + authorize-URL builder.
+- `app/vendors/smartlead.py` — campaigns / leads / sequences / webhook signature validation.
+- `app/vendors/exa.py` — search / findSimilar / contents endpoints.
+- `app/vendors/apollo.py` — people-by-domain + filters / match / org enrich.
+- `app/vendors/linkedin.py` — `LinkedInScraperClient` via RapidAPI's "Real-Time LinkedIn Scraper API"; reads profile / company-by-domain / recent-posts. Env var: `RAPIDAPI_KEY` (legacy `LINKEDIN_API_KEY` honoured during transition).
+- `app/vendors/meta_graph.py` — OAuth helpers (authorize URL + exchange + refresh) + `/{ig-user-id}/media` + `/{media}/insights` + `/{ig-user-id}/stories` + webhook signature + subscription challenge. Graph API pinned to v22.0.
+- `app/vendors/tiktok.py` — OAuth helpers **with PKCE** (`generate_pkce_pair`, authorize URL with `code_challenge_method=S256`, exchange with `code_verifier`) + `/v2/video/list/` + `/v2/video/query/` + `/v2/user/info/`.
+- Every wrapper: rate-limit via Redis token bucket, retry-with-backoff via tenacity, respx mock support, Sentry breadcrumb on every call.
+- OAuth FastAPI callback routes are NOT in M3 — they land in M5 (talent onboarding); M3 ships the building blocks.
 
 **Acceptance:** each vendor has integration tests against mocked endpoints. `live_tests/` directory gated by env flag with live-call smoke tests for each vendor.
 
