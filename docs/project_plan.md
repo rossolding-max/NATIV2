@@ -180,16 +180,24 @@ Each milestone documented below with: inputs (what must exist) + outputs (delive
 
 **Inputs:** M4.
 
-**Outputs:**
-- `app/api/talents.py`: POST/PATCH endpoints implementing the 8-step onboarding (per `docs/onboarding_workflow.md`)
-- `app/services/talent_seed.py` (Step 1)
-- `app/services/platform_oauth.py` (Step 2): full oAuth flows for Meta + TikTok + YouTube; token storage via `pgcrypto`; validation gate (test API call per platform with scope check)
-- `app/services/media_pack_extraction.py` (Step 3): pypdf + python-docx + LLM extraction (uses `extractor` subagent)
-- `app/services/questionnaire.py` (Step 5): adaptive questionnaire including `commission_override` + `invoice_payment_override`
-- `app/services/contract_template_setup.py` (Step 7.5): starter template adoption + validation (every `{{merge_field}}` has a definition; every `{{#if}}` has a rule; dry-run compose passes)
-- Tests: full talent onboarding happy path; oAuth validation gate failure path; skip-step tolerance
+**Outputs (shipped):**
+- `app/api/talents.py`: 13 REST endpoints implementing all 10 onboarding steps (per `docs/onboarding_workflow.md`).
+- `app/api/webhooks/oauth_callbacks.py`: live `/api/v1/webhooks/{meta,tiktok}/oauth_callback` routes (Commit 1).
+- `app/agents/tools/get_context_artefact.py`: pypdf + python-docx parser plus Claude-vision base64 image inlining (Commit 1).
+- `app/models/sqla/talent_vault.py` + `alembic/versions/0004_talent_vault.py`: per-talent + per-platform OAuth-token store with column-level pgcrypto via `EncryptedString` (Commit 1).
+- `app/services/talent_onboarding.py`: state machine (`onboarding → active → archived`) + `validate_data_against_schema` + `check_ready_for_activation` cross-field guard.
+- `app/services/talent_seed.py` (Step 1): country-aware timezone + disclosure defaulting.
+- `app/services/platform_oauth.py` (Step 2): **Meta + TikTok** flows live; PKCE for TikTok; tokens persisted via the callback route into `talent_vault`. YouTube + Twitch + LinkedIn-OAuth + Pinterest + Snap **deferred**.
+- `app/services/media_pack_extraction.py` (Step 3): pre-parse via `get_context_artefact` + optional LLM extraction (opt-in `run_llm_extraction`).
+- `app/services/questionnaire.py` (Step 5): rule-table-based adaptive questionnaire over `field_path` notation; LLM-driven branching deferred.
+- `app/services/brand_history_enrichment.py` (Step 6): exact-match → Exa+LLM stub → unknown.
+- `app/services/similar_talent.py` (Step 7): manual seed + `build_suggestion_prompt`; LLM call lands with the M7 brand-discovery loop.
+- `app/services/contract_template_setup.py` (Step 7.5): GAP-08 version bump + 3 inline starter templates (management / talent-agency / brand-paid-promotion).
+- `app/services/talent_background_research.py` (Step 9): Celery task `kick_off_brand_discovery` fired on `/activate`; writes a stub `data/brand_candidates/current/{talent_id}.json`. The 16-search Exa + Claude loop lands at M7.
+- `app/cli/phase1_onboarding.py` + `nativ test phase 1`: interactive Typer wizard with `--auto`, `--skip-oauth`, `--skip-activate` flags.
+- Tests: ~50 new (10-step happy path against testcontainers + respx-mocked Meta/TikTok; OAuth callback flow; talent-repo CRUD; GAP-08 version bump; CLI wizard e2e).
 
-**Acceptance:** real talent onboarded; all platforms connected with scope-validated tokens; `contract_template` ready for downstream contract pack generation.
+**Acceptance:** real talent onboarded; ≥1 platform connected with scope-validated tokens; `contract_template` ready for downstream contract pack generation.
 
 **Skip notes:** individual onboarding steps can be skipped (deferred to "complete later" backlog); downstream features degrade gracefully if e.g. `working_terms.default_usage_rights` is missing.
 

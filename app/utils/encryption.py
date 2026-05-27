@@ -32,7 +32,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from sqlalchemy import LargeBinary, func, select
+from sqlalchemy import LargeBinary, String, cast, func, select
 from sqlalchemy.sql.elements import ColumnElement
 from sqlalchemy.types import TypeDecorator
 
@@ -60,10 +60,34 @@ class EncryptedString(TypeDecorator[str]):
     def python_type(self) -> type[str]:
         return str
 
+    def process_bind_param(self, value: Any, dialect: Any) -> Any:
+        """Encode str → UTF-8 bytes so asyncpg accepts it for the bytea param.
+
+        ``impl=LargeBinary`` means the wire protocol expects bytes for the
+        bound parameter. We encode the plaintext string to UTF-8 bytes
+        here; ``bind_expression`` then decodes it back to text via
+        ``convert_from(bytea, 'utf-8')`` for pgp_sym_encrypt's
+        ``(text, text)`` signature.
+        """
+        _ = dialect
+        if value is None:
+            return None
+        if isinstance(value, bytes):
+            return value
+        return str(value).encode("utf-8")
+
     def bind_expression(self, bindparam: Any) -> ColumnElement[Any]:
-        """Wrap the bound value in ``pgp_sym_encrypt(value, master_key)``."""
+        """Wrap the bound value in ``pgp_sym_encrypt(value, master_key)``.
+
+        ``bindparam`` is the bytea-shaped bind ($N::bytea over the wire).
+        ``convert_from(bytea, 'utf-8')`` decodes the bytes back to text
+        inside Postgres, matching pgp_sym_encrypt's ``(text, text)``
+        signature. The ``cast`` keeps the SQL strictly typed in case the
+        encoding alias differs across Postgres builds.
+        """
         key = settings.db_master_key.get_secret_value()
-        return func.pgp_sym_encrypt(bindparam, key)
+        decoded = func.convert_from(bindparam, "utf-8")
+        return func.pgp_sym_encrypt(cast(decoded, String), key)
 
     def column_expression(self, column: ColumnElement[Any]) -> ColumnElement[Any]:
         """Wrap the column in ``pgp_sym_decrypt(col, master_key)`` on SELECT."""

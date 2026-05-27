@@ -311,7 +311,7 @@ Every phase tolerates missing upstream data with documented degraded behaviour. 
 - Retry policy is shared via `app/vendors/_retry.py` (tenacity-based). Retries on connect timeouts, 5xx, and 429 (honours `Retry-After`); skips permanent 4xx.
 - Rate limiting is shared via `app/vendors/_rate_limiter.py` — Redis DB 2 token-bucket Lua script (`REDIS_DB_RATELIMIT=2`, reserved in M0; first used by M3).
 - Webhook HMAC verification (Smartlead + Meta) is shared via `app/vendors/_webhook_signing.py`.
-- OAuth state + PKCE persistence is shared via `app/vendors/_oauth_state.py` — Redis DB 2 with single-use TTL=10min state values. M3 ships the helpers; FastAPI callback routes land in M5 (talent onboarding).
+- OAuth state + PKCE persistence is shared via `app/vendors/_oauth_state.py` — Redis DB 2 with single-use TTL=10min state values. FastAPI callback routes at `/api/v1/webhooks/{meta,tiktok}/oauth_callback` are **live as of M5** and persist exchanged tokens into the `talent_vault` table (per-talent + per-platform composite PK, column-level pgcrypto via `EncryptedString`). The callback also stamps `talent.data.platforms[N].api_credentials.scope_validated_at` after a lightweight read-call confirms the granted scopes work.
 
 **Webhook receivers** (FastAPI endpoints under `/webhooks/{vendor}`):
 
@@ -319,8 +319,8 @@ Every phase tolerates missing upstream data with documented degraded behaviour. 
 |---|---|---|
 | `POST /webhooks/smartlead/email_event` | Smartlead | Engagement events → write to `pitch_enrollment.steps[].engagement_events[]` |
 | `POST /webhooks/smartlead/reply` | Smartlead | Reply received → enqueue classification job → on `interested` create Phase 4 deal |
-| `POST /webhooks/meta/oauth_callback` | Meta Login | OAuth code exchange → store encrypted token + scopes; validate via test API call |
-| `POST /webhooks/tiktok/oauth_callback` | TikTok | Same pattern |
+| `GET /api/v1/webhooks/meta/oauth_callback` | Meta Login | OAuth code exchange → write encrypted token + scopes into `talent_vault` + mirror connection state into `talent.data.platforms[]`; lightweight `GET /me/media?limit=1` validates scope, stamps `scope_validated_at` |
+| `GET /api/v1/webhooks/tiktok/oauth_callback` | TikTok | Same pattern with PKCE verifier (TikTok required) |
 | `POST /webhooks/stripe/invoice_paid` (v2) | Stripe | Auto-populate `invoice_pack.payment_state` |
 
 All webhooks validate signature/HMAC before processing.

@@ -901,6 +901,11 @@
             "expires_at": {
               "type": "string",
               "format": "date-time"
+            },
+            "scope_validated_at": {
+              "type": "string",
+              "format": "date-time",
+              "description": "Set by the OAuth callback after a successful test API call confirms the granted scopes work."
             }
           }
         }
