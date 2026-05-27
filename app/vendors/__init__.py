@@ -9,6 +9,14 @@ would crash app startup; the per-module ``__init__`` raises ``IntegrationError``
 on construction instead.
 """
 
+from app.vendors.apollo import ApolloClient
+from app.vendors.exa import ExaClient
+from app.vendors.linkedin import LinkedInScraperClient
 from app.vendors.smartlead import SmartleadClient
 
-__all__ = ["SmartleadClient"]
+__all__ = [
+    "ApolloClient",
+    "ExaClient",
+    "LinkedInScraperClient",
+    "SmartleadClient",
+]

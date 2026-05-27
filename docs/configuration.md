@@ -97,8 +97,13 @@ class Settings(BaseSettings):
     # ─── Apollo ──────────────────────────────────────────────────────────
     apollo_api_key: SecretStr | None = None  # optional — Phase 3a
 
-    # ─── LinkedIn ────────────────────────────────────────────────────────
-    linkedin_api_key: SecretStr | None = None  # optional — Phase 3a enrichment
+    # ─── LinkedIn (via RapidAPI's "Real-Time LinkedIn Scraper API") ──────
+    # Host is hard-coded in app/vendors/linkedin.py:
+    # linkedin-data-api.p.rapidapi.com
+    rapidapi_key: SecretStr | None = None  # optional — Phase 3a enrichment
+    # Deprecated alias for rapidapi_key; backfilled by app.config validator.
+    # Remove on the M5 release.
+    linkedin_api_key: SecretStr | None = None  # deprecated; use RAPIDAPI_KEY
 
     # ─── Meta Graph API ──────────────────────────────────────────────────
     meta_app_id: str | None = None  # optional — Phase 4.8 + 4.9
@@ -256,7 +261,11 @@ EXA_BASE_URL=https://api.exa.ai
 # Apollo — optional, Phase 3a
 APOLLO_API_KEY=
 
-# LinkedIn — optional, Phase 3a enrichment
+# RapidAPI gateway key — optional, Phase 3a LinkedIn enrichment.
+# Used by app/vendors/linkedin.py (Real-Time LinkedIn Scraper API).
+RAPIDAPI_KEY=
+# Deprecated alias for RAPIDAPI_KEY; backfilled by app.config validator.
+# Remove on the M5 release.
 LINKEDIN_API_KEY=
 
 # Meta Graph — optional, Phase 4.8 detection + Phase 4.9 KPI capture
@@ -385,7 +394,8 @@ These appear in `.env.example` as empty fields. Strict policy: never check in va
 - `SMARTLEAD_API_KEY` + `SMARTLEAD_WEBHOOK_SECRET`
 - `EXA_API_KEY`
 - `APOLLO_API_KEY`
-- `LINKEDIN_API_KEY`
+- `RAPIDAPI_KEY` (LinkedIn data via RapidAPI; replaces deprecated `LINKEDIN_API_KEY`)
+- `LINKEDIN_API_KEY` (deprecated alias for `RAPIDAPI_KEY`; remove after M5)
 - `META_APP_SECRET` + `META_WEBHOOK_VERIFY_TOKEN`
 - `TIKTOK_CLIENT_SECRET`
 - `SENTRY_DSN`

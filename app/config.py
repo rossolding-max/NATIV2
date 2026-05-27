@@ -107,7 +107,12 @@ class Settings(BaseSettings):
     exa_base_url: AnyHttpUrl = Field(default=AnyHttpUrl("https://api.exa.ai"))
 
     apollo_api_key: SecretStr | None = None
-    linkedin_api_key: SecretStr | None = None
+    # RapidAPI gateway key. Used by LinkedInScraperClient (RapidAPI's
+    # "Real-Time LinkedIn Scraper API" at linkedin-data-api.p.rapidapi.com).
+    # Deprecated alias ``linkedin_api_key`` is kept until M5 to avoid breaking
+    # .env files written before M3.
+    rapidapi_key: SecretStr | None = None
+    linkedin_api_key: SecretStr | None = None  # deprecated alias for rapidapi_key
 
     meta_app_id: str | None = None
     meta_app_secret: SecretStr | None = None
@@ -177,6 +182,18 @@ class Settings(BaseSettings):
                 "NATIV2_EXTERNAL_BIND_CONFIRMED=true. v0.1 is designed for "
                 "127.0.0.1 only; see docs/auth_and_authorization.md."
             )
+        return self
+
+    @model_validator(mode="after")
+    def _backfill_rapidapi_from_legacy(self) -> Settings:
+        """Promote deprecated ``linkedin_api_key`` into ``rapidapi_key``.
+
+        M3 renamed the field. Until the next release, callers can still set
+        ``LINKEDIN_API_KEY`` in their .env; we read it here and surface it
+        through the canonical field.
+        """
+        if self.rapidapi_key is None and self.linkedin_api_key is not None:
+            self.rapidapi_key = self.linkedin_api_key
         return self
 
     @model_validator(mode="after")

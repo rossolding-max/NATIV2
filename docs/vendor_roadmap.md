@@ -24,12 +24,18 @@
 **Cost:** $99–$500+/mo by volume; roughly $0.20–$0.50 per enriched contact at scale. Budget per-talent, per-discovery-run.
 **Env var:** `APOLLO_API_KEY`.
 
-### LinkedIn API — contact verification + LinkedIn-native search
-**Role:** Confirms Apollo data is fresh (Apollo lags 3–6 months on job changes), pulls last-activity dates for the `recent_linkedin_activity` qualification signal, and provides LinkedIn-native search to find contacts Apollo misses (especially smaller brands and recent hires). See `docs/contact_enrichment_workflow.md` Step 3.
-**Scope:** access agreement provided by the user; specific API tier (standard / Sales Navigator / partnership) confirmed at integration time.
-**Cost:** per access agreement.
-**Env var:** `LINKEDIN_API_KEY` (or per the provided access mechanism).
-**v0.1 scope is enrichment only — NOT outreach.** The LinkedIn API in v0.1 is used to read profile data, last-activity dates, and search. Sending LinkedIn messages / InMails / connection requests as part of an outreach sequence is **deferred to v2** — see `docs/outreach_workflow.md` § "Email-only in v0.1". When v2 ships LinkedIn-channel sending, we'll evaluate sender vendors (Sales Navigator API vs third-party platforms like Closely / Expandi / La Growth Machine) against LinkedIn's automation-policy enforcement.
+### LinkedIn data via RapidAPI — contact verification + activity reads
+**v0.1 provider (M3 decision):** **RapidAPI's "Real-Time LinkedIn Scraper API"** — host `linkedin-data-api.p.rapidapi.com`, accessed through the RapidAPI gateway. The official LinkedIn API is partner-gated (~$10-50k/yr) and cannot fetch third-party profiles, so the realistic v0.1 path is a public-data scraper. The class name in code is `LinkedInScraperClient` to make the data source unambiguous.
+**Role:** Confirms Apollo data is fresh (Apollo lags 3–6 months on job changes), pulls last-activity dates for the `recent_linkedin_activity` qualification signal, and resolves brand domains → LinkedIn company pages. See `docs/contact_enrichment_workflow.md` Step 3.
+**Auth:** two RapidAPI gateway headers: `x-rapidapi-key: <RAPIDAPI_KEY>` + `x-rapidapi-host: linkedin-data-api.p.rapidapi.com`.
+**v0.1 endpoints implemented:**
+- `GET /` — fetch person profile by LinkedIn URL.
+- `GET /get-company-by-domain` — resolve domain → company profile + employee counts.
+- `GET /get-profile-posts` — recent activity feed for outreach personalisation.
+**Env var:** `RAPIDAPI_KEY`. Deprecated alias `LINKEDIN_API_KEY` is honoured at config-load time (M3 backfill) but will be removed at M5.
+**Cost:** per RapidAPI subscription tier (Basic / Pro / Ultra / Mega). Tier choice depends on per-talent enrichment volume.
+**Future RapidAPI vendors:** if we adopt more, the gateway boilerplate moves to `app/vendors/_rapidapi_client.py`; until then it's inlined in `linkedin.py`.
+**v0.1 scope is enrichment only — NOT outreach.** Reading profile data + last-activity dates only. Sending LinkedIn messages / InMails / connection requests is **deferred to v2** — see `docs/outreach_workflow.md` § "Email-only in v0.1". When v2 ships LinkedIn-channel sending, we'll evaluate sender vendors (Sales Navigator API vs third-party platforms like Closely / Expandi / La Growth Machine) against LinkedIn's automation-policy enforcement.
 
 ### Phase 4.6 proposal pack — file parsing (v0.1 in-process)
 **Role:** Phase 4.6 (`docs/proposal_pack_workflow.md`) lets the agent upload brand briefs, discovery call notes, transcripts, and reference material to augment proposal generation context. Each file is parsed to text + LLM-summarised in-process; no external vendor for v0.1.
@@ -246,7 +252,7 @@ This is what the orchestrator will need configured by v0.1:
 | `EXA_API_KEY` | Exa search (Search 15 + enrichment fallbacks + Phase 4.5 discovery prep external research) | **Yes** |
 | `ANTHROPIC_API_KEY` | Claude calls (classification, extraction, decision-role tagging, outreach generation, reply classification) | **Yes** |
 | `APOLLO_API_KEY` | Apollo contact discovery (Phase 3a v0.1) | **Yes** (when Phase 3a enrichment runs) |
-| `LINKEDIN_API_KEY` | LinkedIn enrichment + search (Phase 3a v0.1; specific API tier per user-provided access) | **Yes** (when Phase 3a enrichment runs) |
+| `RAPIDAPI_KEY` | RapidAPI gateway key — LinkedIn data via "Real-Time LinkedIn Scraper API" (Phase 3a v0.1). Replaces deprecated `LINKEDIN_API_KEY`. | **Yes** (when Phase 3a enrichment runs) |
 | `SMARTLEAD_API_KEY` | Smartlead outreach send + sequence backend (Phase 3b v0.1) | **Yes** (when Phase 3b outreach runs) |
 | `META_APP_ID` + `META_APP_SECRET` | Meta Graph API for Phase 4.8 IG deliverable detection (oAuth flow; per-talent tokens stored in talent profile) | **Yes** (when Phase 4.8 detection runs for IG talent) |
 | `TIKTOK_CLIENT_KEY` + `TIKTOK_CLIENT_SECRET` | TikTok Display API for Phase 4.8 TikTok deliverable detection (oAuth flow) | **Yes** (when Phase 4.8 detection runs for TikTok talent) |
