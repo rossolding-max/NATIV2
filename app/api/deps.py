@@ -12,7 +12,9 @@ from __future__ import annotations
 
 from uuid import UUID
 
-from fastapi import Request
+from fastapi import Depends, Request
+
+from app.errors import DegradedModeError
 
 
 def current_agency_id(request: Request) -> UUID | None:
@@ -33,3 +35,17 @@ def current_agent_id(request: Request) -> str | None:
     """
     value = getattr(request.app.state, "agent_id", None)
     return value if isinstance(value, str) else None
+
+
+def require_agency_id(agency_id: UUID | None = Depends(current_agency_id)) -> UUID:  # noqa: B008
+    """Require a bound ``agency_id`` or raise ``DegradedModeError``.
+
+    Used by every M4+ endpoint + every repository-bound FastAPI dep
+    factory. M0 / M1 endpoints (just ``/health``) don't use this — they
+    don't need an agency_id.
+
+    ``Depends()`` in defaults is the FastAPI idiom; B008 is suppressed.
+    """
+    if agency_id is None:
+        raise DegradedModeError("agency_id unavailable — Phase 0 agency setup not completed")
+    return agency_id

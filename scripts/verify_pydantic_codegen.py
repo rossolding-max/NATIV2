@@ -1,14 +1,21 @@
 #!/usr/bin/env python3
-"""Pre-commit drift detector for schemas/ <-> app/models/pydantic/.
+"""Codegen drift detector for schemas/ <-> app/models/pydantic/.
 
-M0 baseline: `app/models/pydantic/` is empty/absent. Exit 0 with a notice.
-M1+: compares schema manifest hash vs stored `.codegen_state.json`; fails on drift.
+Two modes:
 
-Idempotent. Safe to run at any milestone.
+- Default (no args): compares the live schema manifest hash against
+  `.codegen_state.json`. Exits 1 if drift is detected. Used in pre-commit + CI.
+- `--record`: writes the current manifest hash to `.codegen_state.json`. Used
+  by `just codegen` after a fresh regeneration so the next drift check passes.
+
+Pre-M1 baseline behaviour (preserved): if `app/models/pydantic/` is empty,
+exit 0 with a notice so M0's `verify_pydantic_codegen.py` pre-commit hook +
+CI step both succeed before M1 lands.
 """
 
 from __future__ import annotations
 
+import argparse
 import json
 import sys
 from hashlib import sha256
@@ -44,7 +51,19 @@ def has_generated_models() -> bool:
     return any(p.name not in _NON_GENERATED for p in PYDANTIC_DIR.glob("*.py"))
 
 
-def main() -> int:
+def record_state() -> int:
+    """Write the current schema manifest hash to `.codegen_state.json`.
+
+    Called from `just codegen` immediately after datamodel-codegen runs.
+    """
+    h = manifest_hash()
+    STATE_FILE.write_text(json.dumps({"schema_manifest_hash": h}, indent=2) + "\n")
+    print(f"Recorded codegen state: {h[:12]}...")
+    return 0
+
+
+def check_drift() -> int:
+    """Compare current schemas to recorded hash. Return 1 on drift."""
     if not has_generated_models():
         print("M0 baseline -- no Pydantic models codegen state yet; skipping drift check.")
         return 0
@@ -76,6 +95,20 @@ def main() -> int:
 
     print("Pydantic codegen state in sync.")
     return 0
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--record",
+        action="store_true",
+        help="Record the current schema manifest hash to .codegen_state.json.",
+    )
+    args = parser.parse_args()
+
+    if args.record:
+        return record_state()
+    return check_drift()
 
 
 if __name__ == "__main__":

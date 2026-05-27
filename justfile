@@ -64,11 +64,13 @@ db-reset:
     just migrate
 
 # ── Seeding ───────────────────────────────────────────────────────────
+# Loads `data/brand_industry_map.json` (290 records) into the brand table.
+# Idempotent — re-runs skip existing rows.
 seed:
-    @echo "Seed: synthetic Acme fixture (M0 placeholder)."
+    uv run python scripts/import_brand_industry_map.py
 
 seed-real:
-    @echo "Seed: ~/.nativ/test_fixtures/ (lands in M1+)."
+    @echo "Seed: ~/.nativ/test_fixtures/ (lands in M4+ with full agency setup)."
 
 # ── Dev servers ───────────────────────────────────────────────────────
 dev-api:
@@ -102,13 +104,23 @@ coverage:
     @echo "Coverage report: htmlcov/index.html"
 
 # ── Codegen ───────────────────────────────────────────────────────────
+# Regenerate Pydantic models from JSON Schemas and record state for drift check.
+# Flags locked per docs/spec_methodology.md + the M1 plan's "Implementation gotchas".
 codegen:
-    uv run datamodel-code-generator \
+    uv run datamodel-codegen \
         --input schemas \
         --input-file-type jsonschema \
         --output app/models/pydantic \
-        --output-model-type pydantic_v2.BaseModel
-    uv run python scripts/verify_pydantic_codegen.py
+        --output-model-type pydantic_v2.BaseModel \
+        --target-python-version 3.12 \
+        --use-double-quotes \
+        --field-constraints \
+        --use-default \
+        --reuse-model \
+        --collapse-root-models \
+        --use-schema-description \
+        --capitalise-enum-members
+    uv run python scripts/verify_pydantic_codegen.py --record
 
 # ── Lint + typecheck ──────────────────────────────────────────────────
 lint:

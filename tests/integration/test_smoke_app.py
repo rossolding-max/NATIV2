@@ -32,13 +32,15 @@ async def test_integration__health_returns_200_with_envelope(
 async def test_integration__health_surfaces_per_service_status(
     app_client_minimal: AsyncClient,
 ) -> None:
-    """``data.services`` includes postgres/redis/minio/langfuse keys."""
+    """``data.services`` includes postgres/redis/minio/langfuse/taxonomies keys."""
     r = await app_client_minimal.get("/health")
     services = r.json()["data"]["services"]
-    assert set(services.keys()) >= {"postgres", "redis", "minio", "langfuse"}
+    assert set(services.keys()) >= {"postgres", "redis", "minio", "langfuse", "taxonomies"}
     # Each value must be one of the documented status strings.
     for value in services.values():
         assert value in ("ok", "degraded", "down", "disabled"), value
+    # Taxonomies must load successfully (data files ship in `data/`).
+    assert services["taxonomies"] == "ok"
 
 
 async def test_integration__openapi_spec_advertises_correct_title(
