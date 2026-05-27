@@ -36,24 +36,22 @@ data/agency_profile.json
 # Deal lifecycle records (Phase 4): per-deal pipeline files with
 # commercial data (fees, signed contracts, invoice amounts, payment
 # records), brand briefs, content drafts, AND discovery-call prep
-# packs (Phase 4.5: versioned briefing notes, agendas, slide decks
-# with rendered HTML/PDF/PPT artefacts), AND proposal packs
-# (Phase 4.6: versioned commercial proposals with LLM rationale,
-# context-artefact uploads, slide decks), AND contract packs
-# (Phase 4.7: versioned contract drafts with merge field values,
-# clause decisions, narrative sections, legal review gate state,
-# rendered MD/DOCX/PDF), AND invoice packs (Phase 4.8: multi-invoice
-# per deal driven by LLM-parsed contract payment schedule, rendered
-# MD/PDF, payment tracking with status enum). Schemas
-# (schemas/deal.schema.json + schemas/discovery_prep_pack.schema.json
-# + schemas/proposal_pack.schema.json + schemas/contract_pack.schema.
-# json + schemas/invoice_pack.schema.json) and specs
-# (docs/deal_lifecycle_workflow.md + docs/discovery_prep_workflow.md
-# + docs/proposal_pack_workflow.md + docs/contract_pack_workflow.md
-# + docs/invoice_workflow.md) are tracked; the per-deal data is
-# NEVER committed. On successful close (all invoices paid + final
-# KPIs + final report), the deal auto-archives into
-# data/brand_deals/{talent_id}.json (also gitignored).
+# packs (Phase 4.5), AND proposal packs (Phase 4.6), AND contract
+# packs (Phase 4.7), AND invoice packs (Phase 4.8: multi-invoice
+# per deal driven by LLM-parsed contract payment schedule), AND
+# performance report packs (Phase 4.9: post-campaign KPI reports
+# aggregated from interim_kpi_snapshots[] with benchmark
+# comparisons + LLM narrative). Schemas (schemas/deal.schema.json
+# + schemas/discovery_prep_pack.schema.json + schemas/proposal_pack
+# .schema.json + schemas/contract_pack.schema.json + schemas/
+# invoice_pack.schema.json + schemas/performance_report_pack.schema
+# .json) and specs (docs/deal_lifecycle_workflow.md + docs/
+# discovery_prep_workflow.md + docs/proposal_pack_workflow.md +
+# docs/contract_pack_workflow.md + docs/invoice_workflow.md + docs/
+# performance_report_workflow.md) are tracked; the per-deal data
+# is NEVER committed. On successful close (all invoices paid +
+# final KPIs + final report all three set), the deal auto-archives
+# into data/brand_deals/{talent_id}.json (also gitignored).
 data/deals/
 
 # Phase 4.7 contract template starters: agency-curated reference

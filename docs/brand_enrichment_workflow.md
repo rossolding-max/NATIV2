@@ -166,8 +166,9 @@ For each of `[instagram, tiktok, youtube, twitter_x, facebook, linkedin, pintere
    - `10M–100M` → nearest 1M
    - `100M+` → nearest 10M
 4. Store as integer counts in `social_followers.{platform}` + a single `as_of_year` for the block.
-**Outputs:** `social_followers` object. Platforms where the brand has no meaningful presence (or no confident count) are omitted entirely.
-**Fallback:** if no platform data is found, omit the whole `social_followers` block.
+5. **Capture handles alongside counts** — when scraping/fetching the follower count, also capture the platform handle (e.g. `nike`, not `@nike`) and store at `social_handles.{platform}`. The handle is critical input to Phase 4.8 deliverable detection (cron uses `@{handle}` to score whether the talent's post mentions the brand). Weekly refresh detects rebrands; `social_handles.last_handle_change_at` is bumped on any change.
+**Outputs:** `social_followers` object + `social_handles` object. Platforms where the brand has no meaningful presence (or no confident count) are omitted entirely.
+**Fallback:** if no platform data is found, omit the whole `social_followers` block. `social_handles` may be populated independently (handles often discoverable even when follower counts aren't).
 
 ## Honesty-floor policy (applies to every step)
 

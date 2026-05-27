@@ -19,6 +19,7 @@ Build an AI-powered assistant that helps an influencer (or a roster of influence
 | 4.6 | **Proposal Pack** | v0.1 spec + schema shipped | Agent-initiated commercial proposal builder for PROPOSAL substage. Forks discovery deck content + adds proposal-specific sections (executive summary, objectives recap, deliverables, fee, usage rights, exclusivity, timeline, exclusions). 5-stage pipeline: context augmentation (upload briefs/notes/transcripts → parse + summarise) → hybrid discovery debrief extraction → commercial gate (LLM proposes, agent must confirm before render) → 3-pass Sonnet slide generation → render. Bidirectional link to `deal.proposal.negotiation_log[]` for brand pushback handling. v0.1 file parsing: pypdf + python-docx. v2 adds external transcript-link references (Otter / Fireflies / Grain). |
 | 4.7 | **Contract Pack** | v0.1 spec + schema shipped | Agent-initiated contract draft builder for CONTRACT substage. 7-stage pipeline: context augmentation (upload brand legal info, brand-requested clauses, prior contracts) → merge field extraction (talent legal entity from `billing_entity`, commercials from `deal.proposal.*`) → conditional clause evaluation (LLM decides include/exclude per `{{#if}}` block: GDPR, exclusivity, IP, paid social) → narrative drafting (LLM fills `{{narrative_*}}` placeholders) → compose → HARD LEGAL REVIEW GATE → render (markdown source-of-truth + Word .docx + PDF). Per-talent template (captured in Phase 1 onboarding Step 7.5) with markdown + merge fields + conditional sections + narrative placeholders. Brand-redline-response regen type. v0.1 e-sign = manual; v2 = DocuSign / PandaDoc / HelloSign. |
 | 4.8 | **Invoice Pipeline** | v0.1 spec + schema shipped | Three-layer system. (1) Detection: cron polls Meta Graph + TikTok Display APIs (v0.1; v2 = Phyllo for YouTube/LinkedIn/X/podcast/Substack) every 15min-1hr, scores candidate posts against `posting_schedule[]` via time/handle/hashtag/format signals, surfaces matches to agent for confirmation. (2) Generation: LLM auto-parses contract's `payment_terms` into `invoice_schedule[]` (one-time agent gate); each schedule entry fires its own invoice_pack at its trigger_condition (contract_executed / first_post_live / all_deliverables_live / specific_date / manual); deterministic merge field extraction + optional LLM narrative line items + compose + render PDF. Agent reviews + sends (soft gate; sending IS the approval). (3) Tracking: per-invoice payment_state with status enum (draft/sent/viewed/paid/overdue/disputed/void); daily overdue cron with reminder log; v0.1 manual `payment_received_at`; v2 Stripe/Xero/QuickBooks webhook auto-populates. Multi-invoice from v0.1. Agency-wide template captured in Phase 0 Step 5.5. All invoices paid + final KPIs + final report → auto-archive to Phase 1.5. |
+| 4.9 | **Performance Report** | v0.1 spec + schema shipped | Post-campaign report generated when `performance_capture_window_ends_at` reached. Daily KPI cron during window writes per-post snapshots to `deal.delivery.interim_kpi_snapshots[]` (Meta Graph / TikTok / YouTube Insights APIs). On window close, aggregates into final `kpis{}` block + computes 3 benchmark comparisons (vs industry, vs talent historical, vs brand stated targets) + 3 LLM narrative passes (executive summary, what worked, learnings). Soft agent gate; sending IS approval. On send, auto-populates `deal.close.final_performance_report_attachment_id` + `final_kpis` — the last two of three conditions for auto-archive (third = all invoices paid). Without this, deals would never auto-archive. |
 
 ## End-to-end data flow
 
@@ -230,6 +231,33 @@ Build an AI-powered assistant that helps an influencer (or a roster of influence
 │   output: data/deals/{deal_id}/            │   │
 │     invoice_packs/seq{N}_v{M}.json         │   │
 │     (gitignored)                           │   │
+└──────────┬─────────────────────────────────┘   │
+           │ (parallel pipeline during CLOSE)    │
+           ▼                                     │
+┌────────────────────────────────────────────┐   │
+│ Phase 4.9  PERFORMANCE REPORT              │   │
+│   docs/performance_report_workflow.md      │   │
+│   During performance_window:               │   │
+│     Daily KPI cron polls Insights APIs     │   │
+│     (Meta Graph + TikTok + YouTube) →      │   │
+│     deal.delivery.interim_kpi_snapshots[]  │   │
+│   On window end:                           │   │
+│     Auto-fire performance_report_pack      │   │
+│     Aggregate per-post → final kpis{}      │   │
+│     3 benchmark comparisons (industry +    │   │
+│       talent historical + brand targets)   │   │
+│     3 LLM narrative passes (exec summary   │   │
+│       + what worked + learnings)           │   │
+│     Render PDF; agent reviews + sends      │   │
+│     On send: final_kpis + final_report     │   │
+│       auto-populate on deal.close          │   │
+│   Both invoice + report paths must complete│   │
+│   before auto-archive fires.               │   │
+│   schemas/performance_report_pack          │   │
+│     .schema.json                           │   │
+│   output: data/deals/{deal_id}/            │   │
+│     performance_report_packs/v{N}.json     │   │
+│     (gitignored)                           │   │
 └────────────────────────────────────────────┘   │
                                                  ▼
                                   ┌─────────────────────────┐
@@ -279,6 +307,8 @@ The fields below were not in the original request but were added because later p
 - `schemas/proposal_pack.schema.json` — JSON Schema for Phase 4.6 proposal packs. Versioned commercial proposals with five layered sections: (1) generation provenance (5 trigger types including `negotiation_response` with bidirectional log ref); (2) context snapshot (forked_from_prep_pack_id + discovery_debrief_snapshot + optional Exa research refresh); (3) context_artefacts[] (uploaded files with parser metadata, parsed text, LLM summary, extracted signals, relevance tags, exclude toggle); (4) commercial_proposal (LLM-proposed deliverables/fee/usage_rights/exclusivity/timeline/exclusions/payment_terms with rationale per field, plus the gate: confirmed_at + confirmed_by_agent_id + confirmed_overrides[]); (5) slides[] (16-value type enum including forked types from discovery + proposal-specific: executive_summary, objectives_recap, recommendation, deliverables, timeline, investment, usage_rights, exclusivity, exclusions, agency_process, next_steps_proposal; live_body adds `table` for deliverables/timeline/investment). export_artifacts[].status enum includes `blocked_by_commercial_gate`. agent_edits[] includes `commercial_override` and `context_artefact_*` types. Validates files under `data/deals/{deal_id}/proposal_packs/` (gitignored).
 - `schemas/contract_pack.schema.json` — JSON Schema for Phase 4.7 contract packs. Versioned contract drafts with eight layered sections: (1) generation provenance (6 trigger types including `brand_redline_response` and `amendment_request`); (2) context snapshot (template_version_used + proposal_pack_id_at_gen + talent_billing_entity_snapshot + brand_legal_entity_at_gen with signatory info); (3) context_artefacts[] with contract-specific types (brand_legal_info / brand_requested_clauses / prior_contract / brand_redline / talent_redline); (4) merge_field_values[] (each with confidence enum high/medium/low/missing + source enum + needs_review flag); (5) conditional_clause_decisions[] (each with decided_by + applicability_rationale + agent_overridden); (6) narrative_sections[] (LLM-drafted with sources[] + word_count); (7) composed_markdown (canonical contract source-of-truth); (8) legal_review (the gate — required flag, reviewer_id, blocking_issues[] auto-populated, approved_at + approved_by_agent_id, previous_approvals[] audit of edit-reset-reapprove cycles). export_artifacts[].status enum includes `blocked_by_legal_gate`. agent_edits[] includes 7 edit types and the `trivial_edit_override` flag for typos. Validates files under `data/deals/{deal_id}/contract_packs/` (gitignored).
 - `schemas/invoice_pack.schema.json` — JSON Schema for Phase 4.8 invoice packs. Versioned per-schedule-sequence invoices (`inv_..._seq{N}_v{M}` IDs). Eight sections: (1) generation provenance (5 trigger types: schedule_trigger_fired / agent_initiated / agent_regenerate / brand_revision_request / amendment_invoice; captures which trigger_condition fired); (2) context snapshot (contract_pack_id_at_gen + talent_billing_entity_snapshot + brand_legal_entity_snapshot + invoice_schedule_entry_snapshot + matched_posts[] with detection methods); (3) merge_field_values[] (same shape as contract_pack with invoice-specific source enum); (4) line_items[] (deliverable_ref + description + quantity + unit_price + amount + narrative_drafted_by_llm flag); (5) amounts (subtotal + tax_rate + tax_amount + tax_label + total + currency + fx_rate_to_usd); (6) composed_markdown (canonical invoice source-of-truth); (7) agent_review (soft gate — viewed_at + sent_at + send_method enum supporting v2 stripe_invoice_send / xero_send / quickbooks_send + sent_to_email); (8) payment_state (status 7-value enum + due_at + payment_received_at + method enum + amount + reference + external_invoice_id + reconciliation_note). payment_reminder_log[] for overdue cron audit. agent_edits[] for draft mutability + post-send immutability. Validates files under `data/deals/{deal_id}/invoice_packs/` (gitignored).
+- `schemas/performance_report_pack.schema.json` — JSON Schema for Phase 4.9 performance reports (`perf_..._v{N}` IDs). Auto-fires on `performance_capture_window_ends_at`. Eight sections: (1) generation (5 trigger types incl. `auto_on_performance_window_end` + `kpi_refresh` for late-reporting platform data; llm_passes for the 3-4 narrative passes); (2) context_snapshot (contract_pack + proposal_pack + deal_proposal + discovery_debrief snapshots + window timestamps + comparable_brand_deals + platform_apis_used); (3) `kpis{}` aggregate in `brand_deal.kpiMetric` shape (carries verbatim into brand_deal on archive); (4) `per_post_kpis[]` per-deliverable breakdown with capture_method; (5) `benchmark_comparisons` (3 sub-blocks: vs_industry / vs_talent_historical / vs_brand_stated_targets; each KPI gets `{this_campaign_value, benchmark_value, delta_pct, performance_label, benchmark_source}`); (6) `narrative_sections[]` (executive_summary / what_worked / learnings / audience_resonance with declared sources + word count); (7) composed_markdown (canonical); (8) agent_review (soft gate; sending auto-populates `deal.close.final_performance_report_attachment_id` + `final_kpis`). Validates files under `data/deals/{deal_id}/performance_report_packs/` (gitignored).
+- `schemas/brand_industry_map.schema.json` — JSON Schema formalising the canonical brand reference dataset at `data/brand_industry_map.json` (committed; agency-wide source-of-truth referenced by brand_candidates / brand_contacts / brand_deals / deals by `brand_id` slug). 290 brands at writing. Per-brand fields: name + industry_id + aliases[] + domain + hq_country + sells_in_countries + company_stage + typical_campaign_tier + creator_program_presence[] + revenue + headcount + social_followers (counts) + **`social_handles`** (critical for Phase 4.8 detection — handles WITHOUT `@` per platform; `last_handle_change_at` flags rebrands) + **`legal_entity`** (legal_name + entity_type + registered_address + tax_id — captured opportunistically to avoid late-stage contract drafting friction).
 - `schemas/talent.schema.json` — JSON Schema (Draft 2020-12) describing the talent profile.
 - `schemas/brand_candidates.schema.json` — JSON Schema for the per-talent Brand Discovery output. Validates every file written by the orchestrator under `data/brand_candidates/` (the folder itself is gitignored — generated artifact, not source).
 - `schemas/brand_contact.schema.json` — JSON Schema for per-brand contact records (Phase 3a). Validates every file under `data/brand_contacts/` (gitignored — contacts are PII and vendor data is licensed).
@@ -305,6 +335,7 @@ The fields below were not in the original request but were added because later p
 - `docs/proposal_pack_workflow.md` — Phase 4.6 spec for the commercial proposal pack generator. Defines the agent-initiated trigger (substage = `proposal_drafting`), 5-stage generation pipeline (context augmentation → hybrid debrief extraction → commercial gate → 3-pass Sonnet slide generation → render), file upload + parsing (pypdf / python-docx / text reader for v0.1; external transcript-link references for v2), the commercial gate mechanics (LLM proposes, agent must confirm before slides render, confirmed values copy into canonical `deal.proposal.*`), default 15-slide deck structure with 4 slides forked from the discovery prep pack, negotiation tie-in (bidirectional link to `deal.proposal.negotiation_log[].proposal_pack_version`), storage layout, integration touchpoints, 9 failure handling scenarios, and 7 open questions for v0.2 including counter-offer detection, win/loss pricing-model calibration, auto-contract-draft seeding.
 - `docs/contract_pack_workflow.md` — Phase 4.7 spec for the contract pack generator. Defines the agent-initiated trigger (substage = `contract_drafting`), 7-stage generation pipeline (context augmentation → merge field extraction → conditional clause evaluation → narrative drafting → compose → HARD legal review gate → render), per-talent template structure (markdown + merge fields + `{{#if}}` conditionals + `{{narrative_*}}` placeholders) captured in Phase 1 onboarding Step 7.5, full example template markdown demonstrating ~20 merge fields + 4 conditional blocks + 4 narrative placeholders, the legal review gate mechanics (blocking_issues auto-populated from low-confidence fields; edits reset gate; trivial_edit_override for typos; previous_approvals[] audit trail), brand-redline-response handling, storage layout, integration touchpoints with `talent.contract_template` + `talent.billing_entity` + Phase 4.6 proposal pack, 10 failure handling scenarios, and 7 open questions for v0.2 including brand-side legal review automation, counter-template handling, structured JSONLogic clause conditions.
 - `docs/invoice_workflow.md` — Phase 4.8 spec for the invoice pipeline. Three layers: (1) deliverable detection via Meta Graph + TikTok Display APIs in v0.1 (Phyllo for YouTube/LinkedIn/X/podcast/Substack in v2), cron cadence (15min stories / 1hr other), candidate scoring algorithm with time_window + brand_handle + campaign_hashtag + content_type signals, confidence routing (≥80/50-79/<50), agent confirmation flow, per-platform API endpoints + rate limits + oAuth scope notes; (2) invoice generation including LLM parse of contract `payment_terms` into structured `invoice_schedule[]` with one-time agent gate, per-trigger invoice pack pipeline (Stages A-E), invoice numbering atomic increment, multi-invoice from v0.1 with `seq{N}_v{M}` naming; (3) payment tracking with status enum + daily overdue cron + reminder log + auto-archive interaction. Storage layout, integration touchpoints across Phases 0/1/4.6/4.7, consolidated 9 failure handling scenarios, cost profile, 7 v0.1 non-goals, 8 v0.2 open questions including detection signal tuning + auto-reminder + per-jurisdiction tax + Stripe Connect for marketplace flows.
+- `docs/performance_report_workflow.md` — Phase 4.9 spec for the post-campaign performance report. Auto-fires when `performance_capture_window_ends_at` reached. Defines the upstream daily KPI capture cron (writes per-post snapshots to `deal.delivery.interim_kpi_snapshots[]`), the 5-stage generation pipeline (aggregate → benchmarks → narrative → compose → render), the three benchmark sets (vs_industry / vs_talent_historical / vs_brand_stated_targets) and how each is computed, the LLM narrative pass structure (executive_summary + what_worked + learnings + optional audience_resonance), the soft agent gate (sending auto-populates `deal.close.final_performance_report_attachment_id` + `final_kpis` — completing 2 of 3 auto-archive conditions), the bidirectional integration with Phase 4.8 invoice pipeline (both must complete for auto-archive), storage, 10 failure handling scenarios including platform API rate limits + late-reporting via `kpi_refresh` regen, and 7 v0.2 open questions including sales attribution + sentiment ML + auto-case-study generation.
 - `docs/onboarding_workflow.md` — draft spec for how a user adds a new talent: web wizard with OAuth platform connections (paste-fallback), media-pack extraction by LLM, adaptive questionnaire for gaps, hybrid similar-talent seeding (user + AI suggestions), and a background AI research pass that populates similar-talent records. The per-talent sender-domain section was removed: outreach now uses the agency's pre-warmed mailbox from Phase 0.
 - `docs/brand_discovery.md` — draft spec for the long-list generator. **16 independent searches** runnable today (re-engagement, network expansion, affinity expansion, geo, life-stage, constraint-aware, graph, recently-funded via web search, **trending/rising brands via the [`last30days` skill](https://github.com/mvanhorn/last30days-skill) — multi-source social momentum signal across Reddit/X/TikTok/YouTube/HN/etc., run as a monthly cron**) merged with multi-source scoring. Monthly cron drives re-engagement with per-brand cool-downs. Future-versions section lists 12 more searches that need external data (Crunchbase API as a structured upgrade to Search 15, live `#ad` scraping, affiliate networks, creator marketplaces, EMV reports, etc.). Both structural enrichments (`brand_industry_map` metadata + `brand_competitors` graph) are now shipped and used by Searches 3, 4, 10, 14.
 - `docs/vendor_roadmap.md` — single source of truth for external-service decisions. Confirms **Exa** as the v0.1 web-search provider (Search 15). Catalogues deferred vendors with criteria for when to add each: ScrapeCreators (Search 16 visual platforms), Owler (competitor maintenance), Modash/HypeAuditor (brand DB bulk import), Exploding Topics (pre-trend detection), Product Hunt API (day-of launches), Tribe Dynamics EMV (top-spending brands per category), SimilarWeb (audience-overlap competitors), Crunchbase (structured funding data), Apollo (Phase 3 outreach contact discovery), plus alternatives for each. Includes the env-var inventory for all current + deferred services.
@@ -1017,3 +1048,72 @@ All gitignored. Naming includes seq + version so both visible in filename.
 **Per-deal LLM:** one schedule parse on contract execution (~$0.02) + per-invoice generation.
 **Platform APIs (v0.1):** Meta Graph free; TikTok Display free.
 **Phyllo (v2):** ~$50-200/creator/month for unified API across YouTube/LinkedIn/X/podcast/Substack.
+
+---
+
+## Phase 4.9 — Performance Report
+
+### Output
+A versioned post-campaign report per deal at `data/deals/{deal_id}/performance_report_packs/v{N}.json` (gitignored). Aggregates per-post KPIs captured during the `performance_window` + benchmark comparisons + LLM-drafted narrative analysis. Validated against `schemas/performance_report_pack.schema.json`. **This is the artefact that unblocks auto-archive** — without a sent performance report, `deal.close.final_performance_report_attachment_id` + `final_kpis` stay empty and the deal can never archive into Phase 1.5.
+
+### Trigger + locked-in decisions
+- **Auto-fires on:** `performance_capture_window_ends_at < now` reached. Cron generates v1; agent notified in morning summary.
+- **Manual trigger:** agent can fire before window end if brand is eager.
+- **Soft gate:** agent reviews + can edit any KPI value (with reason captured) or narrative section; sending IS approval.
+- **Three benchmark sets:** vs_industry (from `data/industry_kpi_benchmarks.json`, v2), vs_talent_historical (averaged across comparable past brand_deals for same talent), vs_brand_stated_targets (extracted from `discovery_debrief.objectives_heard[]` if numeric targets stated).
+- **On send, auto-populates `deal.close`:** `final_performance_report_attachment_id` (= report.pdf path) + `final_kpis` (= verbatim copy of this pack's `kpis{}` block). These are 2 of the 3 conditions for auto-archive (third = `all_invoices_paid_at`).
+
+### Upstream KPI capture (continuous during window)
+A separate daily cron polls platform Insights APIs throughout the performance_window:
+- **Instagram** → Meta Graph `/{ig-media-id}/insights`
+- **TikTok** → TikTok Display API metrics
+- **YouTube** → YouTube Analytics API
+- **Other (v0.1)** → manual entry or brand reported
+- Each snapshot writes to `deal.delivery.interim_kpi_snapshots[]` with per-post KPIs + captured_at + capture_method. Bounded growth: ~1/day/post × 30d window.
+
+### 5-stage generation pipeline
+```
+Trigger fires (cron on window end, or agent manual)
+  │
+  ▼ A. Aggregate per-post snapshots → final kpis{} (sum/weighted-avg)
+  ▼ B. Benchmark comparisons (3 sets) — compute delta_pct + performance_label
+  ▼ C. Narrative drafting (3-4 Sonnet passes: executive_summary, what_worked,
+       learnings, optional audience_resonance) — bounded creativity with
+       declared context sources per section
+  ▼ D. Compose markdown (title → exec summary → KPI tables → benchmark callouts
+       → narrative → per-post breakdown → appendix)
+  ▼ E. Render PDF (Puppeteer/pandoc) + markdown source-of-truth
+  ▼ Agent reviews; edits regenerate; clicks Send →
+       deal.close.final_performance_report_attachment_id ← report.pdf
+       deal.close.final_kpis ← this pack's kpis{} (verbatim)
+       deal.close.performance_report_pack_ids[] append; latest pointer set
+       If deal.close.all_invoices_paid_at also set → auto-archive fires
+```
+
+### Schema architecture
+- `kpis{}` — aggregate metrics in `brand_deal.kpiMetric` shape (carries verbatim into `brand_deal.kpis` on auto-archive).
+- `per_post_kpis[]` — per-deliverable breakdown (post_url + platform + posted_at + captured_at + capture_method + kpis).
+- `benchmark_comparisons` — three sub-objects (vs_industry / vs_talent_historical / vs_brand_stated_targets); each maps KPI name → `{this_campaign_value, benchmark_value, delta_pct, performance_label, benchmark_source}`.
+- `narrative_sections[]` — LLM-drafted with declared sources + word count + agent_edited tracking. Default placeholders: executive_summary, what_worked, learnings, optional audience_resonance.
+- `context_snapshot` — frozen copy of contract_pack_id + proposal_pack_id + deal_proposal + discovery_debrief + comparable brand_deals at generation time. Window evolution doesn't retroactively rewrite reports.
+- `agent_review.sent_at` — the soft-gate trigger that auto-populates deal.close fields.
+
+### Integration
+- **`deal.delivery.interim_kpi_snapshots[]`** — daily KPI cron's write target; report's primary input.
+- **`deal.delivery.performance_capture_window_*`** — window timing.
+- **`deal.lead.discovery_debrief.objectives_heard[]`** — source for vs_brand_stated_targets benchmark.
+- **`brand_deals/{talent_id}.json` past records** — source for vs_talent_historical benchmark.
+- **`talent.platforms[].api_credentials`** — KPI cron uses same oAuth tokens as Phase 4.8 detection.
+- **`deal.close.final_kpis` + `final_performance_report_attachment_id`** — write targets on agent send.
+- **Phase 4.8 invoice pipeline** — sibling DELIVERY → CLOSE path. Both must complete (all invoices paid + report sent) for auto-archive.
+
+### Storage
+```
+data/deals/{deal_id}/
+  performance_report_packs/
+    v1.json + v1_artifacts/{report.md, report.pdf, report.html}
+    v2.json + v2_artifacts/...  # kpi_refresh regens
+```
+
+### Cost profile
+Per-pack: 3-4 Sonnet narrative passes. ~15-25k input tokens + ~6-10k output tokens. Estimated **$0.10-0.25 per generation**. Cheaper than proposal/contract (less context; bounded narratives). Platform API costs same as Phase 4.8 detection (marginal additional).

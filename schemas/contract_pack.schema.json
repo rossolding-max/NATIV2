@@ -46,6 +46,11 @@
           "items": { "type": "string" },
           "description": "For section/per-clause regen: which sections were rebuilt. e.g. ['merge_field_values', 'conditional_clause_decisions.gdpr', 'narrative_sections.scope_of_work']."
         },
+        "amendment_log_entry_ref": {
+          "type": "string",
+          "format": "date-time",
+          "description": "If trigger=amendment_request: ISO-timestamp matching the `deal.contract.amendment_log[].at` entry this version documents. Closes the bidirectional link with `amendment_log[].contract_pack_version` (parallel to negotiation_log_entry_ref on proposal_pack)."
+        },
         "generated_at": { "type": "string", "format": "date-time" },
         "generated_by_agent_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
         "llm_model": { "type": "string" },

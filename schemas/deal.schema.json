@@ -32,7 +32,12 @@
     "originating_enrollment_id": {
       "type": "string",
       "pattern": "^enr_[a-z0-9]+$",
-      "description": "FK to `data/pitch_enrollments/{enrollment_id}.json` — which Phase 3b outreach pitch produced the `interested` reply that created this deal. Closes the outreach→deal analytics loop."
+      "description": "FK to `data/pitch_enrollments/{enrollment_id}.json` — which Phase 3b outreach pitch produced the `interested` reply that created this deal. Closes the outreach→deal analytics loop (bidirectional with `pitch_enrollment.created_deal_id`)."
+    },
+    "originating_decision_role_at_pitch": {
+      "type": "string",
+      "enum": ["buyer", "influencer", "gatekeeper", "champion", "unknown"],
+      "description": "Snapshot of `brand_contact.decision_role` at the time the originating pitch went out. Captured here on deal creation (vs reading from contact record live) because the contact's role may evolve (promotions, role changes) and we want to anchor 'won-deal-by-decision-role' analytics to the role at pitch time. Powers cross-cuts like 'we win more deals when champion is the originating contact'."
     },
     "assigned_agent_id": {
       "type": "string",
@@ -416,7 +421,7 @@
         },
         "amendment_log": {
           "type": "array",
-          "description": "Post-execution amendments (scope changes, extensions). Each is itself a mini-contract event.",
+          "description": "Post-execution amendments (scope changes, extensions). Each entry is bidirectionally linked to a Phase 4.7 contract pack version generated with `trigger: amendment_request`: `contract_pack_version` here captures which version documented the amendment; the responding contract pack's `generation` block captures the amendment event timestamp. Closes the audit loop between amendment events and contract artefacts (parallel to `proposal.negotiation_log[].proposal_pack_version`).",
           "items": {
             "type": "object",
             "required": ["at", "summary"],
@@ -424,7 +429,12 @@
             "properties": {
               "at": { "type": "string", "format": "date-time" },
               "summary": { "type": "string" },
-              "attachment_id": { "type": "string" }
+              "attachment_id": { "type": "string" },
+              "contract_pack_version": {
+                "type": "integer",
+                "minimum": 1,
+                "description": "Version number of the contract_pack generated with `trigger: amendment_request` to document this amendment. Forms the bidirectional link with `contract_pack.generation.amendment_log_entry_ref`."
+              }
             }
           }
         }
@@ -506,12 +516,38 @@
         "performance_capture_window_starts_at": {
           "type": "string",
           "format": "date-time",
-          "description": "Typically the day the first piece of content goes live. KPI capture cron starts pulling platform insights from this point."
+          "description": "Typically the day the first piece of content goes live. KPI capture cron starts pulling platform insights from this point. Set automatically when first posting_schedule[].posted_at confirms."
         },
         "performance_capture_window_ends_at": {
           "type": "string",
           "format": "date-time",
-          "description": "Typically 30 days after last post — KPIs continue to grow during this window. After this, final KPI snapshot taken."
+          "description": "Typically 30 days after last post — KPIs continue to grow during this window. Reaching this timestamp triggers Phase 4.9 performance_report_pack auto-generation. Configurable per agency (default 30d)."
+        },
+        "campaign_hashtags": {
+          "type": "array",
+          "description": "Campaign-specific hashtags the talent should use in posts (e.g. ['#AloYogaPartner', '#ad']). Captured during proposal_pack generation (LLM extracts from brand brief / discovery_debrief) or contract_pack generation (legal clauses often specify required disclosure hashtags). Used by Phase 4.8 detection cron as a +20pt match signal when scoring candidate posts. Empty array = no hashtag-based matching available (rely on time + brand_handle + content_type signals only).",
+          "items": { "type": "string", "pattern": "^#" }
+        },
+        "interim_kpi_snapshots": {
+          "type": "array",
+          "description": "Daily snapshots of per-post KPIs captured during the performance_window by the Phase 4.9 KPI cron (`docs/performance_report_workflow.md`). Each entry = one post × one capture timestamp. Most recent snapshot per post is the source-of-truth for that post's current KPIs; the performance_report_pack aggregates across all snapshots into the final report. Bounded growth: 1 snapshot per post per day for ~30 days = ~30 entries per deliverable per deal.",
+          "items": {
+            "type": "object",
+            "required": ["captured_at", "post_url", "deliverable_ref", "platform", "kpis"],
+            "additionalProperties": false,
+            "properties": {
+              "captured_at": { "type": "string", "format": "date-time" },
+              "post_url": { "type": "string", "format": "uri" },
+              "deliverable_ref": { "type": "string" },
+              "platform": { "type": "string", "enum": ["instagram", "tiktok", "youtube", "twitter_x", "linkedin", "pinterest", "twitch", "snapchat", "facebook", "substack", "podcast", "other"] },
+              "capture_method": { "type": "string", "enum": ["meta_graph_insights", "tiktok_display_metrics", "youtube_analytics", "linkedin_analytics", "twitter_analytics", "phyllo", "manual_entry", "brand_reported"] },
+              "kpis": {
+                "type": "object",
+                "description": "Per-post KPIs at this capture timestamp. Same kpiMetric shape as brand_deal.kpis and performance_report_pack.kpis — { value, source, source_name?, as_of, verified_at? } per metric.",
+                "additionalProperties": true
+              }
+            }
+          }
         }
       }
     },
@@ -555,15 +591,25 @@
         "all_invoices_paid_at": {
           "type": "string",
           "format": "date-time",
-          "description": "Computed: max of payment_received_at across all invoice_packs once every schedule entry has been fulfilled + paid. Required before auto-archive can fire."
+          "description": "Computed: max of payment_received_at across all invoice_packs once every schedule entry has been fulfilled + paid. One of three required conditions for auto-archive (others: final_performance_report_attachment_id + final_kpis)."
+        },
+        "performance_report_pack_ids": {
+          "type": "array",
+          "description": "FK list to all Phase 4.9 performance report pack versions generated for this deal. Each version is a file at `data/deals/{deal_id}/performance_report_packs/v{N}.json`. Append-only — v1, v2 (regenerated with kpi_refresh), etc.",
+          "items": { "type": "string", "pattern": "^perf_[a-z0-9_-]+_v[0-9]+$" }
+        },
+        "latest_performance_report_pack_id": {
+          "type": "string",
+          "pattern": "^perf_[a-z0-9_-]+_v[0-9]+$",
+          "description": "Pointer to the current `is_latest: true` performance report pack version."
         },
         "final_performance_report_attachment_id": {
           "type": "string",
-          "description": "FK to attachments[] for the post-campaign performance report sent to brand."
+          "description": "FK to attachments[] for the post-campaign performance report sent to brand. AUTO-POPULATED on `performance_report_pack.agent_review.sent_at` — set to the report.pdf path of the latest performance_report_pack version. One of three required conditions for auto-archive."
         },
         "final_kpis": {
           "type": "object",
-          "description": "Final KPI snapshot at archive time. Shape mirrors `brand_deal.kpis` from the Phase 1.5 schema — when auto-archived, these fields carry directly into the brand_deal record. Each metric has {value, source, as_of, verified_at} per the honesty-floor policy.",
+          "description": "Final KPI snapshot at archive time. Shape mirrors `brand_deal.kpis` from the Phase 1.5 schema — when auto-archived, these fields carry directly into the brand_deal record. Each metric has {value, source, as_of, verified_at} per the honesty-floor policy. AUTO-POPULATED on `performance_report_pack.agent_review.sent_at` — copied verbatim from the latest report pack's `kpis` block. One of three required conditions for auto-archive.",
           "additionalProperties": true
         },
         "archived_to_brand_deal_id": {

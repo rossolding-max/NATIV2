@@ -30,6 +30,12 @@
     },
     "killed_at": { "type": ["string", "null"], "format": "date-time" },
 
+    "created_deal_id": {
+      "type": "string",
+      "pattern": "^deal_pipeline_[a-z0-9_-]+$",
+      "description": "FK to the Phase 4 deal (`data/deals/{deal_id}.json`) that this enrollment spawned via an `interested` reply classification. Populated by the orchestrator when the deal is created from this enrollment. Forms the bidirectional link with `deal.originating_enrollment_id` — anyone reviewing this enrollment can navigate forward to the resulting deal; anyone reviewing the deal can navigate back to the originating pitch. Absent if outcome was not `interested` (declined / unrelated / unresponsive enrollments never spawn deals)."
+    },
+
     "smartlead_meta": {
       "type": "object",
       "description": "Cross-references to the Smartlead campaign + lead that backs this enrollment.",

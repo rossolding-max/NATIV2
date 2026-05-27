@@ -1,0 +1,287 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://nativ2/schemas/performance_report_pack.schema.json",
+  "title": "Performance Report Pack",
+  "description": "Phase 4.9 — the post-campaign performance report generated when the deal's `performance_capture_window_ends_at` is reached. Aggregates KPIs captured during the performance window (from `deal.delivery.interim_kpi_snapshots[]`) into a final snapshot + benchmark comparisons + LLM-drafted narrative analysis. Soft agent gate; sending IS approval. On send, `deal.close.final_performance_report_attachment_id` + `deal.close.final_kpis` are auto-populated — both required for the deal's auto-archive into Phase 1.5 brand_deals. Stored at `data/deals/{deal_id}/performance_report_packs/v{N}.json` (gitignored). See `docs/performance_report_workflow.md`.",
+  "type": "object",
+  "required": ["performance_report_pack_id", "deal_id", "version", "is_latest", "generation", "context_snapshot", "kpis", "created_at"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+
+    "performance_report_pack_id": {
+      "type": "string",
+      "pattern": "^perf_[a-z0-9_-]+_v[0-9]+$",
+      "description": "Globally unique. Format: `perf_{deal_id_short}_v{N}`. The `perf_` prefix distinguishes from prep / proposal / contract / invoice packs."
+    },
+    "deal_id": {
+      "type": "string",
+      "pattern": "^deal_pipeline_[a-z0-9_-]+$"
+    },
+    "version": { "type": "integer", "minimum": 1 },
+    "parent_version": { "type": "integer", "minimum": 1 },
+    "is_latest": { "type": "boolean" },
+
+    "generation": {
+      "type": "object",
+      "required": ["trigger", "generated_at"],
+      "additionalProperties": false,
+      "properties": {
+        "trigger": {
+          "type": "string",
+          "enum": ["auto_on_performance_window_end", "agent_initiated", "agent_full_regenerate", "agent_section_regenerate", "kpi_refresh"],
+          "description": "auto_on_performance_window_end: cron fired generation when `performance_capture_window_ends_at` reached. agent_initiated: agent fired before window end (rare). agent_*regenerate: NL feedback regen. kpi_refresh: cron re-fired because new KPI data arrived after initial generation (e.g. platform API late-reporting)."
+        },
+        "pre_generation_guidance": { "type": "string", "description": "Free-text guidance from agent before generation." },
+        "regeneration_feedback": { "type": "string", "description": "NL feedback on parent version." },
+        "target_sections": { "type": "array", "items": { "type": "string" } },
+        "fired_at": { "type": "string", "format": "date-time" },
+        "generated_at": { "type": "string", "format": "date-time" },
+        "generated_by_agent_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$", "description": "Null if cron-triggered (auto_on_performance_window_end / kpi_refresh)." },
+        "llm_model": { "type": "string" },
+        "llm_passes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["pass_name", "input_tokens", "output_tokens"],
+            "additionalProperties": false,
+            "properties": {
+              "pass_name": { "type": "string", "enum": ["kpi_aggregation", "benchmark_comparison", "narrative_executive_summary", "narrative_what_worked", "narrative_learnings", "compose", "section_regen"] },
+              "model": { "type": "string" },
+              "input_tokens": { "type": "integer", "minimum": 0 },
+              "output_tokens": { "type": "integer", "minimum": 0 },
+              "cached_tokens": { "type": "integer", "minimum": 0 },
+              "cost_usd": { "type": "number", "minimum": 0 },
+              "duration_ms": { "type": "integer", "minimum": 0 }
+            }
+          }
+        }
+      }
+    },
+
+    "context_snapshot": {
+      "type": "object",
+      "required": ["captured_at"],
+      "additionalProperties": false,
+      "properties": {
+        "captured_at": { "type": "string", "format": "date-time" },
+        "contract_pack_id_at_gen": {
+          "type": "string",
+          "pattern": "^cp_[a-z0-9_-]+_v[0-9]+$",
+          "description": "Which executed contract this report measures performance against."
+        },
+        "proposal_pack_id_at_gen": {
+          "type": "string",
+          "pattern": "^pp_[a-z0-9_-]+_v[0-9]+$",
+          "description": "Which proposal pack defined the brand's stated objectives (for `vs_brand_stated_targets` benchmark)."
+        },
+        "deal_proposal_snapshot": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Frozen copy of relevant `deal.proposal.*` fields (fee_usd, deliverables[], usage_rights_granted, exclusivity) for performance vs. spend analysis."
+        },
+        "discovery_debrief_snapshot": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Frozen copy of `deal.lead.discovery_debrief.objectives_heard[]` so the report can measure against what the brand actually said they wanted."
+        },
+        "performance_capture_window_starts_at": { "type": "string", "format": "date-time" },
+        "performance_capture_window_ends_at": { "type": "string", "format": "date-time" },
+        "comparable_brand_deals_for_benchmark": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^deal_[a-z0-9_-]+$" },
+          "description": "FK list to past `brand_deals` records used for `vs_talent_historical` benchmark (same talent's prior similar deals)."
+        },
+        "platform_apis_used": {
+          "type": "array",
+          "items": { "type": "string", "enum": ["meta_graph", "tiktok_display", "youtube_data", "linkedin_marketing", "twitter_api", "phyllo", "manual_entry"] },
+          "description": "Which platform APIs the KPI capture cron pulled from. Manual entry recorded when API was unavailable or talent's account wasn't connected."
+        }
+      }
+    },
+
+    "kpis": {
+      "type": "object",
+      "description": "Aggregate final KPIs across all deliverables. Each metric carries source provenance per honesty-floor. Shape mirrors `brand_deal.kpis` from Phase 1.5 — on agent send, these values copy verbatim into `deal.close.final_kpis` (which then carries into brand_deal.kpis on auto-archive).",
+      "additionalProperties": false,
+      "properties": {
+        "reach": { "$ref": "#/$defs/kpiMetric" },
+        "impressions": { "$ref": "#/$defs/kpiMetric" },
+        "engagement_total": { "$ref": "#/$defs/kpiMetric" },
+        "engagement_rate_pct": { "$ref": "#/$defs/kpiMetric" },
+        "video_views": { "$ref": "#/$defs/kpiMetric" },
+        "video_completion_rate_pct": { "$ref": "#/$defs/kpiMetric" },
+        "avg_watch_time_seconds": { "$ref": "#/$defs/kpiMetric" },
+        "likes": { "$ref": "#/$defs/kpiMetric" },
+        "comments": { "$ref": "#/$defs/kpiMetric" },
+        "shares": { "$ref": "#/$defs/kpiMetric" },
+        "saves": { "$ref": "#/$defs/kpiMetric" },
+        "link_clicks": { "$ref": "#/$defs/kpiMetric" },
+        "ctr_pct": { "$ref": "#/$defs/kpiMetric" },
+        "conversions": { "$ref": "#/$defs/kpiMetric" },
+        "sales_attributed_usd": { "$ref": "#/$defs/kpiMetric" },
+        "new_followers_for_brand": { "$ref": "#/$defs/kpiMetric" },
+        "promo_code_redemptions": { "$ref": "#/$defs/kpiMetric" },
+        "cpm_usd": { "$ref": "#/$defs/kpiMetric" },
+        "cpe_usd": { "$ref": "#/$defs/kpiMetric" },
+        "cpv_usd": { "$ref": "#/$defs/kpiMetric" },
+        "emv_usd": { "$ref": "#/$defs/kpiMetric" }
+      }
+    },
+
+    "per_post_kpis": {
+      "type": "array",
+      "description": "Per-deliverable KPI breakdown. Each post in the campaign gets its own row with platform-Insights-fetched metrics + capture timestamp. Aggregate sums into the top-level `kpis` block.",
+      "items": {
+        "type": "object",
+        "required": ["post_url", "deliverable_ref", "platform", "kpis"],
+        "additionalProperties": false,
+        "properties": {
+          "post_url": { "type": "string", "format": "uri" },
+          "deliverable_ref": { "type": "string", "description": "Matches the deliverable_ref in `deal.delivery.posting_schedule[]`." },
+          "platform": { "type": "string", "enum": ["instagram", "tiktok", "youtube", "twitter_x", "linkedin", "pinterest", "twitch", "snapchat", "facebook", "substack", "podcast", "other"] },
+          "posted_at": { "type": "string", "format": "date-time" },
+          "captured_at": { "type": "string", "format": "date-time", "description": "When this post's KPIs were last refreshed from the platform API." },
+          "capture_method": { "type": "string", "enum": ["meta_graph_insights", "tiktok_display_metrics", "youtube_analytics", "linkedin_analytics", "twitter_analytics", "phyllo", "manual_entry", "brand_reported"] },
+          "kpis": {
+            "type": "object",
+            "description": "Per-post KPIs. Same kpiMetric shape as the aggregate block.",
+            "additionalProperties": { "$ref": "#/$defs/kpiMetric" }
+          }
+        }
+      }
+    },
+
+    "benchmark_comparisons": {
+      "type": "object",
+      "description": "Per-KPI comparison against three benchmark sets. Computed at generation time. Each entry is human-readable for direct rendering into the report.",
+      "additionalProperties": false,
+      "properties": {
+        "vs_industry": {
+          "type": "object",
+          "description": "Per-KPI comparison against industry benchmarks (from `data/industry_kpi_benchmarks.json` — v2 data file). Map keys = KPI names (matching `kpis.*`); values = comparison record.",
+          "additionalProperties": { "$ref": "#/$defs/benchmarkComparison" }
+        },
+        "vs_talent_historical": {
+          "type": "object",
+          "description": "Per-KPI comparison against the talent's average across `comparable_brand_deals_for_benchmark[]`. Same shape as vs_industry.",
+          "additionalProperties": { "$ref": "#/$defs/benchmarkComparison" }
+        },
+        "vs_brand_stated_targets": {
+          "type": "object",
+          "description": "Per-KPI comparison against brand's stated targets (extracted from `discovery_debrief.objectives_heard[]` or proposal's commercial rationale). Often empty if brand didn't specify numeric targets.",
+          "additionalProperties": { "$ref": "#/$defs/benchmarkComparison" }
+        }
+      }
+    },
+
+    "narrative_sections": {
+      "type": "array",
+      "description": "LLM-drafted prose. Default sections: executive_summary (3-line top-line outcome) + what_worked (which deliverables outperformed + why) + learnings (recommendations for future campaigns). Each section cites context paths it drew from.",
+      "items": {
+        "type": "object",
+        "required": ["placeholder", "content"],
+        "additionalProperties": false,
+        "properties": {
+          "placeholder": { "type": "string", "enum": ["executive_summary", "what_worked", "learnings", "audience_resonance", "creative_observations", "custom"] },
+          "content": { "type": "string" },
+          "sources": { "type": "array", "items": { "type": "string" }, "description": "Context paths drawn from (e.g. 'kpis.reach', 'per_post_kpis[0].kpis.engagement_rate_pct')." },
+          "word_count": { "type": "integer", "minimum": 0 },
+          "agent_edited": { "type": "boolean", "default": false },
+          "agent_edited_at": { "type": "string", "format": "date-time" }
+        }
+      }
+    },
+
+    "composed_markdown": {
+      "type": "string",
+      "description": "Final assembled report markdown (executive summary + KPI tables + benchmark callouts + narrative sections + per-post breakdown). Source-of-truth for the PDF render."
+    },
+
+    "agent_review": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Soft gate. Agent reviews rendered PDF before sending. Sending sets sent_at and triggers the downstream writes (final_performance_report_attachment_id + final_kpis on deal.close). All fields optional — absence of sent_at means the report is in draft.",
+      "properties": {
+        "viewed_at": { "type": "string", "format": "date-time" },
+        "sent_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When agent sent report to brand. Setting this auto-populates `deal.close.final_performance_report_attachment_id` (= report.pdf path) AND copies this pack's `kpis` into `deal.close.final_kpis`. If `deal.close.all_invoices_paid_at` is also set, auto-archive fires."
+        },
+        "sent_by_agent_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+        "send_method": { "type": "string", "enum": ["manual_email", "shared_link", "stripe_dashboard", "other"], "default": "manual_email" },
+        "sent_to_email": { "type": "string", "format": "email" }
+      }
+    },
+
+    "export_artifacts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["type", "status"],
+        "additionalProperties": false,
+        "properties": {
+          "type": { "type": "string", "enum": ["report_md", "report_pdf", "report_html"] },
+          "status": { "type": "string", "enum": ["rendered", "pending", "failed"] },
+          "path": { "type": "string" },
+          "size_bytes": { "type": "integer", "minimum": 0 },
+          "rendered_at": { "type": "string", "format": "date-time" },
+          "rendered_by": { "type": "string", "enum": ["markdown_writer", "puppeteer_pdf", "pandoc", "jinja2_html"] },
+          "error": { "type": "string" }
+        }
+      }
+    },
+
+    "agent_edits": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["edit_id", "edited_at", "edit_type", "target"],
+        "additionalProperties": false,
+        "properties": {
+          "edit_id": { "type": "string", "pattern": "^edit_[a-z0-9]+$" },
+          "edited_at": { "type": "string", "format": "date-time" },
+          "edited_by_agent_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+          "edit_type": { "type": "string", "enum": ["kpi_override", "narrative_edit", "benchmark_override", "composed_markdown_edit"] },
+          "target": { "type": "string" },
+          "before_excerpt": { "type": "string" },
+          "after_excerpt": { "type": "string" }
+        }
+      }
+    },
+
+    "created_at": { "type": "string", "format": "date-time" },
+    "updated_at": { "type": "string", "format": "date-time" }
+  },
+
+  "$defs": {
+
+    "kpiMetric": {
+      "type": "object",
+      "required": ["value", "source"],
+      "additionalProperties": false,
+      "description": "Same shape as `brand_deal.kpiMetric`. On agent send of this report, these values write verbatim into `deal.close.final_kpis` and ultimately into `brand_deal.kpis` on auto-archive.",
+      "properties": {
+        "value": { "type": "number", "minimum": 0 },
+        "source": { "type": "string", "enum": ["platform_verified", "brand_reported", "third_party", "calculated", "self_reported", "estimated"] },
+        "source_name": { "type": "string" },
+        "as_of": { "type": "string", "format": "date" },
+        "verified_at": { "type": "string", "format": "date-time" }
+      }
+    },
+
+    "benchmarkComparison": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "One KPI's comparison against one benchmark set.",
+      "properties": {
+        "this_campaign_value": { "type": "number" },
+        "benchmark_value": { "type": "number" },
+        "delta_pct": { "type": "number", "description": "Percentage delta (e.g. +29.4 = 29.4% above benchmark)." },
+        "performance_label": { "type": "string", "description": "Human-readable summary, e.g. '2.3x category average', '+29% vs talent's historical', '94% of target'. Rendered directly into the report." },
+        "benchmark_source": { "type": "string", "description": "What the benchmark was. For vs_industry: source data file. For vs_talent_historical: list of deal_ids averaged. For vs_brand_stated_targets: where in the debrief the target was stated." }
+      }
+    }
+  }
+}

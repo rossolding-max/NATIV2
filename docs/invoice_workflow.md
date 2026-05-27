@@ -77,8 +77,8 @@ Cron triggers (15 min for stories / 1 hour for others)
 | Signal | Detection logic |
 |---|---|
 | `time_window` | `abs(post.posted_at - scheduled_for) ≤ 48h` |
-| `brand_handle` | Brand's @ handle (from `brand_candidate.social_handles`) appears in post caption, tagged users, or location |
-| `campaign_hashtag` | Per-deal hashtag (captured at contract or first-detection time) appears in caption |
+| `brand_handle` | Brand's @ handle (from `brand_industry_map.brands[].social_handles.{platform}`) appears in post caption, tagged users, or location. Refreshed weekly via Exa as part of Phase 2 brand discovery; `social_handles.last_handle_change_at` flags rebrands. |
+| `campaign_hashtag` | Per-deal hashtag (from `deal.delivery.campaign_hashtags[]`). Captured during proposal_pack generation (LLM extracts from brand brief / discovery_debrief) or contract_pack generation (legal clauses often spec required disclosure hashtags); agent confirms. Empty array = no hashtag-based matching (degrades to time + brand_handle + content_type signals only). |
 | `content_type` | Post format (reel/post/story/video) matches `deal.proposal.deliverables[].format` |
 
 ### Detection failure modes
@@ -89,7 +89,7 @@ Cron triggers (15 min for stories / 1 hour for others)
 | Talent posts to story; story expires before next poll | 15 min poll cadence catches most; missed stories require agent manual URL entry. Phyllo (v2) supports IG Stories webhook for real-time detection. |
 | Multiple posts in the same time window match equally | All surfaced as candidates; agent picks the right one |
 | Talent deletes + reposts | New posted_at supersedes old; old `posted_detection` archived to `candidate_post_ids_considered` |
-| Brand handle changes mid-campaign | Brand handle refresh runs on `brand_candidate.social_handles` weekly; cron uses latest value |
+| Brand handle changes mid-campaign | Weekly refresh on `brand_industry_map.brands[].social_handles` flags rebrand via `last_handle_change_at`; cron uses latest value (may miss matches in the days between change and refresh — manual URL entry fallback). |
 | Talent's API token expires | Surface to agent + talent: "Reconnect [platform] to enable detection." Detection falls back to manual URL entry. |
 | Deliverable scheduled but talent never posts (deal slipping) | After `scheduled_for + 14 days` with no posted_at, surface to agent: "Deliverable not detected — was it posted? Mark as delivered, push schedule, or escalate to talent." No auto-invoice fires. |
 

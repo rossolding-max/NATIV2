@@ -343,7 +343,7 @@ When `email_replied` fires:
 2. Update `enrollment.steps[N].outcome_classification`.
 
 3. **Kill logic:**
-   - `interested` → kill this enrollment; **create a Phase 4 deal in `stage: "lead"`** (per `docs/deal_lifecycle_workflow.md`) with `originating_enrollment_id` set; UI surfaces as hot lead; agent gets notified. If `extracted_signals.asked_for_meeting == true`, the deal pre-seeds at `substage: "initial_call_scheduled"` instead of `new_lead`.
+   - `interested` → kill this enrollment; **create a Phase 4 deal in `stage: "lead"`** (per `docs/deal_lifecycle_workflow.md`) with `originating_enrollment_id` + `originating_decision_role_at_pitch` (snapshot from contact at pitch time, anchors won-deal-by-role analytics) set; UI surfaces as hot lead; agent gets notified. If `extracted_signals.asked_for_meeting == true`, the deal pre-seeds at `substage: "initial_call_scheduled"` instead of `new_lead`. **Bidirectional link:** the orchestrator also writes the new deal's id back to `pitch_enrollment.created_deal_id` so anyone reviewing the enrollment can navigate forward to the resulting deal.
    - `declined` → kill this enrollment; consider `do_not_contact: true` (manual or auto based on tone)
    - `out_of_office` → pause enrollment until `ooo_until + 1 day`, then auto-resume
    - `unrelated` → kill this enrollment only (don't penalize contact)
