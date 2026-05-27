@@ -191,12 +191,28 @@ async def test_e2e__phase_1_happy_path__ends_in_active_status(m5_app: AsyncClien
     # via the questionnaire/patch endpoint with the activation guard's
     # minimum: a platform with scope_validated_at + billing legal_name
     # (already set) + previous_brands with industry_id.
+    from sqlalchemy import text
+
     from app.db import session as db_session
     from app.repositories.talent import TalentRepository
     from app.services.talent_onboarding import TalentOnboardingService
 
+    # Read whatever agency_id the API request stamped on this talent —
+    # the integration test suite shares a session-scoped Postgres, so
+    # prior M4 tests may have seeded ``agency_profile`` with a row that
+    # the FastAPI lifespan picks up as the singleton ``app.state.agency_id``.
     async with db_session.async_session_factory() as session:
-        repo = TalentRepository(session, agency_id=None)
+        row = (
+            await session.execute(
+                text("SELECT agency_id FROM talent WHERE talent_id = :tid"),
+                {"tid": talent_id},
+            )
+        ).first()
+    assert row is not None, f"talent {talent_id!r} not found in DB after create"
+    bound_agency_id = row[0]
+
+    async with db_session.async_session_factory() as session:
+        repo = TalentRepository(session, agency_id=bound_agency_id)
         await repo.patch_data(
             talent_id,
             {
