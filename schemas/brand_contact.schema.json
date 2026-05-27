@@ -2,12 +2,24 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://nativ2/schemas/brand_contact.schema.json",
   "title": "Brand Contact File",
-  "description": "Per-brand contact records. One file per brand under `data/brand_contacts/{brand_id}.json`. The folder is gitignored — contacts contain PII (names, emails, phone numbers) and Apollo data is licensed. Schema in repo; data is generated. See `docs/contact_enrichment_workflow.md`.",
+  "description": "Per-brand contact records. One file per brand under `data/brand_contacts/{brand_id}.json`. The folder is gitignored \u2014 contacts contain PII (names, emails, phone numbers) and Apollo data is licensed. Schema in repo; data is generated. See `docs/contact_enrichment_workflow.md`.",
   "type": "object",
-  "required": ["brand_id", "version", "last_enriched_at", "contacts"],
+  "required": [
+    "brand_id",
+    "version",
+    "last_enriched_at",
+    "contacts"
+  ],
   "additionalProperties": false,
   "properties": {
-    "$schema": { "type": "string" },
+    "$schema": {
+      "type": "string"
+    },
+    "agency_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Multi-tenant scope: FK to agency_profile.agency_id. Optional in v0.1 (single-tenant deploys may omit); required in v2 SaaS. When present, all cross-record queries MUST filter by agency_id to prevent cross-tenant data leakage. See docs/data_lineage.md GAP-01/02 for rationale."
+    },
     "brand_id": {
       "type": "string",
       "pattern": "^[a-z0-9][a-z0-9-]*$",
@@ -33,46 +45,64 @@
     "contacts": {
       "type": "array",
       "description": "All known contacts at this brand. Includes placeholder entries (`is_placeholder: true`) for roles whose identity isn't yet known.",
-      "items": { "$ref": "#/$defs/contact" }
+      "items": {
+        "$ref": "#/$defs/contact"
+      }
     },
-    "enrichment_meta": { "$ref": "#/$defs/enrichmentMeta" }
+    "enrichment_meta": {
+      "$ref": "#/$defs/enrichmentMeta"
+    }
   },
-
   "$defs": {
-
     "contact": {
       "type": "object",
-      "description": "One contact at one brand. Workflow-state fields (`pitch_history`, `tags`, `notes`, `do_not_contact`, `opt_out_at`) are PRESERVED across enrichment runs — the orchestrator must not overwrite them when refreshing the discovery-output fields.",
+      "description": "One contact at one brand. Workflow-state fields (`pitch_history`, `tags`, `notes`, `do_not_contact`, `opt_out_at`) are PRESERVED across enrichment runs \u2014 the orchestrator must not overwrite them when refreshing the discovery-output fields.",
       "required": [
-        "contact_id", "brand_id", "name", "is_placeholder",
-        "decision_role", "first_discovered_at", "last_verified_at"
+        "contact_id",
+        "brand_id",
+        "name",
+        "is_placeholder",
+        "decision_role",
+        "first_discovered_at",
+        "last_verified_at"
       ],
       "additionalProperties": false,
       "properties": {
-
         "contact_id": {
           "type": "string",
           "pattern": "^[a-z0-9][a-z0-9-]*$",
           "description": "Stable slug derived from brand_id + name + role. Format suggestion: `{brand_id}-{name-slug}-{role-slug}` (e.g. `nike-jane-doe-vp-marketing`). Used as the merge key across enrichment runs."
         },
-        "brand_id": { "$ref": "#/$defs/brandId" },
+        "brand_id": {
+          "$ref": "#/$defs/brandId"
+        },
         "is_placeholder": {
           "type": "boolean",
-          "description": "True when the role exists (e.g. 'Nike has an Influencer Marketing Manager') but the person's name isn't yet known. Placeholders surface gaps in the contact coverage so they can be filled later. When true, `name.full` may be a role-derived stub (e.g. 'Unknown — Influencer Marketing Manager')."
+          "description": "True when the role exists (e.g. 'Nike has an Influencer Marketing Manager') but the person's name isn't yet known. Placeholders surface gaps in the contact coverage so they can be filled later. When true, `name.full` may be a role-derived stub (e.g. 'Unknown \u2014 Influencer Marketing Manager')."
         },
-
         "name": {
           "type": "object",
-          "required": ["full"],
+          "required": [
+            "full"
+          ],
           "additionalProperties": false,
           "properties": {
-            "full": { "type": "string", "description": "Display name as commonly used (e.g. 'Jane Doe' or 'Unknown — Influencer Marketing Manager' for placeholders)." },
-            "first": { "type": "string" },
-            "last": { "type": "string" },
-            "preferred": { "type": "string", "description": "Preferred name to use in outreach (e.g. 'Jay' if their LinkedIn shows 'Jay Doe' but their formal name is 'Jane')." }
+            "full": {
+              "type": "string",
+              "description": "Display name as commonly used (e.g. 'Jane Doe' or 'Unknown \u2014 Influencer Marketing Manager' for placeholders)."
+            },
+            "first": {
+              "type": "string"
+            },
+            "last": {
+              "type": "string"
+            },
+            "preferred": {
+              "type": "string",
+              "description": "Preferred name to use in outreach (e.g. 'Jay' if their LinkedIn shows 'Jay Doe' but their formal name is 'Jane')."
+            }
           }
         },
-
         "title": {
           "type": "string",
           "description": "Job title verbatim from source. May vary across sources; use Apollo's canonical title when available."
@@ -101,7 +131,19 @@
         },
         "seniority": {
           "type": "string",
-          "enum": ["founder", "c_suite", "svp", "vp", "senior_director", "director", "senior_manager", "manager", "ic", "intern", "unknown"],
+          "enum": [
+            "founder",
+            "c_suite",
+            "svp",
+            "vp",
+            "senior_director",
+            "director",
+            "senior_manager",
+            "manager",
+            "ic",
+            "intern",
+            "unknown"
+          ],
           "description": "Hierarchical level. Combined with brand size, drives the `decision_role` classification."
         },
         "decision_role": {
@@ -113,45 +155,80 @@
             "champion",
             "unknown"
           ],
-          "description": "Likely role this person plays in a creator-deal decision. Simplified 5-value taxonomy: `buyer` = can say yes and holds the budget for this deal size; `influencer` = has input but no authority (CMOs at megabrands, senior brand managers, end-users who'd run the campaign); `gatekeeper` = controls access to the buyer (EAs, agency-of-record account managers); `champion` = internal advocate / known fan; `unknown` = default until classified. Note: a CMO of a multibillion brand is typically `influencer`, NOT `buyer` — creator-deal sign-off happens at the IM Manager level 2 levels down."
+          "description": "Likely role this person plays in a creator-deal decision. Simplified 5-value taxonomy: `buyer` = can say yes and holds the budget for this deal size; `influencer` = has input but no authority (CMOs at megabrands, senior brand managers, end-users who'd run the campaign); `gatekeeper` = controls access to the buyer (EAs, agency-of-record account managers); `champion` = internal advocate / known fan; `unknown` = default until classified. Note: a CMO of a multibillion brand is typically `influencer`, NOT `buyer` \u2014 creator-deal sign-off happens at the IM Manager level 2 levels down."
         },
         "decision_role_rationale": {
           "type": "string",
-          "description": "LLM-generated one-line explanation of why this `decision_role` was assigned. e.g. 'VP Marketing at Nike ($51B revenue) — too senior to approve individual £5k Reel deals; useful for warm intros to the IM Manager 2 levels down (who is the actual buyer).'"
+          "description": "LLM-generated one-line explanation of why this `decision_role` was assigned. e.g. 'VP Marketing at Nike ($51B revenue) \u2014 too senior to approve individual \u00a35k Reel deals; useful for warm intros to the IM Manager 2 levels down (who is the actual buyer).'"
         },
         "decision_authority_size_band": {
           "type": "string",
-          "enum": ["micro", "low", "medium", "high", "enterprise", "unknown"],
-          "description": "Estimated deal-size band this person can sign off on without further escalation. `micro` = <$5k, `low` = $5k–$25k, `medium` = $25k–$100k, `high` = $100k–$500k, `enterprise` = $500k+. Inferred from seniority + brand size."
+          "enum": [
+            "micro",
+            "low",
+            "medium",
+            "high",
+            "enterprise",
+            "unknown"
+          ],
+          "description": "Estimated deal-size band this person can sign off on without further escalation. `micro` = <$5k, `low` = $5k\u2013$25k, `medium` = $25k\u2013$100k, `high` = $100k\u2013$500k, `enterprise` = $500k+. Inferred from seniority + brand size."
         },
-
         "location": {
           "type": "object",
           "additionalProperties": false,
           "properties": {
-            "city": { "type": "string" },
-            "country": { "type": "string", "pattern": "^[A-Z]{2}$", "description": "ISO 3166-1 alpha-2." },
-            "timezone": { "type": "string", "description": "IANA timezone string (e.g. 'America/Los_Angeles')." }
+            "city": {
+              "type": "string"
+            },
+            "country": {
+              "type": "string",
+              "pattern": "^[A-Z]{2}$",
+              "description": "ISO 3166-1 alpha-2."
+            },
+            "timezone": {
+              "type": "string",
+              "description": "IANA timezone string (e.g. 'America/Los_Angeles')."
+            }
           }
         },
-
         "email": {
           "type": "object",
-          "description": "Primary email. Honesty policy applies — never fabricate; use verification status to communicate confidence.",
+          "description": "Primary email. Honesty policy applies \u2014 never fabricate; use verification status to communicate confidence.",
           "additionalProperties": false,
           "properties": {
-            "address": { "type": "string", "format": "email" },
+            "address": {
+              "type": "string",
+              "format": "email"
+            },
             "verification_status": {
               "type": "string",
-              "enum": ["verified", "catchall", "guessed_pattern", "unverified", "bounced"],
+              "enum": [
+                "verified",
+                "catchall",
+                "guessed_pattern",
+                "unverified",
+                "bounced"
+              ],
               "description": "verified = vendor SMTP-checked and got a response; catchall = domain accepts everything (can't confirm); guessed_pattern = built from a known pattern (firstname.lastname@brand.com) but not verified; unverified = source provided but no check run; bounced = previous send returned hard bounce."
             },
             "source": {
               "type": "string",
-              "enum": ["apollo", "hunter", "rocketreach", "clay", "linkedin_api", "web_search", "manual_entry", "pattern_inferred"],
+              "enum": [
+                "apollo",
+                "hunter",
+                "rocketreach",
+                "clay",
+                "linkedin_api",
+                "web_search",
+                "manual_entry",
+                "pattern_inferred"
+              ],
               "description": "Vendor or method that supplied this email."
             },
-            "verified_at": { "type": "string", "format": "date-time" }
+            "verified_at": {
+              "type": "string",
+              "format": "date-time"
+            }
           }
         },
         "alternate_emails": {
@@ -159,12 +236,28 @@
           "description": "Other email addresses observed for this person (e.g. personal email leaked in past breaches; alternate work address). Should be used cautiously and only with explicit user opt-in.",
           "items": {
             "type": "object",
-            "required": ["address"],
+            "required": [
+              "address"
+            ],
             "additionalProperties": false,
             "properties": {
-              "address": { "type": "string", "format": "email" },
-              "source": { "type": "string" },
-              "verification_status": { "type": "string", "enum": ["verified", "catchall", "guessed_pattern", "unverified", "bounced"] }
+              "address": {
+                "type": "string",
+                "format": "email"
+              },
+              "source": {
+                "type": "string"
+              },
+              "verification_status": {
+                "type": "string",
+                "enum": [
+                  "verified",
+                  "catchall",
+                  "guessed_pattern",
+                  "unverified",
+                  "bounced"
+                ]
+              }
             }
           }
         },
@@ -173,65 +266,126 @@
           "description": "Phone numbers are rare for brand-side marketing contacts and should generally not be used for first outreach. Captured when available for high-value warm contacts only.",
           "additionalProperties": false,
           "properties": {
-            "number": { "type": "string", "description": "E.164 format preferred (e.g. '+1-503-555-0123')." },
-            "country_code": { "type": "string" },
-            "source": { "type": "string" }
+            "number": {
+              "type": "string",
+              "description": "E.164 format preferred (e.g. '+1-503-555-0123')."
+            },
+            "country_code": {
+              "type": "string"
+            },
+            "source": {
+              "type": "string"
+            }
           }
         },
-
         "linkedin": {
           "type": "object",
-          "description": "LinkedIn is the primary identifier — emails change with job moves but LinkedIn URLs stick. Used as the merge key when two sources describe the same person.",
+          "description": "LinkedIn is the primary identifier \u2014 emails change with job moves but LinkedIn URLs stick. Used as the merge key when two sources describe the same person.",
           "additionalProperties": false,
           "properties": {
-            "url": { "type": "string", "format": "uri", "description": "Full LinkedIn URL (e.g. 'https://linkedin.com/in/janedoe')." },
-            "handle": { "type": "string", "description": "Just the handle portion (e.g. 'janedoe')." },
-            "last_updated": { "type": "string", "format": "date-time", "description": "When LinkedIn API last reported a change to this profile." },
-            "last_activity": { "type": "string", "format": "date-time", "description": "Last time this person posted/commented on LinkedIn — informs the `recent_linkedin_activity` qualification signal." }
+            "url": {
+              "type": "string",
+              "format": "uri",
+              "description": "Full LinkedIn URL (e.g. 'https://linkedin.com/in/janedoe')."
+            },
+            "handle": {
+              "type": "string",
+              "description": "Just the handle portion (e.g. 'janedoe')."
+            },
+            "last_updated": {
+              "type": "string",
+              "format": "date-time",
+              "description": "When LinkedIn API last reported a change to this profile."
+            },
+            "last_activity": {
+              "type": "string",
+              "format": "date-time",
+              "description": "Last time this person posted/commented on LinkedIn \u2014 informs the `recent_linkedin_activity` qualification signal."
+            }
           }
         },
         "social_handles": {
           "type": "object",
-          "description": "Other public social presences where the contact engages. Only relevant ones — not exhaustive.",
+          "description": "Other public social presences where the contact engages. Only relevant ones \u2014 not exhaustive.",
           "additionalProperties": false,
           "properties": {
-            "twitter_x": { "type": "string", "description": "Handle without leading @." },
-            "instagram": { "type": "string" },
-            "threads": { "type": "string" },
-            "tiktok": { "type": "string" },
-            "bluesky": { "type": "string" },
-            "personal_website": { "type": "string", "format": "uri" }
+            "twitter_x": {
+              "type": "string",
+              "description": "Handle without leading @."
+            },
+            "instagram": {
+              "type": "string"
+            },
+            "threads": {
+              "type": "string"
+            },
+            "tiktok": {
+              "type": "string"
+            },
+            "bluesky": {
+              "type": "string"
+            },
+            "personal_website": {
+              "type": "string",
+              "format": "uri"
+            }
           }
         },
-
         "tenure": {
           "type": "object",
           "description": "Time-at-brand context. Influences trust and qualification (a contact 6 months into a role probably isn't yet making big spend decisions).",
           "additionalProperties": false,
           "properties": {
-            "started_at": { "type": "string", "description": "YYYY-MM format when they started this role at this brand." },
-            "previous_brand": { "type": "string", "description": "Free text — the brand they came from. Useful for warm-intro mapping ('your previous Talent X worked with them at Adidas')." },
-            "is_current": { "type": "boolean", "default": true, "description": "False if they've left the brand. Stale contacts kept on file for history but excluded from outreach lists." }
+            "started_at": {
+              "type": "string",
+              "description": "YYYY-MM format when they started this role at this brand."
+            },
+            "previous_brand": {
+              "type": "string",
+              "description": "Free text \u2014 the brand they came from. Useful for warm-intro mapping ('your previous Talent X worked with them at Adidas')."
+            },
+            "is_current": {
+              "type": "boolean",
+              "default": true,
+              "description": "False if they've left the brand. Stale contacts kept on file for history but excluded from outreach lists."
+            }
           }
         },
-
         "qualification": {
           "type": "object",
           "description": "Likelihood this contact converts on a creator-deal pitch. Ranks contacts *within* a brand (different from brand-level qualification in `brand_candidates.schema.json`).",
-          "required": ["score", "tier", "signals"],
+          "required": [
+            "score",
+            "tier",
+            "signals"
+          ],
           "additionalProperties": false,
           "properties": {
-            "score": { "type": "number", "minimum": 0, "maximum": 1 },
+            "score": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
             "tier": {
               "type": "string",
-              "enum": ["qualified", "speculative", "unqualified"],
-              "description": "qualified ≥ 0.60 — top-of-list; speculative 0.30–0.60 — worth a try; unqualified < 0.30 — hidden from default outreach lists (but still in file)."
+              "enum": [
+                "qualified",
+                "speculative",
+                "unqualified"
+              ],
+              "description": "qualified \u2265 0.60 \u2014 top-of-list; speculative 0.30\u20130.60 \u2014 worth a try; unqualified < 0.30 \u2014 hidden from default outreach lists (but still in file)."
             },
             "signals": {
               "type": "array",
-              "items": { "$ref": "#/$defs/qualificationSignal" }
+              "items": {
+                "$ref": "#/$defs/qualificationSignal"
+              }
             },
-            "threshold_applied": { "type": "number", "minimum": 0, "maximum": 1 }
+            "threshold_applied": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            }
           }
         },
         "qualification_filtered": {
@@ -239,11 +393,12 @@
           "default": false,
           "description": "True if qualification.score is below threshold. UI hides by default; user can override."
         },
-
         "tags": {
           "type": "array",
           "description": "Free-form labels for the user's own organisation (e.g. 'primary_contact', 'warm_lead', 'event_met', 'agency_relationship').",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         },
         "notes": {
           "type": "string",
@@ -252,15 +407,18 @@
         "champion_for_talents": {
           "type": "array",
           "description": "Talent IDs this contact has advocated for in the past (known fan, prior successful campaign, warm relationship). Major positive signal for re-outreach.",
-          "items": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" }
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9-]*$"
+          }
         },
-
         "pitch_history": {
           "type": "array",
-          "description": "Per-talent log of outreach attempts to this specific person. Shared roster contact pool, per-talent history — so we know not to double-pitch the same person across two talents in a short window. PRESERVED across enrichment runs.",
-          "items": { "$ref": "#/$defs/pitchHistoryEntry" }
+          "description": "Per-talent log of outreach attempts to this specific person. Shared roster contact pool, per-talent history \u2014 so we know not to double-pitch the same person across two talents in a short window. PRESERVED across enrichment runs.",
+          "items": {
+            "$ref": "#/$defs/pitchHistoryEntry"
+          }
         },
-
         "do_not_contact": {
           "type": "boolean",
           "default": false,
@@ -275,8 +433,10 @@
           "format": "date-time",
           "description": "When the contact unsubscribed or asked to be removed from outreach (CAN-SPAM honour-opt-out hygiene). Record is kept (so we don't accidentally re-enrich and re-pitch them later) but never included in outreach lists going forward."
         },
-
-        "first_discovered_at": { "type": "string", "format": "date-time" },
+        "first_discovered_at": {
+          "type": "string",
+          "format": "date-time"
+        },
         "last_verified_at": {
           "type": "string",
           "format": "date-time",
@@ -287,18 +447,39 @@
           "description": "Each vendor/source that has provided data for this record, with the fields they provided and when.",
           "items": {
             "type": "object",
-            "required": ["source", "fetched_at"],
+            "required": [
+              "source",
+              "fetched_at"
+            ],
             "additionalProperties": false,
             "properties": {
               "source": {
                 "type": "string",
-                "enum": ["apollo", "hunter", "rocketreach", "clay", "linkedin_api", "exa_web_search", "manual_entry", "brand_website_scrape", "ai_inference"]
+                "enum": [
+                  "apollo",
+                  "hunter",
+                  "rocketreach",
+                  "clay",
+                  "linkedin_api",
+                  "exa_web_search",
+                  "manual_entry",
+                  "brand_website_scrape",
+                  "ai_inference"
+                ]
               },
-              "source_id": { "type": "string", "description": "The vendor's internal ID for this record (e.g. Apollo person_id), so we can re-query." },
-              "fetched_at": { "type": "string", "format": "date-time" },
+              "source_id": {
+                "type": "string",
+                "description": "The vendor's internal ID for this record (e.g. Apollo person_id), so we can re-query."
+              },
+              "fetched_at": {
+                "type": "string",
+                "format": "date-time"
+              },
               "fields_provided": {
                 "type": "array",
-                "items": { "type": "string" },
+                "items": {
+                  "type": "string"
+                },
                 "description": "Which fields this source contributed (e.g. ['name','title','email','linkedin.url'])."
               }
             }
@@ -312,10 +493,12 @@
         }
       }
     },
-
     "qualificationSignal": {
       "type": "object",
-      "required": ["signal", "weight"],
+      "required": [
+        "signal",
+        "weight"
+      ],
       "additionalProperties": false,
       "properties": {
         "signal": {
@@ -343,53 +526,91 @@
           "type": "number",
           "minimum": -1,
           "maximum": 1,
-          "description": "Contribution to qualification.score. Positive = stronger likelihood-to-respond; negative = weaker. Typical magnitudes 0.05–0.30."
+          "description": "Contribution to qualification.score. Positive = stronger likelihood-to-respond; negative = weaker. Typical magnitudes 0.05\u20130.30."
         },
         "details": {
           "type": "string",
-          "description": "Human-readable explanation. e.g. 'Verified email via Apollo SMTP check 2026-05-20' or 'Senior Director at $51B brand — likely decision-makers are 2 levels below'."
+          "description": "Human-readable explanation. e.g. 'Verified email via Apollo SMTP check 2026-05-20' or 'Senior Director at $51B brand \u2014 likely decision-makers are 2 levels below'."
         }
       }
     },
-
     "pitchHistoryEntry": {
       "type": "object",
-      "required": ["talent_id", "pitched_at", "channel"],
+      "required": [
+        "talent_id",
+        "pitched_at",
+        "channel"
+      ],
       "additionalProperties": false,
-      "description": "Denormalised per-(contact, talent) pitch summary for fast contact-record reads. The CANONICAL pitch record lives in `data/pitch_enrollments/{enrollment_id}.json` (`schemas/pitch_enrollment.schema.json`) — this entry is a summary index pointing back via `enrollment_id`. `outcome` enum here is intentionally narrow (high-level state for UI rendering); the rich classification + extracted_signals live on the enrollment's `outcomeClassification` block. Stays preserved across enrichment runs.",
+      "description": "Denormalised per-(contact, talent) pitch summary for fast contact-record reads. The CANONICAL pitch record lives in `data/pitch_enrollments/{enrollment_id}.json` (`schemas/pitch_enrollment.schema.json`) \u2014 this entry is a summary index pointing back via `enrollment_id`. `outcome` enum here is intentionally narrow (high-level state for UI rendering); the rich classification + extracted_signals live on the enrollment's `outcomeClassification` block. Stays preserved across enrichment runs.",
       "properties": {
         "talent_id": {
           "type": "string",
           "pattern": "^[a-z0-9][a-z0-9-]*$",
           "description": "ID of the talent on whose behalf this pitch was sent. Links to `talents/{talent_id}.json`."
         },
-        "pitched_at": { "type": "string", "format": "date-time" },
+        "pitched_at": {
+          "type": "string",
+          "format": "date-time"
+        },
         "channel": {
           "type": "string",
-          "enum": ["email", "linkedin_message", "linkedin_inmail", "linkedin_connection", "email_via_aor", "twitter_dm", "instagram_dm", "in_person", "other"]
+          "enum": [
+            "email",
+            "linkedin_message",
+            "linkedin_inmail",
+            "linkedin_connection",
+            "email_via_aor",
+            "twitter_dm",
+            "instagram_dm",
+            "in_person",
+            "other"
+          ]
         },
         "enrollment_id": {
           "type": "string",
           "pattern": "^enr_[a-z0-9]+$",
-          "description": "FK to the canonical pitch enrollment record (`data/pitch_enrollments/{enrollment_id}.json`). Anyone needing detailed pitch state — per-step engagement, classified outcome with extracted_signals, generated content — reads from there. This block is a summary index for fast contact-record scans."
+          "description": "FK to the canonical pitch enrollment record (`data/pitch_enrollments/{enrollment_id}.json`). Anyone needing detailed pitch state \u2014 per-step engagement, classified outcome with extracted_signals, generated content \u2014 reads from there. This block is a summary index for fast contact-record scans."
         },
-        "template_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$", "description": "FK to a pitch template (`schemas/pitch_template.schema.json` — shipped in Phase 3b)." },
-        "subject": { "type": "string", "description": "Subject line for email pitches; first-message preview for DM pitches." },
+        "template_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]*$",
+          "description": "FK to a pitch template (`schemas/pitch_template.schema.json` \u2014 shipped in Phase 3b)."
+        },
+        "subject": {
+          "type": "string",
+          "description": "Subject line for email pitches; first-message preview for DM pitches."
+        },
         "outcome": {
           "type": "string",
-          "enum": ["in_flight", "no_response", "replied_interested", "replied_declined", "replied_other", "bounced", "unsubscribed"],
-          "description": "Narrowed high-level outcome for UI rendering — derived from the canonical `pitch_enrollment.outcomeClassification.outcome` (interested → replied_interested; declined → replied_declined; out_of_office / unrelated / needs_more_info / wrong_person_routed → replied_other; unsubscribe_request → unsubscribed). `in_flight` = enrollment.state in [drafted, awaiting_approval, active, paused] without a final outcome. The orchestrator syncs this field on enrollment state transitions; canonical source is the enrollment record."
+          "enum": [
+            "in_flight",
+            "no_response",
+            "replied_interested",
+            "replied_declined",
+            "replied_other",
+            "bounced",
+            "unsubscribed"
+          ],
+          "description": "Narrowed high-level outcome for UI rendering \u2014 derived from the canonical `pitch_enrollment.outcomeClassification.outcome` (interested \u2192 replied_interested; declined \u2192 replied_declined; out_of_office / unrelated / needs_more_info / wrong_person_routed \u2192 replied_other; unsubscribe_request \u2192 unsubscribed). `in_flight` = enrollment.state in [drafted, awaiting_approval, active, paused] without a final outcome. The orchestrator syncs this field on enrollment state transitions; canonical source is the enrollment record."
         },
-        "outcome_at": { "type": "string", "format": "date-time" },
-        "next_followup_at": { "type": "string", "format": "date-time" },
-        "notes": { "type": "string" },
+        "outcome_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "next_followup_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "notes": {
+          "type": "string"
+        },
         "linked_brand_candidate_run_id": {
           "type": "string",
           "description": "The discovery `search_run_id` (from `brand_candidates.schema.json`) that surfaced this brand and triggered the pitch. Useful for tracking which discovery run produced which conversions."
         }
       }
     },
-
     "enrichmentMeta": {
       "type": "object",
       "description": "Orchestrator telemetry for the most recent enrichment run that touched this file. Useful for monitoring job health and vendor-quota consumption.",
@@ -398,18 +619,30 @@
         "search_durations_ms": {
           "type": "object",
           "description": "Per-step wall-clock duration in milliseconds.",
-          "additionalProperties": { "type": "integer", "minimum": 0 }
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0
+          }
         },
         "errors": {
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["step", "error"],
+            "required": [
+              "step",
+              "error"
+            ],
             "additionalProperties": false,
             "properties": {
-              "step": { "type": "string" },
-              "error": { "type": "string" },
-              "fatal": { "type": "boolean" }
+              "step": {
+                "type": "string"
+              },
+              "error": {
+                "type": "string"
+              },
+              "fatal": {
+                "type": "boolean"
+              }
             }
           }
         },
@@ -421,11 +654,12 @@
         "target_roles_searched": {
           "type": "array",
           "description": "Role titles that the orchestrator looked for on this run. Each unique title becomes a placeholder if no person was found.",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         }
       }
     },
-
     "brandId": {
       "type": "string",
       "pattern": "^[a-z0-9][a-z0-9-]*$",

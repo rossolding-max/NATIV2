@@ -348,6 +348,29 @@ Captures the per-talent contract template used by the Phase 4.7 contract pack pi
 
 **Skip option:** for early-stage agencies still building out their first template, this step can be deferred (talent profile saves without `contract_template`). Deals can progress through LEAD + PROPOSAL stages but block at `contract_drafting` substage with an explicit "Talent contract template not yet configured" message.
 
+### Contract template version bump enforcement (GAP-08 fix)
+
+`talent.contract_template.template_version + .template_updated_at` track the lifecycle of the talent's adopted contract template. Every generated `contract_pack` snapshots the template_version it was generated against (`contract_pack.context_snapshot.template_version_used`) for legal audit trail.
+
+**Enforcement requirement:** the API layer MUST bump `template_version` + set `template_updated_at = now()` on ANY modification to:
+
+- `talent.contract_template.markdown_source`
+- `talent.contract_template.merge_field_definitions`
+- `talent.contract_template.clause_applicability_rules`
+- `talent.contract_template.narrative_placeholders`
+- `talent.contract_template.default_governing_law`
+- `talent.contract_template.default_jurisdiction`
+
+`legal_reviewer_id` is exempt — changing the reviewer doesn't change the contract's terms.
+
+**Implementation:** either DB-level trigger or service-layer guard. Never trust callers to manually bump. Format suggestion: semver (e.g. `1.0.0` → `1.0.1` for narrative tone tweak; `1.1.0` for new conditional clause added; `2.0.0` for full markdown rewrite). API endpoints MUST reject updates that change these fields without an accompanying version bump (or auto-bump server-side).
+
+**Why this matters MORE than the invoice template (GAP-07):** contracts are legal instruments. If a dispute arises, the signed contract's exact clause set must be reproducible from the captured `template_version_used`. Without enforcement, audit trail fails — a major compliance + liability exposure.
+
+**Failure mode if skipped:** silent drift between captured template_version strings + actual template content; surfaces only during legal dispute / audit when reconstruction fails.
+
+**Cross-deal interaction:** if talent updates their template (legitimate version bump) mid-deal, existing contract_packs in flight stay anchored to the prior version (via context_snapshot). New contract_packs for the same deal would use the new version. This is intentional — the audit captures what was generated when, not what currently exists.
+
 ---
 
 ## Step 8 — Final review + validation

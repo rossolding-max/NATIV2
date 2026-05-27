@@ -4,79 +4,153 @@
   "title": "Talent Profile",
   "description": "Profile of an influencer/creator for the NATIV2 AI marketing assistant. One file per talent (multi-talent roster).",
   "type": "object",
-  "required": ["id", "name", "platforms"],
+  "required": [
+    "id",
+    "name",
+    "platforms"
+  ],
   "additionalProperties": false,
   "properties": {
-    "$schema": { "type": "string", "description": "Optional reference to this schema for IDE validation." },
+    "$schema": {
+      "type": "string",
+      "description": "Optional reference to this schema for IDE validation."
+    },
+    "agency_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Multi-tenant scope: FK to agency_profile.agency_id. Optional in v0.1 (single-tenant deploys may omit); required in v2 SaaS. When present, all cross-record queries MUST filter by agency_id to prevent cross-tenant data leakage. See docs/data_lineage.md GAP-01/02 for rationale."
+    },
     "id": {
       "type": "string",
       "description": "Stable slug, e.g. 'jane-doe'. Used as the primary key across phases.",
       "pattern": "^[a-z0-9][a-z0-9-]*$"
     },
-    "name": { "type": "string" },
-    "pronouns": { "type": "string" },
-    "age": { "type": "integer", "minimum": 13, "maximum": 120 },
-    "date_of_birth": { "type": "string", "format": "date" },
+    "name": {
+      "type": "string"
+    },
+    "pronouns": {
+      "type": "string"
+    },
+    "age": {
+      "type": "integer",
+      "minimum": 13,
+      "maximum": 120
+    },
+    "date_of_birth": {
+      "type": "string",
+      "format": "date"
+    },
     "location": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "city": { "type": "string" },
-        "region": { "type": "string" },
-        "country": { "type": "string", "description": "ISO 3166-1 alpha-2, e.g. 'GB', 'US'." }
+        "city": {
+          "type": "string"
+        },
+        "region": {
+          "type": "string"
+        },
+        "country": {
+          "type": "string",
+          "description": "ISO 3166-1 alpha-2, e.g. 'GB', 'US'."
+        }
       }
     },
-    "timezone": { "type": "string", "description": "IANA timezone, e.g. 'Europe/London'." },
+    "timezone": {
+      "type": "string",
+      "description": "IANA timezone, e.g. 'Europe/London'."
+    },
     "languages": {
       "type": "array",
-      "items": { "type": "string", "description": "BCP-47 tag, e.g. 'en', 'en-GB', 'es'." },
+      "items": {
+        "type": "string",
+        "description": "BCP-47 tag, e.g. 'en', 'en-GB', 'es'."
+      },
       "uniqueItems": true
     },
-    "bio": { "type": "string", "description": "Short pitch — 1–3 sentences." },
+    "bio": {
+      "type": "string",
+      "description": "Short pitch \u2014 1\u20133 sentences."
+    },
     "content_niches": {
       "type": "array",
       "description": "Primary content categories. Each value MUST be an `id` from `data/niches.json` (kebab-case slug, e.g. 'fitness', 'skincare', 'pc-gaming').",
-      "items": { "$ref": "#/$defs/nicheId" },
+      "items": {
+        "$ref": "#/$defs/nicheId"
+      },
       "uniqueItems": true
     },
-
     "contact": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "email": { "type": "string", "format": "email" },
-        "phone": { "type": "string" },
+        "email": {
+          "type": "string",
+          "format": "email"
+        },
+        "phone": {
+          "type": "string"
+        },
         "manager": {
           "type": "object",
           "additionalProperties": false,
           "properties": {
-            "name": { "type": "string" },
-            "email": { "type": "string", "format": "email" },
-            "phone": { "type": "string" },
-            "agency": { "type": "string" }
+            "name": {
+              "type": "string"
+            },
+            "email": {
+              "type": "string",
+              "format": "email"
+            },
+            "phone": {
+              "type": "string"
+            },
+            "agency": {
+              "type": "string"
+            }
           }
         }
       }
     },
-
     "billing_entity": {
       "type": "object",
       "description": "Legal/tax info needed to invoice brands. Used as the FROM party on every Phase 4.8 invoice generated for deals involving this talent. Distinguished from `agency_profile.billing_entity` which is the agency's own legal entity (used for outreach signature CAN-SPAM compliance, not invoicing). Whether the agency invoices on the talent's behalf or the talent invoices directly is governed by the `commission_split` model on `agency_profile.default_commission_model` + per-talent overrides via `talent.commission_override`.",
       "additionalProperties": false,
       "properties": {
-        "legal_name": { "type": "string" },
-        "company_number": { "type": "string" },
-        "country": { "type": "string", "description": "ISO 3166-1 alpha-2." },
-        "tax_id": { "type": "string", "description": "VAT/EIN/equivalent." },
-        "address": { "type": "string" },
+        "legal_name": {
+          "type": "string"
+        },
+        "company_number": {
+          "type": "string"
+        },
+        "country": {
+          "type": "string",
+          "description": "ISO 3166-1 alpha-2."
+        },
+        "tax_id": {
+          "type": "string",
+          "description": "VAT/EIN/equivalent."
+        },
+        "address": {
+          "type": "string"
+        },
         "payment_methods": {
           "type": "array",
-          "items": { "type": "string", "enum": ["bank_transfer", "paypal", "stripe", "wise", "crypto", "other"] },
+          "items": {
+            "type": "string",
+            "enum": [
+              "bank_transfer",
+              "paypal",
+              "stripe",
+              "wise",
+              "crypto",
+              "other"
+            ]
+          },
           "uniqueItems": true
         }
       }
     },
-
     "commission_override": {
       "type": "object",
       "description": "Per-talent override of agency-default commission terms. When absent, deals for this talent use `agency_profile.default_commission_rate` + `default_commission_model`. When present, these values take precedence. Captured in Phase 1 onboarding Step 5 (typically) or 7.5.",
@@ -86,33 +160,51 @@
           "type": "number",
           "minimum": 0,
           "maximum": 1,
-          "description": "Decimal — 0.20 = 20% agency commission. Per-talent override of `agency_profile.default_commission_rate`."
+          "description": "Decimal \u2014 0.20 = 20% agency commission. Per-talent override of `agency_profile.default_commission_rate`."
         },
         "commission_model": {
           "type": "string",
-          "enum": ["agency_invoices_brand_pays_talent_net", "talent_invoices_brand_agency_invoices_talent", "talent_invoices_brand_talent_pays_agency"],
-          "description": "How money flows for this talent's deals. agency_invoices_brand_pays_talent_net: agency invoices brand for full fee; agency receives payment; agency pays talent (fee × (1-commission_rate)) net. talent_invoices_brand_agency_invoices_talent: talent invoices brand directly + agency separately invoices talent for commission. talent_invoices_brand_talent_pays_agency: talent invoices brand + manually pays agency commission. v0.1 Phase 4.8 invoicing uses the configured model to determine FROM-party on the brand-facing invoice + whether a sibling commission invoice is auto-generated."
+          "enum": [
+            "agency_invoices_brand_pays_talent_net",
+            "talent_invoices_brand_agency_invoices_talent",
+            "talent_invoices_brand_talent_pays_agency"
+          ],
+          "description": "How money flows for this talent's deals. agency_invoices_brand_pays_talent_net: agency invoices brand for full fee; agency receives payment; agency pays talent (fee \u00d7 (1-commission_rate)) net. talent_invoices_brand_agency_invoices_talent: talent invoices brand directly + agency separately invoices talent for commission. talent_invoices_brand_talent_pays_agency: talent invoices brand + manually pays agency commission. v0.1 Phase 4.8 invoicing uses the configured model to determine FROM-party on the brand-facing invoice + whether a sibling commission invoice is auto-generated."
         }
       }
     },
-
     "invoice_payment_override": {
       "type": "object",
       "description": "Per-talent override of agency-wide invoice payment instructions. When the talent's deals route payment to a different account than the agency's default, capture here. Renders into the `payment_instructions` block of invoices for this talent's deals (replaces `agency_profile.invoice_template.payment_instructions_markdown` for those invoices). Captured in Phase 1 onboarding Step 5.",
       "additionalProperties": false,
       "properties": {
-        "payment_instructions_markdown": { "type": "string", "description": "Bank details / IBAN / SWIFT / Stripe link / PayPal address. Supports merge fields (e.g. `{{invoice_number}}` as bank reference)." },
-        "preferred_payment_method": { "type": "string", "enum": ["bank_transfer", "wire", "ach", "stripe", "paypal", "wise", "check", "other"] }
+        "payment_instructions_markdown": {
+          "type": "string",
+          "description": "Bank details / IBAN / SWIFT / Stripe link / PayPal address. Supports merge fields (e.g. `{{invoice_number}}` as bank reference)."
+        },
+        "preferred_payment_method": {
+          "type": "string",
+          "enum": [
+            "bank_transfer",
+            "wire",
+            "ach",
+            "stripe",
+            "paypal",
+            "wise",
+            "check",
+            "other"
+          ]
+        }
       }
     },
-
     "platforms": {
       "type": "array",
       "description": "One entry per social platform the talent is active on.",
       "minItems": 1,
-      "items": { "$ref": "#/$defs/platformAccount" }
+      "items": {
+        "$ref": "#/$defs/platformAccount"
+      }
     },
-
     "audience_demographics": {
       "type": "object",
       "description": "Aggregate audience demographics across all platforms. Per-platform overrides live on each platform entry.",
@@ -120,34 +212,78 @@
       "properties": {
         "age_bands": {
           "type": "object",
-          "description": "Share by age band as a percentage 0–100. Keys MUST be IAB Audience Taxonomy 1.1 Age Range bands so demographics bridge cleanly to industry audience profiles. IAB has no under-18 segment; if your platform analytics report under-18 share, exclude it from these percentages (re-normalise to 100% over 18+).",
+          "description": "Share by age band as a percentage 0\u2013100. Keys MUST be IAB Audience Taxonomy 1.1 Age Range bands so demographics bridge cleanly to industry audience profiles. IAB has no under-18 segment; if your platform analytics report under-18 share, exclude it from these percentages (re-normalise to 100% over 18+).",
           "additionalProperties": false,
           "propertyNames": {
-            "enum": ["18-20", "21-24", "25-29", "30-34", "35-39", "40-44", "45-49", "50-54", "55-59", "60-64", "65-69", "70-74", "75+"]
+            "enum": [
+              "18-20",
+              "21-24",
+              "25-29",
+              "30-34",
+              "35-39",
+              "40-44",
+              "45-49",
+              "50-54",
+              "55-59",
+              "60-64",
+              "65-69",
+              "70-74",
+              "75+"
+            ]
           },
           "patternProperties": {
-            "^.*$": { "type": "number", "minimum": 0, "maximum": 100 }
+            "^.*$": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            }
           }
         },
         "gender_split": {
           "type": "object",
           "additionalProperties": false,
           "properties": {
-            "female": { "type": "number", "minimum": 0, "maximum": 100 },
-            "male": { "type": "number", "minimum": 0, "maximum": 100 },
-            "non_binary": { "type": "number", "minimum": 0, "maximum": 100 },
-            "unknown": { "type": "number", "minimum": 0, "maximum": 100 }
+            "female": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "male": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "non_binary": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "unknown": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            }
           }
         },
         "top_countries": {
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["country", "share"],
+            "required": [
+              "country",
+              "share"
+            ],
             "additionalProperties": false,
             "properties": {
-              "country": { "type": "string", "description": "ISO 3166-1 alpha-2." },
-              "share": { "type": "number", "minimum": 0, "maximum": 100 }
+              "country": {
+                "type": "string",
+                "description": "ISO 3166-1 alpha-2."
+              },
+              "share": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 100
+              }
             }
           }
         },
@@ -155,12 +291,23 @@
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["city", "share"],
+            "required": [
+              "city",
+              "share"
+            ],
             "additionalProperties": false,
             "properties": {
-              "city": { "type": "string" },
-              "country": { "type": "string" },
-              "share": { "type": "number", "minimum": 0, "maximum": 100 }
+              "city": {
+                "type": "string"
+              },
+              "country": {
+                "type": "string"
+              },
+              "share": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 100
+              }
             }
           }
         },
@@ -168,53 +315,75 @@
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["language", "share"],
+            "required": [
+              "language",
+              "share"
+            ],
             "additionalProperties": false,
             "properties": {
-              "language": { "type": "string" },
-              "share": { "type": "number", "minimum": 0, "maximum": 100 }
+              "language": {
+                "type": "string"
+              },
+              "share": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 100
+              }
             }
           }
         },
         "interests": {
           "type": "array",
-          "items": { "type": "string" },
+          "items": {
+            "type": "string"
+          },
           "uniqueItems": true
         }
       }
     },
-
     "previous_brands": {
       "type": "array",
       "description": "Brands the talent has worked with previously.",
-      "items": { "$ref": "#/$defs/brandDeal" }
+      "items": {
+        "$ref": "#/$defs/brandDeal"
+      }
     },
-
     "similar_talent": {
       "type": "array",
-      "description": "Other creators in the same competitive set — used for positioning and brand discovery.",
-      "items": { "$ref": "#/$defs/similarTalent" }
+      "description": "Other creators in the same competitive set \u2014 used for positioning and brand discovery.",
+      "items": {
+        "$ref": "#/$defs/similarTalent"
+      }
     },
-
     "rate_card": {
       "type": "object",
-      "description": "Price per deliverable, keyed by platform → deliverable type.",
+      "description": "Price per deliverable, keyed by platform \u2192 deliverable type.",
       "additionalProperties": {
         "type": "object",
         "description": "Per-platform rate card.",
         "additionalProperties": false,
         "properties": {
-          "currency": { "type": "string", "description": "ISO 4217, e.g. 'GBP', 'USD'." },
+          "currency": {
+            "type": "string",
+            "description": "ISO 4217, e.g. 'GBP', 'USD'."
+          },
           "deliverables": {
             "type": "object",
             "description": "Keyed by deliverable type, e.g. 'reel','story','feed_post','carousel','live','long_form_video','short','tweet','thread','podcast_mention','newsletter'.",
             "additionalProperties": {
               "type": "object",
               "additionalProperties": false,
-              "required": ["price"],
+              "required": [
+                "price"
+              ],
               "properties": {
-                "price": { "type": "number", "minimum": 0 },
-                "notes": { "type": "string" }
+                "price": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "notes": {
+                  "type": "string"
+                }
               }
             }
           },
@@ -222,13 +391,28 @@
             "type": "array",
             "items": {
               "type": "object",
-              "required": ["name", "price"],
+              "required": [
+                "name",
+                "price"
+              ],
               "additionalProperties": false,
               "properties": {
-                "name": { "type": "string" },
-                "includes": { "type": "array", "items": { "type": "string" } },
-                "price": { "type": "number", "minimum": 0 },
-                "notes": { "type": "string" }
+                "name": {
+                  "type": "string"
+                },
+                "includes": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "price": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "notes": {
+                  "type": "string"
+                }
               }
             }
           },
@@ -237,15 +421,23 @@
             "description": "Percentage uplifts on base price for extra rights.",
             "additionalProperties": false,
             "properties": {
-              "usage_rights_pct": { "type": "number", "minimum": 0 },
-              "whitelisting_pct": { "type": "number", "minimum": 0 },
-              "exclusivity_pct": { "type": "number", "minimum": 0 }
+              "usage_rights_pct": {
+                "type": "number",
+                "minimum": 0
+              },
+              "whitelisting_pct": {
+                "type": "number",
+                "minimum": 0
+              },
+              "exclusivity_pct": {
+                "type": "number",
+                "minimum": 0
+              }
             }
           }
         }
       }
     },
-
     "brand_preferences": {
       "type": "object",
       "additionalProperties": false,
@@ -253,69 +445,106 @@
         "preferred_industries": {
           "type": "array",
           "description": "Industry IDs from `data/industries.json` the talent actively wants to work with.",
-          "items": { "$ref": "#/$defs/industryId" },
+          "items": {
+            "$ref": "#/$defs/industryId"
+          },
           "uniqueItems": true
         },
         "blocked_industries": {
           "type": "array",
           "description": "Industry IDs from `data/industries.json` the talent will not work with.",
-          "items": { "$ref": "#/$defs/industryId" },
+          "items": {
+            "$ref": "#/$defs/industryId"
+          },
           "uniqueItems": true
         },
         "values_red_lines": {
           "type": "array",
           "description": "Free-form hard nos beyond industry-level blocks (e.g. 'diet culture messaging').",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         },
         "active_exclusivities": {
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["industry_id"],
+            "required": [
+              "industry_id"
+            ],
             "additionalProperties": false,
             "properties": {
               "industry_id": {
                 "$ref": "#/$defs/industryId",
                 "description": "Industry the talent is exclusive in. Must match an `id` in `data/industries.json`."
               },
-              "brand": { "type": "string", "description": "The brand the exclusivity is with." },
-              "ends_on": { "type": "string", "format": "date" }
+              "brand": {
+                "type": "string",
+                "description": "The brand the exclusivity is with."
+              },
+              "ends_on": {
+                "type": "string",
+                "format": "date"
+              }
             }
           }
         }
       }
     },
-
     "working_terms": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
         "default_usage_rights": {
           "type": "string",
-          "enum": ["organic_only", "organic_plus_whitelisting", "organic_plus_paid_social", "full_paid_media"]
+          "enum": [
+            "organic_only",
+            "organic_plus_whitelisting",
+            "organic_plus_paid_social",
+            "full_paid_media"
+          ]
         },
-        "default_usage_duration_days": { "type": "integer", "minimum": 0 },
-        "default_turnaround_days": { "type": "integer", "minimum": 0 },
-        "revisions_included": { "type": "integer", "minimum": 0 },
+        "default_usage_duration_days": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "default_turnaround_days": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "revisions_included": {
+          "type": "integer",
+          "minimum": 0
+        },
         "blackout_dates": {
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["start", "end"],
+            "required": [
+              "start",
+              "end"
+            ],
             "additionalProperties": false,
             "properties": {
-              "start": { "type": "string", "format": "date" },
-              "end": { "type": "string", "format": "date" },
-              "reason": { "type": "string" }
+              "start": {
+                "type": "string",
+                "format": "date"
+              },
+              "end": {
+                "type": "string",
+                "format": "date"
+              },
+              "reason": {
+                "type": "string"
+              }
             }
           }
         }
       }
     },
-
     "contract_template": {
       "type": "object",
-      "description": "Per-talent contract template used by the Phase 4.7 contract pack generator (`docs/contract_pack_workflow.md`). Captured during Phase 1 talent onboarding. Markdown source with `{{merge_field}}` placeholders, `{{#if condition}}...{{/if}}` conditional sections, and `{{narrative_*}}` LLM-drafted blocks. Party identification (legal entity name, country, tax ID, address) is pulled from `talent.billing_entity` — single source of truth. Working defaults (usage rights, turnaround, revisions) are pulled from `talent.working_terms`. Agencies can ship starter templates in `data/contract_template_starters/` that the onboarding flow copies into this field for editing.",
+      "description": "Per-talent contract template used by the Phase 4.7 contract pack generator (`docs/contract_pack_workflow.md`). Captured during Phase 1 talent onboarding. Markdown source with `{{merge_field}}` placeholders, `{{#if condition}}...{{/if}}` conditional sections, and `{{narrative_*}}` LLM-drafted blocks. Party identification (legal entity name, country, tax ID, address) is pulled from `talent.billing_entity` \u2014 single source of truth. Working defaults (usage rights, turnaround, revisions) are pulled from `talent.working_terms`. Agencies can ship starter templates in `data/contract_template_starters/` that the onboarding flow copies into this field for editing.",
       "additionalProperties": false,
       "properties": {
         "markdown_source": {
@@ -324,22 +553,50 @@
         },
         "merge_field_definitions": {
           "type": "array",
-          "description": "Every merge field the template uses, with its expected source. Drives Stage B (merge field extraction) — LLM knows where to pull each value from and can flag low-confidence extractions for agent review.",
+          "description": "Every merge field the template uses, with its expected source. Drives Stage B (merge field extraction) \u2014 LLM knows where to pull each value from and can flag low-confidence extractions for agent review.",
           "items": {
             "type": "object",
-            "required": ["field", "source"],
+            "required": [
+              "field",
+              "source"
+            ],
             "additionalProperties": false,
             "properties": {
-              "field": { "type": "string", "description": "Merge field name (without braces). e.g. 'talent_legal_name', 'brand_legal_name', 'fee_usd', 'campaign_start_date'." },
+              "field": {
+                "type": "string",
+                "description": "Merge field name (without braces). e.g. 'talent_legal_name', 'brand_legal_name', 'fee_usd', 'campaign_start_date'."
+              },
               "source": {
                 "type": "string",
-                "enum": ["talent_profile", "talent_billing_entity", "talent_working_terms", "agency_profile", "deal_proposal", "discovery_debrief", "context_artefact", "agent_input", "computed"],
+                "enum": [
+                  "talent_profile",
+                  "talent_billing_entity",
+                  "talent_working_terms",
+                  "agency_profile",
+                  "deal_proposal",
+                  "discovery_debrief",
+                  "context_artefact",
+                  "agent_input",
+                  "computed"
+                ],
                 "description": "Where the value comes from. `agent_input` = agent must provide (typically brand legal entity info). `computed` = derived from other fields (e.g. signed_date = today)."
               },
-              "source_path": { "type": "string", "description": "Dotted path within the source (e.g. 'billing_entity.legal_name', 'proposal.fee_usd'). Optional — omit for free-text fields the agent fills." },
-              "required": { "type": "boolean", "default": true, "description": "If true, draft contract cannot pass legal review until value is set. Critical fields (legal names, fees, dates) should be required." },
-              "default": { "description": "Fallback value if source extraction fails or returns null." },
-              "description": { "type": "string", "description": "Human-readable explanation for the agent reviewing in UI." }
+              "source_path": {
+                "type": "string",
+                "description": "Dotted path within the source (e.g. 'billing_entity.legal_name', 'proposal.fee_usd'). Optional \u2014 omit for free-text fields the agent fills."
+              },
+              "required": {
+                "type": "boolean",
+                "default": true,
+                "description": "If true, draft contract cannot pass legal review until value is set. Critical fields (legal names, fees, dates) should be required."
+              },
+              "default": {
+                "description": "Fallback value if source extraction fails or returns null."
+              },
+              "description": {
+                "type": "string",
+                "description": "Human-readable explanation for the agent reviewing in UI."
+              }
             }
           }
         },
@@ -348,14 +605,47 @@
           "description": "Per-conditional-block rule that determines whether the clause fires. Evaluated in Stage C. Each rule has a human-readable description (for agent + audit) AND a structured condition (machine-evaluatable). The LLM evaluates the condition against full deal/proposal/debrief context and decides include/exclude with rationale.",
           "items": {
             "type": "object",
-            "required": ["clause_id", "description", "condition"],
+            "required": [
+              "clause_id",
+              "description",
+              "condition"
+            ],
             "additionalProperties": false,
             "properties": {
-              "clause_id": { "type": "string", "description": "Matches the `{{#if clause_id}}` identifier in markdown_source." },
-              "description": { "type": "string", "description": "What this clause covers (e.g. 'EU GDPR data-processing addendum')." },
-              "condition": { "type": "string", "description": "Plain-language condition the LLM evaluates (e.g. 'brand registered address is in the EU', 'deal.proposal.exclusivity.duration_days > 0'). Structured JSONLogic could replace this in v0.2 for deterministic evaluation; v0.1 lets the LLM interpret natural-language conditions for flexibility." },
-              "default_decision": { "type": "string", "enum": ["include", "exclude", "llm_decide"], "default": "llm_decide", "description": "If `include` / `exclude`, decision is fixed — LLM doesn't evaluate. `llm_decide` runs Stage C evaluation." },
-              "applicability_source": { "type": "string", "enum": ["deal_proposal", "discovery_debrief", "talent_profile", "agency_profile", "context_artefact", "brand_legal_info"], "description": "Hint to LLM about which context block to inspect." }
+              "clause_id": {
+                "type": "string",
+                "description": "Matches the `{{#if clause_id}}` identifier in markdown_source."
+              },
+              "description": {
+                "type": "string",
+                "description": "What this clause covers (e.g. 'EU GDPR data-processing addendum')."
+              },
+              "condition": {
+                "type": "string",
+                "description": "Plain-language condition the LLM evaluates (e.g. 'brand registered address is in the EU', 'deal.proposal.exclusivity.duration_days > 0'). Structured JSONLogic could replace this in v0.2 for deterministic evaluation; v0.1 lets the LLM interpret natural-language conditions for flexibility."
+              },
+              "default_decision": {
+                "type": "string",
+                "enum": [
+                  "include",
+                  "exclude",
+                  "llm_decide"
+                ],
+                "default": "llm_decide",
+                "description": "If `include` / `exclude`, decision is fixed \u2014 LLM doesn't evaluate. `llm_decide` runs Stage C evaluation."
+              },
+              "applicability_source": {
+                "type": "string",
+                "enum": [
+                  "deal_proposal",
+                  "discovery_debrief",
+                  "talent_profile",
+                  "agency_profile",
+                  "context_artefact",
+                  "brand_legal_info"
+                ],
+                "description": "Hint to LLM about which context block to inspect."
+              }
             }
           }
         },
@@ -364,14 +654,36 @@
           "description": "Sections the LLM drafts (Stage D). Each placeholder names what context to draw from + tone guidance.",
           "items": {
             "type": "object",
-            "required": ["placeholder", "draws_from"],
+            "required": [
+              "placeholder",
+              "draws_from"
+            ],
             "additionalProperties": false,
             "properties": {
-              "placeholder": { "type": "string", "description": "Matches the `{{narrative_*}}` identifier in markdown_source (e.g. 'narrative_scope_of_work')." },
-              "description": { "type": "string", "description": "What the section should cover." },
-              "draws_from": { "type": "array", "items": { "type": "string" }, "description": "List of context sources to draw from (e.g. ['deal.proposal.deliverables', 'discovery_debrief.objectives_heard'])." },
-              "tone": { "type": "string", "description": "Tone guidance (e.g. 'formal legal prose, no marketing language')." },
-              "max_word_count": { "type": "integer", "minimum": 0, "description": "Soft cap — prevents narrative bloat." }
+              "placeholder": {
+                "type": "string",
+                "description": "Matches the `{{narrative_*}}` identifier in markdown_source (e.g. 'narrative_scope_of_work')."
+              },
+              "description": {
+                "type": "string",
+                "description": "What the section should cover."
+              },
+              "draws_from": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "List of context sources to draw from (e.g. ['deal.proposal.deliverables', 'discovery_debrief.objectives_heard'])."
+              },
+              "tone": {
+                "type": "string",
+                "description": "Tone guidance (e.g. 'formal legal prose, no marketing language')."
+              },
+              "max_word_count": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "Soft cap \u2014 prevents narrative bloat."
+              }
             }
           }
         },
@@ -390,81 +702,172 @@
         },
         "template_version": {
           "type": "string",
-          "description": "Semver or freeform version label. Updated whenever markdown_source changes. Captured in `contract_pack.context_snapshot.template_version_used` for traceability — if a template changes mid-deal, prior contract packs stay anchored to the version they were generated from."
+          "description": "Semver or freeform version label. Updated whenever markdown_source / merge_field_definitions / clause_applicability_rules / narrative_placeholders / default_governing_law / default_jurisdiction change. Captured in `contract_pack.context_snapshot.template_version_used` for traceability \u2014 if a template changes mid-deal, prior contract packs stay anchored to the version they were generated from. ENFORCEMENT (GAP-08): API layer MUST bump this string + set template_updated_at on every modification to those fields. Version bump is a DB-enforced trigger or a service-layer guard \u2014 never trust manual update. Critical for legal audit trail: a signed contract's clause set must always be reproducible from the captured template_version."
         },
-        "template_updated_at": { "type": "string", "format": "date-time" },
+        "template_updated_at": {
+          "type": "string",
+          "format": "date-time"
+        },
         "based_on_starter_template_id": {
           "type": "string",
-          "description": "If the template was adopted from one of the agency's starter templates (`data/contract_template_starters/`), the starter's ID is captured here. Provenance — easier to track which talent templates have diverged from which starters."
+          "description": "If the template was adopted from one of the agency's starter templates (`data/contract_template_starters/`), the starter's ID is captured here. Provenance \u2014 easier to track which talent templates have diverged from which starters."
         }
       }
     },
-
     "press_kit": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "media_kit_url": { "type": "string", "format": "uri" },
-        "headshot_urls": { "type": "array", "items": { "type": "string", "format": "uri" } },
-        "demo_reel_urls": { "type": "array", "items": { "type": "string", "format": "uri" } },
+        "media_kit_url": {
+          "type": "string",
+          "format": "uri"
+        },
+        "headshot_urls": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uri"
+          }
+        },
+        "demo_reel_urls": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uri"
+          }
+        },
         "press_mentions": {
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["title", "url"],
+            "required": [
+              "title",
+              "url"
+            ],
             "additionalProperties": false,
             "properties": {
-              "title": { "type": "string" },
-              "publication": { "type": "string" },
-              "url": { "type": "string", "format": "uri" },
-              "date": { "type": "string", "format": "date" }
+              "title": {
+                "type": "string"
+              },
+              "publication": {
+                "type": "string"
+              },
+              "url": {
+                "type": "string",
+                "format": "uri"
+              },
+              "date": {
+                "type": "string",
+                "format": "date"
+              }
             }
           }
         },
-        "awards": { "type": "array", "items": { "type": "string" } }
+        "awards": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
       }
     },
-
     "disclosure_defaults": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "style": { "type": "string", "enum": ["#ad", "#sponsored", "Paid partnership", "Gifted", "other"] },
-        "notes": { "type": "string" }
+        "style": {
+          "type": "string",
+          "enum": [
+            "#ad",
+            "#sponsored",
+            "Paid partnership",
+            "Gifted",
+            "other"
+          ]
+        },
+        "notes": {
+          "type": "string"
+        }
       }
     },
-
     "other_stats": {
       "type": "object",
       "description": "Free-form key/value bag for anything that doesn't fit (newsletter subs, Discord size, podcast downloads, etc.).",
       "additionalProperties": true
     }
   },
-
   "$defs": {
     "platformAccount": {
       "type": "object",
-      "required": ["platform", "handle"],
+      "required": [
+        "platform",
+        "handle"
+      ],
       "additionalProperties": false,
       "properties": {
         "platform": {
           "type": "string",
-          "enum": ["instagram", "tiktok", "youtube", "x", "twitter", "facebook", "snapchat", "twitch", "linkedin", "pinterest", "threads", "substack", "podcast", "other"]
+          "enum": [
+            "instagram",
+            "tiktok",
+            "youtube",
+            "x",
+            "twitter",
+            "facebook",
+            "snapchat",
+            "twitch",
+            "linkedin",
+            "pinterest",
+            "threads",
+            "substack",
+            "podcast",
+            "other"
+          ]
         },
-        "handle": { "type": "string" },
-        "url": { "type": "string", "format": "uri" },
-        "primary": { "type": "boolean", "description": "True if this is the talent's main platform." },
+        "handle": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string",
+          "format": "uri"
+        },
+        "primary": {
+          "type": "boolean",
+          "description": "True if this is the talent's main platform."
+        },
         "stats": {
           "type": "object",
           "additionalProperties": false,
           "properties": {
-            "followers": { "type": "integer", "minimum": 0 },
-            "engagement_rate_pct": { "type": "number", "minimum": 0, "maximum": 100 },
-            "avg_views": { "type": "integer", "minimum": 0 },
-            "avg_likes": { "type": "integer", "minimum": 0 },
-            "avg_comments": { "type": "integer", "minimum": 0 },
-            "avg_shares": { "type": "integer", "minimum": 0 },
-            "last_updated": { "type": "string", "format": "date" }
+            "followers": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "engagement_rate_pct": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "avg_views": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "avg_likes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "avg_comments": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "avg_shares": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "last_updated": {
+              "type": "string",
+              "format": "date"
+            }
           }
         },
         "audience_demographics_override": {
@@ -473,27 +876,49 @@
         },
         "api_credentials": {
           "type": "object",
-          "description": "References to credentials — never the raw secret.",
+          "description": "References to credentials \u2014 never the raw secret.",
           "additionalProperties": false,
           "properties": {
-            "access_token_ref": { "type": "string", "description": "e.g. 'env:INSTAGRAM_TOKEN' or 'vault:nativ2/instagram/jane-doe'." },
-            "refresh_token_ref": { "type": "string" },
-            "client_id_ref": { "type": "string" },
-            "client_secret_ref": { "type": "string" },
-            "scopes": { "type": "array", "items": { "type": "string" } },
-            "expires_at": { "type": "string", "format": "date-time" }
+            "access_token_ref": {
+              "type": "string",
+              "description": "e.g. 'env:INSTAGRAM_TOKEN' or 'vault:nativ2/instagram/jane-doe'."
+            },
+            "refresh_token_ref": {
+              "type": "string"
+            },
+            "client_id_ref": {
+              "type": "string"
+            },
+            "client_secret_ref": {
+              "type": "string"
+            },
+            "scopes": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "expires_at": {
+              "type": "string",
+              "format": "date-time"
+            }
           }
         }
       }
     },
-
     "brandDeal": {
       "type": "object",
-      "description": "Light index entry for a past brand campaign. The full rich record (KPIs, vs-benchmark, audience-overlap, re-engagement metadata, etc.) lives in `data/brand_deals/{talent_id}.json`. Optional `deal_id` field links the two — when present, the orchestrator reads the rich record from there. Kept in talent.json for backwards compatibility + fast scans without loading the deals file.",
-      "required": ["brand", "industry_id"],
+      "description": "Light index entry for a past brand campaign. The full rich record (KPIs, vs-benchmark, audience-overlap, re-engagement metadata, etc.) lives in `data/brand_deals/{talent_id}.json`. Optional `deal_id` field links the two \u2014 when present, the orchestrator reads the rich record from there. Kept in talent.json for backwards compatibility + fast scans without loading the deals file.",
+      "required": [
+        "brand",
+        "industry_id"
+      ],
       "additionalProperties": false,
       "properties": {
-        "brand": { "type": "string", "description": "Brand/company name as commonly written." },
+        "brand": {
+          "type": "string",
+          "description": "Brand/company name as commonly written."
+        },
         "industry_id": {
           "$ref": "#/$defs/industryId",
           "description": "Industry ID from `data/industries.json`. The app auto-suggests this from `brand` via `data/brand_industry_map.json` (exact + alias + domain match) and falls back to AI inference."
@@ -503,38 +928,65 @@
           "pattern": "^deal_[a-z0-9_]+$",
           "description": "Optional FK to a rich deal record in `data/brand_deals/{talent_id}.json`. When set, the rich KPIs, vs-benchmark performance, audience-overlap, and re-engagement metadata are sourced from there. When absent (legacy or skeleton entries), the orchestrator falls back to the inline fields below."
         },
-        "campaign_date": { "type": "string", "format": "date" },
+        "campaign_date": {
+          "type": "string",
+          "format": "date"
+        },
         "platforms": {
           "type": "array",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         },
-        "deliverables": { "type": "array", "items": { "type": "string" } },
+        "deliverables": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
         "fee": {
           "type": "object",
           "additionalProperties": false,
           "properties": {
-            "amount": { "type": "number", "minimum": 0 },
-            "currency": { "type": "string" }
+            "amount": {
+              "type": "number",
+              "minimum": 0
+            },
+            "currency": {
+              "type": "string"
+            }
           }
         },
-        "usage_rights_granted": { "type": "string" },
-        "performance_notes": { "type": "string" },
+        "usage_rights_granted": {
+          "type": "string"
+        },
+        "performance_notes": {
+          "type": "string"
+        },
         "brand_contact": {
           "type": "object",
           "additionalProperties": false,
           "properties": {
-            "name": { "type": "string" },
-            "role": { "type": "string" },
-            "email": { "type": "string", "format": "email" }
+            "name": {
+              "type": "string"
+            },
+            "role": {
+              "type": "string"
+            },
+            "email": {
+              "type": "string",
+              "format": "email"
+            }
           }
         }
       }
     },
-
     "similarTalent": {
       "type": "object",
       "description": "Thin pointer to a competitor/comparable creator. Starts as a seed (name + handles) and is enriched by AI research over time. `previous_brands` is the source of truth; `inferred_niches` is back-derived from those brands by inverting `data/niche_industry_affinity.json` (industry -> niches that resonate).",
-      "required": ["name"],
+      "required": [
+        "name"
+      ],
       "additionalProperties": false,
       "properties": {
         "id": {
@@ -542,33 +994,49 @@
           "pattern": "^[a-z0-9][a-z0-9-]*$",
           "description": "Optional slug for cross-referencing."
         },
-        "name": { "type": "string" },
+        "name": {
+          "type": "string"
+        },
         "handles": {
           "type": "array",
           "description": "Public platform handles. Starting point for AI research.",
           "items": {
             "type": "object",
-            "required": ["platform", "handle"],
+            "required": [
+              "platform",
+              "handle"
+            ],
             "additionalProperties": false,
             "properties": {
-              "platform": { "type": "string" },
-              "handle": { "type": "string" },
-              "url": { "type": "string", "format": "uri" }
+              "platform": {
+                "type": "string"
+              },
+              "handle": {
+                "type": "string"
+              },
+              "url": {
+                "type": "string",
+                "format": "uri"
+              }
             }
           }
         },
         "previous_brands": {
           "type": "array",
-          "description": "Known brand collaborations. Each `industry_id` is auto-resolved via `data/brand_industry_map.json` (or AI inference fallback). This list is the source of truth — niches are derived from it, not authored.",
+          "description": "Known brand collaborations. Each `industry_id` is auto-resolved via `data/brand_industry_map.json` (or AI inference fallback). This list is the source of truth \u2014 niches are derived from it, not authored.",
           "items": {
             "type": "object",
-            "required": ["brand"],
+            "required": [
+              "brand"
+            ],
             "additionalProperties": false,
             "properties": {
-              "brand": { "type": "string" },
+              "brand": {
+                "type": "string"
+              },
               "industry_id": {
                 "$ref": "#/$defs/industryId",
-                "description": "Industry ID from `data/industries.json`. Optional on input — resolved by the app from the brand name."
+                "description": "Industry ID from `data/industries.json`. Optional on input \u2014 resolved by the app from the brand name."
               },
               "source": {
                 "type": "string",
@@ -579,27 +1047,40 @@
         },
         "inferred_niches": {
           "type": "array",
-          "description": "Niches back-derived from `previous_brands` by inverting `data/niche_industry_affinity.json` — for each industry, which niches list it as a primary/secondary/tertiary match? Computed by the app, not hand-authored. Stored on the record so it persists between sessions and can be reviewed/overridden.",
+          "description": "Niches back-derived from `previous_brands` by inverting `data/niche_industry_affinity.json` \u2014 for each industry, which niches list it as a primary/secondary/tertiary match? Computed by the app, not hand-authored. Stored on the record so it persists between sessions and can be reviewed/overridden.",
           "items": {
             "type": "object",
-            "required": ["niche_id", "confidence"],
+            "required": [
+              "niche_id",
+              "confidence"
+            ],
             "additionalProperties": false,
             "properties": {
-              "niche_id": { "$ref": "#/$defs/nicheId" },
+              "niche_id": {
+                "$ref": "#/$defs/nicheId"
+              },
               "confidence": {
                 "type": "string",
-                "enum": ["primary", "secondary", "tertiary"],
+                "enum": [
+                  "primary",
+                  "secondary",
+                  "tertiary"
+                ],
                 "description": "Aggregated strength across all this creator's previous brands. `primary` if multiple brands point at this niche at primary tier; weaker otherwise."
               },
               "supporting_brands": {
                 "type": "array",
                 "description": "The previous_brands entries (by brand name) that contributed to this inference.",
-                "items": { "type": "string" }
+                "items": {
+                  "type": "string"
+                }
               }
             }
           }
         },
-        "notes": { "type": "string" },
+        "notes": {
+          "type": "string"
+        },
         "research": {
           "type": "object",
           "description": "AI-research workflow metadata. Tracks enrichment state so the app knows when to refresh.",
@@ -607,26 +1088,35 @@
           "properties": {
             "status": {
               "type": "string",
-              "enum": ["seed", "researching", "enriched", "failed", "stale"],
+              "enum": [
+                "seed",
+                "researching",
+                "enriched",
+                "failed",
+                "stale"
+              ],
               "description": "`seed` = name+handles only; `researching` = AI run in flight; `enriched` = previous_brands + inferred_niches populated; `failed` = AI couldn't enrich; `stale` = enriched but past refresh window."
             },
-            "last_researched_at": { "type": "string", "format": "date-time" },
+            "last_researched_at": {
+              "type": "string",
+              "format": "date-time"
+            },
             "sources": {
               "type": "array",
               "description": "URLs / source notes the AI used to enrich this record.",
-              "items": { "type": "string" }
+              "items": {
+                "type": "string"
+              }
             }
           }
         }
       }
     },
-
     "nicheId": {
       "type": "string",
       "pattern": "^[a-z0-9][a-z0-9-]*$",
       "description": "Kebab-case slug that MUST match an `id` in `data/niches.json`. Pattern-validated here; semantic match enforced at load time by the app."
     },
-
     "industryId": {
       "type": "string",
       "pattern": "^[a-z0-9][a-z0-9-]*$",

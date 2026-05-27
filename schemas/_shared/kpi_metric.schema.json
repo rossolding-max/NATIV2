@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://nativ2/schemas/_shared/kpi_metric.schema.json",
+  "title": "kpiMetric",
+  "description": "Canonical shared definition for KPI metrics across the system. Each metric carries its value AND its provenance (source enum, optional source_name, as_of date, optional verified_at timestamp). Referenced via $ref by `brand_deal.schema.json` ($defs.kpiMetric) and `performance_report_pack.schema.json` ($defs.kpiMetric), and indirectly by `deal.schema.json` (via deal.close.final_kpis which carries the report's kpis verbatim). On agent send of a performance report, kpis values write into `deal.close.final_kpis` and ultimately into `brand_deal.kpis` on auto-archive — the SAME shape carries through that loop.",
+  "type": "object",
+  "required": ["value", "source"],
+  "additionalProperties": false,
+  "properties": {
+    "value": {
+      "type": "number",
+      "minimum": 0,
+      "description": "The metric value. For rates (engagement_rate_pct, ctr_pct), this is a percentage 0-100."
+    },
+    "source": {
+      "type": "string",
+      "enum": ["platform_verified", "brand_reported", "third_party", "calculated", "self_reported", "estimated"],
+      "description": "platform_verified = pulled directly from IG / TikTok / YouTube Insights API; brand_reported = brand provided the figure; third_party = Tribe Dynamics / HypeAuditor / similar; calculated = derived from other fields (e.g. CPM from fee/impressions); self_reported = talent's claim (lowest confidence); estimated = back-calculated when no source. Email generator + report renderer strongly prefer platform_verified > brand_reported > third_party when citing metrics."
+    },
+    "source_name": {
+      "type": "string",
+      "description": "Specific source identifier (e.g. 'Instagram Insights API', 'Tribe Dynamics Q4 2025 report')."
+    },
+    "as_of": {
+      "type": "string",
+      "format": "date",
+      "description": "When this figure was captured. KPIs continue to grow after campaign end (e.g. viral pickup); the as_of date tells us when the snapshot was taken."
+    },
+    "verified_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

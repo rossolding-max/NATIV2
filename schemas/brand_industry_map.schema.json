@@ -2,13 +2,25 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://nativ2/schemas/brand_industry_map.schema.json",
   "title": "Brand Industry Map",
-  "description": "The canonical brand reference dataset — agency-wide source-of-truth for brand metadata (industry classification, domain, social handles + follower counts, company stage, revenue, headcount, creator-program presence). Lives at `data/brand_industry_map.json` (committed; not gitignored — global reference data, not per-talent). Every brand-related schema in the system references entries here by `brand_id` (kebab-case slug derived from `name`). Refreshed by Phase 2 brand discovery + Phase 3a contact enrichment. Brand handles in `social_handles` are critical input to Phase 4.8 deliverable detection (the cron scores candidate posts on whether the talent tagged the brand via `@{handle}`).",
+  "description": "The canonical brand reference dataset \u2014 agency-wide source-of-truth for brand metadata (industry classification, domain, social handles + follower counts, company stage, revenue, headcount, creator-program presence). Lives at `data/brand_industry_map.json` (committed; not gitignored \u2014 global reference data, not per-talent). Every brand-related schema in the system references entries here by `brand_id` (kebab-case slug derived from `name`). Refreshed by Phase 2 brand discovery + Phase 3a contact enrichment. Brand handles in `social_handles` are critical input to Phase 4.8 deliverable detection (the cron scores candidate posts on whether the talent tagged the brand via `@{handle}`).",
   "type": "object",
-  "required": ["version", "brands"],
+  "required": [
+    "version",
+    "brands"
+  ],
   "additionalProperties": true,
   "properties": {
-    "$schema": { "type": "string" },
-    "$comment": { "type": "string" },
+    "$schema": {
+      "type": "string"
+    },
+    "agency_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Multi-tenant scope: FK to agency_profile.agency_id. Optional in v0.1 (single-tenant deploys may omit); required in v2 SaaS. When present, all cross-record queries MUST filter by agency_id to prevent cross-tenant data leakage. See docs/data_lineage.md GAP-01/02 for rationale."
+    },
+    "$comment": {
+      "type": "string"
+    },
     "version": {
       "type": "string",
       "description": "Schema version of the file shape. Bump on breaking shape changes (additive changes don't require version bump)."
@@ -21,7 +33,9 @@
     "brands": {
       "type": "array",
       "description": "Canonical brand records. Sorted by name for deterministic git diffs.",
-      "items": { "$ref": "#/$defs/brand" }
+      "items": {
+        "$ref": "#/$defs/brand"
+      }
     },
     "enrichment_field_definitions": {
       "type": "object",
@@ -32,9 +46,12 @@
   "$defs": {
     "brand": {
       "type": "object",
-      "required": ["name", "industry_id"],
+      "required": [
+        "name",
+        "industry_id"
+      ],
       "additionalProperties": false,
-      "description": "One brand entry. `brand_id` is implicit — derived from `name` via normalisation (lowercase + kebab-case + suffix stripping). All other fields optional; absence = unknown for that brand.",
+      "description": "One brand entry. `brand_id` is implicit \u2014 derived from `name` via normalisation (lowercase + kebab-case + suffix stripping). All other fields optional; absence = unknown for that brand.",
       "properties": {
         "name": {
           "type": "string",
@@ -47,7 +64,9 @@
         },
         "aliases": {
           "type": "array",
-          "items": { "type": "string" },
+          "items": {
+            "type": "string"
+          },
           "description": "Alternate names the brand goes by (parent company names, abbreviations, legacy names). Used for fuzzy matching during enrichment + outreach reply classification."
         },
         "domain": {
@@ -61,84 +80,237 @@
         },
         "sells_in_countries": {
           "oneOf": [
-            { "type": "string", "enum": ["global"] },
-            { "type": "array", "items": { "type": "string", "pattern": "^[A-Z]{2}$" } }
+            {
+              "type": "string",
+              "enum": [
+                "global"
+              ]
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^[A-Z]{2}$"
+              }
+            }
           ]
         },
         "company_stage": {
           "type": "string",
-          "enum": ["bootstrapped", "seed", "series_a", "series_b", "series_c", "series_d", "private_growth", "public", "subsidiary", "state_owned", "unknown"]
+          "enum": [
+            "bootstrapped",
+            "seed",
+            "series_a",
+            "series_b",
+            "series_c",
+            "series_d",
+            "private_growth",
+            "public",
+            "subsidiary",
+            "state_owned",
+            "unknown"
+          ]
         },
         "typical_campaign_tier": {
           "type": "string",
-          "enum": ["nano", "micro", "mid", "macro", "premium", "unknown"]
+          "enum": [
+            "nano",
+            "micro",
+            "mid",
+            "macro",
+            "premium",
+            "unknown"
+          ]
         },
         "creator_program_presence": {
           "type": "array",
-          "items": { "type": "string", "enum": ["direct", "aspire", "grin", "ltk", "shopmy", "agency_of_record"] }
+          "items": {
+            "type": "string",
+            "enum": [
+              "direct",
+              "aspire",
+              "grin",
+              "ltk",
+              "shopmy",
+              "agency_of_record"
+            ]
+          }
         },
         "revenue": {
           "type": "object",
-          "required": ["amount_usd", "as_of_year", "source"],
+          "required": [
+            "amount_usd",
+            "as_of_year",
+            "source"
+          ],
           "additionalProperties": false,
           "properties": {
-            "amount_usd": { "type": "integer", "minimum": 0 },
-            "as_of_year": { "type": "integer", "minimum": 1900, "maximum": 2100 },
-            "source": { "type": "string", "enum": ["public_filing", "press_release", "reported_estimate"] }
+            "amount_usd": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "as_of_year": {
+              "type": "integer",
+              "minimum": 1900,
+              "maximum": 2100
+            },
+            "source": {
+              "type": "string",
+              "enum": [
+                "public_filing",
+                "press_release",
+                "reported_estimate"
+              ]
+            }
           }
         },
         "headcount": {
           "type": "object",
-          "required": ["band", "source"],
+          "required": [
+            "band",
+            "source"
+          ],
           "additionalProperties": false,
           "properties": {
-            "band": { "type": "string", "enum": ["1_10", "11_50", "51_200", "201_500", "501_1000", "1001_5000", "5001_10000", "10000_plus"] },
-            "source": { "type": "string", "enum": ["linkedin", "public_filing", "press_release", "reported_estimate"] }
+            "band": {
+              "type": "string",
+              "enum": [
+                "1_10",
+                "11_50",
+                "51_200",
+                "201_500",
+                "501_1000",
+                "1001_5000",
+                "5001_10000",
+                "10000_plus"
+              ]
+            },
+            "source": {
+              "type": "string",
+              "enum": [
+                "linkedin",
+                "public_filing",
+                "press_release",
+                "reported_estimate"
+              ]
+            }
           }
         },
         "social_followers": {
           "type": "object",
           "description": "Brand's own social-media follower counts per platform. Integer counts as of as_of_year. Platforms with minimal/uncertain presence omitted.",
-          "required": ["as_of_year"],
+          "required": [
+            "as_of_year"
+          ],
           "additionalProperties": false,
           "properties": {
-            "instagram": { "type": "integer", "minimum": 0 },
-            "tiktok": { "type": "integer", "minimum": 0 },
-            "youtube": { "type": "integer", "minimum": 0 },
-            "twitter_x": { "type": "integer", "minimum": 0 },
-            "facebook": { "type": "integer", "minimum": 0 },
-            "linkedin": { "type": "integer", "minimum": 0 },
-            "pinterest": { "type": "integer", "minimum": 0 },
-            "as_of_year": { "type": "integer", "minimum": 2000, "maximum": 2100 }
+            "instagram": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "tiktok": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "youtube": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "twitter_x": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "facebook": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "linkedin": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "pinterest": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "as_of_year": {
+              "type": "integer",
+              "minimum": 2000,
+              "maximum": 2100
+            }
           }
         },
         "social_handles": {
           "type": "object",
-          "description": "Brand's own social-media handles per platform (NOT contact handles — those live on `brand_contact.social_handles`). Handles WITHOUT the leading `@` symbol (e.g. `nike` not `@nike`). Critical input to Phase 4.8 deliverable detection — cron uses `{platform}_handle` to score whether the talent's candidate post mentions the brand (e.g. searches captions/tags for `@nike`). Refreshed weekly via Exa; on change detected, last_handle_change timestamp logged for audit. Populated as discovered — absent = handle unknown for that platform.",
+          "description": "Brand's own social-media handles per platform (NOT contact handles \u2014 those live on `brand_contact.social_handles`). Handles WITHOUT the leading `@` symbol (e.g. `nike` not `@nike`). Critical input to Phase 4.8 deliverable detection \u2014 cron uses `{platform}_handle` to score whether the talent's candidate post mentions the brand (e.g. searches captions/tags for `@nike`). Refreshed weekly via Exa; on change detected, last_handle_change timestamp logged for audit. Populated as discovered \u2014 absent = handle unknown for that platform.",
           "additionalProperties": false,
           "properties": {
-            "instagram": { "type": "string" },
-            "tiktok": { "type": "string" },
-            "youtube": { "type": "string", "description": "Channel handle (the @-style handle YouTube introduced in 2022, not the legacy channel name)." },
-            "twitter_x": { "type": "string" },
-            "facebook": { "type": "string" },
-            "linkedin": { "type": "string", "description": "Company-page slug (e.g. `nike-inc`)." },
-            "pinterest": { "type": "string" },
-            "last_handle_change_at": { "type": "string", "format": "date", "description": "Most recent date any handle here changed (rebrand detection)." }
+            "instagram": {
+              "type": "string"
+            },
+            "tiktok": {
+              "type": "string"
+            },
+            "youtube": {
+              "type": "string",
+              "description": "Channel handle (the @-style handle YouTube introduced in 2022, not the legacy channel name)."
+            },
+            "twitter_x": {
+              "type": "string"
+            },
+            "facebook": {
+              "type": "string"
+            },
+            "linkedin": {
+              "type": "string",
+              "description": "Company-page slug (e.g. `nike-inc`)."
+            },
+            "pinterest": {
+              "type": "string"
+            },
+            "last_handle_change_at": {
+              "type": "string",
+              "format": "date",
+              "description": "Most recent date any handle here changed (rebrand detection)."
+            }
           }
         },
         "legal_entity": {
           "type": "object",
-          "description": "Brand's legal entity for contracts/invoicing. Often differs from trading name (e.g. brand 'Nike' = legal entity 'Nike, Inc.'). Captured opportunistically — agent may also provide via contract_pack.context_artefacts.brand_legal_info upload. Populating this field once at the brand level avoids per-deal re-capture friction.",
+          "description": "Brand's legal entity for contracts/invoicing. Often differs from trading name (e.g. brand 'Nike' = legal entity 'Nike, Inc.'). Captured opportunistically \u2014 agent may also provide via contract_pack.context_artefacts.brand_legal_info upload. Populating this field once at the brand level avoids per-deal re-capture friction.",
           "additionalProperties": false,
           "properties": {
-            "legal_name": { "type": "string", "description": "Full legal entity name (e.g. 'Nike, Inc.', 'Lululemon Athletica Inc.', 'GymShark Limited')." },
-            "entity_type": { "type": "string", "description": "Free-text (e.g. 'Delaware C-Corp', 'UK Limited', 'GmbH')." },
-            "registered_address": { "type": "string" },
-            "registered_country": { "type": "string", "pattern": "^[A-Z]{2}$" },
-            "tax_id": { "type": "string" },
-            "last_verified_at": { "type": "string", "format": "date" },
-            "source": { "type": "string", "enum": ["exa_research", "agent_uploaded_w9", "agent_uploaded_registration", "manual_entry", "prior_contract"] }
+            "legal_name": {
+              "type": "string",
+              "description": "Full legal entity name (e.g. 'Nike, Inc.', 'Lululemon Athletica Inc.', 'GymShark Limited')."
+            },
+            "entity_type": {
+              "type": "string",
+              "description": "Free-text (e.g. 'Delaware C-Corp', 'UK Limited', 'GmbH')."
+            },
+            "registered_address": {
+              "type": "string"
+            },
+            "registered_country": {
+              "type": "string",
+              "pattern": "^[A-Z]{2}$"
+            },
+            "tax_id": {
+              "type": "string"
+            },
+            "last_verified_at": {
+              "type": "string",
+              "format": "date"
+            },
+            "source": {
+              "type": "string",
+              "enum": [
+                "exa_research",
+                "agent_uploaded_w9",
+                "agent_uploaded_registration",
+                "manual_entry",
+                "prior_contract"
+              ]
+            }
           }
         }
       }

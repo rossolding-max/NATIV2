@@ -2,230 +2,525 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://nativ2/schemas/pitch_enrollment.schema.json",
   "title": "Pitch Enrollment",
-  "description": "A running instance of a pitch_template for a specific (talent, contact) pair. Carries the AI-generated content per step, real-time engagement events from Smartlead webhooks, LLM-classified reply outcomes, and full provenance for A/B analytics. One file per enrollment under `data/pitch_enrollments/{enrollment_id}.json` (gitignored — generated artifact + contact PII). See `docs/outreach_workflow.md`.",
+  "description": "A running instance of a pitch_template for a specific (talent, contact) pair. Carries the AI-generated content per step, real-time engagement events from Smartlead webhooks, LLM-classified reply outcomes, and full provenance for A/B analytics. One file per enrollment under `data/pitch_enrollments/{enrollment_id}.json` (gitignored \u2014 generated artifact + contact PII). See `docs/outreach_workflow.md`.",
   "type": "object",
-  "required": ["enrollment_id", "talent_id", "brand_id", "contact_id", "template_id", "state", "steps", "created_at"],
+  "required": [
+    "enrollment_id",
+    "talent_id",
+    "brand_id",
+    "contact_id",
+    "template_id",
+    "state",
+    "steps",
+    "created_at"
+  ],
   "additionalProperties": false,
   "properties": {
-    "$schema": { "type": "string" },
+    "$schema": {
+      "type": "string"
+    },
+    "agency_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Multi-tenant scope: FK to agency_profile.agency_id. Optional in v0.1 (single-tenant deploys may omit); required in v2 SaaS. When present, all cross-record queries MUST filter by agency_id to prevent cross-tenant data leakage. See docs/data_lineage.md GAP-01/02 for rationale."
+    },
     "enrollment_id": {
       "type": "string",
       "pattern": "^enr_[a-z0-9]+$",
       "description": "Globally unique enrollment identifier. Format: `enr_{nanoid}`."
     },
-    "talent_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
-    "brand_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
-    "contact_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$", "description": "FK to a contact in `data/brand_contacts/{brand_id}.json`." },
-    "template_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
-
+    "talent_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]*$"
+    },
+    "brand_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]*$"
+    },
+    "contact_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]*$",
+      "description": "FK to a contact in `data/brand_contacts/{brand_id}.json`."
+    },
+    "template_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]*$"
+    },
     "state": {
       "type": "string",
-      "enum": ["drafted", "awaiting_approval", "active", "paused", "completed", "killed"],
+      "enum": [
+        "drafted",
+        "awaiting_approval",
+        "active",
+        "paused",
+        "completed",
+        "killed"
+      ],
       "description": "Lifecycle state. `drafted` = AI generated all steps, not approved; `awaiting_approval` = in review queue; `active` = approved and scheduled in Smartlead; `paused` = halted (e.g. by user or by reply on another sequence for the same contact); `completed` = all steps sent without kill; `killed` = stopped early (reply, bounce, unsubscribe, user-killed)."
     },
     "kill_reason": {
-      "type": ["string", "null"],
-      "enum": [null, "reply_received", "bounced", "unsubscribed", "user_killed", "contact_left_brand", "do_not_contact_set", "exclusivity_conflict_detected", "talent_paused_outreach"],
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        null,
+        "reply_received",
+        "bounced",
+        "unsubscribed",
+        "user_killed",
+        "contact_left_brand",
+        "do_not_contact_set",
+        "exclusivity_conflict_detected",
+        "talent_paused_outreach"
+      ],
       "description": "If state=killed, why."
     },
-    "killed_at": { "type": ["string", "null"], "format": "date-time" },
-
+    "killed_at": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    },
     "created_deal_id": {
       "type": "string",
       "pattern": "^deal_pipeline_[a-z0-9_-]+$",
-      "description": "FK to the Phase 4 deal (`data/deals/{deal_id}.json`) that this enrollment spawned via an `interested` reply classification. Populated by the orchestrator when the deal is created from this enrollment. Forms the bidirectional link with `deal.originating_enrollment_id` — anyone reviewing this enrollment can navigate forward to the resulting deal; anyone reviewing the deal can navigate back to the originating pitch. Absent if outcome was not `interested` (declined / unrelated / unresponsive enrollments never spawn deals)."
+      "description": "FK to the Phase 4 deal (`data/deals/{deal_id}.json`) that this enrollment spawned via an `interested` reply classification. Populated by the orchestrator when the deal is created from this enrollment. Forms the bidirectional link with `deal.originating_enrollment_id` \u2014 anyone reviewing this enrollment can navigate forward to the resulting deal; anyone reviewing the deal can navigate back to the originating pitch. Absent if outcome was not `interested` (declined / unrelated / unresponsive enrollments never spawn deals)."
     },
-
     "smartlead_meta": {
       "type": "object",
       "description": "Cross-references to the Smartlead campaign + lead that backs this enrollment.",
       "additionalProperties": false,
       "properties": {
-        "campaign_id": { "type": "string" },
-        "lead_id": { "type": "string" },
-        "sending_mailbox": { "type": "string", "description": "The talent's mailbox sending these emails (e.g. `jane@janedoetalent.com`)." },
-        "sending_domain": { "type": "string" }
+        "campaign_id": {
+          "type": "string"
+        },
+        "lead_id": {
+          "type": "string"
+        },
+        "sending_mailbox": {
+          "type": "string",
+          "description": "The talent's mailbox sending these emails (e.g. `jane@janedoetalent.com`)."
+        },
+        "sending_domain": {
+          "type": "string"
+        }
       }
     },
-
     "steps": {
       "type": "array",
-      "items": { "$ref": "#/$defs/step" }
-    },
-
-    "context_snapshot": {
-      "type": "object",
-      "description": "Snapshot of the (talent, contact, brand) data the AI used at generation time. Stored for reproducibility — if we re-generate later, we can compare to see what changed.",
-      "additionalProperties": false,
-      "properties": {
-        "talent_snapshot_hash": { "type": "string" },
-        "contact_snapshot_hash": { "type": "string" },
-        "brand_snapshot_hash": { "type": "string" },
-        "snapshotted_at": { "type": "string", "format": "date-time" }
+      "items": {
+        "$ref": "#/$defs/step"
       }
     },
-
-    "created_at": { "type": "string", "format": "date-time" },
-    "updated_at": { "type": "string", "format": "date-time" }
+    "context_snapshot": {
+      "type": "object",
+      "description": "Snapshot of the (talent, contact, brand) data the AI used at generation time. Stored for reproducibility \u2014 if we re-generate later, we can compare to see what changed. v0.1: hashes are populated by orchestrator on enrollment creation but no runtime reader exists yet. v0.2 will introduce a regeneration workflow that diffs against snapshotted_at + the three hashes to surface 'what changed since this enrollment was generated' as agent context. See `docs/data_lineage.md` GAP-12.",
+      "additionalProperties": false,
+      "properties": {
+        "talent_snapshot_hash": {
+          "type": "string",
+          "description": "SHA-256 of the talent profile fields used at generation time (canonicalised + hashed). Populated for v0.2 reproducibility tooling."
+        },
+        "contact_snapshot_hash": {
+          "type": "string",
+          "description": "SHA-256 of the brand_contact record used at generation time."
+        },
+        "brand_snapshot_hash": {
+          "type": "string",
+          "description": "SHA-256 of the brand_industry_map entry used at generation time."
+        },
+        "snapshotted_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    }
   },
-
   "$defs": {
     "step": {
       "type": "object",
-      "required": ["step_number", "status"],
+      "required": [
+        "step_number",
+        "status"
+      ],
       "additionalProperties": false,
       "properties": {
-        "step_number": { "type": "integer", "minimum": 1, "maximum": 10 },
+        "step_number": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10
+        },
         "status": {
           "type": "string",
-          "enum": ["pending_generation", "drafted", "awaiting_approval", "scheduled", "sent", "delivered", "skipped", "killed"]
+          "enum": [
+            "pending_generation",
+            "drafted",
+            "awaiting_approval",
+            "scheduled",
+            "sent",
+            "delivered",
+            "skipped",
+            "killed"
+          ]
         },
-        "scheduled_for": { "type": ["string", "null"], "format": "date-time" },
-        "sent_at": { "type": ["string", "null"], "format": "date-time" },
-
-        "generation_meta": { "$ref": "#/$defs/generationMeta" },
-        "generated_content": { "$ref": "#/$defs/generatedContent" },
-        "smartlead_step_meta": { "$ref": "#/$defs/smartleadStepMeta" },
+        "scheduled_for": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "sent_at": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "generation_meta": {
+          "$ref": "#/$defs/generationMeta"
+        },
+        "generated_content": {
+          "$ref": "#/$defs/generatedContent"
+        },
+        "smartlead_step_meta": {
+          "$ref": "#/$defs/smartleadStepMeta"
+        },
         "engagement_events": {
           "type": "array",
-          "items": { "$ref": "#/$defs/engagementEvent" }
+          "items": {
+            "$ref": "#/$defs/engagementEvent"
+          }
         },
-        "engagement_summary": { "$ref": "#/$defs/engagementSummary" },
-        "outcome_classification": { "$ref": "#/$defs/outcomeClassification" },
-
+        "engagement_summary": {
+          "$ref": "#/$defs/engagementSummary"
+        },
+        "outcome_classification": {
+          "$ref": "#/$defs/outcomeClassification"
+        },
         "skip_reason": {
-          "type": ["string", "null"],
-          "enum": [null, "branching_rule_fired", "user_skipped", "scheduling_conflict"],
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            null,
+            "branching_rule_fired",
+            "user_skipped",
+            "scheduling_conflict"
+          ],
           "description": "If status=skipped, why."
         }
       }
     },
-
     "generationMeta": {
       "type": "object",
       "description": "Full provenance of how this step's content was produced. The auditable 'why' behind every email.",
       "additionalProperties": false,
       "properties": {
-        "generated_at": { "type": "string", "format": "date-time" },
+        "generated_at": {
+          "type": "string",
+          "format": "date-time"
+        },
         "model": {
           "type": "string",
-          "enum": ["claude-sonnet-4-7", "claude-haiku-4-5", "claude-opus-4-7", "claude-sonnet-4-6", "claude-haiku-4-5-20251001"]
+          "enum": [
+            "claude-sonnet-4-7",
+            "claude-haiku-4-5",
+            "claude-opus-4-7",
+            "claude-sonnet-4-6",
+            "claude-haiku-4-5-20251001"
+          ]
         },
-        "prompt_tokens": { "type": "integer", "minimum": 0 },
-        "completion_tokens": { "type": "integer", "minimum": 0 },
-        "cost_usd": { "type": "number", "minimum": 0 },
+        "prompt_tokens": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "completion_tokens": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "cost_usd": {
+          "type": "number",
+          "minimum": 0
+        },
         "angles_used": {
           "type": "object",
           "additionalProperties": false,
           "properties": {
-            "primary": { "type": "string", "description": "angle_id from `data/pitch_angles.json`." },
-            "supporting": { "type": ["string", "null"], "description": "Optional second angle the LLM wove in." },
+            "primary": {
+              "type": "string",
+              "description": "angle_id from `data/pitch_angles.json`."
+            },
+            "supporting": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "Optional second angle the LLM wove in."
+            },
             "candidates_considered": {
               "type": "array",
-              "items": { "type": "string" },
+              "items": {
+                "type": "string"
+              },
               "description": "All angle_ids that fired their trigger and were offered to the LLM as candidates. Even un-picked ones logged for analytics."
             }
           }
         },
         "personalization_fields_used": {
           "type": "array",
-          "items": { "type": "string" },
+          "items": {
+            "type": "string"
+          },
           "description": "Dot-paths into the (talent, contact, brand) data that were merged into the email. e.g. `contact.name.first`, `brand.recent_funding.round`."
         },
-        "step_intent": { "type": "string", "description": "Intent from the template step (mirrored here for portability)." },
-        "prompt_hash": { "type": "string", "description": "SHA-256 of the exact prompt sent to the LLM. For reproducibility and de-dup detection." }
+        "step_intent": {
+          "type": "string",
+          "description": "Intent from the template step (mirrored here for portability)."
+        },
+        "prompt_hash": {
+          "type": "string",
+          "description": "SHA-256 of the exact prompt sent to the LLM. For reproducibility and de-dup detection."
+        }
       }
     },
-
     "generatedContent": {
       "type": "object",
       "description": "The actual subject + body that will be sent. Plus structural metadata for A/B analytics.",
-      "required": ["subject", "body"],
+      "required": [
+        "subject",
+        "body"
+      ],
       "additionalProperties": false,
       "properties": {
-        "subject": { "type": "string" },
-        "body": { "type": "string" },
+        "subject": {
+          "type": "string"
+        },
+        "body": {
+          "type": "string"
+        },
         "subject_meta": {
           "type": "object",
           "additionalProperties": false,
           "properties": {
-            "length_chars": { "type": "integer" },
-            "word_count": { "type": "integer" },
-            "has_question_mark": { "type": "boolean" },
-            "has_emoji": { "type": "boolean" },
-            "starts_with": { "type": "string", "description": "First word of the subject — useful for pattern analysis." }
+            "length_chars": {
+              "type": "integer"
+            },
+            "word_count": {
+              "type": "integer"
+            },
+            "has_question_mark": {
+              "type": "boolean"
+            },
+            "has_emoji": {
+              "type": "boolean"
+            },
+            "starts_with": {
+              "type": "string",
+              "description": "First word of the subject \u2014 useful for pattern analysis."
+            }
           }
         },
         "body_meta": {
           "type": "object",
           "additionalProperties": false,
           "properties": {
-            "length_chars": { "type": "integer" },
-            "word_count": { "type": "integer" },
-            "sentence_count": { "type": "integer" },
-            "link_count": { "type": "integer" },
-            "merge_field_count": { "type": "integer", "description": "How many data fields were actually merged in." },
-            "reading_level": { "type": "string", "description": "e.g. 'grade_8' (Flesch-Kincaid bucket)." }
+            "length_chars": {
+              "type": "integer"
+            },
+            "word_count": {
+              "type": "integer"
+            },
+            "sentence_count": {
+              "type": "integer"
+            },
+            "link_count": {
+              "type": "integer"
+            },
+            "merge_field_count": {
+              "type": "integer",
+              "description": "How many data fields were actually merged in."
+            },
+            "reading_level": {
+              "type": "string",
+              "description": "e.g. 'grade_8' (Flesch-Kincaid bucket)."
+            }
           }
         }
       }
     },
-
     "smartleadStepMeta": {
       "type": "object",
       "description": "Per-step Smartlead identifiers + send context.",
       "additionalProperties": false,
       "properties": {
-        "smartlead_email_id": { "type": "string" },
-        "sent_via_mailbox": { "type": "string" },
-        "sent_at_utc": { "type": "string", "format": "date-time" },
-        "sent_at_recipient_local": { "type": "string", "description": "Recipient-local time the email arrived — for time-of-day analytics." },
-        "sender_domain_age_days": { "type": "integer", "description": "How long the sending domain has been warmed up at send time." },
-        "sender_warmup_complete": { "type": "boolean" }
+        "smartlead_email_id": {
+          "type": "string"
+        },
+        "sent_via_mailbox": {
+          "type": "string"
+        },
+        "sent_at_utc": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "sent_at_recipient_local": {
+          "type": "string",
+          "description": "Recipient-local time the email arrived \u2014 for time-of-day analytics."
+        },
+        "sender_domain_age_days": {
+          "type": "integer",
+          "description": "How long the sending domain has been warmed up at send time."
+        },
+        "sender_warmup_complete": {
+          "type": "boolean"
+        }
       }
     },
-
     "engagementEvent": {
       "type": "object",
-      "required": ["event", "at"],
+      "required": [
+        "event",
+        "at"
+      ],
       "additionalProperties": false,
       "properties": {
         "event": {
           "type": "string",
-          "enum": ["delivered", "opened", "clicked", "replied", "bounced", "unsubscribed"]
+          "enum": [
+            "delivered",
+            "opened",
+            "clicked",
+            "replied",
+            "bounced",
+            "unsubscribed"
+          ]
         },
-        "at": { "type": "string", "format": "date-time" },
-        "ip_country": { "type": "string", "pattern": "^[A-Z]{2}$" },
-        "client_inferred": { "type": "string", "description": "Inferred email client (Apple Mail, Outlook, Gmail Web, etc.) from User-Agent." },
-        "likely_mpp": { "type": "boolean", "description": "True if this open event looks like Apple Mail Privacy Protection pre-loading the tracking pixel (vs a real human read). Filtered out of `human_opens` count." },
-        "url": { "type": "string", "format": "uri", "description": "For click events — which URL was clicked." },
-        "bounce_code": { "type": "string", "description": "For bounce events — SMTP error code (5.x.x = hard, 4.x.x = soft)." },
-        "reply_length_chars": { "type": "integer", "description": "For reply events — length of the reply body (proxy for engagement depth)." },
-        "raw_payload_id": { "type": "string", "description": "Reference to the full Smartlead webhook payload (stored separately for forensic value)." }
+        "at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "ip_country": {
+          "type": "string",
+          "pattern": "^[A-Z]{2}$"
+        },
+        "client_inferred": {
+          "type": "string",
+          "description": "Inferred email client (Apple Mail, Outlook, Gmail Web, etc.) from User-Agent."
+        },
+        "likely_mpp": {
+          "type": "boolean",
+          "description": "True if this open event looks like Apple Mail Privacy Protection pre-loading the tracking pixel (vs a real human read). Filtered out of `human_opens` count."
+        },
+        "url": {
+          "type": "string",
+          "format": "uri",
+          "description": "For click events \u2014 which URL was clicked."
+        },
+        "bounce_code": {
+          "type": "string",
+          "description": "For bounce events \u2014 SMTP error code (5.x.x = hard, 4.x.x = soft)."
+        },
+        "reply_length_chars": {
+          "type": "integer",
+          "description": "For reply events \u2014 length of the reply body (proxy for engagement depth)."
+        },
+        "raw_payload_id": {
+          "type": "string",
+          "description": "Reference to the full Smartlead webhook payload (stored separately for forensic value)."
+        }
       }
     },
-
     "engagementSummary": {
       "type": "object",
       "description": "Pre-computed aggregates over `engagement_events[]`. Refreshed every time a new event arrives.",
       "additionalProperties": false,
       "properties": {
-        "opens_total": { "type": "integer", "minimum": 0 },
-        "human_opens": { "type": "integer", "minimum": 0, "description": "Opens excluding `likely_mpp: true` events. The honest open metric in 2026." },
-        "clicks_total": { "type": "integer", "minimum": 0 },
-        "unique_clicks": { "type": "integer", "minimum": 0 },
-        "replied": { "type": "boolean" },
-        "bounced": { "type": "boolean" },
-        "bounce_type": { "type": ["string", "null"], "enum": [null, "hard", "soft"] },
-        "unsubscribed": { "type": "boolean" },
-        "first_human_open_at": { "type": ["string", "null"], "format": "date-time" },
-        "first_click_at": { "type": ["string", "null"], "format": "date-time" },
-        "replied_at": { "type": ["string", "null"], "format": "date-time" },
-        "time_to_first_human_open_seconds": { "type": ["integer", "null"], "minimum": 0 },
-        "time_to_reply_seconds": { "type": ["integer", "null"], "minimum": 0 }
+        "opens_total": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "human_opens": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Opens excluding `likely_mpp: true` events. The honest open metric in 2026."
+        },
+        "clicks_total": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "unique_clicks": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "replied": {
+          "type": "boolean"
+        },
+        "bounced": {
+          "type": "boolean"
+        },
+        "bounce_type": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            null,
+            "hard",
+            "soft"
+          ]
+        },
+        "unsubscribed": {
+          "type": "boolean"
+        },
+        "first_human_open_at": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "first_click_at": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "replied_at": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "time_to_first_human_open_seconds": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "time_to_reply_seconds": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        }
       }
     },
-
     "outcomeClassification": {
       "type": "object",
       "description": "LLM-classified intent of the reply. Populated only when a reply was received. Drives kill-vs-continue decisions and powers the positive_reply_rate metric.",
@@ -233,24 +528,64 @@
       "properties": {
         "outcome": {
           "type": "string",
-          "enum": ["interested", "declined", "out_of_office", "unrelated", "unsubscribe_request", "needs_more_info", "wrong_person_routed"],
+          "enum": [
+            "interested",
+            "declined",
+            "out_of_office",
+            "unrelated",
+            "unsubscribe_request",
+            "needs_more_info",
+            "wrong_person_routed"
+          ],
           "description": "Headline classification. `interested` is the conversion-leading-indicator metric tracked in analytics."
         },
-        "classified_by": { "type": "string", "description": "Model used for classification (typically claude-haiku-4-5)." },
-        "classified_at": { "type": "string", "format": "date-time" },
-        "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
-        "rationale": { "type": "string", "description": "One-line LLM explanation of the classification." },
+        "classified_by": {
+          "type": "string",
+          "description": "Model used for classification (typically claude-haiku-4-5)."
+        },
+        "classified_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "rationale": {
+          "type": "string",
+          "description": "One-line LLM explanation of the classification."
+        },
         "extracted_signals": {
           "type": "object",
           "additionalProperties": false,
           "properties": {
-            "asked_for_pricing": { "type": "boolean" },
-            "asked_for_meeting": { "type": "boolean" },
-            "asked_for_more_info": { "type": "boolean" },
-            "objections_raised": { "type": "array", "items": { "type": "string" } },
-            "next_step_proposed": { "type": "string" },
-            "ooo_until": { "type": "string", "format": "date" },
-            "routed_to_contact": { "type": "string", "description": "If they routed us to someone else, the named person/email." }
+            "asked_for_pricing": {
+              "type": "boolean"
+            },
+            "asked_for_meeting": {
+              "type": "boolean"
+            },
+            "asked_for_more_info": {
+              "type": "boolean"
+            },
+            "objections_raised": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "next_step_proposed": {
+              "type": "string"
+            },
+            "ooo_until": {
+              "type": "string",
+              "format": "date"
+            },
+            "routed_to_contact": {
+              "type": "string",
+              "description": "If they routed us to someone else, the named person/email."
+            }
           }
         }
       }

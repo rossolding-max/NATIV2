@@ -2,13 +2,31 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://nativ2/schemas/contract_pack.schema.json",
   "title": "Contract Pack",
-  "description": "Phase 4.7 — a versioned contract draft generated from the talent's contract template (Phase 1 onboarding) + the deal's confirmed proposal commercials (Phase 4.6) + agent-uploaded brand legal info. 7-stage pipeline: context augmentation → merge field extraction → conditional clause evaluation → narrative drafting → composition → HARD LEGAL REVIEW GATE → render. Output: markdown source (canonical) + Word .docx (editable) + PDF (read-only). Existing `deal.contract.draft_contract_attachment_id` and `contract_attachment_id` auto-populate from the latest contract pack render. Stored at `data/deals/{deal_id}/contract_packs/v{N}.json` (gitignored). See `docs/contract_pack_workflow.md`.",
+  "description": "Phase 4.7 \u2014 a versioned contract draft generated from the talent's contract template (Phase 1 onboarding) + the deal's confirmed proposal commercials (Phase 4.6) + agent-uploaded brand legal info. 7-stage pipeline: context augmentation \u2192 merge field extraction \u2192 conditional clause evaluation \u2192 narrative drafting \u2192 composition \u2192 HARD LEGAL REVIEW GATE \u2192 render. Output: markdown source (canonical) + Word .docx (editable) + PDF (read-only). Existing `deal.contract.draft_contract_attachment_id` and `contract_attachment_id` auto-populate from the latest contract pack render. Stored at `data/deals/{deal_id}/contract_packs/v{N}.json` (gitignored). See `docs/contract_pack_workflow.md`.",
   "type": "object",
-  "required": ["contract_pack_id", "deal_id", "version", "is_latest", "generation", "context_snapshot", "merge_field_values", "conditional_clause_decisions", "narrative_sections", "legal_review", "created_at"],
+  "required": [
+    "contract_pack_id",
+    "deal_id",
+    "version",
+    "is_latest",
+    "generation",
+    "context_snapshot",
+    "merge_field_values",
+    "conditional_clause_decisions",
+    "narrative_sections",
+    "legal_review",
+    "created_at"
+  ],
   "additionalProperties": false,
   "properties": {
-    "$schema": { "type": "string" },
-
+    "$schema": {
+      "type": "string"
+    },
+    "agency_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Multi-tenant scope: FK to agency_profile.agency_id. Optional in v0.1 (single-tenant deploys may omit); required in v2 SaaS. When present, all cross-record queries MUST filter by agency_id to prevent cross-tenant data leakage. See docs/data_lineage.md GAP-01/02 for rationale."
+    },
     "contract_pack_id": {
       "type": "string",
       "pattern": "^cp_[a-z0-9_-]+_v[0-9]+$",
@@ -19,23 +37,41 @@
       "pattern": "^deal_pipeline_[a-z0-9_-]+$",
       "description": "FK to the Phase 4 deal. The deal's `contract.contract_pack_ids[]` array references all versions; `contract.latest_contract_pack_id` points to the current `is_latest: true` version."
     },
-    "version": { "type": "integer", "minimum": 1 },
-    "parent_version": { "type": "integer", "minimum": 1 },
-    "is_latest": { "type": "boolean" },
-
+    "version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "parent_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "is_latest": {
+      "type": "boolean"
+    },
     "generation": {
       "type": "object",
-      "required": ["trigger", "generated_at", "llm_model"],
+      "required": [
+        "trigger",
+        "generated_at",
+        "llm_model"
+      ],
       "additionalProperties": false,
       "properties": {
         "trigger": {
           "type": "string",
-          "enum": ["agent_initiated_v1", "agent_full_regenerate", "agent_section_regenerate", "agent_per_clause_regenerate", "brand_redline_response", "amendment_request"],
+          "enum": [
+            "agent_initiated_v1",
+            "agent_full_regenerate",
+            "agent_section_regenerate",
+            "agent_per_clause_regenerate",
+            "brand_redline_response",
+            "amendment_request"
+          ],
           "description": "agent_initiated_v1: first draft. agent_*regenerate: NL-feedback regen of various scopes. brand_redline_response: agent uploaded brand's redlined version + triggered regen targeting the redlined sections. amendment_request: post-execution amendment (writes to `deal.contract.amendment_log[]` instead of replacing the executed contract)."
         },
         "pre_generation_guidance": {
           "type": "string",
-          "description": "Free-text guidance from the agent before generation. e.g. 'Brand mentioned in call they have strict NDAs — make sure confidentiality clause is comprehensive.'"
+          "description": "Free-text guidance from the agent before generation. e.g. 'Brand mentioned in call they have strict NDAs \u2014 make sure confidentiality clause is comprehensive.'"
         },
         "regeneration_feedback": {
           "type": "string",
@@ -43,7 +79,9 @@
         },
         "target_sections": {
           "type": "array",
-          "items": { "type": "string" },
+          "items": {
+            "type": "string"
+          },
           "description": "For section/per-clause regen: which sections were rebuilt. e.g. ['merge_field_values', 'conditional_clause_decisions.gdpr', 'narrative_sections.scope_of_work']."
         },
         "amendment_log_entry_ref": {
@@ -51,44 +89,88 @@
           "format": "date-time",
           "description": "If trigger=amendment_request: ISO-timestamp matching the `deal.contract.amendment_log[].at` entry this version documents. Closes the bidirectional link with `amendment_log[].contract_pack_version` (parallel to negotiation_log_entry_ref on proposal_pack)."
         },
-        "generated_at": { "type": "string", "format": "date-time" },
-        "generated_by_agent_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
-        "llm_model": { "type": "string" },
+        "generated_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "generated_by_agent_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]*$"
+        },
+        "llm_model": {
+          "type": "string"
+        },
         "llm_passes": {
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["pass_name", "input_tokens", "output_tokens"],
+            "required": [
+              "pass_name",
+              "input_tokens",
+              "output_tokens"
+            ],
             "additionalProperties": false,
             "properties": {
               "pass_name": {
                 "type": "string",
-                "enum": ["context_artefact_summarize", "merge_field_extract", "clause_evaluate", "narrative_draft", "compose", "section_regen", "clause_regen"]
+                "enum": [
+                  "context_artefact_summarize",
+                  "merge_field_extract",
+                  "clause_evaluate",
+                  "narrative_draft",
+                  "compose",
+                  "section_regen",
+                  "clause_regen"
+                ]
               },
-              "model": { "type": "string" },
-              "input_tokens": { "type": "integer", "minimum": 0 },
-              "output_tokens": { "type": "integer", "minimum": 0 },
-              "cached_tokens": { "type": "integer", "minimum": 0 },
-              "cost_usd": { "type": "number", "minimum": 0 },
-              "duration_ms": { "type": "integer", "minimum": 0 }
+              "model": {
+                "type": "string"
+              },
+              "input_tokens": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "output_tokens": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "cached_tokens": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "cost_usd": {
+                "type": "number",
+                "minimum": 0
+              },
+              "duration_ms": {
+                "type": "integer",
+                "minimum": 0
+              }
             }
           }
         }
       }
     },
-
     "context_snapshot": {
       "type": "object",
-      "required": ["captured_at"],
+      "required": [
+        "captured_at"
+      ],
       "additionalProperties": false,
       "description": "Frozen upstream context this version was generated from. If the talent template or deal data evolves, this version stays anchored.",
       "properties": {
-        "captured_at": { "type": "string", "format": "date-time" },
+        "captured_at": {
+          "type": "string",
+          "format": "date-time"
+        },
         "template_version_used": {
           "type": "string",
-          "description": "Value of `talent.contract_template.template_version` at generation time. Anchors this pack to the template version it used — template updates don't retroactively change historic packs."
+          "description": "Value of `talent.contract_template.template_version` at generation time. Anchors this pack to the template version it used \u2014 template updates don't retroactively change historic packs."
         },
-        "talent_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+        "talent_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]*$"
+        },
         "talent_billing_entity_snapshot": {
           "type": "object",
           "description": "Frozen snapshot of `talent.billing_entity` at generation time. Legal-name changes don't break old contracts.",
@@ -109,119 +191,255 @@
           "description": "Brand's legal entity info as known at generation time. Often provided via context_artefacts (agent-uploaded W-9 / company registration / etc.).",
           "additionalProperties": false,
           "properties": {
-            "legal_name": { "type": "string" },
-            "entity_type": { "type": "string", "description": "e.g. 'Delaware C-Corp', 'UK Limited', 'GmbH'." },
-            "registered_address": { "type": "string" },
-            "country": { "type": "string", "description": "ISO 3166-1 alpha-2." },
-            "tax_id": { "type": "string" },
-            "signatory_name": { "type": "string", "description": "Person signing on behalf of the brand. Often different from primary_contact." },
-            "signatory_title": { "type": "string" },
-            "signatory_email": { "type": "string", "format": "email" }
+            "legal_name": {
+              "type": "string"
+            },
+            "entity_type": {
+              "type": "string",
+              "description": "e.g. 'Delaware C-Corp', 'UK Limited', 'GmbH'."
+            },
+            "registered_address": {
+              "type": "string"
+            },
+            "country": {
+              "type": "string",
+              "description": "ISO 3166-1 alpha-2."
+            },
+            "tax_id": {
+              "type": "string"
+            },
+            "signatory_name": {
+              "type": "string",
+              "description": "Person signing on behalf of the brand. Often different from primary_contact."
+            },
+            "signatory_title": {
+              "type": "string"
+            },
+            "signatory_email": {
+              "type": "string",
+              "format": "email"
+            }
           }
         },
         "comparable_contracts_referenced": {
           "type": "array",
-          "items": { "type": "string" },
+          "items": {
+            "type": "string"
+          },
           "description": "FKs to context_artefacts of prior contracts with this brand (or similar brands). Helps the LLM mirror prior conventions where appropriate."
         }
       }
     },
-
     "context_artefacts": {
       "type": "array",
-      "description": "Files uploaded by the agent in Stage A — brand legal info, brand-requested clauses, prior contracts. Same shape as `proposal_pack.context_artefacts` (parser metadata, parsed_text, llm_summary, relevance_tag).",
-      "items": { "$ref": "#/$defs/contextArtefact" }
+      "description": "Files uploaded by the agent in Stage A \u2014 brand legal info, brand-requested clauses, prior contracts. Same shape as `proposal_pack.context_artefacts` (parser metadata, parsed_text, llm_summary, relevance_tag).",
+      "items": {
+        "$ref": "#/$defs/contextArtefact"
+      }
     },
-
     "merge_field_values": {
       "type": "array",
       "description": "Every merge field declared in `talent.contract_template.merge_field_definitions[]`, with extracted/agent-supplied value + provenance + confidence. Stage B output. Critical fields (legal names, fees, dates) with low confidence or missing values block the legal review gate.",
       "items": {
         "type": "object",
-        "required": ["field", "source"],
+        "required": [
+          "field",
+          "source"
+        ],
         "additionalProperties": false,
         "properties": {
-          "field": { "type": "string", "description": "Matches the merge_field_definitions[].field name." },
-          "value": { "description": "Extracted/computed/agent-supplied value. Type varies — string, number, date." },
+          "field": {
+            "type": "string",
+            "description": "Matches the merge_field_definitions[].field name."
+          },
+          "value": {
+            "description": "Extracted/computed/agent-supplied value. Type varies \u2014 string, number, date."
+          },
           "source": {
             "type": "string",
-            "enum": ["talent_profile", "talent_billing_entity", "talent_working_terms", "agency_profile", "deal_proposal", "discovery_debrief", "context_artefact", "agent_input", "computed", "default"],
+            "enum": [
+              "talent_profile",
+              "talent_billing_entity",
+              "talent_working_terms",
+              "agency_profile",
+              "deal_proposal",
+              "discovery_debrief",
+              "context_artefact",
+              "agent_input",
+              "computed",
+              "default"
+            ],
             "description": "Which source the value came from. `default` = fell back to merge_field_definitions[].default. `agent_input` = agent provided directly (typically brand legal info)."
           },
-          "source_path": { "type": "string", "description": "Specific path within source (e.g. 'billing_entity.legal_name')." },
-          "confidence": { "type": "string", "enum": ["high", "medium", "low", "missing"], "description": "high: deterministic extraction (e.g. fee_usd from deal.proposal). medium: LLM-inferred with strong signal. low: LLM guess. missing: no value found, needs_review flag set." },
-          "needs_review": { "type": "boolean", "default": false, "description": "If true, blocks legal review gate until agent reviews + confirms. Auto-set for low/missing confidence on required fields." },
-          "agent_overridden": { "type": "boolean", "default": false, "description": "True if agent edited LLM-extracted value." },
-          "agent_override_note": { "type": "string" }
+          "source_path": {
+            "type": "string",
+            "description": "Specific path within source (e.g. 'billing_entity.legal_name')."
+          },
+          "confidence": {
+            "type": "string",
+            "enum": [
+              "high",
+              "medium",
+              "low",
+              "missing"
+            ],
+            "description": "high: deterministic extraction (e.g. fee_usd from deal.proposal). medium: LLM-inferred with strong signal. low: LLM guess. missing: no value found, needs_review flag set."
+          },
+          "needs_review": {
+            "type": "boolean",
+            "default": false,
+            "description": "If true, blocks legal review gate until agent reviews + confirms. Auto-set for low/missing confidence on required fields."
+          },
+          "agent_overridden": {
+            "type": "boolean",
+            "default": false,
+            "description": "True if agent edited LLM-extracted value."
+          },
+          "agent_override_note": {
+            "type": "string"
+          }
         }
       }
     },
-
     "conditional_clause_decisions": {
       "type": "array",
       "description": "Per-conditional-block decision from Stage C. Each entry covers one `{{#if clause_id}}...{{/if}}` block in the template.",
       "items": {
         "type": "object",
-        "required": ["clause_id", "decision"],
+        "required": [
+          "clause_id",
+          "decision"
+        ],
         "additionalProperties": false,
         "properties": {
-          "clause_id": { "type": "string", "description": "Matches `clause_applicability_rules[].clause_id`." },
-          "decision": { "type": "string", "enum": ["include", "exclude"] },
-          "decided_by": { "type": "string", "enum": ["template_default", "llm", "agent"], "description": "How the decision was reached. template_default: rule had default_decision=include/exclude. llm: rule had llm_decide and Stage C evaluated. agent: agent overrode the LLM decision." },
-          "applicability_rationale": { "type": "string", "description": "LLM's explanation for the decision. Cites which context signals drove inclusion/exclusion." },
-          "agent_overridden": { "type": "boolean", "default": false },
-          "agent_override_note": { "type": "string" }
+          "clause_id": {
+            "type": "string",
+            "description": "Matches `clause_applicability_rules[].clause_id`."
+          },
+          "decision": {
+            "type": "string",
+            "enum": [
+              "include",
+              "exclude"
+            ]
+          },
+          "decided_by": {
+            "type": "string",
+            "enum": [
+              "template_default",
+              "llm",
+              "agent"
+            ],
+            "description": "How the decision was reached. template_default: rule had default_decision=include/exclude. llm: rule had llm_decide and Stage C evaluated. agent: agent overrode the LLM decision."
+          },
+          "applicability_rationale": {
+            "type": "string",
+            "description": "LLM's explanation for the decision. Cites which context signals drove inclusion/exclusion."
+          },
+          "agent_overridden": {
+            "type": "boolean",
+            "default": false
+          },
+          "agent_override_note": {
+            "type": "string"
+          }
         }
       }
     },
-
     "narrative_sections": {
       "type": "array",
       "description": "LLM-drafted content for each `{{narrative_*}}` placeholder declared in `talent.contract_template.narrative_placeholders[]`. Stage D output.",
       "items": {
         "type": "object",
-        "required": ["placeholder", "content"],
+        "required": [
+          "placeholder",
+          "content"
+        ],
         "additionalProperties": false,
         "properties": {
-          "placeholder": { "type": "string", "description": "Matches narrative_placeholders[].placeholder name." },
-          "content": { "type": "string", "description": "LLM-drafted markdown content." },
+          "placeholder": {
+            "type": "string",
+            "description": "Matches narrative_placeholders[].placeholder name."
+          },
+          "content": {
+            "type": "string",
+            "description": "LLM-drafted markdown content."
+          },
           "sources": {
             "type": "array",
-            "items": { "type": "string" },
+            "items": {
+              "type": "string"
+            },
             "description": "Which context paths the LLM drew from (e.g. 'deal.proposal.deliverables[0..2]', 'discovery_debrief.objectives_heard[1]')."
           },
-          "word_count": { "type": "integer", "minimum": 0 },
-          "agent_edited": { "type": "boolean", "default": false },
-          "agent_edited_at": { "type": "string", "format": "date-time" }
+          "word_count": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "agent_edited": {
+            "type": "boolean",
+            "default": false
+          },
+          "agent_edited_at": {
+            "type": "string",
+            "format": "date-time"
+          }
         }
       }
     },
-
     "composed_markdown": {
       "type": "string",
-      "description": "The final composed contract — template markdown_source with all merge fields substituted, conditional blocks resolved (included blocks kept verbatim, excluded blocks stripped), narrative placeholders filled. Stage E output. This is the canonical source-of-truth that the Word and PDF artefacts render from. Agent direct edits update this string + log to agent_edits[]; subsequent renders regenerate Word + PDF from the updated source."
+      "description": "The final composed contract \u2014 template markdown_source with all merge fields substituted, conditional blocks resolved (included blocks kept verbatim, excluded blocks stripped), narrative placeholders filled. Stage E output. This is the canonical source-of-truth that the Word and PDF artefacts render from. Agent direct edits update this string + log to agent_edits[]; subsequent renders regenerate Word + PDF from the updated source."
     },
-
     "legal_review": {
       "type": "object",
-      "required": ["required"],
+      "required": [
+        "required"
+      ],
       "additionalProperties": false,
       "description": "The HARD LEGAL REVIEW GATE. Word + PDF artefacts cannot render until approved_at is set. Any edit post-approval resets the gate (re-approval required) unless trivial_edit_override is true.",
       "properties": {
-        "required": { "type": "boolean", "default": true, "description": "v0.1: always true. v0.2 if agency-configurable gate is added, agencies can opt out." },
-        "reviewer_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$", "description": "Defaulted from talent.contract_template.legal_reviewer_id (if set) or deal.assigned_agent_id. Only this identity can approve." },
+        "required": {
+          "type": "boolean",
+          "default": true,
+          "description": "v0.1: always true. v0.2 if agency-configurable gate is added, agencies can opt out."
+        },
+        "reviewer_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]*$",
+          "description": "Defaulted from talent.contract_template.legal_reviewer_id (if set) or deal.assigned_agent_id. Only this identity can approve."
+        },
         "blocking_issues": {
           "type": "array",
           "description": "Automatically populated: merge_field_values entries where needs_review=true OR required field is missing/low-confidence; clause_decisions agent has flagged for re-evaluation; narrative sections agent has flagged. Gate cannot pass with non-empty blocking_issues.",
           "items": {
             "type": "object",
-            "required": ["category", "field_or_id", "issue"],
+            "required": [
+              "category",
+              "field_or_id",
+              "issue"
+            ],
             "additionalProperties": false,
             "properties": {
-              "category": { "type": "string", "enum": ["merge_field", "clause_decision", "narrative_section", "agent_flagged"] },
-              "field_or_id": { "type": "string" },
-              "issue": { "type": "string" },
-              "resolved_at": { "type": "string", "format": "date-time" }
+              "category": {
+                "type": "string",
+                "enum": [
+                  "merge_field",
+                  "clause_decision",
+                  "narrative_section",
+                  "agent_flagged"
+                ]
+              },
+              "field_or_id": {
+                "type": "string"
+              },
+              "issue": {
+                "type": "string"
+              },
+              "resolved_at": {
+                "type": "string",
+                "format": "date-time"
+              }
             }
           }
         },
@@ -230,106 +448,274 @@
           "format": "date-time",
           "description": "When the reviewer passed the gate. ABSENT = Word + PDF artefacts blocked. Setting this enables Stage G render."
         },
-        "approved_by_agent_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
-        "approval_notes": { "type": "string", "description": "Optional notes captured at approval (e.g. 'reviewed by external counsel; minor wording change on indemnification — see edit log')." },
+        "approved_by_agent_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]*$"
+        },
+        "approval_notes": {
+          "type": "string",
+          "description": "Optional notes captured at approval (e.g. 'reviewed by external counsel; minor wording change on indemnification \u2014 see edit log')."
+        },
         "previous_approvals": {
           "type": "array",
           "description": "If edits reset the gate, prior approvals are pushed here as an audit trail. Each entry is the prior {approved_at, approved_by_agent_id, approval_notes} + the timestamp the approval was reset + reset_reason.",
           "items": {
             "type": "object",
-            "required": ["approved_at", "approved_by_agent_id", "reset_at"],
+            "required": [
+              "approved_at",
+              "approved_by_agent_id",
+              "reset_at"
+            ],
             "additionalProperties": false,
             "properties": {
-              "approved_at": { "type": "string", "format": "date-time" },
-              "approved_by_agent_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
-              "approval_notes": { "type": "string" },
-              "reset_at": { "type": "string", "format": "date-time" },
-              "reset_reason": { "type": "string", "description": "What edit triggered the reset (e.g. 'agent edited merge_field fee_usd', 'narrative scope_of_work regenerated')." }
+              "approved_at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "approved_by_agent_id": {
+                "type": "string",
+                "pattern": "^[a-z0-9][a-z0-9-]*$"
+              },
+              "approval_notes": {
+                "type": "string"
+              },
+              "reset_at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "reset_reason": {
+                "type": "string",
+                "description": "What edit triggered the reset (e.g. 'agent edited merge_field fee_usd', 'narrative scope_of_work regenerated')."
+              }
             }
           }
         }
       }
     },
-
     "export_artifacts": {
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["type", "status"],
+        "required": [
+          "type",
+          "status"
+        ],
         "additionalProperties": false,
         "properties": {
-          "type": { "type": "string", "enum": ["contract_md", "contract_docx", "contract_pdf"] },
-          "status": { "type": "string", "enum": ["rendered", "pending", "failed", "blocked_by_legal_gate"] },
-          "path": { "type": "string" },
-          "size_bytes": { "type": "integer", "minimum": 0 },
-          "rendered_at": { "type": "string", "format": "date-time" },
-          "rendered_by": { "type": "string", "enum": ["markdown_writer", "python_docx", "puppeteer_pdf", "pandoc"] },
-          "error": { "type": "string" }
+          "type": {
+            "type": "string",
+            "enum": [
+              "contract_md",
+              "contract_docx",
+              "contract_pdf"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "rendered",
+              "pending",
+              "failed",
+              "blocked_by_legal_gate"
+            ]
+          },
+          "path": {
+            "type": "string"
+          },
+          "size_bytes": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "rendered_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "rendered_by": {
+            "type": "string",
+            "enum": [
+              "markdown_writer",
+              "python_docx",
+              "puppeteer_pdf",
+              "pandoc"
+            ]
+          },
+          "error": {
+            "type": "string"
+          }
         }
       }
     },
-
     "agent_edits": {
       "type": "array",
       "description": "Append-only audit log of direct edits (no LLM regen). Edits that change merge field values / clause decisions / narrative content / composed markdown reset the legal review gate (push current approval to previous_approvals[]).",
       "items": {
         "type": "object",
-        "required": ["edit_id", "edited_at", "edit_type", "target"],
+        "required": [
+          "edit_id",
+          "edited_at",
+          "edit_type",
+          "target"
+        ],
         "additionalProperties": false,
         "properties": {
-          "edit_id": { "type": "string", "pattern": "^edit_[a-z0-9]+$" },
-          "edited_at": { "type": "string", "format": "date-time" },
-          "edited_by_agent_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+          "edit_id": {
+            "type": "string",
+            "pattern": "^edit_[a-z0-9]+$"
+          },
+          "edited_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "edited_by_agent_id": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9-]*$"
+          },
           "edit_type": {
             "type": "string",
-            "enum": ["merge_field_override", "clause_decision_override", "narrative_section_edit", "composed_markdown_edit", "context_artefact_retag", "context_artefact_exclude", "brand_legal_entity_update"]
+            "enum": [
+              "merge_field_override",
+              "clause_decision_override",
+              "narrative_section_edit",
+              "composed_markdown_edit",
+              "context_artefact_retag",
+              "context_artefact_exclude",
+              "brand_legal_entity_update"
+            ]
           },
-          "target": { "type": "string", "description": "What was edited. e.g. 'merge_field_values[fee_usd]', 'conditional_clause_decisions[gdpr]', 'narrative_sections[scope_of_work]'." },
-          "before_excerpt": { "type": "string" },
-          "after_excerpt": { "type": "string" },
-          "resets_legal_gate": { "type": "boolean", "default": true, "description": "Most edits reset the gate. Trivial edits (whitespace, typo) can be flagged to NOT reset — agent decides at edit time." },
-          "trivial_edit_override": { "type": "boolean", "default": false, "description": "If true, edit does NOT reset legal_review.approved_at. Agent must explicitly mark trivial." }
+          "target": {
+            "type": "string",
+            "description": "What was edited. e.g. 'merge_field_values[fee_usd]', 'conditional_clause_decisions[gdpr]', 'narrative_sections[scope_of_work]'."
+          },
+          "before_excerpt": {
+            "type": "string"
+          },
+          "after_excerpt": {
+            "type": "string"
+          },
+          "resets_legal_gate": {
+            "type": "boolean",
+            "default": true,
+            "description": "Most edits reset the gate. Trivial edits (whitespace, typo) can be flagged to NOT reset \u2014 agent decides at edit time."
+          },
+          "trivial_edit_override": {
+            "type": "boolean",
+            "default": false,
+            "description": "If true, edit does NOT reset legal_review.approved_at. Agent must explicitly mark trivial."
+          }
         }
       }
     },
-
-    "created_at": { "type": "string", "format": "date-time" },
-    "updated_at": { "type": "string", "format": "date-time" }
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    }
   },
-
   "$defs": {
-
     "contextArtefact": {
       "type": "object",
-      "required": ["artefact_id", "type", "original_filename", "uploaded_at", "parser"],
+      "required": [
+        "artefact_id",
+        "type",
+        "original_filename",
+        "uploaded_at",
+        "parser"
+      ],
       "additionalProperties": false,
       "description": "Same shape as proposal_pack.context_artefact, with contract-specific type enum values.",
       "properties": {
-        "artefact_id": { "type": "string", "pattern": "^ctx_[a-z0-9]+$" },
+        "artefact_id": {
+          "type": "string",
+          "pattern": "^ctx_[a-z0-9]+$"
+        },
         "type": {
           "type": "string",
-          "enum": ["brand_legal_info", "brand_requested_clauses", "prior_contract", "brand_redline", "talent_redline", "reference_material", "other"],
+          "enum": [
+            "brand_legal_info",
+            "brand_requested_clauses",
+            "prior_contract",
+            "brand_redline",
+            "talent_redline",
+            "reference_material",
+            "other"
+          ],
           "description": "brand_legal_info: W-9, company registration, corporate structure documents. brand_requested_clauses: specific clauses the brand has asked be included. prior_contract: previous executed contract with this brand (for convention matching). brand_redline / talent_redline: redlined versions received during review."
         },
-        "role": { "type": "string", "enum": ["primary_input", "supplementary", "reference"], "default": "primary_input" },
-        "original_filename": { "type": "string" },
-        "stored_filepath": { "type": "string" },
-        "mime_type": { "type": "string" },
-        "size_bytes": { "type": "integer", "minimum": 0 },
-        "uploaded_at": { "type": "string", "format": "date-time" },
-        "uploaded_by_agent_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
-        "parser": { "type": "string", "enum": ["pypdf", "python_docx", "text_reader", "external_url"] },
-        "parsed_text": { "type": "string" },
-        "parsed_text_length": { "type": "integer", "minimum": 0 },
-        "external_url": { "type": "string", "format": "uri" },
-        "llm_summary": { "type": "string" },
+        "role": {
+          "type": "string",
+          "enum": [
+            "primary_input",
+            "supplementary",
+            "reference"
+          ],
+          "default": "primary_input"
+        },
+        "original_filename": {
+          "type": "string"
+        },
+        "stored_filepath": {
+          "type": "string"
+        },
+        "mime_type": {
+          "type": "string"
+        },
+        "size_bytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "uploaded_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "uploaded_by_agent_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]*$"
+        },
+        "parser": {
+          "type": "string",
+          "enum": [
+            "pypdf",
+            "python_docx",
+            "text_reader",
+            "external_url"
+          ]
+        },
+        "parsed_text": {
+          "type": "string"
+        },
+        "parsed_text_length": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "external_url": {
+          "type": "string",
+          "format": "uri"
+        },
+        "llm_summary": {
+          "type": "string"
+        },
         "llm_extracted_signals": {
           "type": "object",
-          "description": "Optional structured extraction (e.g. brand_legal_info → legal_name, registered_address, tax_id, signatory).",
+          "description": "Optional structured extraction (e.g. brand_legal_info \u2192 legal_name, registered_address, tax_id, signatory).",
           "additionalProperties": true
         },
-        "relevance_tag": { "type": "string", "enum": ["core", "context", "low", "drop"], "default": "core" },
-        "include_in_generation": { "type": "boolean", "default": true }
+        "relevance_tag": {
+          "type": "string",
+          "enum": [
+            "core",
+            "context",
+            "low",
+            "drop"
+          ],
+          "default": "core"
+        },
+        "include_in_generation": {
+          "type": "boolean",
+          "default": true
+        }
       }
     }
   }

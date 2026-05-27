@@ -2,25 +2,43 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://nativ2/schemas/memo.schema.json",
   "title": "Memo",
-  "description": "Cross-invocation memory store for agents. Any subagent (researcher / writer / extractor / renderer) or the deal_orchestrator coordinator can write memos summarising learnings, observations, or patterns. Future agent invocations retrieve memos via the `read_memos` tool using tag filters (talent_id, brand_id, industry_id, deal_id, topics, scope). Persistence is intentionally cross-scope: a memo written during a Phase 4.7 contract negotiation for one brand may surface later when prepping a proposal for a competitor in the same industry. v0.1 = explicit write + deterministic tag-filter retrieval (no vector embedding); v0.2 may add pgvector for semantic retrieval. Stored as a row in Postgres + (optionally) markdown content blobs in S3 if length exceeds DB threshold. See `docs/architecture.md` § 5 Memo store.",
+  "description": "Cross-invocation memory store for agents. Any subagent (researcher / writer / extractor / renderer) or the deal_orchestrator coordinator can write memos summarising learnings, observations, or patterns. Future agent invocations retrieve memos via the `read_memos` tool using tag filters (talent_id, brand_id, industry_id, deal_id, topics, scope). Persistence is intentionally cross-scope: a memo written during a Phase 4.7 contract negotiation for one brand may surface later when prepping a proposal for a competitor in the same industry. v0.1 = explicit write + deterministic tag-filter retrieval (no vector embedding); v0.2 may add pgvector for semantic retrieval. Stored as a row in Postgres + (optionally) markdown content blobs in S3 if length exceeds DB threshold. See `docs/architecture.md` \u00a7 5 Memo store.",
   "type": "object",
-  "required": ["memo_id", "scope", "memo_type", "content_markdown", "tags", "created_by_agent", "created_at"],
+  "required": [
+    "memo_id",
+    "scope",
+    "memo_type",
+    "content_markdown",
+    "tags",
+    "created_by_agent",
+    "created_at"
+  ],
   "additionalProperties": false,
   "properties": {
-    "$schema": { "type": "string" },
-
+    "$schema": {
+      "type": "string"
+    },
+    "agency_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Multi-tenant scope: FK to agency_profile.agency_id. Optional in v0.1 (single-tenant deploys may omit); required in v2 SaaS. When present, all cross-record queries MUST filter by agency_id to prevent cross-tenant data leakage. See docs/data_lineage.md GAP-01/02 for rationale."
+    },
     "memo_id": {
       "type": "string",
       "pattern": "^memo_[a-z0-9]+$",
       "description": "Globally unique. Format: `memo_{nanoid}`."
     },
-
     "scope": {
       "type": "string",
-      "enum": ["deal_specific", "brand_relationship", "industry_pattern", "talent_pattern", "cross_cutting"],
+      "enum": [
+        "deal_specific",
+        "brand_relationship",
+        "industry_pattern",
+        "talent_pattern",
+        "cross_cutting"
+      ],
       "description": "How broadly this memo applies. deal_specific: only relevant to one deal (e.g. 'agent regenerated slide 4 with feedback X'). brand_relationship: relevant whenever this brand surfaces (e.g. 'Brand X requires GDPR addendum on all contracts'). industry_pattern: pattern observed across multiple brands in an industry. talent_pattern: pattern about a specific talent's deals/preferences. cross_cutting: applies across deals/brands/industries (e.g. 'whitelisting > 60d is usually a redline')."
     },
-
     "memo_type": {
       "type": "string",
       "enum": [
@@ -35,47 +53,61 @@
         "agent_decision_audit",
         "other"
       ],
-      "description": "What kind of memo this is. Drives downstream retrieval — e.g. the proposal pack's writer subagent queries `objection_handler` + `negotiation_pattern` memos for this brand to inform commercial proposal rationale."
+      "description": "What kind of memo this is. Drives downstream retrieval \u2014 e.g. the proposal pack's writer subagent queries `objection_handler` + `negotiation_pattern` memos for this brand to inform commercial proposal rationale."
     },
-
     "content_markdown": {
       "type": "string",
       "description": "The memo body in markdown. Typically 1-5 paragraphs; targets agent consumption (concise, factual, action-oriented). Larger memos may be stored in S3 with `content_markdown_s3_key` field overriding inline content; v0.1 = always inline."
     },
-
     "structured": {
       "type": "object",
-      "description": "Optional structured payload alongside the narrative content. Free-form per memo_type — e.g. for `negotiation_pattern` might contain `{redlines_received: [...], counter_offers: [...], final_terms: {...}}`. Schema validation is permissive (additionalProperties: true) to support memo-type evolution.",
+      "description": "Optional structured payload alongside the narrative content. Free-form per memo_type \u2014 e.g. for `negotiation_pattern` might contain `{redlines_received: [...], counter_offers: [...], final_terms: {...}}`. Schema validation is permissive (additionalProperties: true) to support memo-type evolution.",
       "additionalProperties": true
     },
-
     "tags": {
       "type": "object",
-      "required": ["topics"],
+      "required": [
+        "topics"
+      ],
       "additionalProperties": false,
       "description": "Tag filters drive retrieval. The orchestrator and subagents query `read_memos(...)` with combinations of these tags. Multiple values per tag = OR; multiple tag keys = AND.",
       "properties": {
         "talent_ids": {
           "type": "array",
-          "items": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9-]*$"
+          },
           "description": "Talent slugs this memo references. Empty = not talent-specific."
         },
         "brand_ids": {
           "type": "array",
-          "items": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9-]*$"
+          },
           "description": "Brand slugs this memo references. Empty = not brand-specific."
         },
         "industry_ids": {
           "type": "array",
-          "items": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9-]*$"
+          },
           "description": "Industry slugs this memo applies to. Empty = not industry-specific. Often populated even when memo is brand-specific (broader retrieval surface for cross-brand learning)."
         },
         "deal_ids": {
           "type": "array",
           "items": {
             "anyOf": [
-              { "type": "string", "pattern": "^deal_pipeline_[a-z0-9_-]+$" },
-              { "type": "string", "pattern": "^deal_[a-z0-9_-]+$" }
+              {
+                "type": "string",
+                "pattern": "^deal_pipeline_[a-z0-9_-]+$"
+              },
+              {
+                "type": "string",
+                "pattern": "^deal_[a-z0-9_-]+$"
+              }
             ]
           },
           "description": "Deal IDs this memo references. Supports both pipeline (`deal_pipeline_*`) and archived (`deal_*`) deal_id formats."
@@ -83,56 +115,70 @@
         "topics": {
           "type": "array",
           "minItems": 1,
-          "items": { "type": "string" },
+          "items": {
+            "type": "string"
+          },
           "description": "Free-form topic tags for fuzzy semantic matching. Convention: lowercase, kebab-case (e.g. 'exclusivity', 'payment-terms', 'usage-rights', 'gdpr', 'audience-mismatch', 'red-line-breach', 'kpi-overperformance'). Required (at least 1) to encourage explicit categorisation."
         },
         "phase_context": {
           "type": "string",
-          "enum": ["lead", "proposal", "contract", "delivery", "close", "cross_phase"],
+          "enum": [
+            "lead",
+            "proposal",
+            "contract",
+            "delivery",
+            "close",
+            "cross_phase"
+          ],
           "description": "Which phase of the deal lifecycle was active when this memo was written. cross_phase = memo intentionally spans phases (e.g. 'this brand's contract negotiation always slows delivery by 2 weeks')."
         }
       }
     },
-
     "created_by_agent": {
       "type": "string",
-      "enum": ["deal_orchestrator", "researcher", "writer", "extractor", "renderer", "human_agent"],
+      "enum": [
+        "deal_orchestrator",
+        "researcher",
+        "writer",
+        "extractor",
+        "renderer",
+        "human_agent"
+      ],
       "description": "Which agent (or human) authored the memo. `human_agent` = the user manually wrote it via the UI. `renderer` is included for completeness but rarely writes memos (deterministic agent, few learnings)."
     },
-
     "created_in_pack_id": {
       "type": "string",
       "description": "If the memo was written during a pack generation, captures the pack_id (`prep_*` / `pp_*` / `cp_*` / `inv_*_seq*_v*` / `perf_*`). Null for orchestrator-level memos or human-written memos."
     },
-
-    "created_at": { "type": "string", "format": "date-time" },
-    "updated_at": { "type": "string", "format": "date-time" },
-
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
     "supersedes_memo_id": {
       "type": "string",
       "pattern": "^memo_[a-z0-9]+$",
       "description": "Optional FK to a prior memo this one replaces. The superseded memo's `is_active` flips to false on the orchestrator's next write. Used when a learning evolves (e.g. v1 said 'Brand X never accepts 90d whitelisting'; v2 corrects after they did)."
     },
-
     "expires_at": {
       "type": "string",
       "format": "date-time",
-      "description": "Optional TTL. After this timestamp, the memo is no longer surfaced by `read_memos` (filtered server-side). Useful for time-bound observations (e.g. 'Brand X paused all influencer campaigns Q3 2026' — expires when Q3 ends)."
+      "description": "Optional TTL. After this timestamp, the memo is no longer surfaced by `read_memos` (filtered server-side). Useful for time-bound observations (e.g. 'Brand X paused all influencer campaigns Q3 2026' \u2014 expires when Q3 ends)."
     },
-
     "is_active": {
       "type": "boolean",
       "default": true,
       "description": "Soft-delete flag. Inactive memos are excluded from `read_memos` by default but preserved for audit. Flipped to false when superseded or when an agent/human marks the memo as no-longer-valid."
     },
-
     "retrieval_count": {
       "type": "integer",
       "minimum": 0,
       "default": 0,
       "description": "How many times this memo has been returned by `read_memos`. Auto-incremented. Useful signal: high-retrieval memos are validated learnings; never-retrieved memos may be noise."
     },
-
     "last_retrieved_at": {
       "type": "string",
       "format": "date-time",

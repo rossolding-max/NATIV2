@@ -203,7 +203,7 @@
         },
         "template_version": {
           "type": "string",
-          "description": "Updated whenever markdown_source / numbering / tax settings change. Captured in `invoice_pack.context_snapshot.agency_invoice_template_version` for traceability."
+          "description": "Updated whenever markdown_source / invoice_number_sequence settings / tax_handling / invoice_footer change. Captured in `invoice_pack.context_snapshot.agency_invoice_template_version` for traceability. ENFORCEMENT (GAP-07): API layer MUST bump this string + set template_updated_at on every modification to those fields. Version bump is a DB-enforced trigger or a service-layer guard — never trust manual update. Format suggestion: semver (e.g. '1.0.0' → '1.0.1' for footer tweak, '1.1.0' for new tax handling, '2.0.0' for major rewrite)."
         },
         "template_updated_at": { "type": "string", "format": "date-time" }
       }

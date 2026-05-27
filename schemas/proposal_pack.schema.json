@@ -2,13 +2,28 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://nativ2/schemas/proposal_pack.schema.json",
   "title": "Proposal Pack",
-  "description": "Phase 4.6 — a versioned commercial proposal the agency sends to the brand after the discovery call. Forks structured content from the discovery prep pack (Phase 4.5) and adds proposal-specific sections: executive summary, objectives recap, deliverables, fee, usage rights, exclusivity, timeline, exclusions, next steps. Generation is gated on the agent explicitly confirming pricing + deliverables — slides cannot render until the commercial gate is passed. Each version is a single source of truth for that round of proposal; the confirmed commercial values write into `deal.proposal.*` (canonical). Stored at `data/deals/{deal_id}/proposal_packs/v{N}.json` (gitignored). See `docs/proposal_pack_workflow.md`.",
+  "description": "Phase 4.6 \u2014 a versioned commercial proposal the agency sends to the brand after the discovery call. Forks structured content from the discovery prep pack (Phase 4.5) and adds proposal-specific sections: executive summary, objectives recap, deliverables, fee, usage rights, exclusivity, timeline, exclusions, next steps. Generation is gated on the agent explicitly confirming pricing + deliverables \u2014 slides cannot render until the commercial gate is passed. Each version is a single source of truth for that round of proposal; the confirmed commercial values write into `deal.proposal.*` (canonical). Stored at `data/deals/{deal_id}/proposal_packs/v{N}.json` (gitignored). See `docs/proposal_pack_workflow.md`.",
   "type": "object",
-  "required": ["proposal_pack_id", "deal_id", "version", "is_latest", "generation", "context_snapshot", "commercial_proposal", "created_at"],
+  "required": [
+    "proposal_pack_id",
+    "deal_id",
+    "version",
+    "is_latest",
+    "generation",
+    "context_snapshot",
+    "commercial_proposal",
+    "created_at"
+  ],
   "additionalProperties": false,
   "properties": {
-    "$schema": { "type": "string" },
-
+    "$schema": {
+      "type": "string"
+    },
+    "agency_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Multi-tenant scope: FK to agency_profile.agency_id. Optional in v0.1 (single-tenant deploys may omit); required in v2 SaaS. When present, all cross-record queries MUST filter by agency_id to prevent cross-tenant data leakage. See docs/data_lineage.md GAP-01/02 for rationale."
+    },
     "proposal_pack_id": {
       "type": "string",
       "pattern": "^pp_[a-z0-9_-]+_v[0-9]+$",
@@ -19,7 +34,10 @@
       "pattern": "^deal_pipeline_[a-z0-9_-]+$",
       "description": "FK to the Phase 4 deal. The deal's `proposal.proposal_pack_ids[]` array references all versions; `proposal.latest_proposal_pack_id` points to the current `is_latest: true` version."
     },
-    "version": { "type": "integer", "minimum": 1 },
+    "version": {
+      "type": "integer",
+      "minimum": 1
+    },
     "parent_version": {
       "type": "integer",
       "minimum": 1,
@@ -29,16 +47,25 @@
       "type": "boolean",
       "description": "Exactly one version per deal_id at any time."
     },
-
     "generation": {
       "type": "object",
-      "required": ["trigger", "generated_at", "llm_model"],
+      "required": [
+        "trigger",
+        "generated_at",
+        "llm_model"
+      ],
       "additionalProperties": false,
       "description": "Provenance + parameters for this version. Parallels discovery_prep_pack.generation; same versioning model.",
       "properties": {
         "trigger": {
           "type": "string",
-          "enum": ["agent_initiated_v1", "agent_full_regenerate", "agent_section_regenerate", "agent_per_slide_regenerate", "negotiation_response"],
+          "enum": [
+            "agent_initiated_v1",
+            "agent_full_regenerate",
+            "agent_section_regenerate",
+            "agent_per_slide_regenerate",
+            "negotiation_response"
+          ],
           "description": "agent_initiated_v1: first version, agent clicked 'draft proposal' after passing commercial gate. agent_*regenerate: NL-feedback regen of various scopes. negotiation_response: regen triggered by brand pushback recorded in deal.proposal.negotiation_log[]; this version is bidirectionally linked to that log entry."
         },
         "pre_generation_guidance": {
@@ -51,67 +78,122 @@
         },
         "target_sections": {
           "type": "array",
-          "items": { "type": "string" },
+          "items": {
+            "type": "string"
+          },
           "description": "For section/per-slide regen: which sections were rebuilt. Untargeted sections carry from parent_version."
         },
         "negotiation_log_entry_ref": {
           "type": "string",
           "description": "If trigger=negotiation_response: ISO-timestamp of the deal.proposal.negotiation_log[] entry this version responds to. Closes the bidirectional link between proposal_pack version history and the deal's negotiation audit log."
         },
-        "generated_at": { "type": "string", "format": "date-time" },
-        "generated_by_agent_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
-        "llm_model": { "type": "string" },
+        "generated_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "generated_by_agent_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]*$"
+        },
+        "llm_model": {
+          "type": "string"
+        },
         "llm_passes": {
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["pass_name", "input_tokens", "output_tokens"],
+            "required": [
+              "pass_name",
+              "input_tokens",
+              "output_tokens"
+            ],
             "additionalProperties": false,
             "properties": {
               "pass_name": {
                 "type": "string",
-                "enum": ["context_artefact_summarize", "discovery_debrief_extract", "commercial_proposal", "executive_summary", "slides", "speaker_notes", "section_regen", "slide_regen"]
+                "enum": [
+                  "context_artefact_summarize",
+                  "discovery_debrief_extract",
+                  "commercial_proposal",
+                  "executive_summary",
+                  "slides",
+                  "speaker_notes",
+                  "section_regen",
+                  "slide_regen"
+                ]
               },
-              "model": { "type": "string" },
-              "input_tokens": { "type": "integer", "minimum": 0 },
-              "output_tokens": { "type": "integer", "minimum": 0 },
-              "cached_tokens": { "type": "integer", "minimum": 0 },
-              "cost_usd": { "type": "number", "minimum": 0 },
-              "duration_ms": { "type": "integer", "minimum": 0 }
+              "model": {
+                "type": "string"
+              },
+              "input_tokens": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "output_tokens": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "cached_tokens": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "cost_usd": {
+                "type": "number",
+                "minimum": 0
+              },
+              "duration_ms": {
+                "type": "integer",
+                "minimum": 0
+              }
             }
           }
         }
       }
     },
-
     "context_snapshot": {
       "type": "object",
-      "required": ["captured_at"],
+      "required": [
+        "captured_at"
+      ],
       "additionalProperties": false,
       "description": "Frozen upstream context this version was generated from. Same lock-on-generation pattern as discovery_prep_pack.context_snapshot.",
       "properties": {
-        "captured_at": { "type": "string", "format": "date-time" },
+        "captured_at": {
+          "type": "string",
+          "format": "date-time"
+        },
         "forked_from_prep_pack_id": {
           "type": "string",
           "pattern": "^prep_[a-z0-9_-]+_v[0-9]+$",
-          "description": "FK to the discovery prep pack version that this proposal forks from. Slide content (talent_overview, audience_snapshot, recent_work) is lifted from this prep pack. If null, the proposal was generated without a prior discovery deck (rare — e.g. for repeat brands)."
+          "description": "FK to the discovery prep pack version that this proposal forks from. Slide content (talent_overview, audience_snapshot, recent_work) is lifted from this prep pack. If null, the proposal was generated without a prior discovery deck (rare \u2014 e.g. for repeat brands)."
         },
-        "talent_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
-        "brand_candidate_id": { "type": "string" },
-        "primary_contact_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+        "talent_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]*$"
+        },
+        "brand_candidate_id": {
+          "type": "string"
+        },
+        "primary_contact_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]*$"
+        },
         "discovery_debrief_snapshot": {
           "type": "object",
           "description": "Frozen copy of `deal.lead.discovery_debrief` at generation time. If the canonical block later evolves (e.g. agent adds notes after a follow-up call), this version stays anchored. Shape mirrors `deal.lead.discovery_debrief`."
         },
         "comparable_brand_deal_ids": {
           "type": "array",
-          "items": { "type": "string", "pattern": "^deal_[a-z0-9_-]+$" },
+          "items": {
+            "type": "string",
+            "pattern": "^deal_[a-z0-9_-]+$"
+          },
           "description": "Past brand_deals used as commercial + creative comparables."
         },
         "external_research_refreshed": {
           "type": "boolean",
           "default": false,
-          "description": "Was Exa research re-run for this proposal? Default false — proposal trusts the discovery prep's external research. Refresh recommended if >14d since prep pack v1."
+          "description": "Was Exa research re-run for this proposal? Default false \u2014 proposal trusts the discovery prep's external research. Refresh recommended if >14d since prep pack v1."
         },
         "external_research": {
           "type": "object",
@@ -120,22 +202,29 @@
         }
       }
     },
-
     "context_artefacts": {
       "type": "array",
-      "description": "Files uploaded by the agent to augment generation context — briefs, notes, transcripts, reference material. Each parsed (pypdf / python-docx / text reader), LLM-summarised, and optionally signal-extracted. Agent can tag relevance to demote/exclude from generation.",
-      "items": { "$ref": "#/$defs/contextArtefact" }
+      "description": "Files uploaded by the agent to augment generation context \u2014 briefs, notes, transcripts, reference material. Each parsed (pypdf / python-docx / text reader), LLM-summarised, and optionally signal-extracted. Agent can tag relevance to demote/exclude from generation.",
+      "items": {
+        "$ref": "#/$defs/contextArtefact"
+      }
     },
-
     "commercial_proposal": {
       "type": "object",
-      "required": ["llm_proposed", "proposed_at"],
+      "required": [
+        "llm_proposed",
+        "proposed_at"
+      ],
       "additionalProperties": false,
-      "description": "The LLM's commercial proposal + the agent's confirmation event. SLIDES CANNOT RENDER until `confirmed_at` is set. On confirmation, the confirmed values write into `deal.proposal.*` (canonical) — this block holds the provenance.",
+      "description": "The LLM's commercial proposal + the agent's confirmation event. SLIDES CANNOT RENDER until `confirmed_at` is set. On confirmation, the confirmed values write into `deal.proposal.*` (canonical) \u2014 this block holds the provenance.",
       "properties": {
         "llm_proposed": {
           "type": "object",
-          "required": ["deliverables", "fee_usd", "overall_rationale"],
+          "required": [
+            "deliverables",
+            "fee_usd",
+            "overall_rationale"
+          ],
           "additionalProperties": false,
           "description": "What the LLM proposed, with rationale per field. Built from briefing's commercial_range + objectives heard + comparables + scope/budget signals from discovery_debrief.",
           "properties": {
@@ -143,58 +232,170 @@
               "type": "array",
               "items": {
                 "type": "object",
-                "required": ["platform", "format", "count"],
+                "required": [
+                  "platform",
+                  "format",
+                  "count"
+                ],
                 "additionalProperties": false,
                 "properties": {
-                  "platform": { "type": "string", "enum": ["instagram", "tiktok", "youtube", "twitter_x", "linkedin", "pinterest", "twitch", "snapchat", "facebook", "substack", "podcast", "other"] },
-                  "format": { "type": "string", "enum": ["reel", "story", "feed_post", "carousel", "live", "video_long_form", "video_short", "podcast_episode", "podcast_read", "newsletter", "tweet_thread", "linkedin_post", "appearance", "co_created_product", "other"] },
-                  "count": { "type": "integer", "minimum": 1 },
-                  "rationale": { "type": "string", "description": "Why this specific deliverable was proposed (links to a stated objective or pain point from the debrief)." }
+                  "platform": {
+                    "type": "string",
+                    "enum": [
+                      "instagram",
+                      "tiktok",
+                      "youtube",
+                      "twitter_x",
+                      "linkedin",
+                      "pinterest",
+                      "twitch",
+                      "snapchat",
+                      "facebook",
+                      "substack",
+                      "podcast",
+                      "other"
+                    ]
+                  },
+                  "format": {
+                    "type": "string",
+                    "enum": [
+                      "reel",
+                      "story",
+                      "feed_post",
+                      "carousel",
+                      "live",
+                      "video_long_form",
+                      "video_short",
+                      "podcast_episode",
+                      "podcast_read",
+                      "newsletter",
+                      "tweet_thread",
+                      "linkedin_post",
+                      "appearance",
+                      "co_created_product",
+                      "other"
+                    ]
+                  },
+                  "count": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "rationale": {
+                    "type": "string",
+                    "description": "Why this specific deliverable was proposed (links to a stated objective or pain point from the debrief)."
+                  }
                 }
               }
             },
-            "fee_usd": { "type": "number", "minimum": 0 },
-            "fee_rationale": { "type": "string", "description": "How the fee was derived. Cites commercial_range + budget_signal + comparable_deal_ids." },
-            "fee_currency_original": { "type": "string", "pattern": "^[A-Z]{3}$" },
-            "fee_original_amount": { "type": "number", "minimum": 0 },
+            "fee_usd": {
+              "type": "number",
+              "minimum": 0
+            },
+            "fee_rationale": {
+              "type": "string",
+              "description": "How the fee was derived. Cites commercial_range + budget_signal + comparable_deal_ids."
+            },
+            "fee_currency_original": {
+              "type": "string",
+              "pattern": "^[A-Z]{3}$"
+            },
+            "fee_original_amount": {
+              "type": "number",
+              "minimum": 0
+            },
             "usage_rights": {
               "type": "array",
-              "items": { "type": "string", "enum": ["organic", "whitelisting_30d", "whitelisting_60d", "whitelisting_90d", "whitelisting_unlimited", "paid_social_30d", "paid_social_90d", "paid_social_perpetual", "website_use", "broadcast", "print", "perpetual_all_channels"] }
+              "items": {
+                "type": "string",
+                "enum": [
+                  "organic",
+                  "whitelisting_30d",
+                  "whitelisting_60d",
+                  "whitelisting_90d",
+                  "whitelisting_unlimited",
+                  "paid_social_30d",
+                  "paid_social_90d",
+                  "paid_social_perpetual",
+                  "website_use",
+                  "broadcast",
+                  "print",
+                  "perpetual_all_channels"
+                ]
+              }
             },
-            "usage_rights_rationale": { "type": "string" },
+            "usage_rights_rationale": {
+              "type": "string"
+            },
             "exclusivity": {
               "type": "object",
               "additionalProperties": false,
               "properties": {
-                "category": { "type": "string" },
-                "duration_days": { "type": "integer", "minimum": 0 },
-                "rationale": { "type": "string" }
+                "category": {
+                  "type": "string"
+                },
+                "duration_days": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "rationale": {
+                  "type": "string"
+                }
               }
             },
             "timeline": {
               "type": "array",
               "items": {
                 "type": "object",
-                "required": ["milestone", "target_date"],
+                "required": [
+                  "milestone",
+                  "target_date"
+                ],
                 "additionalProperties": false,
                 "properties": {
-                  "milestone": { "type": "string", "description": "e.g. 'Contract signed', 'Concept approval', 'First draft delivered', 'Live posting', 'Final report'." },
-                  "target_date": { "type": "string", "format": "date" },
-                  "notes": { "type": "string" }
+                  "milestone": {
+                    "type": "string",
+                    "description": "e.g. 'Contract signed', 'Concept approval', 'First draft delivered', 'Live posting', 'Final report'."
+                  },
+                  "target_date": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "notes": {
+                    "type": "string"
+                  }
                 }
               }
             },
-            "timeline_rationale": { "type": "string" },
+            "timeline_rationale": {
+              "type": "string"
+            },
             "additional_compensation": {
               "type": "array",
               "items": {
                 "type": "object",
-                "required": ["type"],
+                "required": [
+                  "type"
+                ],
                 "additionalProperties": false,
                 "properties": {
-                  "type": { "type": "string", "enum": ["gifted_product", "comped_event", "comped_travel", "equity", "discount_code", "other"] },
-                  "value_usd": { "type": "number", "minimum": 0 },
-                  "description": { "type": "string" }
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "gifted_product",
+                      "comped_event",
+                      "comped_travel",
+                      "equity",
+                      "discount_code",
+                      "other"
+                    ]
+                  },
+                  "value_usd": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "description": {
+                    "type": "string"
+                  }
                 }
               }
             },
@@ -204,12 +405,14 @@
             },
             "exclusions": {
               "type": "array",
-              "items": { "type": "string" },
+              "items": {
+                "type": "string"
+              },
               "description": "Explicit list of what is NOT included. Clarity reduces friction during execution. e.g. 'Paid amplification beyond 60d whitelisting', 'Original music licensing', 'Additional revisions beyond 2 rounds'."
             },
             "overall_rationale": {
               "type": "string",
-              "description": "Top-level rationale tying the whole proposal together — references the discovery debrief signals it responds to. The LLM's pitch to the agent for why this is the right proposal."
+              "description": "Top-level rationale tying the whole proposal together \u2014 references the discovery debrief signals it responds to. The LLM's pitch to the agent for why this is the right proposal."
             }
           }
         },
@@ -223,84 +426,149 @@
           "format": "date-time",
           "description": "When the agent passed the commercial gate. ABSENT = slides not yet rendered. Setting this triggers Stage D (slide generation) AND copies values into deal.proposal.*."
         },
-        "confirmed_by_agent_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+        "confirmed_by_agent_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]*$"
+        },
         "confirmed_overrides": {
           "type": "array",
           "description": "Agent's edits to LLM-proposed values, captured per field. If empty, agent accepted all LLM values verbatim. If non-empty, each entry records the override + optional reasoning. Powers analytics (do we systematically overprice / underprice vs comparables?).",
           "items": {
             "type": "object",
-            "required": ["field", "from", "to"],
+            "required": [
+              "field",
+              "from",
+              "to"
+            ],
             "additionalProperties": false,
             "properties": {
-              "field": { "type": "string", "description": "Which field was overridden. e.g. 'fee_usd', 'usage_rights', 'exclusivity.duration_days', 'deliverables[1].count'." },
-              "from": { "description": "LLM-proposed value (any type)." },
-              "to": { "description": "Agent-confirmed value (any type)." },
-              "note": { "type": "string", "description": "Why the override. Optional but encouraged." }
+              "field": {
+                "type": "string",
+                "description": "Which field was overridden. e.g. 'fee_usd', 'usage_rights', 'exclusivity.duration_days', 'deliverables[1].count'."
+              },
+              "from": {
+                "description": "LLM-proposed value (any type)."
+              },
+              "to": {
+                "description": "Agent-confirmed value (any type)."
+              },
+              "note": {
+                "type": "string",
+                "description": "Why the override. Optional but encouraged."
+              }
             }
           }
         }
       }
     },
-
     "slides": {
       "type": "array",
       "description": "Generated only after commercial gate passed. Forks talent_overview / audience_snapshot / recent_work / fit_angle slides from the source discovery prep pack; adds proposal-specific slides (executive_summary, objectives_recap, recommendation, deliverables, timeline, investment, usage_rights, exclusivity, exclusions, next_steps_proposal). Same `live_body` + `leave_behind_extension` + `speaker_notes` + `sources` shape as discovery prep pack slides.",
-      "items": { "$ref": "#/$defs/slide" }
+      "items": {
+        "$ref": "#/$defs/slide"
+      }
     },
-
     "export_artifacts": {
       "type": "array",
-      "items": { "$ref": "#/$defs/exportArtifact" }
+      "items": {
+        "$ref": "#/$defs/exportArtifact"
+      }
     },
-
     "agent_edits": {
       "type": "array",
       "description": "Append-only audit log of direct edits to this version (no LLM regen). Same shape as discovery_prep_pack.agent_edits[].",
-      "items": { "$ref": "#/$defs/agentEdit" }
+      "items": {
+        "$ref": "#/$defs/agentEdit"
+      }
     },
-
-    "created_at": { "type": "string", "format": "date-time" },
-    "updated_at": { "type": "string", "format": "date-time" }
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    }
   },
-
   "$defs": {
-
     "contextArtefact": {
       "type": "object",
-      "required": ["artefact_id", "type", "original_filename", "uploaded_at", "parser"],
+      "required": [
+        "artefact_id",
+        "type",
+        "original_filename",
+        "uploaded_at",
+        "parser"
+      ],
       "additionalProperties": false,
       "properties": {
-        "artefact_id": { "type": "string", "pattern": "^ctx_[a-z0-9]+$" },
+        "artefact_id": {
+          "type": "string",
+          "pattern": "^ctx_[a-z0-9]+$"
+        },
         "type": {
           "type": "string",
-          "enum": ["brand_brief", "discovery_call_notes", "call_transcript", "reference_material", "competitor_example", "internal_memo", "other"],
-          "description": "What kind of artefact this is. Drives how the LLM weights it during generation — brand_brief gets highest weight; reference_material is supplementary."
+          "enum": [
+            "brand_brief",
+            "discovery_call_notes",
+            "call_transcript",
+            "reference_material",
+            "competitor_example",
+            "internal_memo",
+            "other"
+          ],
+          "description": "What kind of artefact this is. Drives how the LLM weights it during generation \u2014 brand_brief gets highest weight; reference_material is supplementary."
         },
         "role": {
           "type": "string",
-          "enum": ["primary_input", "supplementary", "reference"],
+          "enum": [
+            "primary_input",
+            "supplementary",
+            "reference"
+          ],
           "default": "primary_input",
           "description": "Generation weighting. primary_input: heavily influences output. supplementary: cited if relevant. reference: available but not actively used."
         },
-        "original_filename": { "type": "string" },
+        "original_filename": {
+          "type": "string"
+        },
         "stored_filepath": {
           "type": "string",
           "description": "Relative path to the uploaded raw file. v0.1: `data/deals/{deal_id}/context_uploads/{artefact_id}_{filename}`. v2: S3 key."
         },
-        "mime_type": { "type": "string" },
-        "size_bytes": { "type": "integer", "minimum": 0 },
-        "uploaded_at": { "type": "string", "format": "date-time" },
-        "uploaded_by_agent_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+        "mime_type": {
+          "type": "string"
+        },
+        "size_bytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "uploaded_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "uploaded_by_agent_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]*$"
+        },
         "parser": {
           "type": "string",
-          "enum": ["pypdf", "python_docx", "text_reader", "external_transcript_link"],
-          "description": "v0.1: pypdf (PDF) / python_docx (Word) / text_reader (txt, md). v2: external_transcript_link (Otter / Fireflies / Grain URL — no parsing, just reference)."
+          "enum": [
+            "pypdf",
+            "python_docx",
+            "text_reader",
+            "external_transcript_link"
+          ],
+          "description": "v0.1: pypdf (PDF) / python_docx (Word) / text_reader (txt, md). v2: external_transcript_link (Otter / Fireflies / Grain URL \u2014 no parsing, just reference)."
         },
         "parsed_text": {
           "type": "string",
           "description": "Raw extracted text. Truncated for very large files (configurable cap, default 100k chars). Preserved for the life of the deal; purged on archive."
         },
-        "parsed_text_length": { "type": "integer", "minimum": 0 },
+        "parsed_text_length": {
+          "type": "integer",
+          "minimum": 0
+        },
         "external_url": {
           "type": "string",
           "format": "uri",
@@ -312,20 +580,43 @@
         },
         "llm_extracted_signals": {
           "type": "object",
-          "description": "Optional structured extraction from the artefact (e.g. brand_brief → stated objectives, deliverables requested, budget mentioned). Used to seed the discovery_debrief block on the deal record.",
+          "description": "Optional structured extraction from the artefact (e.g. brand_brief \u2192 stated objectives, deliverables requested, budget mentioned). Used to seed the discovery_debrief block on the deal record.",
           "additionalProperties": true,
           "properties": {
-            "stated_objectives": { "type": "array", "items": { "type": "string" } },
-            "stated_budget": { "type": "string" },
-            "stated_timeline": { "type": "string" },
-            "deliverables_requested": { "type": "array", "items": { "type": "string" } },
-            "exclusivity_requested": { "type": "string" },
-            "usage_rights_requested": { "type": "string" }
+            "stated_objectives": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "stated_budget": {
+              "type": "string"
+            },
+            "stated_timeline": {
+              "type": "string"
+            },
+            "deliverables_requested": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "exclusivity_requested": {
+              "type": "string"
+            },
+            "usage_rights_requested": {
+              "type": "string"
+            }
           }
         },
         "relevance_tag": {
           "type": "string",
-          "enum": ["core", "context", "low", "drop"],
+          "enum": [
+            "core",
+            "context",
+            "low",
+            "drop"
+          ],
           "default": "core",
           "description": "Agent's manual tagging. `drop` = excluded from generation; `low` = available but de-prioritised; `context` = supplementary background; `core` = heavily weighted."
         },
@@ -336,49 +627,96 @@
         }
       }
     },
-
     "slide": {
       "type": "object",
-      "required": ["slide_id", "position", "title", "type", "live_body"],
+      "required": [
+        "slide_id",
+        "position",
+        "title",
+        "type",
+        "live_body"
+      ],
       "additionalProperties": false,
       "properties": {
-        "slide_id": { "type": "string", "pattern": "^slide_[a-z0-9_-]+$" },
-        "position": { "type": "integer", "minimum": 1 },
-        "title": { "type": "string" },
+        "slide_id": {
+          "type": "string",
+          "pattern": "^slide_[a-z0-9_-]+$"
+        },
+        "position": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "title": {
+          "type": "string"
+        },
         "type": {
           "type": "string",
           "enum": [
-            "title", "executive_summary", "objectives_recap",
-            "talent_overview", "audience_snapshot", "recent_work",
-            "recommendation", "deliverables", "timeline",
-            "investment", "usage_rights", "exclusivity", "exclusions",
-            "agency_process", "next_steps_proposal", "custom"
+            "title",
+            "executive_summary",
+            "objectives_recap",
+            "talent_overview",
+            "audience_snapshot",
+            "recent_work",
+            "recommendation",
+            "deliverables",
+            "timeline",
+            "investment",
+            "usage_rights",
+            "exclusivity",
+            "exclusions",
+            "agency_process",
+            "next_steps_proposal",
+            "custom"
           ],
           "description": "Drives renderer layout. Proposal-specific types: executive_summary (the one slide the buyer's boss reads); objectives_recap (lifts discovery_debrief.objectives_heard to confirm we listened); recommendation (the angle/concept); deliverables (table); investment (fee + payment terms); usage_rights / exclusivity / exclusions (commercial); next_steps_proposal (what brand does to move forward). Forked types from discovery: talent_overview / audience_snapshot / recent_work. agency_process is renamed from discovery's `process` for clarity."
         },
         "forked_from_prep_slide_id": {
           "type": "string",
-          "description": "If this slide was forked from the discovery prep pack rather than generated fresh, the prep pack's slide_id is captured here. Used by the renderer to flag (in editor mode) which slides are inherited vs new — agent can choose to re-generate forked slides if discovery context evolved."
+          "description": "If this slide was forked from the discovery prep pack rather than generated fresh, the prep pack's slide_id is captured here. Used by the renderer to flag (in editor mode) which slides are inherited vs new \u2014 agent can choose to re-generate forked slides if discovery context evolved."
         },
         "live_body": {
           "type": "object",
           "additionalProperties": false,
           "properties": {
-            "headline": { "type": "string" },
-            "subheadline": { "type": "string" },
-            "body_text": { "type": "string" },
-            "bullets": { "type": "array", "items": { "type": "string" } },
+            "headline": {
+              "type": "string"
+            },
+            "subheadline": {
+              "type": "string"
+            },
+            "body_text": {
+              "type": "string"
+            },
+            "bullets": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
             "kpi_tiles": {
               "type": "array",
               "items": {
                 "type": "object",
-                "required": ["value", "label"],
+                "required": [
+                  "value",
+                  "label"
+                ],
                 "additionalProperties": false,
                 "properties": {
-                  "value": { "type": "string" },
-                  "label": { "type": "string" },
-                  "source": { "type": "string" },
-                  "as_of": { "type": "string", "format": "date" }
+                  "value": {
+                    "type": "string"
+                  },
+                  "label": {
+                    "type": "string"
+                  },
+                  "source": {
+                    "type": "string"
+                  },
+                  "as_of": {
+                    "type": "string",
+                    "format": "date"
+                  }
                 }
               }
             },
@@ -386,12 +724,20 @@
               "type": "array",
               "items": {
                 "type": "object",
-                "required": ["url"],
+                "required": [
+                  "url"
+                ],
                 "additionalProperties": false,
                 "properties": {
-                  "url": { "type": "string" },
-                  "alt": { "type": "string" },
-                  "caption": { "type": "string" }
+                  "url": {
+                    "type": "string"
+                  },
+                  "alt": {
+                    "type": "string"
+                  },
+                  "caption": {
+                    "type": "string"
+                  }
                 }
               }
             },
@@ -400,74 +746,180 @@
               "description": "For deliverables / timeline / investment slides. Renderer turns this into a styled table.",
               "additionalProperties": false,
               "properties": {
-                "columns": { "type": "array", "items": { "type": "string" } },
-                "rows": { "type": "array", "items": { "type": "array", "items": { "type": "string" } } }
+                "columns": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "rows": {
+                  "type": "array",
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
               }
             },
-            "callout": { "type": "string" }
+            "callout": {
+              "type": "string"
+            }
           }
         },
         "leave_behind_extension": {
           "type": "object",
           "additionalProperties": false,
           "properties": {
-            "expanded_body": { "type": "string" },
-            "supporting_data": { "type": "string" },
-            "footnotes": { "type": "array", "items": { "type": "string" } }
+            "expanded_body": {
+              "type": "string"
+            },
+            "supporting_data": {
+              "type": "string"
+            },
+            "footnotes": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
           }
         },
-        "speaker_notes": { "type": "string" },
+        "speaker_notes": {
+          "type": "string"
+        },
         "sources": {
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["claim", "source"],
+            "required": [
+              "claim",
+              "source"
+            ],
             "additionalProperties": false,
             "properties": {
-              "claim": { "type": "string" },
-              "source": { "type": "string" },
-              "as_of": { "type": "string", "format": "date" }
+              "claim": {
+                "type": "string"
+              },
+              "source": {
+                "type": "string"
+              },
+              "as_of": {
+                "type": "string",
+                "format": "date"
+              }
             }
           }
         },
-        "agent_edited": { "type": "boolean", "default": false },
-        "agent_edited_at": { "type": "string", "format": "date-time" }
+        "agent_edited": {
+          "type": "boolean",
+          "default": false
+        },
+        "agent_edited_at": {
+          "type": "string",
+          "format": "date-time"
+        }
       }
     },
-
     "exportArtifact": {
       "type": "object",
-      "required": ["type", "status"],
+      "required": [
+        "type",
+        "status"
+      ],
       "additionalProperties": false,
       "properties": {
         "type": {
           "type": "string",
-          "enum": ["html_live", "html_leave_behind", "pdf_live", "pdf_leave_behind", "speaker_notes_md", "pptx", "commercial_summary_md"]
+          "enum": [
+            "html_live",
+            "html_leave_behind",
+            "pdf_live",
+            "pdf_leave_behind",
+            "speaker_notes_md",
+            "pptx",
+            "commercial_summary_md"
+          ]
         },
-        "status": { "type": "string", "enum": ["rendered", "pending", "failed", "blocked_by_commercial_gate"] },
-        "path": { "type": "string" },
-        "size_bytes": { "type": "integer", "minimum": 0 },
-        "rendered_at": { "type": "string", "format": "date-time" },
-        "rendered_by": { "type": "string", "enum": ["jinja2_html", "puppeteer_pdf", "slide_skill", "markdown_writer"] },
-        "error": { "type": "string" }
+        "status": {
+          "type": "string",
+          "enum": [
+            "rendered",
+            "pending",
+            "failed",
+            "blocked_by_commercial_gate"
+          ]
+        },
+        "path": {
+          "type": "string"
+        },
+        "size_bytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "rendered_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "rendered_by": {
+          "type": "string",
+          "enum": [
+            "jinja2_html",
+            "puppeteer_pdf",
+            "slide_skill",
+            "markdown_writer"
+          ]
+        },
+        "error": {
+          "type": "string"
+        }
       }
     },
-
     "agentEdit": {
       "type": "object",
-      "required": ["edit_id", "edited_at", "edit_type", "target"],
+      "required": [
+        "edit_id",
+        "edited_at",
+        "edit_type",
+        "target"
+      ],
       "additionalProperties": false,
       "properties": {
-        "edit_id": { "type": "string", "pattern": "^edit_[a-z0-9]+$" },
-        "edited_at": { "type": "string", "format": "date-time" },
-        "edited_by_agent_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+        "edit_id": {
+          "type": "string",
+          "pattern": "^edit_[a-z0-9]+$"
+        },
+        "edited_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "edited_by_agent_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]*$"
+        },
         "edit_type": {
           "type": "string",
-          "enum": ["slide_html_direct", "commercial_override", "slide_reorder", "slide_delete", "slide_insert", "context_artefact_retag", "context_artefact_exclude"]
+          "enum": [
+            "slide_html_direct",
+            "commercial_override",
+            "slide_reorder",
+            "slide_delete",
+            "slide_insert",
+            "context_artefact_retag",
+            "context_artefact_exclude"
+          ]
         },
-        "target": { "type": "string", "description": "What was edited. e.g. 'slides[3].live_body', 'commercial_proposal.fee_usd', 'context_artefacts[ctx_abc].relevance_tag'." },
-        "before_excerpt": { "type": "string" },
-        "after_excerpt": { "type": "string" }
+        "target": {
+          "type": "string",
+          "description": "What was edited. e.g. 'slides[3].live_body', 'commercial_proposal.fee_usd', 'context_artefacts[ctx_abc].relevance_tag'."
+        },
+        "before_excerpt": {
+          "type": "string"
+        },
+        "after_excerpt": {
+          "type": "string"
+        }
       }
     }
   }

@@ -192,6 +192,26 @@ When v2 adds multi-agent support:
 - New onboarding sub-step: "Add an agent to the roster" with the same DNS-already-done shortcut (new agents share the agency's domain reputation; only need a new mailbox warmed)
 - Cross-roster kill becomes per-agent-aware (replies to Sarah only kill Sarah's active enrollments, not Tom's)
 
+## Invoice template version bump enforcement (GAP-07 fix)
+
+`agency_profile.invoice_template.template_version + .template_updated_at` track the lifecycle of the agency's invoice template. Every generated `invoice_pack` snapshots the template_version it was generated against (`invoice_pack.context_snapshot.agency_invoice_template_version`) for audit trail.
+
+**Enforcement requirement:** the API layer MUST bump `template_version` + set `template_updated_at = now()` on ANY modification to:
+
+- `agency_profile.invoice_template.markdown_source`
+- `agency_profile.invoice_template.tax_handling`
+- `agency_profile.invoice_template.invoice_footer`
+- `agency_profile.invoice_template.payment_instructions_markdown`
+- `agency_profile.invoice_template.default_payment_terms_days`
+
+`agency_profile.invoice_template.invoice_number_sequence` is exempt — it's an atomic counter that increments on every invoice generation; not a template change.
+
+**Implementation:** either DB-level trigger or service-layer guard. Never trust callers to manually bump. Format suggestion: semver (e.g. `1.0.0` → `1.0.1` for footer tweak; `1.1.0` for new tax handling; `2.0.0` for full markdown rewrite). API endpoints MUST reject updates that change these fields without an accompanying version bump (or auto-bump server-side).
+
+**Why this matters:** if an agency tweaks the markdown_source mid-deal and a future dispute references the invoice version, we need to reproduce the exact template that generated that invoice. Without enforcement, `agency_invoice_template_version` would silently capture stale version strings while the underlying markdown_source has changed — destroying audit trail.
+
+**Failure mode if skipped:** silent drift between captured template_version strings and the actual template content; surfaces only during dispute / audit.
+
 ## Failure handling
 
 | Failure | Behaviour |

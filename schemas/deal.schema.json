@@ -2,23 +2,48 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://nativ2/schemas/deal.schema.json",
   "title": "Deal Lifecycle Record",
-  "description": "Phase 4 deal record — moves through 5 stages from a Phase 3b `interested` reply through to a paid + archived deal. Per-deal file at `data/deals/{deal_id}.json` (gitignored — commercial data, signed contracts, invoice amounts). On close + payment + KPI capture, the orchestrator auto-archives this into `data/brand_deals/{talent_id}.json` (Phase 1.5). See `docs/deal_lifecycle_workflow.md`.",
+  "description": "Phase 4 deal record \u2014 moves through 5 stages from a Phase 3b `interested` reply through to a paid + archived deal. Per-deal file at `data/deals/{deal_id}.json` (gitignored \u2014 commercial data, signed contracts, invoice amounts). On close + payment + KPI capture, the orchestrator auto-archives this into `data/brand_deals/{talent_id}.json` (Phase 1.5). See `docs/deal_lifecycle_workflow.md`.",
   "type": "object",
-  "required": ["deal_id", "talent_id", "brand_id", "stage", "substage", "assigned_agent_id", "created_at"],
+  "required": [
+    "deal_id",
+    "talent_id",
+    "brand_id",
+    "stage",
+    "substage",
+    "assigned_agent_id",
+    "created_at"
+  ],
   "additionalProperties": false,
   "properties": {
-    "$schema": { "type": "string" },
-
+    "$schema": {
+      "type": "string"
+    },
+    "agency_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Multi-tenant scope: FK to agency_profile.agency_id. Optional in v0.1 (single-tenant deploys may omit); required in v2 SaaS. When present, all cross-record queries MUST filter by agency_id to prevent cross-tenant data leakage. See docs/data_lineage.md GAP-01/02 for rationale."
+    },
     "deal_id": {
       "type": "string",
       "pattern": "^deal_pipeline_[a-z0-9_-]+$",
       "description": "Globally unique pipeline-deal identifier. Format: `deal_pipeline_{year}_{quarter}_{brand_slug}_{talent_slug}` or similar (slugs allowed to contain hyphens). Distinguished from Phase 1.5 `brand_deals[].deal_id` (which starts `deal_`) so we never collide IDs between pipeline + archived."
     },
-    "talent_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
-    "brand_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
-    "brand_name": { "type": "string", "description": "Denormalised for at-a-glance reading." },
-    "industry_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
-
+    "talent_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]*$"
+    },
+    "brand_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]*$"
+    },
+    "brand_name": {
+      "type": "string",
+      "description": "Denormalised for at-a-glance reading."
+    },
+    "industry_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]*$"
+    },
     "primary_contact_id": {
       "type": "string",
       "pattern": "^[a-z0-9][a-z0-9-]*$",
@@ -26,17 +51,26 @@
     },
     "additional_contact_ids": {
       "type": "array",
-      "items": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z0-9][a-z0-9-]*$"
+      },
       "description": "Other contacts looped in (legal, finance, brand manager, agency-of-record)."
     },
     "originating_enrollment_id": {
       "type": "string",
       "pattern": "^enr_[a-z0-9]+$",
-      "description": "FK to `data/pitch_enrollments/{enrollment_id}.json` — which Phase 3b outreach pitch produced the `interested` reply that created this deal. Closes the outreach→deal analytics loop (bidirectional with `pitch_enrollment.created_deal_id`)."
+      "description": "FK to `data/pitch_enrollments/{enrollment_id}.json` \u2014 which Phase 3b outreach pitch produced the `interested` reply that created this deal. Closes the outreach\u2192deal analytics loop (bidirectional with `pitch_enrollment.created_deal_id`)."
     },
     "originating_decision_role_at_pitch": {
       "type": "string",
-      "enum": ["buyer", "influencer", "gatekeeper", "champion", "unknown"],
+      "enum": [
+        "buyer",
+        "influencer",
+        "gatekeeper",
+        "champion",
+        "unknown"
+      ],
       "description": "Snapshot of `brand_contact.decision_role` at the time the originating pitch went out. Captured here on deal creation (vs reading from contact record live) because the contact's role may evolve (promotions, role changes) and we want to anchor 'won-deal-by-decision-role' analytics to the role at pitch time. Powers cross-cuts like 'we win more deals when champion is the originating contact'."
     },
     "assigned_agent_id": {
@@ -44,21 +78,52 @@
       "pattern": "^[a-z0-9][a-z0-9-]*$",
       "description": "FK to an agent in `agency_profile.agents[]`. v0.1: always the single primary agent. v2: per-deal assignment."
     },
-
     "stage": {
       "type": "string",
-      "enum": ["lead", "proposal", "contract", "delivery", "close", "archived"],
+      "enum": [
+        "lead",
+        "proposal",
+        "contract",
+        "delivery",
+        "close",
+        "archived"
+      ],
       "description": "Top-level lifecycle stage. `archived` is the post-close terminal state after auto-archive into Phase 1.5 brand_deals."
     },
     "substage": {
       "type": "string",
       "enum": [
-        "new_lead", "initial_call_scheduled", "initial_call_completed", "brief_received", "qualified", "disqualified",
-        "proposal_drafting", "proposal_sent", "under_review", "negotiation", "terms_agreed",
-        "contract_drafting", "contract_in_review_brand", "contract_in_review_talent", "contract_revisions", "contract_executed", "contract_failed",
-        "pre_production", "content_in_production", "pending_brand_approval", "revisions_requested", "approved_for_posting", "live", "performance_window",
-        "invoice_sent", "invoice_paid", "post_campaign_reporting", "archived",
-        "lost", "killed", "paused"
+        "new_lead",
+        "initial_call_scheduled",
+        "initial_call_completed",
+        "brief_received",
+        "qualified",
+        "disqualified",
+        "proposal_drafting",
+        "proposal_sent",
+        "under_review",
+        "negotiation",
+        "terms_agreed",
+        "contract_drafting",
+        "contract_in_review_brand",
+        "contract_in_review_talent",
+        "contract_revisions",
+        "contract_executed",
+        "contract_failed",
+        "pre_production",
+        "content_in_production",
+        "pending_brand_approval",
+        "revisions_requested",
+        "approved_for_posting",
+        "live",
+        "performance_window",
+        "invoice_sent",
+        "invoice_paid",
+        "post_campaign_reporting",
+        "archived",
+        "lost",
+        "killed",
+        "paused"
       ],
       "description": "Granular state within (or terminal-state outside of) the current stage. Transition validity is enforced by the orchestrator per the state machine in docs/deal_lifecycle_workflow.md."
     },
@@ -72,24 +137,39 @@
       "default": false,
       "description": "True only after stage=archived with payment_received. Distinguished from terminal-but-lost."
     },
-
     "stage_history": {
       "type": "array",
       "description": "Audit trail of every stage/substage transition. Append-only.",
       "items": {
         "type": "object",
-        "required": ["stage", "substage", "at"],
+        "required": [
+          "stage",
+          "substage",
+          "at"
+        ],
         "additionalProperties": false,
         "properties": {
-          "stage": { "type": "string" },
-          "substage": { "type": "string" },
-          "at": { "type": "string", "format": "date-time" },
-          "by_agent_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
-          "note": { "type": "string", "description": "Optional context on the transition." }
+          "stage": {
+            "type": "string"
+          },
+          "substage": {
+            "type": "string"
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "by_agent_id": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9-]*$"
+          },
+          "note": {
+            "type": "string",
+            "description": "Optional context on the transition."
+          }
         }
       }
     },
-
     "expected_value_usd": {
       "type": "number",
       "minimum": 0,
@@ -105,7 +185,6 @@
       "minimum": 0,
       "description": "Final paid amount. Set when stage=archived. May differ from expected_value_usd if scope changed mid-deal."
     },
-
     "next_action": {
       "type": "string",
       "description": "Free-text or templated next action the agent needs to take. e.g. 'Send revised proposal with adjusted usage rights'. Drives the agent's daily task list."
@@ -113,70 +192,154 @@
     "next_action_due_at": {
       "type": "string",
       "format": "date-time",
-      "description": "When the next_action is due. Drives the daily reminder cron — overdue actions surface in the agent's morning summary."
+      "description": "When the next_action is due. Drives the daily reminder cron \u2014 overdue actions surface in the agent's morning summary."
     },
-
-    "lead": { "$ref": "#/$defs/leadStage" },
-    "proposal": { "$ref": "#/$defs/proposalStage" },
-    "contract": { "$ref": "#/$defs/contractStage" },
-    "delivery": { "$ref": "#/$defs/deliveryStage" },
-    "close": { "$ref": "#/$defs/closeStage" },
-
+    "lead": {
+      "$ref": "#/$defs/leadStage"
+    },
+    "proposal": {
+      "$ref": "#/$defs/proposalStage"
+    },
+    "contract": {
+      "$ref": "#/$defs/contractStage"
+    },
+    "delivery": {
+      "$ref": "#/$defs/deliveryStage"
+    },
+    "close": {
+      "$ref": "#/$defs/closeStage"
+    },
     "loss": {
       "type": "object",
       "description": "Populated only when substage is `lost`, `killed`, `disqualified`, or `contract_failed`. Captures structured loss-reason for funnel analytics.",
-      "required": ["reason", "at"],
+      "required": [
+        "reason",
+        "at"
+      ],
       "additionalProperties": false,
       "properties": {
         "reason": {
           "type": "string",
-          "enum": ["budget", "timing", "competitor_won", "internal_pivot", "talent_no_fit", "terms_disagreed", "unresponsive", "compliance_block", "other"],
+          "enum": [
+            "budget",
+            "timing",
+            "competitor_won",
+            "internal_pivot",
+            "talent_no_fit",
+            "terms_disagreed",
+            "unresponsive",
+            "compliance_block",
+            "other"
+          ],
           "description": "budget: brand insufficient budget; timing: schedule didn't work; competitor_won: brand picked another creator; internal_pivot: brand strategy changed; talent_no_fit: talent declined; terms_disagreed: couldn't agree on usage rights/exclusivity/etc; unresponsive: went dark; compliance_block: values/red-lines conflict; other: free-text."
         },
-        "at": { "type": "string", "format": "date-time" },
-        "by_agent_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
-        "notes": { "type": "string", "description": "Free-text detail on the loss circumstances." },
-        "competitor_brand": { "type": "string", "description": "If reason=competitor_won, who won." },
-        "lost_at_stage": { "type": "string", "enum": ["lead", "proposal", "contract", "delivery"], "description": "Which stage we were in when the deal went sideways." }
+        "at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "by_agent_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]*$"
+        },
+        "notes": {
+          "type": "string",
+          "description": "Free-text detail on the loss circumstances."
+        },
+        "competitor_brand": {
+          "type": "string",
+          "description": "If reason=competitor_won, who won."
+        },
+        "lost_at_stage": {
+          "type": "string",
+          "enum": [
+            "lead",
+            "proposal",
+            "contract",
+            "delivery"
+          ],
+          "description": "Which stage we were in when the deal went sideways."
+        }
       }
     },
-
     "attachments": {
       "type": "array",
       "description": "All documents associated with the deal: briefs, proposals, contracts, content drafts, approvals, invoices, reports. Files stored externally (S3/cloud storage); this array holds metadata + references.",
-      "items": { "$ref": "#/$defs/attachment" }
+      "items": {
+        "$ref": "#/$defs/attachment"
+      }
     },
     "notes": {
       "type": "array",
       "description": "Free-text notes from the agent. Append-only audit trail of insights, conversations, decisions.",
-      "items": { "$ref": "#/$defs/note" }
+      "items": {
+        "$ref": "#/$defs/note"
+      }
     },
-
-    "created_at": { "type": "string", "format": "date-time" },
-    "updated_at": { "type": "string", "format": "date-time" },
-    "created_by_agent_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" }
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "created_by_agent_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]*$"
+    }
   },
-
   "$defs": {
-
     "leadStage": {
       "type": "object",
       "description": "Captured during LEAD stage. Discovery call notes, brand brief, qualification decision, discovery prep pack references (Phase 4.5).",
       "additionalProperties": false,
       "properties": {
-        "discovery_call_scheduled_at": { "type": "string", "format": "date-time" },
-        "discovery_call_completed_at": { "type": "string", "format": "date-time" },
-        "discovery_call_notes": { "type": "string" },
-        "brief_text": { "type": "string", "description": "Inline brief text if brand sent in email/chat." },
-        "brief_attachment_id": { "type": "string", "description": "FK to attachments[] if brief is a PDF/doc." },
-        "brief_received_at": { "type": "string", "format": "date-time" },
-        "qualification_decision": { "type": "string", "enum": ["qualified", "disqualified", "pending"] },
-        "qualification_decision_at": { "type": "string", "format": "date-time" },
-        "qualification_rationale": { "type": "string", "description": "Why qualified or disqualified — used by analytics to learn what we say yes/no to." },
+        "discovery_call_scheduled_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "discovery_call_completed_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "discovery_call_notes": {
+          "type": "string"
+        },
+        "brief_text": {
+          "type": "string",
+          "description": "Inline brief text if brand sent in email/chat."
+        },
+        "brief_attachment_id": {
+          "type": "string",
+          "description": "FK to attachments[] if brief is a PDF/doc."
+        },
+        "brief_received_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "qualification_decision": {
+          "type": "string",
+          "enum": [
+            "qualified",
+            "disqualified",
+            "pending"
+          ]
+        },
+        "qualification_decision_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "qualification_rationale": {
+          "type": "string",
+          "description": "Why qualified or disqualified \u2014 used by analytics to learn what we say yes/no to."
+        },
         "discovery_prep_pack_ids": {
           "type": "array",
-          "description": "FK list to all versions of the discovery-call prep pack generated for this deal (Phase 4.5). Each version is a file at `data/deals/{deal_id}/prep_packs/v{N}.json`. Append-only — v1, v2, v3... all retained as history. See `docs/discovery_prep_workflow.md`.",
-          "items": { "type": "string", "pattern": "^prep_[a-z0-9_-]+_v[0-9]+$" }
+          "description": "FK list to all versions of the discovery-call prep pack generated for this deal (Phase 4.5). Each version is a file at `data/deals/{deal_id}/prep_packs/v{N}.json`. Append-only \u2014 v1, v2, v3... all retained as history. See `docs/discovery_prep_workflow.md`.",
+          "items": {
+            "type": "string",
+            "pattern": "^prep_[a-z0-9_-]+_v[0-9]+$"
+          }
         },
         "latest_prep_pack_id": {
           "type": "string",
@@ -185,13 +348,19 @@
         },
         "discovery_debrief": {
           "type": "object",
-          "description": "Structured debrief of what was learned in the discovery call. Populated via the hybrid extraction flow in Phase 4.6 Stage B: agent dumps free-form notes (or uploads transcript file), LLM extracts structured fields, agent reviews + edits inline + confirms. Each field carries a confidence level. Cross-version anchor — multiple proposal pack versions can share the same debrief; if debrief evolves (e.g. follow-up call adds context), each proposal_pack version snapshots its state in `context_snapshot.discovery_debrief_snapshot`. See `docs/proposal_pack_workflow.md`.",
+          "description": "Structured debrief of what was learned in the discovery call. Populated via the hybrid extraction flow in Phase 4.6 Stage B: agent dumps free-form notes (or uploads transcript file), LLM extracts structured fields, agent reviews + edits inline + confirms. Each field carries a confidence level. Cross-version anchor \u2014 multiple proposal pack versions can share the same debrief; if debrief evolves (e.g. follow-up call adds context), each proposal_pack version snapshots its state in `context_snapshot.discovery_debrief_snapshot`. See `docs/proposal_pack_workflow.md`.",
           "additionalProperties": false,
           "properties": {
-            "extracted_at": { "type": "string", "format": "date-time" },
+            "extracted_at": {
+              "type": "string",
+              "format": "date-time"
+            },
             "extracted_from_artefact_ids": {
               "type": "array",
-              "items": { "type": "string", "pattern": "^ctx_[a-z0-9]+$" },
+              "items": {
+                "type": "string",
+                "pattern": "^ctx_[a-z0-9]+$"
+              },
               "description": "FKs to `proposal_pack.context_artefacts[]` entries the LLM used as source material (discovery_call_notes, call_transcript, etc.)."
             },
             "confirmed_at": {
@@ -199,20 +368,27 @@
               "format": "date-time",
               "description": "When the agent reviewed + confirmed the extracted debrief. Required before proposal generation Stage C can fire."
             },
-            "confirmed_by_agent_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+            "confirmed_by_agent_id": {
+              "type": "string",
+              "pattern": "^[a-z0-9][a-z0-9-]*$"
+            },
             "objectives_heard": {
               "type": "array",
               "description": "What the brand stated they want to achieve.",
-              "items": { "$ref": "#/$defs/debriefSignal" }
+              "items": {
+                "$ref": "#/$defs/debriefSignal"
+              }
             },
             "pain_points": {
               "type": "array",
               "description": "Current friction the brand surfaced (e.g. 'past creator partnerships felt transactional, no continuity').",
-              "items": { "$ref": "#/$defs/debriefSignal" }
+              "items": {
+                "$ref": "#/$defs/debriefSignal"
+              }
             },
             "critical_event": {
               "$ref": "#/$defs/debriefSignal",
-              "description": "Why now — what's triggering the brand to act (e.g. 'spring launch in 6 weeks', 'CMO pressure to show creator-driven growth')."
+              "description": "Why now \u2014 what's triggering the brand to act (e.g. 'spring launch in 6 weeks', 'CMO pressure to show creator-driven growth')."
             },
             "scope_signal": {
               "$ref": "#/$defs/debriefSignal",
@@ -225,53 +401,103 @@
             "budget_signal": {
               "type": "object",
               "additionalProperties": false,
-              "description": "Budget hints from the call. Numeric range optional — sometimes only qualitative signal ('flexible', 'tight') is captured.",
+              "description": "Budget hints from the call. Numeric range optional \u2014 sometimes only qualitative signal ('flexible', 'tight') is captured.",
               "properties": {
-                "statement": { "type": "string" },
-                "confidence": { "type": "string", "enum": ["high", "medium", "low"] },
-                "range_usd_low": { "type": "number", "minimum": 0 },
-                "range_usd_high": { "type": "number", "minimum": 0 }
+                "statement": {
+                  "type": "string"
+                },
+                "confidence": {
+                  "type": "string",
+                  "enum": [
+                    "high",
+                    "medium",
+                    "low"
+                  ]
+                },
+                "range_usd_low": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "range_usd_high": {
+                  "type": "number",
+                  "minimum": 0
+                }
               }
             },
             "exclusivity_signals": {
               "type": "array",
               "description": "Competing-creator concerns, category exclusivity expectations.",
-              "items": { "$ref": "#/$defs/debriefSignal" }
+              "items": {
+                "$ref": "#/$defs/debriefSignal"
+              }
             },
             "usage_rights_signals": {
               "type": "array",
               "description": "Paid social / whitelisting / broadcast hints from the call.",
-              "items": { "$ref": "#/$defs/debriefSignal" }
+              "items": {
+                "$ref": "#/$defs/debriefSignal"
+              }
             },
             "decision_process": {
               "type": "object",
               "additionalProperties": false,
               "description": "Who else needs to weigh in + how + when.",
               "properties": {
-                "stakeholders": { "type": "array", "items": { "type": "string" }, "description": "Roles or names of other approvers (legal, finance, CMO, etc.)." },
-                "process_description": { "type": "string" },
-                "timeline": { "type": "string" },
-                "confidence": { "type": "string", "enum": ["high", "medium", "low"] }
+                "stakeholders": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "Roles or names of other approvers (legal, finance, CMO, etc.)."
+                },
+                "process_description": {
+                  "type": "string"
+                },
+                "timeline": {
+                  "type": "string"
+                },
+                "confidence": {
+                  "type": "string",
+                  "enum": [
+                    "high",
+                    "medium",
+                    "low"
+                  ]
+                }
               }
             },
             "red_flags_surfaced": {
               "type": "array",
               "description": "Anything from the call that conflicts with talent's red_lines or values.",
-              "items": { "$ref": "#/$defs/debriefSignal" }
+              "items": {
+                "$ref": "#/$defs/debriefSignal"
+              }
             },
             "agent_edits_post_extraction": {
               "type": "array",
               "description": "Audit log of agent edits to LLM-extracted fields during the review-and-confirm step. Captures what the agent changed before clicking Confirm.",
               "items": {
                 "type": "object",
-                "required": ["edited_at", "field", "from", "to"],
+                "required": [
+                  "edited_at",
+                  "field",
+                  "from",
+                  "to"
+                ],
                 "additionalProperties": false,
                 "properties": {
-                  "edited_at": { "type": "string", "format": "date-time" },
-                  "field": { "type": "string" },
+                  "edited_at": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "field": {
+                    "type": "string"
+                  },
                   "from": {},
                   "to": {},
-                  "note": { "type": "string" }
+                  "note": {
+                    "type": "string"
+                  }
                 }
               }
             }
@@ -279,16 +505,18 @@
         }
       }
     },
-
     "proposalStage": {
       "type": "object",
-      "description": "Captured during PROPOSAL stage. Mirrors brand_deal.deliverables/commercials shape — when archived, these fields carry into the brand_deal record. Generated by the Phase 4.6 proposal pack pipeline (`docs/proposal_pack_workflow.md`): the LLM proposes commercials, the agent confirms (passing the commercial gate), and confirmed values write into the fields below. `proposal_pack_ids[]` references all versions of the proposal pack generated for this deal.",
+      "description": "Captured during PROPOSAL stage. Mirrors brand_deal.deliverables/commercials shape \u2014 when archived, these fields carry into the brand_deal record. Generated by the Phase 4.6 proposal pack pipeline (`docs/proposal_pack_workflow.md`): the LLM proposes commercials, the agent confirms (passing the commercial gate), and confirmed values write into the fields below. `proposal_pack_ids[]` references all versions of the proposal pack generated for this deal.",
       "additionalProperties": false,
       "properties": {
         "proposal_pack_ids": {
           "type": "array",
-          "description": "FK list to all versions of the proposal pack generated for this deal (Phase 4.6). Each version is a file at `data/deals/{deal_id}/proposal_packs/v{N}.json`. Append-only — v1, v2, v3... all retained as history including negotiation-response regens.",
-          "items": { "type": "string", "pattern": "^pp_[a-z0-9_-]+_v[0-9]+$" }
+          "description": "FK list to all versions of the proposal pack generated for this deal (Phase 4.6). Each version is a file at `data/deals/{deal_id}/proposal_packs/v{N}.json`. Append-only \u2014 v1, v2, v3... all retained as history including negotiation-response regens.",
+          "items": {
+            "type": "string",
+            "pattern": "^pp_[a-z0-9_-]+_v[0-9]+$"
+          }
         },
         "latest_proposal_pack_id": {
           "type": "string",
@@ -298,58 +526,147 @@
         "commercial_confirmed_at": {
           "type": "string",
           "format": "date-time",
-          "description": "When the agent passed the Phase 4.6 commercial gate — confirmed the LLM-proposed deliverables + fee + usage_rights + exclusivity etc. Setting this triggers slide generation. The commercial fields below (deliverables, fee_usd, etc.) are populated from the confirmed values."
+          "description": "When the agent passed the Phase 4.6 commercial gate \u2014 confirmed the LLM-proposed deliverables + fee + usage_rights + exclusivity etc. Setting this triggers slide generation. The commercial fields below (deliverables, fee_usd, etc.) are populated from the confirmed values."
         },
-        "commercial_confirmed_by_agent_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
-        "proposal_attachment_id": { "type": "string", "description": "FK to attachments[] for the formal proposal PDF — typically the leave-behind PDF from the latest proposal pack version." },
-        "proposal_sent_at": { "type": "string", "format": "date-time" },
+        "commercial_confirmed_by_agent_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]*$"
+        },
+        "proposal_attachment_id": {
+          "type": "string",
+          "description": "FK to attachments[] for the formal proposal PDF \u2014 typically the leave-behind PDF from the latest proposal pack version."
+        },
+        "proposal_sent_at": {
+          "type": "string",
+          "format": "date-time"
+        },
         "deliverables": {
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["platform", "format", "count"],
+            "required": [
+              "platform",
+              "format",
+              "count"
+            ],
             "additionalProperties": false,
             "properties": {
               "platform": {
                 "type": "string",
-                "enum": ["instagram", "tiktok", "youtube", "twitter_x", "linkedin", "pinterest", "twitch", "snapchat", "facebook", "substack", "podcast", "other"]
+                "enum": [
+                  "instagram",
+                  "tiktok",
+                  "youtube",
+                  "twitter_x",
+                  "linkedin",
+                  "pinterest",
+                  "twitch",
+                  "snapchat",
+                  "facebook",
+                  "substack",
+                  "podcast",
+                  "other"
+                ]
               },
               "format": {
                 "type": "string",
-                "enum": ["reel", "story", "feed_post", "carousel", "live", "video_long_form", "video_short", "podcast_episode", "podcast_read", "newsletter", "tweet_thread", "linkedin_post", "appearance", "co_created_product", "other"]
+                "enum": [
+                  "reel",
+                  "story",
+                  "feed_post",
+                  "carousel",
+                  "live",
+                  "video_long_form",
+                  "video_short",
+                  "podcast_episode",
+                  "podcast_read",
+                  "newsletter",
+                  "tweet_thread",
+                  "linkedin_post",
+                  "appearance",
+                  "co_created_product",
+                  "other"
+                ]
               },
-              "count": { "type": "integer", "minimum": 1 }
+              "count": {
+                "type": "integer",
+                "minimum": 1
+              }
             }
           }
         },
-        "fee_usd": { "type": "number", "minimum": 0 },
-        "fee_currency_original": { "type": "string", "pattern": "^[A-Z]{3}$" },
-        "fee_original_amount": { "type": "number", "minimum": 0 },
+        "fee_usd": {
+          "type": "number",
+          "minimum": 0
+        },
+        "fee_currency_original": {
+          "type": "string",
+          "pattern": "^[A-Z]{3}$"
+        },
+        "fee_original_amount": {
+          "type": "number",
+          "minimum": 0
+        },
         "usage_rights_granted": {
           "type": "array",
           "items": {
             "type": "string",
-            "enum": ["organic", "whitelisting_30d", "whitelisting_60d", "whitelisting_90d", "whitelisting_unlimited", "paid_social_30d", "paid_social_90d", "paid_social_perpetual", "website_use", "broadcast", "print", "perpetual_all_channels"]
+            "enum": [
+              "organic",
+              "whitelisting_30d",
+              "whitelisting_60d",
+              "whitelisting_90d",
+              "whitelisting_unlimited",
+              "paid_social_30d",
+              "paid_social_90d",
+              "paid_social_perpetual",
+              "website_use",
+              "broadcast",
+              "print",
+              "perpetual_all_channels"
+            ]
           }
         },
         "exclusivity": {
           "type": "object",
           "additionalProperties": false,
           "properties": {
-            "category": { "type": "string" },
-            "duration_days": { "type": "integer", "minimum": 0 }
+            "category": {
+              "type": "string"
+            },
+            "duration_days": {
+              "type": "integer",
+              "minimum": 0
+            }
           }
         },
         "additional_compensation": {
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["type"],
+            "required": [
+              "type"
+            ],
             "additionalProperties": false,
             "properties": {
-              "type": { "type": "string", "enum": ["gifted_product", "comped_event", "comped_travel", "equity", "discount_code", "other"] },
-              "value_usd": { "type": "number", "minimum": 0 },
-              "description": { "type": "string" }
+              "type": {
+                "type": "string",
+                "enum": [
+                  "gifted_product",
+                  "comped_event",
+                  "comped_travel",
+                  "equity",
+                  "discount_code",
+                  "other"
+                ]
+              },
+              "value_usd": {
+                "type": "number",
+                "minimum": 0
+              },
+              "description": {
+                "type": "string"
+              }
             }
           }
         },
@@ -358,15 +675,48 @@
           "description": "Chronological back-and-forth during negotiation. Each entry bidirectionally links to a Phase 4.6 proposal pack version: `proposal_pack_version` captures which version this pushback was on; the responding proposal pack version's `generation.negotiation_log_entry_ref` (an ISO timestamp matching `at`) points back here. Closes the audit loop between negotiation events and proposal artefacts.",
           "items": {
             "type": "object",
-            "required": ["at", "direction", "summary"],
+            "required": [
+              "at",
+              "direction",
+              "summary"
+            ],
             "additionalProperties": false,
             "properties": {
-              "at": { "type": "string", "format": "date-time" },
-              "direction": { "type": "string", "enum": ["sent_to_brand", "received_from_brand", "internal_decision"] },
-              "channel": { "type": "string", "enum": ["email", "call", "meeting", "message", "other"] },
-              "summary": { "type": "string" },
-              "terms_changed": { "type": "string", "description": "Description of what changed in the proposal as a result of this exchange." },
-              "attachment_ids": { "type": "array", "items": { "type": "string" } },
+              "at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "direction": {
+                "type": "string",
+                "enum": [
+                  "sent_to_brand",
+                  "received_from_brand",
+                  "internal_decision"
+                ]
+              },
+              "channel": {
+                "type": "string",
+                "enum": [
+                  "email",
+                  "call",
+                  "meeting",
+                  "message",
+                  "other"
+                ]
+              },
+              "summary": {
+                "type": "string"
+              },
+              "terms_changed": {
+                "type": "string",
+                "description": "Description of what changed in the proposal as a result of this exchange."
+              },
+              "attachment_ids": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
               "proposal_pack_version": {
                 "type": "integer",
                 "minimum": 1,
@@ -375,11 +725,16 @@
             }
           }
         },
-        "terms_agreed_at": { "type": "string", "format": "date-time" },
-        "agreed_final_terms_summary": { "type": "string", "description": "One-paragraph summary of what got verbally agreed at terms_agreed transition. The legal contract written in CONTRACT stage should match this." }
+        "terms_agreed_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "agreed_final_terms_summary": {
+          "type": "string",
+          "description": "One-paragraph summary of what got verbally agreed at terms_agreed transition. The legal contract written in CONTRACT stage should match this."
+        }
       }
     },
-
     "contractStage": {
       "type": "object",
       "description": "Captured during CONTRACT stage. Drafts are generated by the Phase 4.7 contract pack pipeline (`docs/contract_pack_workflow.md`) from the talent's contract template + the deal's confirmed proposal commercials. v0.1: manual PDF + dates after auto-generation. v2: DocuSign/PandaDoc/HelloSign integration via API.",
@@ -387,8 +742,11 @@
       "properties": {
         "contract_pack_ids": {
           "type": "array",
-          "description": "FK list to all versions of the Phase 4.7 contract pack. Each version is a file at `data/deals/{deal_id}/contract_packs/v{N}.json`. Append-only — v1, v2, v3... all retained including brand-redline-response regens.",
-          "items": { "type": "string", "pattern": "^cp_[a-z0-9_-]+_v[0-9]+$" }
+          "description": "FK list to all versions of the Phase 4.7 contract pack. Each version is a file at `data/deals/{deal_id}/contract_packs/v{N}.json`. Append-only \u2014 v1, v2, v3... all retained including brand-redline-response regens.",
+          "items": {
+            "type": "string",
+            "pattern": "^cp_[a-z0-9_-]+_v[0-9]+$"
+          }
         },
         "latest_contract_pack_id": {
           "type": "string",
@@ -400,20 +758,50 @@
           "pattern": "^[a-z0-9][a-z0-9-]*$",
           "description": "Identity authorised to pass the Phase 4.7 hard legal review gate. Defaults to `talent.contract_template.legal_reviewer_id` if set; otherwise defaults to `deal.assigned_agent_id`. Captured here at deal level so per-deal overrides are possible (e.g. specific deal goes to external counsel)."
         },
-        "contract_attachment_id": { "type": "string", "description": "FK to attachments[] for the final signed PDF. v0.1: agent uploads after both sides sign. v2: e-sign provider auto-populates." },
-        "draft_contract_attachment_id": { "type": "string", "description": "Pre-signature draft PDF. Auto-populated from the latest contract pack's rendered PDF on Stage G render (after legal review gate passed). Updated each time a new contract pack version is rendered." },
+        "contract_attachment_id": {
+          "type": "string",
+          "description": "FK to attachments[] for the final signed PDF. v0.1: agent uploads after both sides sign. v2: e-sign provider auto-populates."
+        },
+        "draft_contract_attachment_id": {
+          "type": "string",
+          "description": "Pre-signature draft PDF. Auto-populated from the latest contract pack's rendered PDF on Stage G render (after legal review gate passed). Updated each time a new contract pack version is rendered."
+        },
         "e_sign_provider": {
           "type": "string",
-          "enum": ["manual", "docusign", "pandadoc", "hellosign", "other"],
+          "enum": [
+            "manual",
+            "docusign",
+            "pandadoc",
+            "hellosign",
+            "other"
+          ],
           "default": "manual",
           "description": "v0.1: manual (PDF upload + dates tracked). v2: API integration with the chosen provider auto-populates signed_at fields and the contract_attachment_id."
         },
-        "e_sign_envelope_id": { "type": "string", "description": "Provider's identifier for the e-sign envelope. v2." },
-        "contract_drafting_started_at": { "type": "string", "format": "date-time" },
-        "sent_to_brand_for_review_at": { "type": "string", "format": "date-time" },
-        "sent_to_talent_for_review_at": { "type": "string", "format": "date-time" },
-        "talent_signed_at": { "type": "string", "format": "date-time" },
-        "brand_signed_at": { "type": "string", "format": "date-time" },
+        "e_sign_envelope_id": {
+          "type": "string",
+          "description": "Provider's identifier for the e-sign envelope. v2."
+        },
+        "contract_drafting_started_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "sent_to_brand_for_review_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "sent_to_talent_for_review_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "talent_signed_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "brand_signed_at": {
+          "type": "string",
+          "format": "date-time"
+        },
         "contract_executed_at": {
           "type": "string",
           "format": "date-time",
@@ -424,12 +812,22 @@
           "description": "Post-execution amendments (scope changes, extensions). Each entry is bidirectionally linked to a Phase 4.7 contract pack version generated with `trigger: amendment_request`: `contract_pack_version` here captures which version documented the amendment; the responding contract pack's `generation` block captures the amendment event timestamp. Closes the audit loop between amendment events and contract artefacts (parallel to `proposal.negotiation_log[].proposal_pack_version`).",
           "items": {
             "type": "object",
-            "required": ["at", "summary"],
+            "required": [
+              "at",
+              "summary"
+            ],
             "additionalProperties": false,
             "properties": {
-              "at": { "type": "string", "format": "date-time" },
-              "summary": { "type": "string" },
-              "attachment_id": { "type": "string" },
+              "at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "summary": {
+                "type": "string"
+              },
+              "attachment_id": {
+                "type": "string"
+              },
               "contract_pack_version": {
                 "type": "integer",
                 "minimum": 1,
@@ -440,34 +838,73 @@
         }
       }
     },
-
     "deliveryStage": {
       "type": "object",
       "description": "Captured during DELIVERY stage. Content production, brand approval, posting, performance capture.",
       "additionalProperties": false,
       "properties": {
-        "production_kickoff_at": { "type": "string", "format": "date-time" },
-        "products_shipped_to_talent_at": { "type": "string", "format": "date-time", "description": "If applicable — brand sent product samples." },
-        "products_received_by_talent_at": { "type": "string", "format": "date-time" },
+        "production_kickoff_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "products_shipped_to_talent_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "If applicable \u2014 brand sent product samples."
+        },
+        "products_received_by_talent_at": {
+          "type": "string",
+          "format": "date-time"
+        },
         "content_drafts": {
           "type": "array",
-          "description": "Per-deliverable content drafts submitted for brand approval. Versioned — revisions add new entries.",
+          "description": "Per-deliverable content drafts submitted for brand approval. Versioned \u2014 revisions add new entries.",
           "items": {
             "type": "object",
-            "required": ["deliverable_ref", "version", "submitted_at", "brand_review_status"],
+            "required": [
+              "deliverable_ref",
+              "version",
+              "submitted_at",
+              "brand_review_status"
+            ],
             "additionalProperties": false,
             "properties": {
-              "deliverable_ref": { "type": "string", "description": "Reference to which entry in `proposal.deliverables[]` this is (e.g. 'instagram-reel-1')." },
-              "version": { "type": "integer", "minimum": 1 },
-              "draft_attachment_id": { "type": "string" },
-              "draft_url": { "type": "string", "format": "uri", "description": "Optional external preview URL." },
-              "submitted_at": { "type": "string", "format": "date-time" },
+              "deliverable_ref": {
+                "type": "string",
+                "description": "Reference to which entry in `proposal.deliverables[]` this is (e.g. 'instagram-reel-1')."
+              },
+              "version": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "draft_attachment_id": {
+                "type": "string"
+              },
+              "draft_url": {
+                "type": "string",
+                "format": "uri",
+                "description": "Optional external preview URL."
+              },
+              "submitted_at": {
+                "type": "string",
+                "format": "date-time"
+              },
               "brand_review_status": {
                 "type": "string",
-                "enum": ["pending", "approved", "revisions_requested", "rejected"]
+                "enum": [
+                  "pending",
+                  "approved",
+                  "revisions_requested",
+                  "rejected"
+                ]
               },
-              "brand_review_at": { "type": "string", "format": "date-time" },
-              "brand_review_notes": { "type": "string" }
+              "brand_review_at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "brand_review_notes": {
+                "type": "string"
+              }
             }
           }
         },
@@ -476,13 +913,28 @@
           "description": "When content is scheduled to / has gone live. The Phase 4.8 detection cron polls platform APIs (Meta Graph + TikTok Display in v0.1; YouTube/LinkedIn/X/podcast via Phyllo in v2) and surfaces candidate post matches to the agent for confirmation. `posted_detection` block captures the detection method + match signals + agent confirmation.",
           "items": {
             "type": "object",
-            "required": ["deliverable_ref", "scheduled_for"],
+            "required": [
+              "deliverable_ref",
+              "scheduled_for"
+            ],
             "additionalProperties": false,
             "properties": {
-              "deliverable_ref": { "type": "string" },
-              "scheduled_for": { "type": "string", "format": "date-time" },
-              "posted_at": { "type": "string", "format": "date-time", "description": "When it actually went live. Populated on agent confirmation of detected post (or manual URL entry)." },
-              "post_url": { "type": "string", "format": "uri" },
+              "deliverable_ref": {
+                "type": "string"
+              },
+              "scheduled_for": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "posted_at": {
+                "type": "string",
+                "format": "date-time",
+                "description": "When it actually went live. Populated on agent confirmation of detected post (or manual URL entry)."
+              },
+              "post_url": {
+                "type": "string",
+                "format": "uri"
+              },
               "posted_detection": {
                 "type": "object",
                 "additionalProperties": false,
@@ -490,24 +942,59 @@
                 "properties": {
                   "method": {
                     "type": "string",
-                    "enum": ["meta_graph_auto", "tiktok_api_auto", "phyllo_auto", "agent_confirmed_suggestion", "manual_url_entry", "talent_self_reported"],
+                    "enum": [
+                      "meta_graph_auto",
+                      "tiktok_api_auto",
+                      "phyllo_auto",
+                      "agent_confirmed_suggestion",
+                      "manual_url_entry",
+                      "talent_self_reported"
+                    ],
                     "description": "meta_graph_auto/tiktok_api_auto: v0.1 direct API detection. phyllo_auto: v2 via Phyllo. agent_confirmed_suggestion: API suggested + agent confirmed. manual_url_entry: agent (or talent) entered URL directly (typical for platforms without v0.1 API coverage)."
                   },
-                  "detected_at": { "type": "string", "format": "date-time", "description": "When the cron first surfaced the candidate." },
-                  "match_score": { "type": "integer", "minimum": 0, "maximum": 100, "description": "Confidence 0-100. ≥80 = strong auto-suggest; 50-79 = weak suggest with flag; <50 = log only." },
+                  "detected_at": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "When the cron first surfaced the candidate."
+                  },
+                  "match_score": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 100,
+                    "description": "Confidence 0-100. \u226580 = strong auto-suggest; 50-79 = weak suggest with flag; <50 = log only."
+                  },
                   "match_signals": {
                     "type": "array",
-                    "items": { "type": "string", "enum": ["time_window", "brand_handle", "campaign_hashtag", "content_type"] },
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "time_window",
+                        "brand_handle",
+                        "campaign_hashtag",
+                        "content_type"
+                      ]
+                    },
                     "description": "Which signals contributed to the match score. Helps agent + audit understand why this post was suggested."
                   },
                   "candidate_post_ids_considered": {
                     "type": "array",
-                    "items": { "type": "string" },
+                    "items": {
+                      "type": "string"
+                    },
                     "description": "Other candidate post IDs the cron considered but didn't suggest. Captured for audit + debugging (why did we suggest this one vs that one?)."
                   },
-                  "agent_confirmed_at": { "type": "string", "format": "date-time" },
-                  "agent_confirmed_by": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
-                  "agent_rejection_note": { "type": "string", "description": "If agent rejected an auto-suggestion, why. Helps tune the matcher over time." }
+                  "agent_confirmed_at": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "agent_confirmed_by": {
+                    "type": "string",
+                    "pattern": "^[a-z0-9][a-z0-9-]*$"
+                  },
+                  "agent_rejection_note": {
+                    "type": "string",
+                    "description": "If agent rejected an auto-suggestion, why. Helps tune the matcher over time."
+                  }
                 }
               }
             }
@@ -521,29 +1008,74 @@
         "performance_capture_window_ends_at": {
           "type": "string",
           "format": "date-time",
-          "description": "Typically 30 days after last post — KPIs continue to grow during this window. Reaching this timestamp triggers Phase 4.9 performance_report_pack auto-generation. Configurable per agency (default 30d)."
+          "description": "Typically 30 days after last post \u2014 KPIs continue to grow during this window. Reaching this timestamp triggers Phase 4.9 performance_report_pack auto-generation. Configurable per agency (default 30d)."
         },
         "campaign_hashtags": {
           "type": "array",
           "description": "Campaign-specific hashtags the talent should use in posts (e.g. ['#AloYogaPartner', '#ad']). Captured during proposal_pack generation (LLM extracts from brand brief / discovery_debrief) or contract_pack generation (legal clauses often specify required disclosure hashtags). Used by Phase 4.8 detection cron as a +20pt match signal when scoring candidate posts. Empty array = no hashtag-based matching available (rely on time + brand_handle + content_type signals only).",
-          "items": { "type": "string", "pattern": "^#" }
+          "items": {
+            "type": "string",
+            "pattern": "^#"
+          }
         },
         "interim_kpi_snapshots": {
           "type": "array",
-          "description": "Daily snapshots of per-post KPIs captured during the performance_window by the Phase 4.9 KPI cron (`docs/performance_report_workflow.md`). Each entry = one post × one capture timestamp. Most recent snapshot per post is the source-of-truth for that post's current KPIs; the performance_report_pack aggregates across all snapshots into the final report. Bounded growth: 1 snapshot per post per day for ~30 days = ~30 entries per deliverable per deal.",
+          "description": "Daily snapshots of per-post KPIs captured during the performance_window by the Phase 4.9 KPI cron (`docs/performance_report_workflow.md`). Each entry = one post \u00d7 one capture timestamp. Most recent snapshot per post is the source-of-truth for that post's current KPIs; the performance_report_pack aggregates across all snapshots into the final report. Bounded growth: 1 snapshot per post per day for ~30 days = ~30 entries per deliverable per deal.",
           "items": {
             "type": "object",
-            "required": ["captured_at", "post_url", "deliverable_ref", "platform", "kpis"],
+            "required": [
+              "captured_at",
+              "post_url",
+              "deliverable_ref",
+              "platform",
+              "kpis"
+            ],
             "additionalProperties": false,
             "properties": {
-              "captured_at": { "type": "string", "format": "date-time" },
-              "post_url": { "type": "string", "format": "uri" },
-              "deliverable_ref": { "type": "string" },
-              "platform": { "type": "string", "enum": ["instagram", "tiktok", "youtube", "twitter_x", "linkedin", "pinterest", "twitch", "snapchat", "facebook", "substack", "podcast", "other"] },
-              "capture_method": { "type": "string", "enum": ["meta_graph_insights", "tiktok_display_metrics", "youtube_analytics", "linkedin_analytics", "twitter_analytics", "phyllo", "manual_entry", "brand_reported"] },
+              "captured_at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "post_url": {
+                "type": "string",
+                "format": "uri"
+              },
+              "deliverable_ref": {
+                "type": "string"
+              },
+              "platform": {
+                "type": "string",
+                "enum": [
+                  "instagram",
+                  "tiktok",
+                  "youtube",
+                  "twitter_x",
+                  "linkedin",
+                  "pinterest",
+                  "twitch",
+                  "snapchat",
+                  "facebook",
+                  "substack",
+                  "podcast",
+                  "other"
+                ]
+              },
+              "capture_method": {
+                "type": "string",
+                "enum": [
+                  "meta_graph_insights",
+                  "tiktok_display_metrics",
+                  "youtube_analytics",
+                  "linkedin_analytics",
+                  "twitter_analytics",
+                  "phyllo",
+                  "manual_entry",
+                  "brand_reported"
+                ]
+              },
               "kpis": {
                 "type": "object",
-                "description": "Per-post KPIs at this capture timestamp. Same kpiMetric shape as brand_deal.kpis and performance_report_pack.kpis — { value, source, source_name?, as_of, verified_at? } per metric.",
+                "description": "Per-post KPIs at this capture timestamp. Same kpiMetric shape as brand_deal.kpis and performance_report_pack.kpis \u2014 { value, source, source_name?, as_of, verified_at? } per metric.",
                 "additionalProperties": true
               }
             }
@@ -551,7 +1083,6 @@
         }
       }
     },
-
     "closeStage": {
       "type": "object",
       "description": "Captured during CLOSE stage. Multi-invoice via Phase 4.8 invoice pack pipeline (`docs/invoice_workflow.md`). LLM auto-parses the contract pack's payment_terms into `invoice_schedule[]` on contract execution; agent confirms; each entry fires its own invoice_pack when its trigger_condition is met. All invoices must be paid before the deal auto-archives into Phase 1.5 brand_deals.",
@@ -562,31 +1093,83 @@
           "description": "Structured payment schedule, LLM-parsed from the contract pack's `commercial_proposal.llm_proposed.payment_terms` free-text field on contract execution. One-time agent gate: agent confirms parsed schedule before any invoice fires. Locked thereafter (amendments use the contract amendment workflow). Each entry corresponds to one invoice_pack.",
           "items": {
             "type": "object",
-            "required": ["sequence", "trigger_condition", "amount_usd"],
+            "required": [
+              "sequence",
+              "trigger_condition",
+              "amount_usd"
+            ],
             "additionalProperties": false,
             "properties": {
-              "sequence": { "type": "integer", "minimum": 1, "description": "Ordering. Used in invoice_pack_id format `inv_..._seq{N}_v{M}`." },
-              "percentage": { "type": "number", "minimum": 0, "maximum": 100, "description": "Share of total deal fee (e.g. 50 for 50%). LLM-parsed from payment_terms. May be null for fixed-amount schedules." },
-              "amount_usd": { "type": "number", "minimum": 0, "description": "Computed as deal.proposal.fee_usd × (percentage / 100). Captured here at confirmation time so subsequent fee changes don't retroactively rewrite the schedule." },
+              "sequence": {
+                "type": "integer",
+                "minimum": 1,
+                "description": "Ordering. Used in invoice_pack_id format `inv_..._seq{N}_v{M}`."
+              },
+              "percentage": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 100,
+                "description": "Share of total deal fee (e.g. 50 for 50%). LLM-parsed from payment_terms. May be null for fixed-amount schedules."
+              },
+              "amount_usd": {
+                "type": "number",
+                "minimum": 0,
+                "description": "Computed as deal.proposal.fee_usd \u00d7 (percentage / 100). Captured here at confirmation time so subsequent fee changes don't retroactively rewrite the schedule."
+              },
               "trigger_condition": {
                 "type": "string",
-                "enum": ["contract_executed", "first_post_live", "all_deliverables_live", "specific_date", "manual"],
+                "enum": [
+                  "contract_executed",
+                  "first_post_live",
+                  "all_deliverables_live",
+                  "specific_date",
+                  "manual"
+                ],
                 "description": "When this invoice fires. contract_executed = immediately on contract_executed_at. first_post_live = when first posting_schedule[].posted_at is set. all_deliverables_live = when all posting_schedule[] entries have posted_at. specific_date = on a calendar date. manual = agent fires explicitly."
               },
-              "specific_date": { "type": "string", "format": "date", "description": "Required if trigger_condition = specific_date." },
-              "payment_terms_days": { "type": "integer", "minimum": 0, "description": "Days from sent_at to due_at. Per-entry override of agency_profile.invoice_template.default_payment_terms_days." },
-              "description": { "type": "string", "description": "LLM-extracted description (e.g. '50% upon contract execution'). Renders into the invoice line item or memo." },
-              "fired_at": { "type": "string", "format": "date-time", "description": "When the trigger_condition was detected as met. Triggers invoice_pack generation. Null until fired." },
-              "invoice_pack_id": { "type": "string", "pattern": "^inv_[a-z0-9_-]+_seq[0-9]+_v[0-9]+$", "description": "FK to the latest invoice_pack version generated for this schedule entry. Updates as new versions generate." },
-              "schedule_confirmed_at": { "type": "string", "format": "date-time", "description": "When agent confirmed the LLM-parsed schedule. Required before any entry can fire. Confirms the entire schedule at once (not per-entry)." },
-              "schedule_confirmed_by_agent_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" }
+              "specific_date": {
+                "type": "string",
+                "format": "date",
+                "description": "Required if trigger_condition = specific_date."
+              },
+              "payment_terms_days": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "Days from sent_at to due_at. Per-entry override of agency_profile.invoice_template.default_payment_terms_days."
+              },
+              "description": {
+                "type": "string",
+                "description": "LLM-extracted description (e.g. '50% upon contract execution'). Renders into the invoice line item or memo."
+              },
+              "fired_at": {
+                "type": "string",
+                "format": "date-time",
+                "description": "When the trigger_condition was detected as met. Triggers invoice_pack generation. Null until fired."
+              },
+              "invoice_pack_id": {
+                "type": "string",
+                "pattern": "^inv_[a-z0-9_-]+_seq[0-9]+_v[0-9]+$",
+                "description": "FK to the latest invoice_pack version generated for this schedule entry. Updates as new versions generate."
+              },
+              "schedule_confirmed_at": {
+                "type": "string",
+                "format": "date-time",
+                "description": "When agent confirmed the LLM-parsed schedule. Required before any entry can fire. Confirms the entire schedule at once (not per-entry)."
+              },
+              "schedule_confirmed_by_agent_id": {
+                "type": "string",
+                "pattern": "^[a-z0-9][a-z0-9-]*$"
+              }
             }
           }
         },
         "invoice_pack_ids": {
           "type": "array",
-          "description": "Flat FK list to ALL invoice pack versions across all schedule sequences. Append-only — v1 of seq=1, v1 of seq=2, v2 of seq=2 (revision), etc. Each schedule_entry.invoice_pack_id points to the latest version for that sequence; this list captures every version ever generated.",
-          "items": { "type": "string", "pattern": "^inv_[a-z0-9_-]+_seq[0-9]+_v[0-9]+$" }
+          "description": "Flat FK list to ALL invoice pack versions across all schedule sequences. Append-only \u2014 v1 of seq=1, v1 of seq=2, v2 of seq=2 (revision), etc. Each schedule_entry.invoice_pack_id points to the latest version for that sequence; this list captures every version ever generated.",
+          "items": {
+            "type": "string",
+            "pattern": "^inv_[a-z0-9_-]+_seq[0-9]+_v[0-9]+$"
+          }
         },
         "all_invoices_paid_at": {
           "type": "string",
@@ -595,8 +1178,11 @@
         },
         "performance_report_pack_ids": {
           "type": "array",
-          "description": "FK list to all Phase 4.9 performance report pack versions generated for this deal. Each version is a file at `data/deals/{deal_id}/performance_report_packs/v{N}.json`. Append-only — v1, v2 (regenerated with kpi_refresh), etc.",
-          "items": { "type": "string", "pattern": "^perf_[a-z0-9_-]+_v[0-9]+$" }
+          "description": "FK list to all Phase 4.9 performance report pack versions generated for this deal. Each version is a file at `data/deals/{deal_id}/performance_report_packs/v{N}.json`. Append-only \u2014 v1, v2 (regenerated with kpi_refresh), etc.",
+          "items": {
+            "type": "string",
+            "pattern": "^perf_[a-z0-9_-]+_v[0-9]+$"
+          }
         },
         "latest_performance_report_pack_id": {
           "type": "string",
@@ -605,38 +1191,65 @@
         },
         "final_performance_report_attachment_id": {
           "type": "string",
-          "description": "FK to attachments[] for the post-campaign performance report sent to brand. AUTO-POPULATED on `performance_report_pack.agent_review.sent_at` — set to the report.pdf path of the latest performance_report_pack version. One of three required conditions for auto-archive."
+          "description": "FK to attachments[] for the post-campaign performance report sent to brand. AUTO-POPULATED on `performance_report_pack.agent_review.sent_at` \u2014 set to the report.pdf path of the latest performance_report_pack version. One of three required conditions for auto-archive."
         },
         "final_kpis": {
           "type": "object",
-          "description": "Final KPI snapshot at archive time. Shape mirrors `brand_deal.kpis` from the Phase 1.5 schema — when auto-archived, these fields carry directly into the brand_deal record. Each metric has {value, source, as_of, verified_at} per the honesty-floor policy. AUTO-POPULATED on `performance_report_pack.agent_review.sent_at` — copied verbatim from the latest report pack's `kpis` block. One of three required conditions for auto-archive.",
+          "description": "Final KPI snapshot at archive time. Shape mirrors `brand_deal.kpis` from the Phase 1.5 schema \u2014 when auto-archived, these fields carry directly into the brand_deal record. Each metric has {value, source, as_of, verified_at} per the honesty-floor policy. AUTO-POPULATED on `performance_report_pack.agent_review.sent_at` \u2014 copied verbatim from the latest report pack's `kpis` block. One of three required conditions for auto-archive.",
           "additionalProperties": true
         },
         "archived_to_brand_deal_id": {
           "type": "string",
           "pattern": "^deal_[a-z0-9_-]+$",
-          "description": "FK to the created entry in `data/brand_deals/{talent_id}.json` after auto-archive fires. Closes the loop — anyone looking at this deal can navigate forward to its archived historical record."
+          "description": "FK to the created entry in `data/brand_deals/{talent_id}.json` after auto-archive fires. Closes the loop \u2014 anyone looking at this deal can navigate forward to its archived historical record."
         },
-        "archived_at": { "type": "string", "format": "date-time" }
+        "archived_at": {
+          "type": "string",
+          "format": "date-time"
+        }
       }
     },
-
     "debriefSignal": {
       "type": "object",
-      "required": ["statement"],
+      "required": [
+        "statement"
+      ],
       "additionalProperties": false,
-      "description": "A single signal extracted from the discovery call (an objective heard, a pain point surfaced, a critical event mentioned, etc.). Each signal carries a confidence level reflecting how clearly the brand stated it — used downstream to weight LLM-driven proposal generation.",
+      "description": "A single signal extracted from the discovery call (an objective heard, a pain point surfaced, a critical event mentioned, etc.). Each signal carries a confidence level reflecting how clearly the brand stated it \u2014 used downstream to weight LLM-driven proposal generation.",
       "properties": {
-        "statement": { "type": "string", "description": "The signal in plain language, ideally close to the brand's own words." },
-        "confidence": { "type": "string", "enum": ["high", "medium", "low"], "default": "medium", "description": "high = brand stated explicitly; medium = brand implied / agent inferred from context; low = LLM extracted weakly, agent should verify." },
-        "source_quote": { "type": "string", "description": "Optional verbatim quote from the source artefact (call notes, transcript)." },
-        "source_artefact_id": { "type": "string", "pattern": "^ctx_[a-z0-9]+$", "description": "FK to the proposal_pack.context_artefacts[] entry this signal came from." }
+        "statement": {
+          "type": "string",
+          "description": "The signal in plain language, ideally close to the brand's own words."
+        },
+        "confidence": {
+          "type": "string",
+          "enum": [
+            "high",
+            "medium",
+            "low"
+          ],
+          "default": "medium",
+          "description": "high = brand stated explicitly; medium = brand implied / agent inferred from context; low = LLM extracted weakly, agent should verify."
+        },
+        "source_quote": {
+          "type": "string",
+          "description": "Optional verbatim quote from the source artefact (call notes, transcript)."
+        },
+        "source_artefact_id": {
+          "type": "string",
+          "pattern": "^ctx_[a-z0-9]+$",
+          "description": "FK to the proposal_pack.context_artefacts[] entry this signal came from."
+        }
       }
     },
-
     "attachment": {
       "type": "object",
-      "required": ["attachment_id", "type", "filename", "uploaded_at"],
+      "required": [
+        "attachment_id",
+        "type",
+        "filename",
+        "uploaded_at"
+      ],
       "additionalProperties": false,
       "properties": {
         "attachment_id": {
@@ -646,34 +1259,79 @@
         },
         "type": {
           "type": "string",
-          "enum": ["brief", "proposal", "contract", "amendment", "content_draft", "approval_artifact", "post_screenshot", "invoice", "payment_confirmation", "performance_report", "other"]
+          "enum": [
+            "brief",
+            "proposal",
+            "contract",
+            "amendment",
+            "content_draft",
+            "approval_artifact",
+            "post_screenshot",
+            "invoice",
+            "payment_confirmation",
+            "performance_report",
+            "other"
+          ]
         },
-        "filename": { "type": "string" },
+        "filename": {
+          "type": "string"
+        },
         "url": {
           "type": "string",
           "format": "uri",
           "description": "Reference to where the file actually lives. v0.1: filesystem path or external link. v2: signed S3 URL."
         },
-        "size_bytes": { "type": "integer", "minimum": 0 },
-        "mime_type": { "type": "string" },
-        "uploaded_at": { "type": "string", "format": "date-time" },
-        "uploaded_by_agent_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
-        "description": { "type": "string" }
+        "size_bytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "mime_type": {
+          "type": "string"
+        },
+        "uploaded_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "uploaded_by_agent_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]*$"
+        },
+        "description": {
+          "type": "string"
+        }
       }
     },
-
     "note": {
       "type": "object",
-      "required": ["note_id", "agent_id", "created_at", "content"],
+      "required": [
+        "note_id",
+        "agent_id",
+        "created_at",
+        "content"
+      ],
       "additionalProperties": false,
       "properties": {
-        "note_id": { "type": "string", "pattern": "^note_[a-z0-9]+$" },
-        "agent_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
-        "created_at": { "type": "string", "format": "date-time" },
-        "content": { "type": "string" },
+        "note_id": {
+          "type": "string",
+          "pattern": "^note_[a-z0-9]+$"
+        },
+        "agent_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]*$"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "content": {
+          "type": "string"
+        },
         "mentioned_contact_ids": {
           "type": "array",
-          "items": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" }
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9-]*$"
+          }
         }
       }
     }

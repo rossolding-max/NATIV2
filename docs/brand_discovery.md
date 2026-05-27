@@ -405,6 +405,38 @@ A brand can appear under multiple names (Lulu / Lululemon / Lululemon Athletica)
 
 ---
 
+## brand_candidates.candidates[].status — sync discipline (GAP-06 fix)
+
+`brand_candidates.candidates[].status` is a denormalised mirror of canonical state held in `pitch_enrollment` + `deal`. Values like `pitched / responded / negotiating / closed_won / closed_lost` come from downstream phases — Brand Discovery itself only writes `surfaced / qualified` initially.
+
+**Sync requirement:** the denormalised status MUST stay in sync with canonical state, otherwise the UI surfaces stale labels.
+
+**Sync source-of-truth per status:**
+
+| Candidate status | Canonical source | Trigger event for sync |
+|---|---|---|
+| `surfaced` | (initial discovery write) | discovery_run write |
+| `qualified` | `brand_candidate.qualification.tier ∈ [qualified, speculative]` | qualification scoring within discovery_run |
+| `pitched` | `pitch_enrollment.enrollment_state ∈ [active, paused]` | pitch_enrollment creation |
+| `responded` | `pitch_enrollment.outcomeClassification.outcome != null` | reply classification webhook |
+| `negotiating` | `deal.stage ∈ [LEAD, PROPOSAL, CONTRACT] AND deal.originating_enrollment_id != null` | deal creation + state transitions |
+| `closed_won` | `deal.stage = archived AND deal.is_won = true` | auto-archive fire |
+| `closed_lost` | `deal.stage IN (lost terminal states) AND deal.is_won = false` | deal substage transition to terminal-lost |
+| `dnc` | `brand_contact.contacts[].do_not_contact = true` (any contact for this brand) | brand_contact update webhook or manual flip |
+
+**Implementation requirement (project plan M9 + M10):** a Celery task `sync_brand_candidate_status` runs on every:
+- `pitch_enrollment` state transition (create / pause / resume / classify-reply / terminate)
+- `deal` substage transition (any transition)
+- `brand_contact.do_not_contact` flip
+
+The task identifies the affected `brand_candidate` row by `(talent_id, brand_id)` lookup + writes the highest-priority status per the table above (e.g. closed_won wins over negotiating wins over responded wins over pitched wins over qualified wins over surfaced).
+
+**Backfill:** on first deployment, run a one-shot sync over all existing brand_candidates to set status from current canonical state.
+
+**Failure mode if skipped:** UI shows stale "pitched" status on brands that have actually won + archived — confusing for agents reviewing the discovery pipeline. Detectable + fixable via re-run of the sync task.
+
+---
+
 ## Schedule
 
 ### Per-talent search runs
