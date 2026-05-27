@@ -171,8 +171,12 @@ def run_wizard(
         )
         if not dns_resp["data"]["verified"]:
             typer.echo("  ! DNS not yet verified. Add records in Smartlead UI, then rerun.")
-            if not auto:
-                raise typer.Exit(code=0)
+            # DNS-verified is a hard gate: Step 4 (mailbox), Step 6 (warmup),
+            # Step 7 (activate) all require Smartlead's domain config to be live.
+            # Exit cleanly in BOTH interactive and ``--auto`` mode; under
+            # respx-mocked Smartlead in tests, the mock returns verified=true
+            # so the wizard progresses past this point.
+            raise typer.Exit(code=0)
 
         # Step 4 — Mailbox
         typer.echo("\nStep 4 — Sending mailbox")
