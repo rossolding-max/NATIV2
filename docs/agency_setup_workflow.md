@@ -222,6 +222,21 @@ When v2 adds multi-agent support:
 | User wants to change agent name after warmup is complete | Allowed but UI warns: a sudden change in From-name on a warmed mailbox may cause Gmail to throttle. Recommend a 7-day overlap period with both names visible. |
 | Signature template missing required tokens at save | Validation fails inline; UI highlights missing `{unsubscribe_link}` / `{agency_address}` / `{agent_name}`. |
 
+## M4 implementation notes (what shipped vs what's still deferred)
+
+**Shipped in M4:**
+- All 9 setup steps callable via REST under `/api/v1/agencies/*`.
+- State machine (`setup_in_progress → awaiting_dns → warming_up → active`) enforced server-side.
+- JSON Schema validation runs on every patch — invalid intermediate states are rejected.
+- Server-side `invoice_template.template_version` patch-bump on material-field changes (GAP-07 fix).
+- Mailbox-warmup polling via the `poll_mailbox_warmup_status` Celery task running hourly via Beat; auto-flips status to `active` when warmup completes.
+- Interactive CLI wizard at `nativ test phase 0` that walks through the same REST endpoints.
+
+**Spec→reality reconciliations:**
+- **DNS verification** was originally specced as a Smartlead-API integration, but Smartlead does NOT expose a programmatic DNS verification endpoint (DNS auth is a manual UI flow in Smartlead). M4 instead verifies SPF/DKIM/DMARC by querying TXT records directly with `dnspython`. Agencies still copy the records into their DNS via the Smartlead UI; we just confirm propagation independently. Default DKIM selector is `smartlead`; agencies may override.
+- **Idempotency-Key** is currently a soft-warn (logged when missing) — full backing-store replay safety lands when M5+ first writes a state-changing endpoint that needs it.
+- **Smartlead endpoint paths** for email-account create + warmup are confirmed against Smartlead's public API reference. Live-key smoke tests run env-gated via `tests/live/vendors/test_smartlead_live.py`.
+
 ## Open questions for v0.2
 
 1. **Multi-domain support for one agency** — some agencies want a separate sending domain per vertical (e.g. `partnerships.agency.com` for one type of pitch, `outreach.agency.com` for another). v0.2 may add multiple sending domains under one agency.

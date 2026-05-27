@@ -122,6 +122,114 @@ class SmartleadClient(BaseVendorClient):
         )
         return response.json()
 
+    # ── Phase 0 email-account / mailbox warmup ───────────────────────────
+    #
+    # Smartlead endpoints (verified against
+    # https://api.smartlead.ai/reference/create-an-email-account +
+    # https://api.smartlead.ai/reference/addupdate-warmup-to-email-account):
+    #
+    #   POST /email-accounts/save                — create
+    #   GET  /email-accounts/{id}/               — fetch
+    #   POST /email-accounts/{id}/warmup         — enable/configure warmup
+    #   GET  /email-accounts/{id}/warmup-stats   — last-7-day deliverability
+    #
+    # Smartlead does NOT expose a DNS-verification API; SPF/DKIM/DMARC checks
+    # are done directly via dnspython in app/services/dns_validation.py.
+
+    @async_vendor_retry()
+    async def create_email_account(
+        self,
+        *,
+        from_name: str,
+        from_email: str,
+        user_name: str,
+        password: str,
+        smtp_host: str,
+        smtp_port: int,
+        imap_host: str,
+        imap_port: int,
+        warmup_enabled: bool = True,
+        max_email_per_day: int | None = None,
+        signature: str | None = None,
+        provider_type: str = "SMTP",
+    ) -> dict[str, Any]:
+        """Provision a sending mailbox in Smartlead. Returns ``id`` + connectivity flags."""
+        await check_rate_limit(self.vendor_name, "global", max_per_period=30, period_seconds=60)
+        payload: dict[str, Any] = {
+            "from_name": from_name,
+            "from_email": from_email,
+            "user_name": user_name,
+            "password": password,
+            "smtp_host": smtp_host,
+            "smtp_port": smtp_port,
+            "imap_host": imap_host,
+            "imap_port": imap_port,
+            "warmup_enabled": warmup_enabled,
+            "type": provider_type,
+        }
+        if max_email_per_day is not None:
+            payload["max_email_per_day"] = max_email_per_day
+        if signature is not None:
+            payload["signature"] = signature
+        response = await self._request(
+            "POST",
+            self._url("/email-accounts/save"),
+            endpoint="create_email_account",
+            params=self._auth_params(),
+            json=payload,
+        )
+        return response.json()
+
+    @async_vendor_retry()
+    async def get_email_account(self, email_account_id: str | int) -> dict[str, Any]:
+        """Fetch a single email account incl. warmup state."""
+        await check_rate_limit(self.vendor_name, "global", max_per_period=120, period_seconds=60)
+        response = await self._request(
+            "GET",
+            self._url(f"/email-accounts/{email_account_id}/"),
+            endpoint="get_email_account",
+            params=self._auth_params(),
+        )
+        return response.json()
+
+    @async_vendor_retry()
+    async def update_warmup_settings(
+        self,
+        email_account_id: str | int,
+        *,
+        warmup_enabled: bool,
+        total_warmup_per_day: int = 20,
+        daily_rampup: int = 2,
+        reply_rate_percentage: int = 30,
+    ) -> dict[str, Any]:
+        """Enable + configure warmup on an existing email account."""
+        await check_rate_limit(self.vendor_name, "global", max_per_period=30, period_seconds=60)
+        response = await self._request(
+            "POST",
+            self._url(f"/email-accounts/{email_account_id}/warmup"),
+            endpoint="update_warmup_settings",
+            params=self._auth_params(),
+            json={
+                "warmup_enabled": warmup_enabled,
+                "total_warmup_per_day": total_warmup_per_day,
+                "daily_rampup": daily_rampup,
+                "reply_rate_percentage": reply_rate_percentage,
+            },
+        )
+        return response.json()
+
+    @async_vendor_retry()
+    async def get_warmup_stats(self, email_account_id: str | int) -> dict[str, Any]:
+        """Return last-7-day warmup deliverability (sent / inbox / spam)."""
+        await check_rate_limit(self.vendor_name, "global", max_per_period=60, period_seconds=60)
+        response = await self._request(
+            "GET",
+            self._url(f"/email-accounts/{email_account_id}/warmup-stats"),
+            endpoint="get_warmup_stats",
+            params=self._auth_params(),
+        )
+        return response.json()
+
     # ── Webhook helpers ──────────────────────────────────────────────────
 
     def verify_webhook(self, raw_body: bytes, signature_header: str | None) -> bool:

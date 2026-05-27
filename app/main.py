@@ -20,11 +20,13 @@ import asyncio
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from typing import Any
+from uuid import UUID
 
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from sqlalchemy import text
 
+from app.api import agencies as agencies_router
 from app.api.middleware import RequestContextMiddleware
 from app.api.responses import APIError, APIResponse, make_meta
 from app.config import settings
@@ -83,30 +85,38 @@ async def _ping_minio() -> str:
         return "down"
 
 
-async def _try_load_singleton_agency() -> None:
-    """Read the singleton ``agency_id`` from Postgres if the table exists.
+async def _try_load_singleton_agency() -> tuple[UUID | None, str | None]:
+    """Read the singleton ``agency_id`` + first ``agent_id`` from Postgres.
 
-    At M0 the ``agency_profile`` table does not exist yet (lands in M1); this
-    function logs a warning and leaves ``app.state.agency_id`` as ``None``.
-    Post-M1 it will either find one row (set the singleton) or raise on
-    multiple-row state.
+    At M0 the ``agency_profile`` table does not exist yet; this function
+    returns ``(None, None)`` and the caller logs accordingly. Post-M1 +
+    pre-M4 the table exists but is empty — also returns ``(None, None)``.
+    Post-M4 either returns the (agency_id, agent_id) tuple or logs an
+    error on the multiple-row state.
     """
     try:
         async with async_session_factory() as session:
-            result = await session.execute(text("SELECT agency_id FROM agency_profile LIMIT 2"))
+            result = await session.execute(
+                text("SELECT agency_id, data FROM agency_profile LIMIT 2")
+            )
             rows = result.fetchall()
     except Exception as exc:
         log.info("agency_singleton_skipped", reason=str(exc))
-        return
+        return None, None
 
     if len(rows) == 0:
         log.info("agency_singleton_absent", note="phase_0_setup_required")
-    elif len(rows) > 1:
+        return None, None
+    if len(rows) > 1:
         log.error("agency_singleton_multiple_rows", count=len(rows))
-    else:
-        # Bind the singleton when found. The app.state mutation happens in
-        # lifespan() since we don't hold a reference to the FastAPI app here.
-        log.info("agency_singleton_loaded", agency_id=str(rows[0][0]))
+        return None, None
+
+    agency_id_raw, data_blob = rows[0][0], rows[0][1] or {}
+    agency_uuid = agency_id_raw if isinstance(agency_id_raw, UUID) else UUID(str(agency_id_raw))
+    agents = data_blob.get("agents") or []
+    agent_id = agents[0].get("agent_id") if agents else None
+    log.info("agency_singleton_loaded", agency_id=str(agency_uuid), agent_id=agent_id)
+    return agency_uuid, agent_id
 
 
 # ── Lifespan ─────────────────────────────────────────────────────────
@@ -137,10 +147,11 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         "taxonomies": taxonomies_status,
     }
 
-    # Best-effort singleton load. agency_id stays None at M0 (table absent).
-    app.state.agency_id = None
-    app.state.agent_id = None
-    await _try_load_singleton_agency()
+    # Best-effort singleton load. agency_id stays None at M0 (table absent)
+    # and post-M1 pre-M4 (table empty); post-M4 it binds to the row.
+    agency_uuid, agent_id = await _try_load_singleton_agency()
+    app.state.agency_id = agency_uuid
+    app.state.agent_id = agent_id
 
     log.info(
         "app_started",
@@ -172,6 +183,7 @@ app = FastAPI(
 )
 
 app.add_middleware(RequestContextMiddleware)
+app.include_router(agencies_router.router, prefix="/api/v1")
 
 
 @app.exception_handler(NATIV2Error)
