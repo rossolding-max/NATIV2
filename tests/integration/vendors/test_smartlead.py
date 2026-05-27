@@ -3,6 +3,13 @@
 Mocks HTTP via ``respx``; bypasses rate-limit + redis interactions with the
 ``_rate_limit_ok`` fixture. Real-network tests live in
 ``tests/live/vendors/test_smartlead_live.py``.
+
+Fixtures mutate ``app.config.settings`` via ``monkeypatch.setattr`` — NOT
+``get_settings()``. Other M0/M1/M2 integration tests call
+``get_settings.cache_clear()``, which divorces the new cached Settings from
+the module-level ``app.config.settings`` that vendor clients capture at
+import. Mutating the module-level binding directly keeps everything in
+sync regardless of cache state.
 """
 
 from __future__ import annotations
@@ -17,23 +24,18 @@ import pytest
 import respx
 from pydantic import SecretStr
 
-from app.config import get_settings
+from app.config import settings as app_settings
 from app.errors import IntegrationError, IntegrationRateLimitError
 from app.vendors import _http_client
 
 
 @pytest.fixture(autouse=True)
-def _vendor_settings() -> Any:  # pyright: ignore[reportUnusedFunction]
+def _vendor_settings(monkeypatch: pytest.MonkeyPatch) -> Any:  # pyright: ignore[reportUnusedFunction]
     """Provide Smartlead API + webhook secret for the duration of the test."""
-    s = get_settings()
-    original_key = s.smartlead_api_key
-    original_secret = s.smartlead_webhook_secret
-    s.smartlead_api_key = SecretStr("sk-smartlead-test")
-    s.smartlead_webhook_secret = SecretStr("webhook-secret-xyz")
+    monkeypatch.setattr(app_settings, "smartlead_api_key", SecretStr("sk-smartlead-test"))
+    monkeypatch.setattr(app_settings, "smartlead_webhook_secret", SecretStr("webhook-secret-xyz"))
     _http_client.reset_client_for_tests()
     yield
-    s.smartlead_api_key = original_key
-    s.smartlead_webhook_secret = original_secret
     _http_client.reset_client_for_tests()
 
 
@@ -147,17 +149,14 @@ def test_integration__webhook_verify__tampered_body__returns_false() -> None:
     assert client.verify_webhook(b'{"event_type":"clicked"}', sig) is False
 
 
-def test_integration__webhook_verify__no_secret_configured__returns_false() -> None:
+def test_integration__webhook_verify__no_secret_configured__returns_false(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     from app.vendors.smartlead import SmartleadClient
 
-    s = get_settings()
-    saved = s.smartlead_webhook_secret
-    s.smartlead_webhook_secret = None
-    try:
-        client = SmartleadClient()
-        assert client.verify_webhook(b"x", "deadbeef") is False
-    finally:
-        s.smartlead_webhook_secret = saved
+    monkeypatch.setattr(app_settings, "smartlead_webhook_secret", None)
+    client = SmartleadClient()
+    assert client.verify_webhook(b"x", "deadbeef") is False
 
 
 def test_integration__parse_engagement_event__extracts_fields() -> None:
@@ -178,14 +177,11 @@ def test_integration__parse_engagement_event__extracts_fields() -> None:
     assert parsed["raw"] is body
 
 
-def test_integration__missing_api_key_raises_at_construction() -> None:
+def test_integration__missing_api_key_raises_at_construction(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     from app.vendors.smartlead import SmartleadClient
 
-    s = get_settings()
-    saved = s.smartlead_api_key
-    s.smartlead_api_key = None
-    try:
-        with pytest.raises(IntegrationError):
-            SmartleadClient()
-    finally:
-        s.smartlead_api_key = saved
+    monkeypatch.setattr(app_settings, "smartlead_api_key", None)
+    with pytest.raises(IntegrationError):
+        SmartleadClient()

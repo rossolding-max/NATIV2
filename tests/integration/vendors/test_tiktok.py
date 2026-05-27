@@ -12,23 +12,18 @@ import pytest
 import respx
 from pydantic import SecretStr
 
-from app.config import get_settings
+from app.config import settings as app_settings
 from app.errors import IntegrationError, IntegrationRateLimitError
 from app.vendors import _http_client
 from app.vendors.tiktok import generate_pkce_pair
 
 
 @pytest.fixture(autouse=True)
-def _vendor_settings() -> Any:  # pyright: ignore[reportUnusedFunction]
-    s = get_settings()
-    saved_key = s.tiktok_client_key
-    saved_secret = s.tiktok_client_secret
-    s.tiktok_client_key = "tt-client-key-test"
-    s.tiktok_client_secret = SecretStr("tt-client-secret-test")
+def _vendor_settings(monkeypatch: pytest.MonkeyPatch) -> Any:  # pyright: ignore[reportUnusedFunction]
+    monkeypatch.setattr(app_settings, "tiktok_client_key", "tt-client-key-test")
+    monkeypatch.setattr(app_settings, "tiktok_client_secret", SecretStr("tt-client-secret-test"))
     _http_client.reset_client_for_tests()
     yield
-    s.tiktok_client_key = saved_key
-    s.tiktok_client_secret = saved_secret
     _http_client.reset_client_for_tests()
 
 
@@ -161,17 +156,12 @@ async def test_integration__429_maps_to_rate_limit_error() -> None:
         await client.get_user_info("token")
 
 
-def test_integration__missing_credentials_raises_at_construction() -> None:
+def test_integration__missing_credentials_raises_at_construction(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     from app.vendors.tiktok import TikTokClient
 
-    s = get_settings()
-    saved_key = s.tiktok_client_key
-    saved_secret = s.tiktok_client_secret
-    s.tiktok_client_key = None
-    s.tiktok_client_secret = None
-    try:
-        with pytest.raises(IntegrationError):
-            TikTokClient()
-    finally:
-        s.tiktok_client_key = saved_key
-        s.tiktok_client_secret = saved_secret
+    monkeypatch.setattr(app_settings, "tiktok_client_key", None)
+    monkeypatch.setattr(app_settings, "tiktok_client_secret", None)
+    with pytest.raises(IntegrationError):
+        TikTokClient()

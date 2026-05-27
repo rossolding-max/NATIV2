@@ -10,19 +10,16 @@ import pytest
 import respx
 from pydantic import SecretStr
 
-from app.config import get_settings
+from app.config import settings as app_settings
 from app.errors import IntegrationError, IntegrationRateLimitError
 from app.vendors import _http_client
 
 
 @pytest.fixture(autouse=True)
-def _vendor_settings() -> Any:  # pyright: ignore[reportUnusedFunction]
-    s = get_settings()
-    saved = s.apollo_api_key
-    s.apollo_api_key = SecretStr("sk-apollo-test")
+def _vendor_settings(monkeypatch: pytest.MonkeyPatch) -> Any:  # pyright: ignore[reportUnusedFunction]
+    monkeypatch.setattr(app_settings, "apollo_api_key", SecretStr("sk-apollo-test"))
     _http_client.reset_client_for_tests()
     yield
-    s.apollo_api_key = saved
     _http_client.reset_client_for_tests()
 
 
@@ -111,14 +108,11 @@ async def test_integration__429_maps_to_rate_limit_error() -> None:
         await client.enrich_organization("acme.com")
 
 
-def test_integration__missing_api_key_raises_at_construction() -> None:
+def test_integration__missing_api_key_raises_at_construction(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     from app.vendors.apollo import ApolloClient
 
-    s = get_settings()
-    saved = s.apollo_api_key
-    s.apollo_api_key = None
-    try:
-        with pytest.raises(IntegrationError):
-            ApolloClient()
-    finally:
-        s.apollo_api_key = saved
+    monkeypatch.setattr(app_settings, "apollo_api_key", None)
+    with pytest.raises(IntegrationError):
+        ApolloClient()

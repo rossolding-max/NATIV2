@@ -10,19 +10,16 @@ import pytest
 import respx
 from pydantic import SecretStr
 
-from app.config import get_settings
+from app.config import settings as app_settings
 from app.errors import IntegrationError, IntegrationRateLimitError
 from app.vendors import _http_client
 
 
 @pytest.fixture(autouse=True)
-def _vendor_settings() -> Any:  # pyright: ignore[reportUnusedFunction]
-    s = get_settings()
-    saved_rapid = s.rapidapi_key
-    s.rapidapi_key = SecretStr("rapidapi-test-key")
+def _vendor_settings(monkeypatch: pytest.MonkeyPatch) -> Any:  # pyright: ignore[reportUnusedFunction]
+    monkeypatch.setattr(app_settings, "rapidapi_key", SecretStr("rapidapi-test-key"))
     _http_client.reset_client_for_tests()
     yield
-    s.rapidapi_key = saved_rapid
     _http_client.reset_client_for_tests()
 
 
@@ -103,40 +100,28 @@ async def test_integration__429_maps_to_rate_limit_error() -> None:
         await client.get_profile_by_url("https://linkedin.com/in/x")
 
 
-def test_integration__missing_rapidapi_key_raises_at_construction() -> None:
+def test_integration__missing_rapidapi_key_raises_at_construction(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     from app.vendors.linkedin import LinkedInScraperClient
 
-    s = get_settings()
-    saved = s.rapidapi_key
-    saved_legacy = s.linkedin_api_key
-    s.rapidapi_key = None
-    s.linkedin_api_key = None
-    try:
-        with pytest.raises(IntegrationError):
-            LinkedInScraperClient()
-    finally:
-        s.rapidapi_key = saved
-        s.linkedin_api_key = saved_legacy
-
-
-def test_integration__legacy_linkedin_api_key_backfills_rapidapi() -> None:
-    """Until M5, LINKEDIN_API_KEY-only configs still construct successfully."""
-    from app.vendors.linkedin import LinkedInScraperClient
-
-    s = get_settings()
-    saved = s.rapidapi_key
-    saved_legacy = s.linkedin_api_key
-    s.rapidapi_key = None
-    s.linkedin_api_key = SecretStr("legacy-set-value")
-    # The backfill happens in the Settings model_validator on first construction.
-    # In this test we mutate the cached instance and apply the backfill by hand
-    # so the test focuses on the *vendor client's* fallback path, not the
-    # validator (which is exercised separately in tests/unit/test_config.py).
-    object.__setattr__(s, "rapidapi_key", s.linkedin_api_key)
-    try:
-        # The client reads `settings.rapidapi_key` at __init__ — we just need
-        # to confirm it constructs without raising.
+    monkeypatch.setattr(app_settings, "rapidapi_key", None)
+    monkeypatch.setattr(app_settings, "linkedin_api_key", None)
+    with pytest.raises(IntegrationError):
         LinkedInScraperClient()
-    finally:
-        s.rapidapi_key = saved
-        s.linkedin_api_key = saved_legacy
+
+
+def test_integration__legacy_linkedin_api_key_backfills_rapidapi(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Until M5, LINKEDIN_API_KEY-only configs still construct successfully.
+
+    The backfill happens in the Settings model_validator on construction.
+    In this test we simulate the post-validator state (rapidapi_key takes
+    its value from linkedin_api_key) and confirm the *client* succeeds.
+    """
+    from app.vendors.linkedin import LinkedInScraperClient
+
+    monkeypatch.setattr(app_settings, "rapidapi_key", SecretStr("legacy-set-value"))
+    monkeypatch.setattr(app_settings, "linkedin_api_key", SecretStr("legacy-set-value"))
+    LinkedInScraperClient()

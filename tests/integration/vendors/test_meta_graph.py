@@ -12,25 +12,18 @@ import pytest
 import respx
 from pydantic import SecretStr
 
-from app.config import get_settings
+from app.config import settings as app_settings
 from app.errors import IntegrationError, IntegrationRateLimitError
 from app.vendors import _http_client
 
 
 @pytest.fixture(autouse=True)
-def _vendor_settings() -> Any:  # pyright: ignore[reportUnusedFunction]
-    s = get_settings()
-    saved_id = s.meta_app_id
-    saved_secret = s.meta_app_secret
-    saved_verify = s.meta_webhook_verify_token
-    s.meta_app_id = "meta-app-id-test"
-    s.meta_app_secret = SecretStr("meta-app-secret-test")
-    s.meta_webhook_verify_token = SecretStr("verify-token-xyz")
+def _vendor_settings(monkeypatch: pytest.MonkeyPatch) -> Any:  # pyright: ignore[reportUnusedFunction]
+    monkeypatch.setattr(app_settings, "meta_app_id", "meta-app-id-test")
+    monkeypatch.setattr(app_settings, "meta_app_secret", SecretStr("meta-app-secret-test"))
+    monkeypatch.setattr(app_settings, "meta_webhook_verify_token", SecretStr("verify-token-xyz"))
     _http_client.reset_client_for_tests()
     yield
-    s.meta_app_id = saved_id
-    s.meta_app_secret = saved_secret
-    s.meta_webhook_verify_token = saved_verify
     _http_client.reset_client_for_tests()
 
 
@@ -160,17 +153,12 @@ async def test_integration__429_maps_to_rate_limit_error() -> None:
         await client.list_media("ig-user-1", "token")
 
 
-def test_integration__missing_credentials_raises_at_construction() -> None:
+def test_integration__missing_credentials_raises_at_construction(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     from app.vendors.meta_graph import MetaGraphClient
 
-    s = get_settings()
-    saved_id = s.meta_app_id
-    saved_secret = s.meta_app_secret
-    s.meta_app_id = None
-    s.meta_app_secret = None
-    try:
-        with pytest.raises(IntegrationError):
-            MetaGraphClient()
-    finally:
-        s.meta_app_id = saved_id
-        s.meta_app_secret = saved_secret
+    monkeypatch.setattr(app_settings, "meta_app_id", None)
+    monkeypatch.setattr(app_settings, "meta_app_secret", None)
+    with pytest.raises(IntegrationError):
+        MetaGraphClient()
