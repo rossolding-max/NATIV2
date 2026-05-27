@@ -1,0 +1,145 @@
+# NATIV2 v0.1 local dev stack. All services bind to 127.0.0.1 only.
+# See docs/dev_setup.md § 3 + docs/architecture.md § 8.
+
+services:
+  # ── Postgres 16 with pgcrypto enabled at init ───────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: nativ2-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-nativ2}
+      POSTGRES_USER: ${POSTGRES_USER:-nativ2}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD required}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --locale=en_US.UTF-8"
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./scripts/dev/init-pgcrypto.sql:/docker-entrypoint-initdb.d/01-pgcrypto.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-nativ2} -d ${POSTGRES_DB:-nativ2}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+
+  # ── Redis 7 (broker + cache + ratelimit) ────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: nativ2-redis
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # ── MinIO (S3-compatible) ───────────────────────────────────────────
+  minio:
+    image: minio/minio:latest
+    container_name: nativ2-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${S3_ACCESS_KEY:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${S3_SECRET_KEY:-minioadmin}
+    ports:
+      - "127.0.0.1:9000:9000"
+      - "127.0.0.1:9001:9001"
+    volumes:
+      - miniodata:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/ready"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+
+  # ── MinIO bucket bootstrap (one-shot) ───────────────────────────────
+  minio-init:
+    image: minio/mc:latest
+    container_name: nativ2-minio-init
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set local http://minio:9000 ${S3_ACCESS_KEY:-minioadmin} ${S3_SECRET_KEY:-minioadmin} &&
+      mc mb --ignore-existing local/${S3_BUCKET:-nativ2-v0-1-local} &&
+      mc anonymous set none local/${S3_BUCKET:-nativ2-v0-1-local};
+      exit 0;
+      "
+    restart: "no"
+
+  # ── Langfuse v2 (LLM observability; postgres-backed) ────────────────
+  # v3 would require additional ClickHouse — deferred per V2-OBS-01.
+  langfuse-db:
+    image: postgres:16-alpine
+    container_name: nativ2-langfuse-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: langfuse
+      POSTGRES_USER: langfuse
+      POSTGRES_PASSWORD: ${LANGFUSE_DB_PASSWORD:-langfuse}
+    volumes:
+      - langfuse-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U langfuse -d langfuse"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  langfuse:
+    image: langfuse/langfuse:2
+    container_name: nativ2-langfuse
+    restart: unless-stopped
+    depends_on:
+      langfuse-db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://langfuse:${LANGFUSE_DB_PASSWORD:-langfuse}@langfuse-db:5432/langfuse
+      NEXTAUTH_URL: http://localhost:3000
+      NEXTAUTH_SECRET: ${LANGFUSE_NEXTAUTH_SECRET:-dev-secret-please-rotate-in-prod}
+      SALT: ${LANGFUSE_SALT:-dev-salt}
+      TELEMETRY_ENABLED: "false"
+      LANGFUSE_INIT_ORG_ID: nativ2
+      LANGFUSE_INIT_PROJECT_ID: nativ2-v01
+    ports:
+      - "127.0.0.1:${LANGFUSE_PORT:-3000}:3000"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000/api/public/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 30s
+
+  # ── Mailpit (transactional email stub; MailHog replacement) ─────────
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: nativ2-mailpit
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:1025:1025"
+      - "127.0.0.1:8025:8025"
+    volumes:
+      - mailpitdata:/data
+    environment:
+      MP_DATABASE: /data/mailpit.db
+      MP_MAX_MESSAGES: "5000"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8025/readyz"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  pgdata:
+  redisdata:
+  miniodata:
+  langfuse-pgdata:
+  mailpitdata:

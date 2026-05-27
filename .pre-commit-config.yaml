@@ -45,11 +45,14 @@ repos:
         exclude: ^(alembic/versions/|app/models/pydantic/)
 
   # ── trufflehog: secret scanning ─────────────────────────────────────
+  # Uses upstream's default entry: scans the working tree since HEAD,
+  # fails only on VERIFIED secrets. The earlier `args:` override produced
+  # a duplicate `git` token in the CLI invocation; the hook's own entry
+  # already declares `trufflehog git file://. --since-commit HEAD ...`.
   - repo: https://github.com/trufflesecurity/trufflehog
     rev: v3.85.0
     hooks:
       - id: trufflehog
-        args: ['--no-update', '--fail', '--no-verification', 'git', 'file://.', '--since-commit', 'HEAD', '--branch', 'HEAD']
 
   # ── schema codegen drift ────────────────────────────────────────────
   # Catches: schema edited without regenerating app/models/pydantic/

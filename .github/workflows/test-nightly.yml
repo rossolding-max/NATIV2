@@ -1,0 +1,34 @@
+name: Nightly
+
+on:
+  schedule:
+    # 02:00 UTC daily
+    - cron: "0 2 * * *"
+  workflow_dispatch:
+
+env:
+  PYTHON_VERSION: "3.12"
+
+jobs:
+  llm-eval-real:
+    name: LLM eval (real Anthropic, budget-gated)
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    if: ${{ vars.NIGHTLY_LLM_EVAL_ENABLED == 'true' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v3
+      - run: uv python install ${{ env.PYTHON_VERSION }}
+      - run: uv sync --all-extras
+      - name: Run live LLM eval (budget-gated)
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          POSTGRES_PASSWORD: ci-postgres-pw
+          DB_MASTER_KEY: ci-master-key-base64-32-chars-long==
+        run: |
+          # M0 baseline: tests/llm_eval/ is empty. Skill arrives M11.
+          if [[ ! -d tests/llm_eval ]] || [[ -z "$(ls -A tests/llm_eval 2>/dev/null | grep -v __init__.py | grep -v cassettes | grep -v conftest.py)" ]]; then
+            echo "M0 baseline -- tests/llm_eval/ has no live tests yet."
+            exit 0
+          fi
+          uv run pytest tests/llm_eval/ -m live --budget=25

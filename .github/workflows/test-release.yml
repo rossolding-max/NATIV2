@@ -1,0 +1,37 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+jobs:
+  build-image:
+    name: Build Docker image
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Compute safe tag
+        id: tag
+        env:
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          # github.ref_name on a tag push is the tag name. Git restricts the alphabet,
+          # but we revalidate here defensively: only allow [A-Za-z0-9._-].
+          if [[ ! "$REF_NAME" =~ ^[A-Za-z0-9._-]+$ ]]; then
+            echo "::error::Refusing to build with unsafe tag: $REF_NAME"
+            exit 1
+          fi
+          echo "value=$REF_NAME" >> "$GITHUB_OUTPUT"
+      - name: Build (no push -- v0.1 is local-only)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          tags: |
+            nativ2:${{ steps.tag.outputs.value }}
+            nativ2:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

@@ -1,0 +1,177 @@
+[project]
+name = "nativ2"
+version = "0.1.0"
+description = "AI influencer marketing assistant for talent agencies"
+readme = "README.md"
+requires-python = "==3.12.*"
+license = { text = "Proprietary" }
+authors = [{ name = "NATIV2 Team" }]
+
+dependencies = [
+    # FastAPI + ASGI
+    "fastapi>=0.110",
+    "uvicorn[standard]>=0.30",
+    "python-multipart>=0.0.9",
+    "email-validator>=2.1",
+    "jinja2>=3.1",
+    # Data layer
+    "sqlalchemy[asyncio]>=2.0",
+    "asyncpg>=0.29",
+    "alembic>=1.13",
+    # Validation + settings
+    "pydantic>=2.6",
+    "pydantic-settings>=2.2",
+    # Job orchestration
+    "celery[redis]>=5.4",
+    "redis>=5.0",
+    # Storage
+    "boto3>=1.34",
+    # Observability
+    "structlog>=24.1",
+    "sentry-sdk[fastapi,sqlalchemy,celery]>=2.0",
+    "langfuse>=2.40,<3",
+    # HTTP client
+    "httpx>=0.27",
+    # ID generation
+    "nanoid>=2.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    # Test runner
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23",
+    "pytest-cov>=5.0",
+    # HTTP test
+    "respx>=0.21",
+    "vcrpy>=6.0",
+    # Containers + factories
+    "testcontainers[postgres,redis,minio]>=4.0",
+    "factory-boy>=3.3",
+    # Property testing
+    "hypothesis>=6.100",
+    # Contract testing
+    "schemathesis>=3.27",
+    # Schema validation
+    "jsonschema>=4.21",
+    # Tooling
+    "ruff>=0.7.4",
+    "pyright>=1.1.389",
+    "pre-commit>=3.7",
+    # Codegen (used in M1; declare in M0 so the lock pins it early)
+    "datamodel-code-generator>=0.25",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["app"]
+
+# ── ruff ─────────────────────────────────────────────────────────────
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+extend-exclude = [
+    "alembic/versions",
+    "app/models/pydantic",
+    "tests/llm_eval/cassettes",
+    ".venv",
+    "htmlcov",
+    # Spec-phase data utilities (pre-date M0; not part of the runtime app).
+    # See docs/build_kickoff.md § "scripts directory".
+    "scripts/analyze_outreach.py",
+    "scripts/build_affinity.py",
+    "scripts/enrich_brand_map.py",
+]
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "F",   # pyflakes
+    "W",   # pycodestyle warnings
+    "I",   # isort
+    "UP",  # pyupgrade
+    "N",   # pep8-naming
+    "RUF", # ruff-specific
+    "DTZ", # flake8-datetimez (UTC discipline)
+    "S",   # flake8-bandit (security)
+    "B",   # flake8-bugbear
+    "PT",  # flake8-pytest-style
+    "TID", # flake8-tidy-imports
+    "PIE", # flake8-pie
+    "SIM", # flake8-simplify
+    "ARG", # flake8-unused-arguments
+]
+ignore = [
+    "S101", # assert allowed in tests
+    "S104", # hardcoded bind 0.0.0.0 — Settings validator enforces 127.0.0.1
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["S", "ARG"]
+"scripts/**/*.py" = ["S"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+# ── pyright ──────────────────────────────────────────────────────────
+[tool.pyright]
+include = ["app", "tests", "scripts"]
+exclude = [
+    "alembic/versions",
+    "app/models/pydantic",
+    "tests/llm_eval/cassettes",
+    ".venv",
+    "htmlcov",
+    ".worktrees",
+    ".claude",
+    # Spec-phase data utilities (pre-date M0; not part of the runtime app).
+    "scripts/analyze_outreach.py",
+    "scripts/build_affinity.py",
+    "scripts/enrich_brand_map.py",
+]
+pythonVersion = "3.12"
+typeCheckingMode = "strict"
+reportMissingTypeStubs = false
+reportPrivateImportUsage = false
+
+# ── pytest ───────────────────────────────────────────────────────────
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+python_files = "test_*.py"
+addopts = [
+    "--strict-markers",
+    "--strict-config",
+    "-ra",
+]
+markers = [
+    "live: real vendor API calls; gated by env flag",
+    "record: cassette re-recording mode",
+    "slow: takes >5s",
+    "requires_real_fixture: needs ~/.nativ/test_fixtures/",
+]
+filterwarnings = [
+    "ignore::DeprecationWarning:celery.*",
+    "ignore::DeprecationWarning:kombu.*",
+]
+
+# ── coverage ─────────────────────────────────────────────────────────
+[tool.coverage.run]
+source = ["app"]
+branch = true
+omit = [
+    "app/models/pydantic/*",
+    "alembic/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "raise NotImplementedError",
+    "if TYPE_CHECKING:",
+    "if __name__ == .__main__.:",
+]

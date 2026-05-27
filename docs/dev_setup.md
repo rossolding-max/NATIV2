@@ -142,7 +142,8 @@ just dev-api
 # Terminal 2 — Celery worker (all queues)
 just dev-worker
 # Equivalent to:
-#   uv run celery -A app.celery_app worker -Q default,llm_heavy,vendor_apis,rendering -l info
+#   uv run celery -A app.celery_app worker -Q default,llm_heavy -l info
+# (v0.1 = 2 queues; v2 adds vendor_apis + rendering per V2-SCALE-01.)
 
 # Terminal 3 — Celery beat (cron scheduler)
 just dev-beat
