@@ -10,9 +10,9 @@ import os
 from typing import Any
 
 import pytest
-from alembic.config import Config
 
 from alembic import command
+from alembic.config import Config
 
 
 @pytest.fixture

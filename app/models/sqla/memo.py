@@ -15,7 +15,7 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from typing import Any
 
-from sqlalchemy import DateTime, Index, String, and_, or_, sql
+from sqlalchemy import DateTime, Index, Integer, String, and_, or_, sql
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import Mapped, mapped_column
@@ -37,6 +37,9 @@ class Memo(Base, AgencyScopedMixin, SoftDeleteMixin, TimestampedMixin):
     )
     last_retrieved_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
+    )
+    retrieval_count: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=0, server_default="0"
     )
 
     # tags as JSONB: { talent_ids[], brand_ids[], industry_ids[], deal_ids[],

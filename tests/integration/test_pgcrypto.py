@@ -17,9 +17,9 @@ from typing import Any
 from uuid import uuid4
 
 import pytest
-from alembic.config import Config
 
 from alembic import command
+from alembic.config import Config
 
 
 @pytest.fixture

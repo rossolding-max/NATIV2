@@ -25,9 +25,9 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-from alembic.config import Config
 
 from alembic import command
+from alembic.config import Config
 
 REPO = Path(__file__).resolve().parents[2]
 SOURCE_FILE = REPO / "data" / "brand_industry_map.json"
@@ -87,9 +87,9 @@ def test_acceptance__brand_industry_map_imports_290_records(m1_seeded_db: Any) -
         text=True,
         check=False,
     )
-    assert result.returncode == 0, (
-        f"Import script failed.\nstdout: {result.stdout}\nstderr: {result.stderr}"
-    )
+    assert (
+        result.returncode == 0
+    ), f"Import script failed.\nstdout: {result.stdout}\nstderr: {result.stderr}"
     assert "Imported 290 new brand" in result.stdout
 
     # Verify directly via psycopg.
