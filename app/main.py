@@ -33,6 +33,7 @@ from app.errors import NATIV2Error
 from app.observability.langfuse import init_langfuse
 from app.observability.sentry import init_sentry
 from app.utils.logging import get_logger, init_logging
+from app.utils.taxonomies import init_taxonomies
 
 log = get_logger(__name__)
 
@@ -118,11 +119,22 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     init_logging()
     init_langfuse()
 
+    # Load static reference taxonomies (niches, industries, affinities, IAB,
+    # competitors). Best-effort: if data files are absent, the app still boots
+    # but `/health` surfaces `taxonomies: "down"`.
+    taxonomies_status = "ok"
+    try:
+        init_taxonomies()
+    except Exception as exc:
+        log.warning("taxonomies_load_failed", error=str(exc))
+        taxonomies_status = "down"
+
     app.state.service_status = {
         "postgres": await _ping_postgres(),
         "redis": await _ping_redis(),
         "minio": await _ping_minio(),
         "langfuse": "ok" if settings.langfuse_enabled else "disabled",
+        "taxonomies": taxonomies_status,
     }
 
     # Best-effort singleton load. agency_id stays None at M0 (table absent).

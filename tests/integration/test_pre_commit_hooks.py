@@ -87,8 +87,13 @@ def test_integration__jsonschema_validator_rejects_malformed_schema(tmp_path: Pa
     assert result.returncode in (0, 1)
 
 
-def test_integration__verify_pydantic_codegen_script_baseline_exits_zero() -> None:
-    """``scripts/verify_pydantic_codegen.py`` tolerates the M0 baseline state."""
+def test_integration__verify_pydantic_codegen_script_in_sync() -> None:
+    """``scripts/verify_pydantic_codegen.py`` reports in-sync state.
+
+    Pre-M1: script printed "M0 baseline -- ... skipping drift check".
+    Post-M1: script verifies `.codegen_state.json` matches the live schemas
+    and prints "in sync" on success.
+    """
     script = PROJECT_ROOT / "scripts" / "verify_pydantic_codegen.py"
     result = subprocess.run(
         ["uv", "run", "python", str(script)],
@@ -98,7 +103,9 @@ def test_integration__verify_pydantic_codegen_script_baseline_exits_zero() -> No
         check=False,
     )
     assert result.returncode == 0, (
-        f"verify_pydantic_codegen.py should exit 0 at M0 baseline, "
+        f"verify_pydantic_codegen.py should exit 0 when state is in sync, "
         f"got {result.returncode}\nstdout: {result.stdout}\nstderr: {result.stderr}"
     )
-    assert "M0 baseline" in result.stdout
+    # Either pre-M1 baseline-skip or post-M1 in-sync output is acceptable
+    # (this test runs in both states across the milestone transition).
+    assert "in sync" in result.stdout or "M0 baseline" in result.stdout
