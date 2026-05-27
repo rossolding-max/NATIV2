@@ -14,8 +14,14 @@ from app.errors import ConflictError, NotFoundError
 
 
 @pytest.fixture
-async def m4_session(postgres_container: Any, monkeypatch: pytest.MonkeyPatch) -> Any:  # pyright: ignore[reportUnusedFunction]
-    """Migrate the testcontainer Postgres to head + yield an AsyncSession."""
+def _m4_migrated_db(postgres_container: Any, monkeypatch: pytest.MonkeyPatch) -> Any:  # pyright: ignore[reportUnusedFunction]
+    """Migrate the testcontainer Postgres to head. Sync — Alembic's env.py
+    internally calls ``asyncio.run(...)``, which conflicts with an outer
+    running loop (i.e. with async fixtures). Keep migration sync; let the
+    session fixture below open the async session separately.
+    """
+    from pathlib import Path
+
     url = postgres_container.get_connection_url().replace("+psycopg2", "")
     match = re.match(
         r"postgresql(?:\+\w+)?://(?P<user>[^:]+):(?P<pw>[^@]+)@(?P<host>[^:]+):(?P<port>\d+)/(?P<db>.+)",
@@ -34,17 +40,26 @@ async def m4_session(postgres_container: Any, monkeypatch: pytest.MonkeyPatch) -
 
     get_settings.cache_clear()
 
-    from pathlib import Path
-
     repo = Path(__file__).resolve().parents[2]
     cfg = Config(str(repo / "alembic.ini"))
     cfg.set_main_option("script_location", str(repo / "alembic"))
     command.upgrade(cfg, "head")
+    return postgres_container
 
-    from app.db.session import async_session_factory
 
-    async with async_session_factory() as session:
+@pytest.fixture
+async def m4_session(_m4_migrated_db: Any) -> Any:  # pyright: ignore[reportUnusedFunction]
+    """Yield an AsyncSession against the (already-migrated) testcontainer Postgres."""
+    # Rebuild the async engine + sessionmaker against the env we just bound.
+    from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+
+    from app.config import settings as live_settings
+
+    engine = create_async_engine(live_settings.database_url_async, future=True)
+    session_factory = async_sessionmaker(engine, expire_on_commit=False)
+    async with session_factory() as session:
         yield session
+    await engine.dispose()
 
 
 async def test_integration__get_singleton__empty_returns_none(m4_session: Any) -> None:

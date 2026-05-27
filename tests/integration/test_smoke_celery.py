@@ -26,11 +26,16 @@ def test_integration__celery_default_queue_is_default() -> None:
     assert celery_app.conf.task_default_queue == "default"
 
 
-def test_integration__celery_beat_schedule_empty_at_m0() -> None:
-    """No Beat tasks land in M0 — per-milestone additions arrive M7+."""
+def test_integration__celery_beat_schedule_carries_m4_warmup_poll() -> None:
+    """M4 added the hourly Phase-0 warmup poll. Future milestones extend this."""
     from app.celery_app import app as celery_app
 
-    assert celery_app.conf.beat_schedule == {}
+    schedule = celery_app.conf.beat_schedule
+    assert "agency-warmup-poll" in schedule
+    entry = schedule["agency-warmup-poll"]
+    assert entry["task"] == "app.services.agency_warmup.poll_mailbox_warmup_status"
+    assert entry["options"]["queue"] == "default"
+    assert isinstance(entry["schedule"], float)
 
 
 @pytest.mark.parametrize("queue", ["default", "llm_heavy"])

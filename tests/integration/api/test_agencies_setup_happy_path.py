@@ -38,12 +38,16 @@ def _fake_txt_answer(value: str) -> Any:
 
 
 @pytest.fixture
-async def m4_app(
+def _m4_setup_env(  # pyright: ignore[reportUnusedFunction]
     postgres_container: Any,
     minio_container: Any,
     monkeypatch: pytest.MonkeyPatch,
-) -> Any:  # pyright: ignore[reportUnusedFunction]
-    """Boot the FastAPI app pointed at the testcontainers; yield an AsyncClient."""
+) -> Any:
+    """Sync fixture — points env + settings at the testcontainers + migrates.
+
+    Migration runs in a sync context because Alembic's ``env.py`` calls
+    ``asyncio.run(...)``, which conflicts with an outer running loop.
+    """
     url = postgres_container.get_connection_url().replace("+psycopg2", "")
     match = re.match(
         r"postgresql(?:\+\w+)?://(?P<user>[^:]+):(?P<pw>[^@]+)@(?P<host>[^:]+):(?P<port>\d+)/(?P<db>.+)",
@@ -71,7 +75,7 @@ async def m4_app(
     monkeypatch.setattr(app_settings, "s3_force_path_style", True)
     monkeypatch.setattr(app_settings, "smartlead_api_key", SecretStr("sk-smartlead-test"))
 
-    # Migrate.
+    # Migrate (sync — uses asyncio.run internally).
     repo = Path(__file__).resolve().parents[3]
     cfg = Config(str(repo / "alembic.ini"))
     cfg.set_main_option("script_location", str(repo / "alembic"))
@@ -85,24 +89,47 @@ async def m4_app(
     with contextlib.suppress(Exception):
         s3_client.create_bucket(Bucket=_TEST_BUCKET)
 
-    # Bypass rate limiter for the duration of the test.
-    async def _noop(_v: str, _b: str, *, max_per_period: int, period_seconds: int) -> None:
-        return None
+    return {"postgres": postgres_container, "minio": minio_container}
 
+
+@pytest.fixture
+async def m4_app(_m4_setup_env: Any) -> Any:  # pyright: ignore[reportUnusedFunction]
+    """Boot the FastAPI app against the migrated testcontainer; yield AsyncClient."""
+    # Rebuild the async engine + session factory against the rebound settings.
+    from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+
+    from app.config import settings as live_settings
+    from app.db import session as db_session
+    from app.utils import s3 as s3_util
     from app.vendors import _http_client
+
+    new_engine = create_async_engine(live_settings.database_url_async, future=True)
+    new_factory = async_sessionmaker(new_engine, expire_on_commit=False)
+    # Patch the module-level engine + session factory so app.main + endpoints use it.
+    original_engine = db_session.engine
+    original_factory = db_session.async_session_factory
+    db_session.engine = new_engine
+    db_session.async_session_factory = new_factory
 
     _http_client.reset_client_for_tests()
 
-    with patch("app.vendors.smartlead.check_rate_limit", _noop):
-        from app.main import app
+    async def _noop(_v: str, _b: str, *, max_per_period: int, period_seconds: int) -> None:
+        return None
 
-        async with (
-            app.router.lifespan_context(app),
-            AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client,
-        ):
-            yield client
+    try:
+        with patch("app.vendors.smartlead.check_rate_limit", _noop):
+            from app.main import app
 
-    s3_util.reset_client_for_tests()
+            async with (
+                app.router.lifespan_context(app),
+                AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client,
+            ):
+                yield client
+    finally:
+        await new_engine.dispose()
+        db_session.engine = original_engine
+        db_session.async_session_factory = original_factory
+        s3_util.reset_client_for_tests()
 
 
 @respx.mock
@@ -228,9 +255,11 @@ async def test_e2e__phase_0_happy_path__ends_in_active_status(m4_app: AsyncClien
         # mailbox via a special test-only path: hit the DB directly.
         from sqlalchemy import text
 
-        from app.db.session import async_session_factory
+        # Pick up the patched module-level session factory (the fixture
+        # replaced it with one bound to the testcontainer Postgres).
+        from app.db import session as db_session
 
-        async with async_session_factory() as session:
+        async with db_session.async_session_factory() as session:
             await session.execute(
                 text(
                     "UPDATE agency_profile SET data = jsonb_set("
