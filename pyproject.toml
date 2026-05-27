@@ -34,6 +34,19 @@ dependencies = [
     "httpx>=0.27",
     # ID generation
     "nanoid>=2.0",
+    # Claude Agent SDK + LLM evals (M2)
+    # NOTE: 0.100+ is the post-Managed-Agents stable floor; upper bound prevents
+    # accidental breaking-change exposure. Bump deliberately per CONTRIBUTING.md.
+    "anthropic>=0.100,<0.110",
+    # File parsing (M2 extractor skill + M5 talent media pack + M12 proposal uploads)
+    "pypdf>=4.0",
+    "python-docx>=1.1",
+    # Sync→async bridge for Celery task → coordinator.run() — avoids asyncio.run()
+    # closing the event loop between back-to-back tasks on the same worker.
+    "asgiref>=3.7",
+    # CLI (M2 nativ test)
+    "typer>=0.12",
+    "prompt-toolkit>=3.0",
 ]
 
 [project.optional-dependencies]
@@ -63,6 +76,9 @@ dev = [
     # Codegen (used in M1; declare in M0 so the lock pins it early)
     "datamodel-code-generator>=0.25",
 ]
+
+[project.scripts]
+nativ = "app.cli.main:app"
 
 [build-system]
 requires = ["hatchling"]
