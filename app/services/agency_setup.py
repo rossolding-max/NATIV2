@@ -135,16 +135,21 @@ class AgencySetupService:
     async def apply_data_patch(
         self, agency_id: UUID, diff: dict[str, Any], *, validate_full: bool = False
     ) -> dict[str, Any]:
-        """Apply a diff to ``data`` and (optionally) validate the result.
+        """Apply a diff to ``data`` and optionally full-schema-validate.
 
-        v0.1 always validates the merged ``data`` against the JSON schema —
-        any patch leaving the row in an invalid state is rejected. The
-        ``validate_full`` flag is kept for future relaxation (currently a
-        no-op since every write validates).
+        Phase 0 setup is incremental: the first patches (branding, agent,
+        signature) leave ``data`` in an invalid state — agents/mailboxes
+        not yet populated. The full ``agency_profile.schema.json`` only
+        applies at activation time, where ``activate()`` runs the
+        validator + cross-field checks.
+
+        Per-patch fields ARE still validated by the request-body Pydantic
+        models in ``app/api/agencies.py`` (hex-color pattern, slug pattern,
+        invoice-template field types, etc.), so this is not a free-for-all.
         """
-        _ = validate_full
         instance = await self._repo.patch_data(agency_id, diff)
-        validate_data_against_schema(instance.data)
+        if validate_full:
+            validate_data_against_schema(instance.data)
         return dict(instance.data)
 
     async def transition_status(self, agency_id: UUID, *, current: str, target: str) -> str:

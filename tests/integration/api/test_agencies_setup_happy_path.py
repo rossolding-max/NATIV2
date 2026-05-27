@@ -13,7 +13,6 @@ Confirms the final agency_profile row passes schema validation with
 from __future__ import annotations
 
 import contextlib
-import os
 import re
 from pathlib import Path
 from typing import Any
@@ -67,25 +66,24 @@ def _m4_setup_env(  # pyright: ignore[reportUnusedFunction]
 
     # Lazy import so app.config isn't loaded at module collection time —
     # that would freeze settings to default env, breaking downstream tests.
-    from app.config import get_settings
-    from app.config import settings as app_settings
+    import app.config as app_config
+    from app.config import Settings, get_settings
 
     get_settings.cache_clear()
+    # Rebuild app.config.settings from the (now-monkeypatched) env. We
+    # PERSIST the rebuild past fixture teardown so subsequent M1 fixtures
+    # (test_brand_import / test_pgcrypto / test_alembic_*) see the same
+    # testcontainer DSN — those fixtures monkeypatch.setenv() but never
+    # rebuild the settings instance themselves.
+    app_config.settings = Settings()  # type: ignore[call-arg]
+    app_settings = app_config.settings
+
     monkeypatch.setattr(app_settings, "s3_endpoint_url", AnyHttpUrl(minio_endpoint))
     monkeypatch.setattr(app_settings, "s3_access_key", minio_cfg["access_key"])
     monkeypatch.setattr(app_settings, "s3_secret_key", SecretStr(minio_cfg["secret_key"]))
     monkeypatch.setattr(app_settings, "s3_bucket", _TEST_BUCKET)
     monkeypatch.setattr(app_settings, "s3_force_path_style", True)
     monkeypatch.setattr(app_settings, "smartlead_api_key", SecretStr("sk-smartlead-test"))
-    # POSTGRES_* env vars are already monkeypatched. Re-bind the module-level
-    # ``settings`` so app.db.session sees the testcontainer URL on next import.
-    monkeypatch.setattr(app_settings, "postgres_host", os.environ["POSTGRES_HOST"])
-    monkeypatch.setattr(app_settings, "postgres_port", int(os.environ["POSTGRES_PORT"]))
-    monkeypatch.setattr(app_settings, "postgres_db", os.environ["POSTGRES_DB"])
-    monkeypatch.setattr(app_settings, "postgres_user", os.environ["POSTGRES_USER"])
-    monkeypatch.setattr(
-        app_settings, "postgres_password", SecretStr(os.environ["POSTGRES_PASSWORD"])
-    )
 
     # Migrate (sync — uses asyncio.run internally).
     repo = Path(__file__).resolve().parents[3]

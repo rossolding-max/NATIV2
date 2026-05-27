@@ -36,9 +36,16 @@ def _m4_migrated_db(postgres_container: Any, monkeypatch: pytest.MonkeyPatch) ->
     monkeypatch.setenv("DB_MASTER_KEY", "test-master-key-32-bytes-base64==")
     monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-test-stub")
 
-    from app.config import get_settings
+    import app.config as app_config
+    from app.config import Settings, get_settings
 
     get_settings.cache_clear()
+    # Persistently rebuild app.config.settings from the monkeypatched env,
+    # so the alembic env.py (which does ``from app.config import settings``
+    # at module load) sees the testcontainer DSN. We do NOT auto-revert at
+    # teardown because subsequent M0/M1 fixtures (test_brand_import etc.)
+    # rely on the settings instance staying in sync with monkeypatched env.
+    app_config.settings = Settings()  # type: ignore[call-arg]
 
     repo = Path(__file__).resolve().parents[2]
     cfg = Config(str(repo / "alembic.ini"))
