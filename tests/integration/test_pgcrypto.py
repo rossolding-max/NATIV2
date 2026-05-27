@@ -17,9 +17,9 @@ from typing import Any
 from uuid import uuid4
 
 import pytest
+from alembic.config import Config
 
 from alembic import command
-from alembic.config import Config
 
 
 @pytest.fixture
@@ -57,7 +57,11 @@ def _insert_encrypted_contact(
     email: str,
     master_key: str,
 ) -> None:
-    """Insert a brand_contact row using pgp_sym_encrypt at SQL level."""
+    """Insert a brand_contact row using pgp_sym_encrypt at SQL level.
+
+    Sets ``created_at`` + ``updated_at`` explicitly because raw psycopg
+    INSERTs bypass SQLAlchemy's Python-side ``default=_utcnow`` hook.
+    """
     import psycopg
 
     url = container.get_connection_url().replace("+psycopg2", "")
@@ -65,8 +69,8 @@ def _insert_encrypted_contact(
         # First insert a brand row (FK target).
         cur.execute(
             """
-            INSERT INTO brand (brand_id, name, industry_id, data)
-            VALUES (%s, %s, 'cosmetics', '{}')
+            INSERT INTO brand (brand_id, name, industry_id, data, created_at, updated_at)
+            VALUES (%s, %s, 'cosmetics', '{}', NOW() AT TIME ZONE 'UTC', NOW() AT TIME ZONE 'UTC')
             ON CONFLICT (brand_id) DO NOTHING
             """,
             (brand_id, "Test Brand"),
@@ -75,11 +79,12 @@ def _insert_encrypted_contact(
             """
             INSERT INTO brand_contact (
                 contact_id, brand_id, name, decision_role, email,
-                do_not_contact, data, agency_id
+                do_not_contact, data, agency_id, created_at, updated_at
             )
             VALUES (
                 %s, %s, %s, 'buyer', pgp_sym_encrypt(%s, %s),
-                false, '{}', %s
+                false, '{}', %s,
+                NOW() AT TIME ZONE 'UTC', NOW() AT TIME ZONE 'UTC'
             )
             """,
             (contact_id, brand_id, name, email, master_key, uuid4()),

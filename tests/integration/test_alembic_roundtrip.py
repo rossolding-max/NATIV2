@@ -10,9 +10,9 @@ import os
 from typing import Any
 
 import pytest
+from alembic.config import Config
 
 from alembic import command
-from alembic.config import Config
 
 
 @pytest.fixture
@@ -52,7 +52,13 @@ def alembic_cfg(postgres_container: Any, monkeypatch: pytest.MonkeyPatch) -> Con
 
 
 def test_integration__alembic_upgrade_head_applies_baseline(alembic_cfg: Config) -> None:
-    """``alembic upgrade head`` applies the 0001 baseline and creates the version table."""
+    """``alembic upgrade head`` applies all migrations + creates the version table.
+
+    After M1 PR 2, head is `0002_initial_schema` (M1). Before M1 it was
+    `0001_empty_baseline`. This test asserts only that the version table
+    is populated with a non-empty revision id — it doesn't pin the exact
+    head value, so it survives future migrations.
+    """
     command.upgrade(alembic_cfg, "head")
 
     # Verify alembic_version table populated.
@@ -67,7 +73,7 @@ def test_integration__alembic_upgrade_head_applies_baseline(alembic_cfg: Config)
             result = await session.execute(text("SELECT version_num FROM alembic_version"))
             rows = result.fetchall()
             assert len(rows) == 1
-            assert rows[0][0] == "0001"
+            assert rows[0][0], "alembic_version should hold the head revision id"
 
     asyncio.run(_verify())
 
