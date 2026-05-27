@@ -29,6 +29,7 @@ from sqlalchemy import text
 from app.api import agencies as agencies_router
 from app.api.middleware import RequestContextMiddleware
 from app.api.responses import APIError, APIResponse, make_meta
+from app.api.webhooks import oauth_callbacks as oauth_callbacks_router
 from app.config import settings
 from app.db.session import async_session_factory, engine
 from app.errors import NATIV2Error
@@ -184,6 +185,7 @@ app = FastAPI(
 
 app.add_middleware(RequestContextMiddleware)
 app.include_router(agencies_router.router, prefix="/api/v1")
+app.include_router(oauth_callbacks_router.router, prefix="/api/v1")
 
 
 @app.exception_handler(NATIV2Error)

@@ -147,12 +147,22 @@ def postgres_container(_docker_check: None) -> Generator[object, None, None]:
 
 @pytest.fixture(scope="session")
 def redis_container(_docker_check: None) -> Generator[object, None, None]:
-    """Session-scoped Redis 7 container."""
+    """Session-scoped Redis 7 container.
+
+    Also binds ``app.config.settings.redis_host`` + ``redis_port`` to the
+    container's published address so the OAuth state store (M3, consumed
+    by M5) and the rate limiter (M3) talk to the testcontainer instead
+    of whatever Redis might be running on localhost:6379.
+    """
     from testcontainers.redis import RedisContainer  # type: ignore[import-untyped]
 
     container = RedisContainer("redis:7-alpine")
     container.start()
     try:
+        from app.config import settings as live_settings
+
+        live_settings.redis_host = container.get_container_host_ip()
+        live_settings.redis_port = int(container.get_exposed_port(6379))
         yield container
     finally:
         container.stop()

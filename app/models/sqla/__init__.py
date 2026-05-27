@@ -26,6 +26,7 @@ from app.models.sqla.pitch_enrollment import PitchEnrollment
 from app.models.sqla.pitch_template import PitchTemplate
 from app.models.sqla.proposal_pack import ProposalPack
 from app.models.sqla.talent import Talent
+from app.models.sqla.talent_vault import TalentVault
 
 __all__ = [
     "AgencyProfile",
@@ -44,4 +45,5 @@ __all__ = [
     "PitchTemplate",
     "ProposalPack",
     "Talent",
+    "TalentVault",
 ]
