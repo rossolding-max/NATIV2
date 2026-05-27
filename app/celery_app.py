@@ -3,9 +3,9 @@
 v0.1 = 2 queues: ``default`` + ``llm_heavy``. v2 adds ``vendor_apis`` +
 ``rendering`` per V2-SCALE-01.
 
-The Beat schedule is empty at M0 — per-milestone cron tasks land in M7+
-(discovery cron), M11+ (pack auto-fire), M14+ (detection polling), M16
-(auto-archive check), and so on.
+Beat schedule populated per-milestone. M4 adds the agency-warmup poll
+(``app.services.agency_warmup.poll_mailbox_warmup_status``) at the
+hourly cadence borrowed from ``cron_phase_4_8_detection_other_seconds``.
 """
 
 from __future__ import annotations
@@ -21,7 +21,11 @@ def _build_app() -> Celery:
         "nativ2",
         broker=settings.celery_broker_url,
         backend=settings.celery_result_backend,
-        include=["app.tasks.echo"],
+        include=[
+            "app.tasks.echo",
+            "app.tasks.pack_generation",
+            "app.services.agency_warmup",
+        ],
     )
 
     celery_app.conf.update(
@@ -39,8 +43,16 @@ def _build_app() -> Celery:
         task_time_limit=settings.celery_task_time_limit_seconds,
         task_acks_late=True,
         worker_prefetch_multiplier=1,
-        # ── Beat (empty at M0; populated per milestone) ───────────────
-        beat_schedule={},
+        # ── Beat (populated per milestone) ────────────────────────────
+        beat_schedule={
+            "agency-warmup-poll": {
+                "task": "app.services.agency_warmup.poll_mailbox_warmup_status",
+                # M4: hourly cadence reuses the Phase-4.8 "other" cron until
+                # a dedicated warmup interval is added.
+                "schedule": float(settings.cron_phase_4_8_detection_other_seconds),
+                "options": {"queue": "default"},
+            },
+        },
     )
 
     return celery_app

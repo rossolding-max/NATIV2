@@ -146,23 +146,33 @@ Each milestone documented below with: inputs (what must exist) + outputs (delive
 **Inputs:** M1-M3.
 
 **Outputs:**
-- `app/api/agencies.py`: POST/PATCH endpoints implementing the 9-step setup (per `docs/agency_setup_workflow.md`)
-- `app/services/dns_validation.py`: Smartlead-backed DNS record validation
-- `app/services/branding.py`: branding asset upload to S3 (presigned PUT URLs)
-- `app/services/invoice_template.py`: starter template + atomic sequence counter (Postgres `SELECT … FOR UPDATE`)
-- `app/services/agency_warmup.py`: Smartlead warmup status sync (Celery task)
-- Commission defaults capture (`default_commission_rate` + `default_commission_model`)
-- Tests: end-to-end agency setup happy path (Smartlead mocked); validation rejects incomplete setups
+- `app/api/agencies.py` — 11 REST endpoints under `/api/v1/agencies` implementing the 9-step setup. Same surface drives the CLI wizard.
+- `app/services/agency_setup.py` — state-machine helper + JSON-Schema validator (`schemas/agency_profile.schema.json`) + activation cross-field checks (DNS verified + warmup complete).
+- `app/services/dns_validation.py` — direct dnspython lookups for SPF/DKIM/DMARC. **Smartlead does NOT expose a DNS API**, so M4 verifies propagation by querying TXT records directly. Default DKIM selector is `smartlead`; agencies may override.
+- `app/services/branding.py` — presigned-PUT URL generator + MIME/size guards (image/png|jpeg|svg+xml, max 100 MB).
+- `app/services/invoice_template.py` — starter Markdown template + GAP-07 server-side `template_version` bump on material-field changes + `next_invoice_number` (atomic counter via `SELECT ... FOR UPDATE`; consumed by M14).
+- `app/services/agency_warmup.py` — Celery task `poll_mailbox_warmup_status` running hourly via Beat. Polls Smartlead's `GET /email-accounts/{id}/`, translates the warmup status, persists into `sending_mailboxes[0].warmup_status`, and auto-flips `agency_profile.status` to `active` when warmup completes AND the rest of the data is schema-valid.
+- `app/utils/s3.py` — boto3 client + presigned PUT/GET URL helpers (fills in the M0 placeholder).
+- `app/vendors/smartlead.py` — extended with 4 verified email-account endpoints (`create_email_account`, `get_email_account`, `update_warmup_settings`, `get_warmup_stats`).
+- `app/repositories/agency_profile.py` — singleton-aware: `get_singleton`, `create_singleton` (refuses duplicates), `patch_data` (deep-merge into JSONB), `set_status`.
+- `app/cli/phase0_setup.py` — interactive Typer wizard calling the REST surface; supports `--auto`, `--skip-warmup`, `--logo <path>`, `--api-base-url`.
+- `app/cli/main.py` — `nativ test phase 0` wired to the wizard.
+- `app/main.py` — lifespan binds `app.state.agency_id` + `agent_id` from the singleton row (was no-op at M0).
 
-**Acceptance:** real agency setup completed; `agency_profile` row in Postgres with branding + invoice template + commission defaults populated; mailbox warmed.
+**Acceptance:** real agency setup completed via REST (or the CLI wizard); `agency_profile` row in Postgres with `status == "active"`; branding + invoice template + commission defaults populated; mailbox warmed via Smartlead.
 
 **Skip notes:** Phase 0 cannot be skipped — it's the prerequisite to everything.
 
 **Interdependency checks:**
-- DNS records SPF/DKIM/DMARC all verified before `status: active`
-- `branding` block populated with at minimum logo_url + primary_color + font families
-- `invoice_template.invoice_number_sequence` initialised
-- `default_commission_*` fields set
+- DNS records SPF/DKIM/DMARC verified directly via dnspython before transitioning to `awaiting_dns`.
+- `branding` block populated with at minimum `primary_color` + `text_color` (logo optional but recommended).
+- `invoice_template.invoice_number_sequence` initialised to 1; `template_version` seeded at first write.
+- `default_commission_rate` + `default_commission_model` set before activation.
+- Mailbox warmup polled hourly; `status` auto-flips `warming_up → active` when complete.
+
+**Deferred from M4 (carried forward):**
+- Full `Idempotency-Key` backing store (M4 logs a warning when missing; full key+response replay safety lands when M5+ first needs it).
+- Live Smartlead-path confirmation against a real key (best-effort URLs ship in M4 with respx-mocked tests; first agency setup confirms).
 
 ---
 
