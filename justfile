@@ -64,11 +64,13 @@ db-reset:
     just migrate
 
 # ── Seeding ───────────────────────────────────────────────────────────
+# Loads `data/brand_industry_map.json` (290 records) into the brand table.
+# Idempotent — re-runs skip existing rows.
 seed:
-    @echo "Seed: synthetic Acme fixture (M0 placeholder)."
+    uv run python scripts/import_brand_industry_map.py
 
 seed-real:
-    @echo "Seed: ~/.nativ/test_fixtures/ (lands in M1+)."
+    @echo "Seed: ~/.nativ/test_fixtures/ (lands in M4+ with full agency setup)."
 
 # ── Dev servers ───────────────────────────────────────────────────────
 dev-api:

@@ -17,9 +17,9 @@ from typing import Any
 from uuid import uuid4
 
 import pytest
-from alembic.config import Config
 
 from alembic import command
+from alembic.config import Config
 
 
 @pytest.fixture
@@ -161,5 +161,3 @@ def test_integration__pgcrypto_tampered_ciphertext_fails(m1_db: Any) -> None:
         conn.commit()
     with pytest.raises((psycopg.errors.OperationalError, psycopg.errors.InternalError_)):
         _select_decrypted_email(m1_db, "con_test1234569", key)
-
-
