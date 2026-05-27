@@ -32,9 +32,9 @@ def test_unit__init_loads_full_corpus() -> None:
     assert len(tax.niches) >= 100, f"niches loaded: {len(tax.niches)}"
     assert len(tax.industries) >= 150, f"industries loaded: {len(tax.industries)}"
     assert len(tax.iab_segments) >= 1000, f"iab loaded: {len(tax.iab_segments)}"
-    assert (
-        len(tax.brand_competitors) >= 50
-    ), f"brand competitors loaded: {len(tax.brand_competitors)}"
+    assert len(tax.brand_competitors) >= 50, (
+        f"brand competitors loaded: {len(tax.brand_competitors)}"
+    )
 
 
 def test_unit__get_taxonomies_raises_before_init() -> None:

@@ -91,22 +91,27 @@ def test_integration__m1_migration_creates_all_16_tables(
     """``alembic upgrade head`` applies 0001 + 0002; 16 tables present + pgcrypto."""
     command.upgrade(m1_alembic_cfg, "head")
     tables = _tables_present(postgres_container)
-    assert EXPECTED_TABLES.issubset(
-        tables
-    ), f"Missing tables: {EXPECTED_TABLES - tables}\nGot: {sorted(tables)}"
+    assert EXPECTED_TABLES.issubset(tables), (
+        f"Missing tables: {EXPECTED_TABLES - tables}\nGot: {sorted(tables)}"
+    )
     assert _pgcrypto_present(postgres_container), "pgcrypto extension must be installed"
 
 
 def test_integration__m1_migration_downgrade_drops_tables(
     m1_alembic_cfg: Config, postgres_container: Any
 ) -> None:
-    """Downgrade -1 from M1 head drops the 16 tables; pgcrypto extension stays."""
+    """Downgrading past M1 (0001 → drop M1's tables) clears domain tables.
+
+    After M2 added 0003, ``-1`` only rolls back the retrieval_count column.
+    To verify M1's table-drop path, downgrade to revision 0001 explicitly
+    (one step before M1's 0002).
+    """
     command.upgrade(m1_alembic_cfg, "head")
-    command.downgrade(m1_alembic_cfg, "-1")
+    command.downgrade(m1_alembic_cfg, "0001")
     tables = _tables_present(postgres_container)
     domain_tables_remaining = EXPECTED_TABLES & tables
     assert not domain_tables_remaining, (
-        f"After downgrade, domain tables should be gone but found: "
+        f"After downgrade to 0001, domain tables should be gone but found: "
         f"{sorted(domain_tables_remaining)}"
     )
     # pgcrypto extension is not dropped on downgrade (intentional).
@@ -116,9 +121,9 @@ def test_integration__m1_migration_downgrade_drops_tables(
 def test_integration__m1_migration_round_trip_idempotent(
     m1_alembic_cfg: Config, postgres_container: Any
 ) -> None:
-    """upgrade head → downgrade -1 → upgrade head is a no-op cycle."""
+    """upgrade head → downgrade to 0001 → upgrade head is a no-op cycle."""
     command.upgrade(m1_alembic_cfg, "head")
-    command.downgrade(m1_alembic_cfg, "-1")
+    command.downgrade(m1_alembic_cfg, "0001")
     command.upgrade(m1_alembic_cfg, "head")
     tables = _tables_present(postgres_container)
     assert EXPECTED_TABLES.issubset(tables)
