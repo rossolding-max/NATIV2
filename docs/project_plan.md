@@ -109,7 +109,9 @@ Each milestone documented below with: inputs (what must exist) + outputs (delive
 
 ## M3 — Vendor wrappers
 
-**Inputs:** M2.
+**Inputs:** M2 (for the agent SDK config; other vendor wrappers don't strictly depend on agent work).
+
+**Parallel-with-M2 note:** M3 can start in parallel with M2 once the vendor list is locked. Smartlead / Exa / Apollo / LinkedIn / Meta Graph / TikTok wrappers don't depend on agent infrastructure (researcher / writer / extractor / renderer); they're consumed BY the agents but built independently. Run them on a separate workstream if team has capacity.
 
 **Outputs:**
 - `app/vendors/anthropic_client.py` (centralises Anthropic SDK config + cost tracking)
@@ -301,24 +303,24 @@ Each milestone documented below with: inputs (what must exist) + outputs (delive
 
 **Outputs:**
 - `app/agents/packs/discovery_prep.py`: pack-specific coordinator
-- Composes `researcher` (Exa brand research) + `writer` (briefing + agenda + slides) + `renderer`
-- 3-pass Sonnet (now Opus 4.7 per locked tier) generation with prompt-caching across passes
+- Composes `researcher` (Exa brand research) + `writer` (briefing + agenda + slide content as markdown). **Renderer subagent NOT engaged in v0.1** — slide visual rendering deferred to v2 (V2-PACK-01); first invoked in M12 / proposal pack.
+- 3-pass Opus 4.7 generation with prompt-caching across passes
 - NL feedback regeneration loop (v1, v2, v3 versioning per `docs/discovery_prep_workflow.md`)
 - Auto-fire on `substage = initial_call_scheduled` (Celery scheduled task `phase_4_5_auto_fire`)
 - Versioned storage in S3 + Postgres
-- Slide skill integration seam (per locked design — user-provided skill plugs into renderer)
+- v0.1 deliverables: `briefing-notes.md` + `agenda.md` + `speaker-notes.md` + `slides.md` (all slide content concatenated as markdown — agent reads pre-call). HTML/PDF/PPTX deferred to v2.
 
-**Acceptance:** real deal in `initial_call_scheduled` fires real prep pack generation; PDF + HTML + speaker notes all rendered; agent NL feedback produces v2; memo written summarising prep-pack-generation learnings (visible in subsequent `read_memos` calls).
+**Acceptance:** real deal in `initial_call_scheduled` fires real prep pack generation; 4 markdown deliverables produced + stored in S3; agent NL feedback produces v2; memo written summarising prep-pack-generation learnings (visible in subsequent `read_memos` calls).
 
 **Skip notes:** if skipped, agent goes into discovery call without auto-drafted pack; `deal.lead.discovery_call_notes` captured manually post-call.
 
 **Interdependency checks:**
-- Coordinator + 4 skill subagents successfully compose (multi-pass; prompt cache hits)
+- Coordinator + 3 LLM subagents (researcher + writer + extractor as needed) successfully compose (multi-pass; prompt cache hits)
 - Memo store writes from `researcher` (brand observations) + `writer` (talent learnings) round-trip readable
 - Context bundle composer + augment tools both exercised in real generation
 - Langfuse trace shows full multi-agent span tree
 
-**This is the foundational AI pack — proves the entire agent architecture.** Subsequent packs (M12-M15) reuse the same skill subagents with different compositions.
+**This is the foundational AI pack — proves the entire agent architecture for v0.1 (coordinator + skill subagents + memo store + context bundles + Langfuse instrumentation).** Subsequent packs (M12-M15) reuse the same skill subagents with different compositions; M12 (proposal pack) is where the renderer subagent first ships.
 
 ---
 

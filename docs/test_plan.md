@@ -36,7 +36,7 @@
 | **LLM eval (cassette)** | Pack-level agent outputs against recorded LLM responses. | pytest + vcrpy + golden assertions | 100ms-2s | $0 post-record | Default for PRs + on-merge |
 | **LLM eval (real)** | Same evals against live Anthropic API. Nightly only. | pytest + live API key + budget gate | 30s-3min per pack | $5-20/night | Catches prompt-engineering regressions |
 | **End-to-end** | Full pipelines through FastAPI: agency setup → talent onboarding → discovery → outreach → deal → pack → invoice → archive. | pytest + httpx client + spun-up FastAPI | 2-10s per scenario | $0 (cassettes) | Critical-path scenarios |
-| **OpenAPI smoke** | Stub frontend (Vue 3 + Vite) wires up agency setup wizard against `/openapi.json`. | Playwright headless | 10-30s | $0 | Proves the API surface is UI-shaped |
+| **OpenAPI contract (schemathesis)** | Property-based testing against `/openapi.json` spec. Auto-generates request payloads; checks response shape + error codes match spec. Catches contract mismatches + spec drift. Stub frontend deferred to v2 (V2-FRONT-01); production frontend supersedes when it ships. | schemathesis | 30-60s | $0 | Verifies API is contract-correct |
 | **Performance** | Load test: 50 concurrent deals across 10 talents. Profile slow queries + Celery throughput. | Locust + pytest-benchmark | 5-30min | $0 | M17 production hardening |
 | **Security** | Secret leakage scan + SQL injection + authz boundary tests + dependency vuln scan. | trufflehog + bandit + safety + pytest authz | 1-5min | $0 | M17 + every release |
 
@@ -55,7 +55,7 @@
 | Pre-commit (developer) | `git commit` | Lint (ruff) + typecheck (pyright) + format + fast unit tests | <30s |
 | Pre-push (developer) | `git push` | Above + full unit + integration + schema round-trip | <3min |
 | CI on PR | `pull_request` | Above + API contract + webhook + state machine + LLM eval (cassette) + end-to-end (cassette) | <8min |
-| CI on merge to main | `push to main` | Above + OpenAPI stub frontend smoke | <12min |
+| CI on merge to main | `push to main` | Above (no extra layer in v0.1; OpenAPI contract coverage already in PR gate) | <8min |
 | Nightly | 02:00 UTC daily | All of the above + LLM eval (real Anthropic) + performance smoke | <30min; ~$10-25 LLM cost |
 | Pre-release | Manual tag | All of the above + security audit + load test | <2hr |
 
@@ -182,7 +182,7 @@ Maps every milestone in `docs/project_plan.md` to the tests it ships with.
 ### M11 — Phase 4.5 (Discovery Prep Pack) ⭐
 **Tests authored:**
 - `tests/integration/agents/packs/test_discovery_prep_smoke.py` — bundle composes, agent invokes, output validates against schema
-- `tests/llm_eval/discovery_prep/test_briefing_quality.py` — golden test set (5 scenarios; assertions on key fields present + sourced + word count)
+- `tests/llm_eval/discovery_prep/test_briefing_quality.py` — golden test set (3 scenarios; assertions on key fields present + sourced + word count). Nightly real-LLM run samples a wider 10-scenario set to catch drift (V2-PACK-05 expands cassettes to 5+ in v2 as production edge cases discovered).
 - `tests/llm_eval/discovery_prep/test_slide_generation.py` — slides match expected types + position; live_body + leave_behind_extension present
 - `tests/llm_eval/discovery_prep/test_speaker_notes.py` — speaker notes generated with correct cues
 - `tests/integration/tasks/test_phase_4_5_auto_fire.py` — substage transition triggers pack gen
@@ -397,7 +397,7 @@ Where § 2 maps test deliverables to BUILD milestones, this section maps the COM
 - Onboarded talent + deal in `initial_call_scheduled` → pack auto-fires → 4 artefacts (HTML + PDF + speaker_notes_md + briefing_notes_md) in S3 + DB
 
 **LLM eval (cassette + nightly real):**
-- 5 golden scenarios (different talent niches × brand archetypes) → assert: title slide present + talent_overview + audience_snapshot + recent_work (if brand_deals exist) + fit_angle + 3+ proof_point slides + next_steps slide
+- 3 golden scenarios (v0.1; V2-PACK-05 expands to 5+ in v2) (different talent niches × brand archetypes) → assert: title slide present + talent_overview + audience_snapshot + recent_work (if brand_deals exist) + fit_angle + 3+ proof_point slides + next_steps slide
 - briefing_notes_md has 5+ source citations + agenda has 4-6 timed sections + speaker_notes per slide
 
 ### 3.8 — P4.6 (Proposal Pack)
@@ -417,7 +417,7 @@ Where § 2 maps test deliverables to BUILD milestones, this section maps the COM
 - Confirmed prep pack v1 + uploaded brand_brief.pdf → proposal pack v1 generates → agent confirms commercial gate → render artefacts produced → `deal.proposal.*` canonical values populated
 
 **LLM eval (cassette + nightly real):**
-- 5 golden scenarios → assert: discovery_debrief 10 fields populated; commercial proposal aligns with talent.working_terms defaults + brand_deal comparable fees; executive_summary 50-80 words; recommendation slide cites at least 2 reasons-to-believe; deliverables/timeline/investment slides structurally complete
+- 3 golden scenarios (v0.1; V2-PACK-05 expands to 5+ in v2) → assert: discovery_debrief 10 fields populated; commercial proposal aligns with talent.working_terms defaults + brand_deal comparable fees; executive_summary 50-80 words; recommendation slide cites at least 2 reasons-to-believe; deliverables/timeline/investment slides structurally complete
 
 ### 3.9 — P4.7 (Contract Pack)
 
@@ -436,7 +436,7 @@ Where § 2 maps test deliverables to BUILD milestones, this section maps the COM
 - Confirmed proposal + uploaded brand_legal_info.pdf → contract drafts → reviewer approves → render produces .md + .docx + .pdf → signed PDFs upload writes contract_attachment_id
 
 **LLM eval (cassette + nightly real):**
-- 5 golden scenarios → assert: every {{merge_field}} resolved with source + confidence; every {{#if}} block has include/exclude decision + applicability_rationale; narrative_sections each <= max_word_count + cites declared sources
+- 3 golden scenarios (v0.1; V2-PACK-05 expands to 5+ in v2) → assert: every {{merge_field}} resolved with source + confidence; every {{#if}} block has include/exclude decision + applicability_rationale; narrative_sections each <= max_word_count + cites declared sources
 
 ### 3.10 — P4.8 (Invoice Pipeline)
 
@@ -479,7 +479,7 @@ Where § 2 maps test deliverables to BUILD milestones, this section maps the COM
 - DELIVERY-stage deal with posted_at set + posting_schedule complete → daily KPI cron accumulates snapshots → window-end auto-fires report → agent sends → 2 of 3 auto-archive conditions met (final_kpis + final_performance_report_attachment_id)
 
 **LLM eval (cassette + nightly real):**
-- Narrative quality: 5 golden scenarios → executive_summary 80-120 words + 3+ sources cited; what_worked 3-5 bullets; learnings 2-4 bullets
+- Narrative quality: 3 golden scenarios (v0.1; V2-PACK-05 expands in v2) → executive_summary 80-120 words + 3+ sources cited; what_worked 3-5 bullets; learnings 2-4 bullets
 
 ### 3.A — Auto-archive (loop closure)
 
@@ -819,31 +819,37 @@ def test_every_endpoint_has_contract_test():
     assert not missing, f"Endpoints without contract tests: {missing}"
 ```
 
-### 8.2 Stub frontend smoke
+### 8.2 schemathesis property-based contract testing (v0.1 — replaces stub frontend)
 
-`tests/frontend_smoke/` — Vue 3 + Vite project that:
-1. Reads `/openapi.json` from the local FastAPI
-2. Scaffolds typed TypeScript clients via `openapi-typescript`
-3. Implements ONE critical UI flow (the agency setup wizard) using the generated client
-4. Renders the wizard headlessly via Playwright
-5. Walks through all 9 setup steps end-to-end via simulated user input
-6. Asserts on each step's success + final state
+`tests/contract/` consumes `/openapi.json` and uses **schemathesis** to:
 
-Run via `nativ test e2e --frontend-smoke`. ~30s per run. Catches "this endpoint isn't UI-shaped" issues early.
+1. Auto-generate request payloads from each endpoint's documented Pydantic input schema
+2. Validate that every response shape conforms to the documented output schema
+3. Check error responses match the documented `{data: null, errors: [...]}` envelope
+4. Verify documented status codes are actually emitted
+5. Catch spec-vs-implementation drift (endpoint exists in code but not in OpenAPI, or vice-versa)
 
-Subsequent phases get one stub-frontend smoke per critical flow:
-- P1: talent onboarding wizard
-- P4.5: prep pack viewer + agent NL feedback box
-- P4.6: proposal pack viewer + commercial gate UI
-- P4.7: contract pack viewer + legal review gate UI
+```bash
+# In CI:
+uv run schemathesis run http://localhost:8000/openapi.json --checks all --hypothesis-deadline=2000
+```
 
-### 8.3 What the frontend smoke verifies
+Per-endpoint hand-written contract tests (in `tests/contract/test_{tag}.py`) complement schemathesis with happy-path assertions + specific error-path triggers + (v2) authz boundary tests.
+
+### 8.3 What the contract testing verifies
 
 - Every endpoint returns JSON-serialisable data (no datetime tuples; UUIDs as strings; etc.)
-- Error responses match documented schema (`{"detail": "...", "code": "..."}`)
-- Long-running operations return immediately with task_id + status polling endpoint
-- File uploads use multipart/form-data with documented field names
+- Error responses match documented schema (`{data: null, errors: [{code, message, field?, detail?}]}`)
+- Long-running operations return 202 + task_id + status_url
+- File uploads use multipart/form-data with documented field names (v0.1; v2 V2-STORAGE-01 switches to presigned PUT)
 - Webhook receivers are clearly separated from agent-facing endpoints (different prefix path)
+- Pagination meta carries `page + page_size + total_count + total_pages` (v0.1 offset; v2 V2-API-02 switches to cursor)
+
+### 8.4 Stub frontend (deferred to v2 — see V2-FRONT-01)
+
+A stub frontend (Vue 3 + Vite + Playwright wiring up critical flows) was specced as an additional UI-shape validation layer. **Deferred:** schemathesis + per-endpoint contract tests catch the same issues at lower cost. When production frontend work begins, that IS the frontend — no stub needed.
+
+If the team wants a stub frontend later (e.g. for in-house demos before frontend devs are available), the original spec is preserved in `docs/v2_deferred_requirements.md` V2-FRONT-01.
 
 ---
 
@@ -911,11 +917,13 @@ jobs:
     steps:
       - pytest tests/e2e/
 
-  frontend-smoke:
+  schemathesis:
     services: [postgres, redis, minio]
     steps:
-      - cd tests/frontend_smoke && pnpm install && pnpm test
+      - uv run schemathesis run http://localhost:8000/openapi.json --checks all --hypothesis-deadline=2000
 ```
+
+(Stub frontend smoke job deferred to v2 — see § 8.4 + V2-FRONT-01.)
 
 ### 9.3 Nightly (`test-nightly.yml`)
 
@@ -985,7 +993,7 @@ tests/
     outreach/
     decision_role/
   e2e/                              # full pipeline scenarios
-  frontend_smoke/                   # Vue 3 + Vite + Playwright
+  # frontend_smoke/ deferred to v2 — see § 8.4 + V2-FRONT-01
     package.json
     src/
     playwright.config.ts
@@ -1045,9 +1053,9 @@ The test plan accretes alongside the project plan milestones (see § 1.5 + § 2)
 The backend ships when:
 - All CI gates green
 - 100% coverage per § 1.1 metrics
-- LLM eval cassettes cover every pack type's 5+ golden scenarios
+- LLM eval cassettes cover every pack type's 3 golden scenarios (V2-PACK-05 expands to 5+ in v2)
 - Real-LLM nightly run pass rate >95% for 7 consecutive nights
-- `nativ test e2e --deal-from-scratch --agency mercer --talent riley --auto` runs end-to-end with real LLM + writes a fully-archived brand_deal record at completion
-- OpenAPI stub frontend wizard runs headless without errors
+- `nativ test e2e --deal-from-scratch --agency {real} --talent {real} --auto` runs end-to-end with real LLM + writes a fully-archived brand_deal record at completion
+- schemathesis property-based contract tests pass against every endpoint in `/openapi.json`
 - Performance: p95 endpoint latency <500ms (LLM-excluded); 50 concurrent deals supported
 - Security: 0 critical findings from secret leakage + dependency vuln + authz boundary scans

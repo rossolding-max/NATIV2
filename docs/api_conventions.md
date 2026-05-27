@@ -92,7 +92,7 @@ Content-Type: application/json
 ### 2.2 List
 
 ```json
-GET /api/v1/talents?limit=50
+GET /api/v1/talents?page=1&page_size=50
 HTTP 200 OK
 
 {
@@ -105,9 +105,10 @@ HTTP 200 OK
     "timestamp": "...",
     "api_version": "v1",
     "pagination": {
-      "next_cursor": "eyJpZCI6Imp...",
-      "has_more": true,
-      "limit": 50
+      "page": 1,
+      "page_size": 50,
+      "total_count": 12,
+      "total_pages": 1
     }
   },
   "errors": []
@@ -203,40 +204,46 @@ HTTP 422
 
 ## 4. Pagination
 
-### 4.1 Cursor-based
+### 4.1 Offset-based (v0.1)
 
 ```
-GET /api/v1/deals?limit=20&cursor=eyJpZCI6Im...
+GET /api/v1/deals?page=1&page_size=50
 ```
 
 Query params:
-- `limit` — page size. Default 50. Max 200.
-- `cursor` — opaque base64 of `{last_id, sort_field, sort_direction}`. Server constructs.
+- `page` — 1-indexed page number. Default 1.
+- `page_size` — items per page. Default 50. Max 200.
 
 Response:
-- `meta.pagination.next_cursor` — pass on next request to continue.
-- `meta.pagination.has_more` — boolean; false on last page.
-- `meta.pagination.limit` — echo of request.
-
-### 4.2 No total_count by default
-
-`total_count` is OPT-IN via `?include=total_count` because counting large tables is expensive. When requested:
 
 ```json
 "meta": {
   "pagination": {
-    "next_cursor": "...",
-    "has_more": true,
-    "limit": 50,
-    "total_count": 12873
+    "page": 1,
+    "page_size": 50,
+    "total_count": 137,
+    "total_pages": 3
   }
 }
 ```
 
-### 4.3 Sorting + filtering
+`total_count` + `total_pages` are always populated at v0.1 scale (datasets are small — counting is cheap). When v2 introduces cursor pagination (V2-API-02), `total_count` becomes opt-in via `?include=total_count` to avoid expensive counts on large tables.
+
+### 4.2 Sorting + filtering
 
 Sorting: `?sort=created_at:desc` (single field; comma-separate for multi). Whitelisted per endpoint.
 Filtering: explicit query params per endpoint (e.g. `?stage=PROPOSAL&substage=proposal_sent`). NOT a generic `?filter=...` DSL (security + clarity).
+
+### 4.3 v2 deferral
+
+Cursor-based pagination is deferred to v2 — see `docs/v2_deferred_requirements.md` V2-API-02. v2 form:
+
+```
+GET /api/v1/deals?limit=20&cursor=eyJpZCI6Im...
+meta.pagination: {next_cursor, has_more, limit}
+```
+
+Switchover is internal; frontend SDK updates without breaking call sites.
 
 ---
 
@@ -366,23 +373,31 @@ If the client sends the same key with a DIFFERENT body (e.g. they retried a `POS
 - Generate one key per logical user action (not per request).
 - Send the key on every retry of that action.
 
-### 6.5 Idempotent-by-design vs key-required
+### 6.5 Idempotent-by-design vs key-required (v0.1)
 
 | Endpoint type | Idempotency-Key required | Reason |
 |---|---|---|
 | `GET *` | N/A | naturally idempotent |
-| `PATCH *` | Optional | full-replace PATCH is idempotent; header adds replay-safety |
-| `DELETE *` | Required | repeated DELETE of soft-deleted record is no-op; key prevents accidental duplicate audit entries |
+| `PATCH *` | Optional in v0.1 (V2-API-03 makes required in v2) | full-replace PATCH is naturally idempotent on identical payload |
+| `DELETE *` | Optional in v0.1 (V2-API-03 makes required in v2) | repeated DELETE of soft-deleted record is no-op |
 | `POST */resource` | Required | creates a new record; without key, double-clicks create duplicates |
 | `POST */:action` | Required | actions (advance deal, generate pack, send invoice) are not naturally idempotent |
 
+**v2 transition:** Per V2-API-03, v2 tightens to required on every write endpoint regardless of method. v0.1 keeps optional on PATCH/DELETE to reduce defensive overhead for single-operator scale; the table above lists the v0.1 behaviour.
+
 ---
 
-## 7. Optimistic concurrency (If-Match)
+## 7. Concurrency model
 
-### 7.1 Pattern
+### 7.1 v0.1 — last-write-wins
 
-Pack regeneration + any update to versioned resources requires:
+Single operator + local-hosted = zero contention. All writes are last-write-wins. No `If-Match` / `ETag` headers required.
+
+The `version` field on pack/deal/talent/agency_profile schemas IS populated (incremented on every write) for v2-readiness, but `version` is not enforced at the API layer in v0.1. Audit history (`stage_history[]`, `template_version_used` in pack context snapshots) preserves the trail without needing optimistic locking.
+
+### 7.2 v0.1 → v2 transition
+
+Optimistic concurrency via `If-Match` + `ETag` is **deferred to v2** — see `docs/v2_deferred_requirements.md` V2-API-01. v2 pattern:
 
 ```
 PATCH /api/v1/talents/riley/deals/d_002/proposal_packs/pp_..._v1
@@ -390,37 +405,14 @@ If-Match: "1"
 Idempotency-Key: <uuid>
 
 { "commercial_proposal": { "confirmed_overrides": [...] } }
+
+# v2 response on stale version:
+HTTP 409 Conflict
+ETag: "5"   # actual current version
+errors: [{ code: "CONFLICT_OPTIMISTIC_LOCK", ... }]
 ```
 
-The server returns `409 Conflict CONFLICT_OPTIMISTIC_LOCK` if `If-Match` doesn't match the current `version`.
-
-### 7.2 ETag exposure
-
-Every response carries an `ETag` header:
-
-```
-HTTP 200 OK
-ETag: "5"
-
-{
-  "data": {
-    "version": 5,
-    "..."
-  },
-  ...
-}
-```
-
-Frontend reads the ETag from the response + sends it as `If-Match` on subsequent writes. OR reads `data.version` directly + sends as `If-Match` quoted.
-
-### 7.3 Which resources are versioned
-
-All pack types (`*_pack`): yes — concurrent regen risk.
-`deal`: yes — multiple agents editing in v2 is plausible.
-`talent`: yes — talent profile edits.
-`agency_profile`: yes — invoice template changes are version-bumped per GAP-07 enforcement.
-`brand_candidate` + `brand_contact` + `brand_deal`: not required v0.1 (low-contention); add ETag for v2-readiness.
-`memo`: not required (memos are append-only; supersedes_memo_id chain is the version model).
+Versioned resources at v2: all pack types + `deal` + `talent` + `agency_profile` + `brand_candidate` + `brand_contact` + `brand_deal`. Memos remain append-only via the `supersedes_memo_id` chain (no version negotiation needed).
 
 ---
 
@@ -432,7 +424,7 @@ All pack types (`*_pack`): yes — concurrent regen risk.
 |---|---|---|
 | `Content-Type: application/json` | Required on POST/PATCH | Standard |
 | `Idempotency-Key` | Per § 6.5 | Idempotency |
-| `If-Match` | On writes to versioned resources | Optimistic concurrency |
+| `If-Match` | v2 only (V2-API-01) | Optimistic concurrency (no-op in v0.1) |
 | `X-Request-Id` | Optional (server generates if absent) | Distributed tracing |
 | `X-Correlation-Id` | Optional | Long-running workflow tracing |
 | `Accept: application/json` | Recommended | Future content negotiation |
@@ -442,7 +434,7 @@ All pack types (`*_pack`): yes — concurrent regen risk.
 | Header | Always | Purpose |
 |---|---|---|
 | `X-Request-Id` | Always | Matches request or generated |
-| `ETag` | On versioned resources | Optimistic concurrency |
+| `ETag` | v2 only (V2-API-01) | Optimistic concurrency (not emitted in v0.1) |
 | `Retry-After` | On 202 + 429 + 503 | Suggested retry interval (seconds) |
 | `Content-Type: application/json; charset=utf-8` | Always | Standard |
 | `X-LLM-Cost-USD` | On endpoints that consume LLM tokens (pack generation, classification) | Cost transparency to agent UI |
@@ -485,9 +477,53 @@ ID format per record type: see `docs/id_conventions.md`.
 
 ---
 
+## 10.1 File uploads (v0.1)
+
+Multipart upload through FastAPI; FastAPI streams to S3/MinIO.
+
+```http
+POST /api/v1/uploads
+Content-Type: multipart/form-data; boundary=---FormBoundary
+Idempotency-Key: idemp_01H...
+
+(multipart fields)
+file:        <binary>
+context:     "deal/{deal_id}/proposal/context_artefacts"   # routing hint
+mime_type:   "application/pdf"
+```
+
+```http
+HTTP 201 Created
+Location: /api/v1/uploads/up_abc123xyz789
+
+{
+  "data": {
+    "upload_id": "up_abc123xyz789",
+    "s3_key": "deals/d_002/proposal_packs/context_uploads/up_abc123xyz789.pdf",
+    "mime_type": "application/pdf",
+    "size_bytes": 487123,
+    "uploaded_at": "2026-05-27T14:30:00Z"
+  },
+  "meta": {...},
+  "errors": []
+}
+```
+
+Limits enforced server-side per `UPLOAD_MAX_FILE_SIZE_MB` (default 100MB) + `UPLOAD_ALLOWED_MIME_TYPES`.
+
+**v2 deferral:** Two-step presigned PUT protocol — see `docs/v2_deferred_requirements.md` V2-STORAGE-01. v2 form:
+
+```
+1. POST /api/v1/uploads/presign    → server returns S3 presigned PUT URL + upload_id
+2. PUT  <presigned-url>             → client uploads directly to S3
+3. POST /api/v1/uploads/{id}/finalize → server confirms + indexes
+```
+
+Switchover is local to the upload flow; consumers reference `upload_id` either way.
+
 ## 11. CORS (v2)
 
-In v0.1, FastAPI and the stub frontend are served from the same origin (`http://127.0.0.1:8000`); CORS is not configured.
+In v0.1, FastAPI runs as a single process bound to 127.0.0.1 with no separate frontend. CORS is not configured.
 
 In v2, when the production frontend ships on a separate origin, configure:
 
@@ -602,7 +638,6 @@ ETag: "1"
 ```http
 POST /api/v1/talents/riley-carter/deals/d_002/prep_packs:generate
 Idempotency-Key: idemp_01H...
-If-Match: "0"           # no existing prep pack yet
 ```
 
 ```http
@@ -631,7 +666,6 @@ GET /api/v1/tasks/task_01H...
 ```http
 POST /api/v1/talents/riley-carter/deals/d_002/proposal_packs/pp_..._v1:confirm_commercial
 Idempotency-Key: idemp_01H...
-If-Match: "1"
 
 {
   "confirmed_overrides": [
@@ -642,7 +676,6 @@ If-Match: "1"
 
 ```http
 HTTP 200 OK
-ETag: "2"
 
 {
   "data": {
@@ -659,3 +692,5 @@ ETag: "2"
   "errors": []
 }
 ```
+
+Note: `data.version` is incremented server-side on every write (v2-readiness for V2-API-01 optimistic concurrency). v0.1 doesn't enforce stale-version rejection; v2 will.

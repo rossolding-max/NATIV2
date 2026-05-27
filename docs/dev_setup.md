@@ -2,7 +2,7 @@
 
 **Status:** Locked v0.1 (2026-05-26). Read this first if you've just cloned the repo and want to run the stack.
 
-**TL;DR:** Install Docker + uv + node 20 → copy `.env.example` to `.env` + add secrets → `make up` → `make migrate` → `make seed` → `make test`.
+**TL;DR:** Install Docker + uv → copy `.env.example` to `.env` + add secrets → `just up` → `just migrate` → `just seed` → `just test`.
 
 > **Note on current repo state:** The repo is currently in the SPEC phase. Code scaffolding lands at M0 (see `docs/project_plan.md`). This doc describes the target setup the dev team will create in M0. Files referenced below that don't yet exist will exist after M0 completes.
 
@@ -15,8 +15,6 @@
 | **Docker Desktop** | latest stable | Runs Postgres + Redis + MinIO + Langfuse locally | https://www.docker.com/products/docker-desktop |
 | **uv** | latest | Python venv + dependency manager (~10x faster than pip) | `curl -LsSf https://astral.sh/uv/install.sh \| sh` |
 | **Python 3.12** | exactly 3.12.x | Runtime | `uv python install 3.12` |
-| **Node.js 20 LTS** | 20.x | Stub frontend (Vue 3 + Vite + Playwright) | https://nodejs.org/ or via nvm |
-| **pnpm** | 9.x | Frontend dependency manager | `npm install -g pnpm` |
 | **just** | latest | Command runner (replaces Makefile) | `cargo install just` or `brew install just` |
 | **direnv** (optional but recommended) | latest | Auto-load `.env` per directory | `brew install direnv` (then add `eval "$(direnv hook bash)"` to shell rc) |
 
@@ -26,10 +24,10 @@ Verify:
 docker --version          # 24+
 uv --version              # 0.4+
 python3.12 --version      # 3.12.x
-node --version            # v20.x.x
-pnpm --version            # 9.x.x
 just --version            # 1.x
 ```
+
+**Note:** Node.js + pnpm not required for v0.1 — the stub frontend was deferred to v2 (V2-FRONT-01); contract testing happens via schemathesis (Python-native). Add Node/pnpm when production frontend work begins.
 
 ---
 
@@ -201,8 +199,7 @@ just coverage
 3. Implement business logic in a service in `app/services/...`.
 4. Add a repository method in `app/repositories/...` if it touches new DB queries.
 5. Write tests: unit (service) + integration (with real DB) + contract (OpenAPI shape).
-6. Re-generate frontend TS types if you'll touch the stub frontend:
-   `cd tests/frontend_smoke && pnpm openapi-types`
+6. (v2 only) Re-generate frontend TS types: when the production frontend exists, run `npx openapi-typescript http://localhost:8000/openapi.json > frontend/src/api/types.ts`. v0.1 has no frontend dependency to regenerate.
 
 ### 9.2 Add a new database table
 

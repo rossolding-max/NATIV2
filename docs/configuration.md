@@ -64,14 +64,13 @@ class Settings(BaseSettings):
     s3_force_path_style: bool = True  # required for MinIO
 
     # ─── Celery ─────────────────────────────────────────────────────────
+    # v0.1 = 2 queues (default + llm_heavy). v2 splits to 4 — V2-SCALE-01.
     celery_broker_url: str = "redis://127.0.0.1:6379/0"
     celery_result_backend: str = "redis://127.0.0.1:6379/0"
     celery_task_track_started: bool = True
     celery_task_time_limit_seconds: int = 1800  # 30 min default
     celery_worker_concurrency_default: int = 4
     celery_worker_concurrency_llm_heavy: int = 2
-    celery_worker_concurrency_vendor_apis: int = 8
-    celery_worker_concurrency_rendering: int = 2
 
     # ─── Anthropic (Claude) ──────────────────────────────────────────────
     anthropic_api_key: SecretStr

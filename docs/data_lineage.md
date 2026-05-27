@@ -682,6 +682,29 @@ For high-traffic / cross-phase fields, who writes + who reads. Surfaces orphan +
 - **Readers:** Any subagent invocation via `read_memos(...)` tag filters
 - **Discipline:** every agent milestone (M11-M15) defines which memos it writes + reads (project_plan.md cross-cutting discipline)
 
+#### Memo defaults table — "which scope + memo_type for which kind of learning?"
+
+50 (5 scope × 10 memo_type) combinations are valid but only ~10 are commonly used. To reduce choice paralysis + standardise tagging across agents, use these defaults:
+
+| Common learning | Default `scope` | Default `memo_type` | Tag with |
+|---|---|---|---|
+| "Agent X regenerated slide 4 with feedback Y; root cause was Z" | `deal_specific` | `agent_decision_audit` | `deal_id`, `pack_id` (via `created_in_pack_id`), `phase_context` |
+| "Brand X requires GDPR addendum on all contracts" | `brand_relationship` | `brand_observation` | `brand_id`, `industry_id`, `topics: ["gdpr", "contract-clause"]`, `phase_context: contract` |
+| "Brand X pushed back on whitelisting >60d; settled at 60d in 3 deals" | `brand_relationship` | `negotiation_pattern` | `brand_id`, `industry_id`, `topics: ["whitelisting", "usage-rights"]`, `phase_context: proposal` |
+| "Activewear brands typically counter-offer at 70% of asking" | `industry_pattern` | `negotiation_pattern` | `industry_id`, `topics: ["pricing", "counter-offer"]`, `phase_context: proposal` |
+| "Brand X consistently asks 'what's the audience overlap with our existing customers'" | `brand_relationship` | `objection_handler` | `brand_id`, `topics: ["audience-overlap", "discovery-questions"]`, `phase_context: lead` |
+| "Talent's engagement rate dropped from 5.2% to 3.8% over Q2; affects future fee defensibility" | `talent_pattern` | `talent_learning` | `talent_id`, `topics: ["engagement-rate", "kpi-trend"]` |
+| "Talent prefers 60d default usage rights vs the agency default of 90d" | `talent_pattern` | `talent_learning` | `talent_id`, `topics: ["usage-rights", "working-terms"]` |
+| "Athletic Greens 2025 Q1 campaign overperformed; final ER 5.1% vs predicted 4.2%" | `deal_specific` | `kpi_pattern` | `deal_id`, `brand_id`, `topics: ["overperformance", "engagement-rate"]`, `phase_context: close` |
+| "Across 5 fitness × activewear deals, IG reels outperform feed posts by ~40% on reach" | `industry_pattern` | `creative_insight` | `industry_id`, `topics: ["content-format", "ig-reels", "reach"]` |
+| "Whitelisting > 60d is usually a redline across brands" | `cross_cutting` | `negotiation_pattern` | `topics: ["whitelisting", "redline"]`, `phase_context: cross_phase` |
+
+**Discipline rules:**
+- Always include at least 1 entry in `topics[]` (schema-enforced via `minItems: 1`).
+- If the memo references specific brand(s) or talent(s), tag them — enables cross-deal retrieval.
+- Use `cross_cutting` scope sparingly; most learnings fit a more specific scope.
+- Prefer the most-specific scope that's still useful for retrieval. A brand-specific pattern in `industry_pattern` is overgeneralised; the same observation in `brand_relationship` will surface only when that brand is relevant.
+
 ### `deal.proposal.negotiation_log[].proposal_pack_version` ↔ `proposal_pack.generation.negotiation_log_entry_ref`
 - **Writer (both):** P4.6 on `negotiation_response` regen (bidirectional)
 - **Reader:** Audit views — "which pack version responded to which pushback?"

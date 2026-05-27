@@ -338,6 +338,8 @@ class SoftDeleteMixin:
     deleted_by_agent_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
 ```
 
+**v0.1 simplification (V2-DATA-07):** `deleted_by_agent_id` defaults to the singleton agent (`current_agent_id()`) in v0.1 — there is only one operator, so the column is auto-populated by the API layer without requiring explicit input. v2 will enforce population from the JWT-derived agent_id and reject writes without it. The column stays in the schema for v2-readiness.
+
 ### 6.2 Repository discipline
 
 ALL repository read methods filter by `is_deleted == False` by default:

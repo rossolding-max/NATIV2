@@ -81,15 +81,18 @@ Before writing services:
 | Auth v2 | TBD; spec at `docs/auth_and_authorization.md` |
 | URL versioning | `/api/v1/...` |
 | Response envelope | Always `{data, meta, errors}` |
-| Pagination | Cursor-based |
+| Pagination | Offset-based v0.1; cursor-based v2 (see `docs/v2_deferred_requirements.md` V2-API-02) |
 | Long-running ops | 202 + task_id + polling |
-| Idempotency | `Idempotency-Key` header (Stripe pattern) |
-| Concurrency | Optimistic via `If-Match` ETag on versioned resources |
-| File uploads | Presigned PUT to S3/MinIO |
+| Idempotency | `Idempotency-Key` header required on POST creates + `:action` endpoints; optional on PATCH/DELETE (v2 = required everywhere — V2-API-03) |
+| Concurrency | Last-write-wins v0.1; optimistic via `If-Match` + ETag v2 (V2-API-01) |
+| File uploads | Multipart through FastAPI v0.1; presigned PUT to S3 v2 (V2-STORAGE-01) |
 | Money | Decimal everywhere |
 | Time | UTC + ISO 8601 + `DateTime(timezone=True)` |
 | Soft-delete | System-wide (`is_deleted` + `deleted_at` + `deleted_by_agent_id`) |
 | ID generation | Server-side; see `docs/id_conventions.md` for per-type formats |
+| Celery queues | 2 (`default` + `llm_heavy`) v0.1; 4 in v2 (V2-SCALE-01) |
+| Prep pack deliverables | Markdown only (briefing + agenda + speaker_notes) v0.1; rendered slides v2 (V2-PACK-01) |
+| Stub frontend | None v0.1; production frontend supersedes v2 (V2-FRONT-01) — API readiness via schemathesis contract tests |
 | Pre-commit | Aggressive (lint + format + typecheck + schema codegen drift + unit tests for changed files + trufflehog + JSON schema validation) |
 
 ---

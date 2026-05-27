@@ -28,9 +28,12 @@
 | Vector DB | **None in v0.1** (tag-filter memos only); pgvector deferred to v0.2 |
 | Errors / perf | **Sentry** (Python SDK) |
 | LLM observability | **Langfuse** (self-hosted in local v0.1; cloud later) |
-| Test | **pytest** + **pytest-asyncio** + **factory_boy** + **respx** (HTTP mocking) |
+| Test | **pytest** + **pytest-asyncio** + **factory_boy** + **respx** (HTTP mocking) + **schemathesis** (OpenAPI contract testing) |
 | Local infra | **Docker Compose** (FastAPI + Celery worker + Celery beat + Postgres + Redis + MinIO + Langfuse) |
 | Deployment | **Local hosted v0.1**; production hosting decision deferred to v2 |
+| API protocol — v0.1 | Offset pagination; multipart uploads through FastAPI; last-write-wins on writes; `Idempotency-Key` on POST creates + `:action` endpoints |
+| API protocol — v2 deferrals | Cursor pagination, presigned PUT, optimistic `If-Match` concurrency, SSE pack-progress streaming. See `docs/v2_deferred_requirements.md` § 2 |
+| Frontend smoke (v0.1) | None — production frontend deferred entirely. API readiness validated via OpenAPI contract tests (schemathesis property-based) |
 
 ## 2. System architecture (component diagram)
 
@@ -110,11 +113,11 @@
 
 | Pack | researcher | extractor | writer | renderer |
 |---|---|---|---|---|
-| **Prep (4.5)** | ✅ heavy (Exa brand research) | — | ✅ briefing + agenda + slides | ✅ |
-| **Proposal (4.6)** | medium | ✅ heavy (debrief from uploads) | ✅ slides + recommendation | ✅ |
+| **Prep (4.5)** | ✅ heavy (Exa brand research) | — | ✅ briefing + agenda + slide markdown | **deferred to v2** (V2-PACK-01) — v0.1 ships markdown only |
+| **Proposal (4.6)** | medium | ✅ heavy (debrief from uploads) | ✅ slides + recommendation | ✅ (first pack to engage renderer) |
 | **Contract (4.7)** | — | ✅ (brand legal uploads) | ✅ merge + clauses + narrative | ✅ |
 | **Invoice (4.8)** | — | — | ✅ light (line items only) | ✅ |
-| **Performance Report (4.9)** | ✅ (vs_industry benchmarks) | — | ✅ narrative (exec summary, learnings) | ✅ |
+| **Performance Report (4.9)** | ✅ (vs_talent_historical benchmarks; vs_industry deferred to V2-PACK-04) | — | ✅ narrative (exec summary, learnings) | ✅ |
 
 ## 4. LLM tier map
 
@@ -248,14 +251,14 @@ S3 paths stored as `s3://{bucket}/{key}` strings in Postgres; presigned URLs min
 
 ## 8. Job orchestration (Celery queue catalog)
 
-**Queues** (separate Celery workers per queue for resource isolation):
+**Queues** (v0.1 = 2 queues; v2 splits to 4 — see `docs/v2_deferred_requirements.md` V2-SCALE-01):
 
 | Queue | Worker type | Tasks |
 |---|---|---|
-| `default` | General-purpose | Pack generation kickoff; webhook handlers; CRUD-adjacent jobs |
+| `default` | General-purpose | Pack gen kickoff; webhook handlers; CRUD-adjacent jobs; vendor API polls (Meta / TikTok / Apollo / Exa); rendering (Playwright PDF; python-docx Word; Jinja2 HTML) |
 | `llm_heavy` | Long-running (timeout=30min) | Multi-pass LLM generation jobs (prep/proposal/contract/perf report packs) |
-| `vendor_apis` | Rate-limited | Meta Graph, TikTok Display, YouTube Insights polling; Apollo enrichment; Exa research |
-| `rendering` | CPU/IO mixed | Playwright PDF rendering; python-docx Word rendering; Jinja2 HTML rendering |
+
+Rate-limit enforcement happens at the vendor-wrapper layer (Redis-backed counters per vendor) regardless of which queue invokes them. v2 splits to `vendor_apis` + `rendering` as separate queues for throughput tuning; v0.1 throughput on a single agency is trivially served by one general queue.
 
 **Scheduled jobs (Celery Beat):**
 
