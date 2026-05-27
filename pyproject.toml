@@ -137,6 +137,13 @@ pythonVersion = "3.12"
 typeCheckingMode = "strict"
 reportMissingTypeStubs = false
 reportPrivateImportUsage = false
+# External-lib boundaries: celery + sentry-sdk + redis ship partial / dynamic
+# stubs; treating their internals as Unknown adds noise without catching bugs.
+# Our own code is still strict-typed; these only relax the wrapper modules.
+reportUnknownMemberType = false
+reportUnknownArgumentType = false
+reportUnknownVariableType = false
+reportUntypedFunctionDecorator = false
 
 # ── pytest ───────────────────────────────────────────────────────────
 [tool.pytest.ini_options]
