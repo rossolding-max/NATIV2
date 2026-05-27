@@ -463,7 +463,7 @@
         },
         "posting_schedule": {
           "type": "array",
-          "description": "When content is scheduled to / has gone live.",
+          "description": "When content is scheduled to / has gone live. The Phase 4.8 detection cron polls platform APIs (Meta Graph + TikTok Display in v0.1; YouTube/LinkedIn/X/podcast via Phyllo in v2) and surfaces candidate post matches to the agent for confirmation. `posted_detection` block captures the detection method + match signals + agent confirmation.",
           "items": {
             "type": "object",
             "required": ["deliverable_ref", "scheduled_for"],
@@ -471,8 +471,35 @@
             "properties": {
               "deliverable_ref": { "type": "string" },
               "scheduled_for": { "type": "string", "format": "date-time" },
-              "posted_at": { "type": "string", "format": "date-time", "description": "When it actually went live." },
-              "post_url": { "type": "string", "format": "uri" }
+              "posted_at": { "type": "string", "format": "date-time", "description": "When it actually went live. Populated on agent confirmation of detected post (or manual URL entry)." },
+              "post_url": { "type": "string", "format": "uri" },
+              "posted_detection": {
+                "type": "object",
+                "additionalProperties": false,
+                "description": "Provenance for how this post was matched to the expected deliverable. Surfaced to the agent in UI so the confirmation decision is informed.",
+                "properties": {
+                  "method": {
+                    "type": "string",
+                    "enum": ["meta_graph_auto", "tiktok_api_auto", "phyllo_auto", "agent_confirmed_suggestion", "manual_url_entry", "talent_self_reported"],
+                    "description": "meta_graph_auto/tiktok_api_auto: v0.1 direct API detection. phyllo_auto: v2 via Phyllo. agent_confirmed_suggestion: API suggested + agent confirmed. manual_url_entry: agent (or talent) entered URL directly (typical for platforms without v0.1 API coverage)."
+                  },
+                  "detected_at": { "type": "string", "format": "date-time", "description": "When the cron first surfaced the candidate." },
+                  "match_score": { "type": "integer", "minimum": 0, "maximum": 100, "description": "Confidence 0-100. ≥80 = strong auto-suggest; 50-79 = weak suggest with flag; <50 = log only." },
+                  "match_signals": {
+                    "type": "array",
+                    "items": { "type": "string", "enum": ["time_window", "brand_handle", "campaign_hashtag", "content_type"] },
+                    "description": "Which signals contributed to the match score. Helps agent + audit understand why this post was suggested."
+                  },
+                  "candidate_post_ids_considered": {
+                    "type": "array",
+                    "items": { "type": "string" },
+                    "description": "Other candidate post IDs the cron considered but didn't suggest. Captured for audit + debugging (why did we suggest this one vs that one?)."
+                  },
+                  "agent_confirmed_at": { "type": "string", "format": "date-time" },
+                  "agent_confirmed_by": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+                  "agent_rejection_note": { "type": "string", "description": "If agent rejected an auto-suggestion, why. Helps tune the matcher over time." }
+                }
+              }
             }
           }
         },
@@ -491,32 +518,44 @@
 
     "closeStage": {
       "type": "object",
-      "description": "Captured during CLOSE stage. Invoicing, payment, final report, archive trigger.",
+      "description": "Captured during CLOSE stage. Multi-invoice via Phase 4.8 invoice pack pipeline (`docs/invoice_workflow.md`). LLM auto-parses the contract pack's payment_terms into `invoice_schedule[]` on contract execution; agent confirms; each entry fires its own invoice_pack when its trigger_condition is met. All invoices must be paid before the deal auto-archives into Phase 1.5 brand_deals.",
       "additionalProperties": false,
       "properties": {
-        "invoice_id": {
-          "type": "string",
-          "description": "External invoice identifier — agency's invoicing system / Xero / QuickBooks / etc."
+        "invoice_schedule": {
+          "type": "array",
+          "description": "Structured payment schedule, LLM-parsed from the contract pack's `commercial_proposal.llm_proposed.payment_terms` free-text field on contract execution. One-time agent gate: agent confirms parsed schedule before any invoice fires. Locked thereafter (amendments use the contract amendment workflow). Each entry corresponds to one invoice_pack.",
+          "items": {
+            "type": "object",
+            "required": ["sequence", "trigger_condition", "amount_usd"],
+            "additionalProperties": false,
+            "properties": {
+              "sequence": { "type": "integer", "minimum": 1, "description": "Ordering. Used in invoice_pack_id format `inv_..._seq{N}_v{M}`." },
+              "percentage": { "type": "number", "minimum": 0, "maximum": 100, "description": "Share of total deal fee (e.g. 50 for 50%). LLM-parsed from payment_terms. May be null for fixed-amount schedules." },
+              "amount_usd": { "type": "number", "minimum": 0, "description": "Computed as deal.proposal.fee_usd × (percentage / 100). Captured here at confirmation time so subsequent fee changes don't retroactively rewrite the schedule." },
+              "trigger_condition": {
+                "type": "string",
+                "enum": ["contract_executed", "first_post_live", "all_deliverables_live", "specific_date", "manual"],
+                "description": "When this invoice fires. contract_executed = immediately on contract_executed_at. first_post_live = when first posting_schedule[].posted_at is set. all_deliverables_live = when all posting_schedule[] entries have posted_at. specific_date = on a calendar date. manual = agent fires explicitly."
+              },
+              "specific_date": { "type": "string", "format": "date", "description": "Required if trigger_condition = specific_date." },
+              "payment_terms_days": { "type": "integer", "minimum": 0, "description": "Days from sent_at to due_at. Per-entry override of agency_profile.invoice_template.default_payment_terms_days." },
+              "description": { "type": "string", "description": "LLM-extracted description (e.g. '50% upon contract execution'). Renders into the invoice line item or memo." },
+              "fired_at": { "type": "string", "format": "date-time", "description": "When the trigger_condition was detected as met. Triggers invoice_pack generation. Null until fired." },
+              "invoice_pack_id": { "type": "string", "pattern": "^inv_[a-z0-9_-]+_seq[0-9]+_v[0-9]+$", "description": "FK to the latest invoice_pack version generated for this schedule entry. Updates as new versions generate." },
+              "schedule_confirmed_at": { "type": "string", "format": "date-time", "description": "When agent confirmed the LLM-parsed schedule. Required before any entry can fire. Confirms the entire schedule at once (not per-entry)." },
+              "schedule_confirmed_by_agent_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" }
+            }
+          }
         },
-        "invoice_attachment_id": { "type": "string", "description": "FK to attachments[] for the invoice PDF." },
-        "invoice_provider": {
-          "type": "string",
-          "enum": ["manual", "stripe_invoices", "xero", "quickbooks", "wave", "other"],
-          "default": "manual",
-          "description": "v0.1: manual (PDF + dates). v2: API integration auto-populates these fields."
+        "invoice_pack_ids": {
+          "type": "array",
+          "description": "Flat FK list to ALL invoice pack versions across all schedule sequences. Append-only — v1 of seq=1, v1 of seq=2, v2 of seq=2 (revision), etc. Each schedule_entry.invoice_pack_id points to the latest version for that sequence; this list captures every version ever generated.",
+          "items": { "type": "string", "pattern": "^inv_[a-z0-9_-]+_seq[0-9]+_v[0-9]+$" }
         },
-        "invoice_amount_usd": { "type": "number", "minimum": 0 },
-        "invoice_currency": { "type": "string", "pattern": "^[A-Z]{3}$" },
-        "invoice_sent_at": { "type": "string", "format": "date-time" },
-        "payment_due_at": { "type": "string", "format": "date-time" },
-        "payment_received_at": {
+        "all_invoices_paid_at": {
           "type": "string",
           "format": "date-time",
-          "description": "When payment landed. Required before auto-archive can fire."
-        },
-        "payment_method": {
-          "type": "string",
-          "enum": ["bank_transfer", "wire", "ach", "stripe", "paypal", "check", "other"]
+          "description": "Computed: max of payment_received_at across all invoice_packs once every schedule entry has been fulfilled + paid. Required before auto-archive can fire."
         },
         "final_performance_report_attachment_id": {
           "type": "string",

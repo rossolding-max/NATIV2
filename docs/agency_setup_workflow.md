@@ -24,7 +24,7 @@ The agency setup is fundamentally different from talent onboarding:
 
 Doing this as Phase 0 rather than embedding it in talent onboarding means: (a) the first talent doesn't wait 2-4 weeks for warmup before any outreach can go out; (b) the DNS records are the agency's concern, not each talent's.
 
-## The 8-step setup
+## The 9-step setup
 
 ### Step 1 — Agency identity
 Collect:
@@ -98,6 +98,23 @@ To unsubscribe: {unsubscribe_link}
 - `{agent_name}` — identifies the human sender
 
 The orchestrator validates these tokens are present when the user saves.
+
+### Step 5.5 — Invoice template
+Captures the agency-wide invoice template used by the Phase 4.8 invoice pack generator (`docs/invoice_workflow.md`). Stored under `agency_profile.invoice_template`. Single template for all talent + deals — talent-specific billing entity comes from `talent.billing_entity` at generation; brand entity from `contract_pack.context_snapshot.brand_legal_entity_at_gen`.
+
+**Captured:**
+- `markdown_source` — invoice body template with `{{merge_field}}` placeholders. Optional `{{narrative_line_items}}` enables LLM-drafted per-line-item descriptions. Default starter template provided that agencies can edit.
+- `invoice_number_prefix` (default `INV-`) + `invoice_number_format` (default `INV-{YYYY}-{seq:04d}` → `INV-2026-0042`)
+- `invoice_number_sequence` — auto-incrementing per-agency counter (initialised to 1 unless agency is importing from a prior system, in which case set to current sequence to maintain continuity)
+- `default_payment_terms_days` (default 30 — i.e. NET-30) + `due_date_calculation` (calendar_days or business_days)
+- `tax_handling` enum (`none` / `vat_inclusive` / `vat_added` / `sales_tax`) + `default_tax_rate` decimal + `tax_label`
+- `payment_instructions_markdown` — bank details / IBAN / SWIFT / Stripe link / PayPal address. Free-text supporting merge fields (e.g. `{{invoice_number}}` as bank reference)
+- `invoice_footer` — late-payment legal text (optional)
+- `template_version` + `template_updated_at` — bumped on any change; captured in `invoice_pack.context_snapshot.agency_invoice_template_version` for traceability
+
+**Why capture here, not later:** invoices are highly deterministic — most of the template variation is at agency level (numbering scheme, tax treatment, payment instructions). Capturing once at agency setup avoids per-talent or per-deal re-config. Talent-specific fields (billing entity legal name) auto-pull from existing `talent.billing_entity` data.
+
+**v0.1 minimum:** payment_instructions_markdown + invoice_number_prefix + default_payment_terms_days. Everything else has sensible defaults.
 
 ### Step 6 — Mailbox warmup (background, 2-4 weeks)
 Smartlead's peer-to-peer warmup network starts gradually building sender reputation:

@@ -48,6 +48,39 @@
 **v0.1 placeholder:** schema field `context_artefact.parser: "external_transcript_link"` + `external_url` exist and accept manual URL paste; the LLM is informed of the link but cannot read it.
 **Env vars when wired:** `OTTER_API_KEY` / `FIREFLIES_API_KEY` / `GRAIN_API_KEY` / `ZOOM_CLIENT_ID` (whichever is chosen).
 
+### Phase 4.8 invoice — platform APIs for deliverable detection (v0.1)
+**Role:** Phase 4.8 (`docs/invoice_workflow.md`) detects when contracted deliverables go live by polling the talent's connected platform accounts. Detection scores candidate posts against `posting_schedule[]` entries and surfaces matches to the agent for confirmation. v0.1 covers Instagram + TikTok via direct platform APIs. Other platforms (YouTube, LinkedIn, X, podcast, Substack) deferred to v2 via Phyllo (see below).
+**APIs (v0.1):**
+- **Meta Graph API** (Instagram Business accounts only): `GET /{ig-user-id}/media` for Reels + Feed Posts + Carousels; `GET /{ig-user-id}/stories` for Stories. Requires `instagram_basic` + `instagram_manage_insights` scopes. Webhooks supported (v2 migration target).
+- **TikTok Display API**: `GET /v2/video/list/`. Requires `video.list` scope. Rate limit 100 calls/day per user (tight — guides cron cadence).
+**Why direct (not Phyllo) in v0.1:** narrower platform surface in v0.1 (IG + TikTok cover most influencer partnerships); avoids per-creator monthly Phyllo cost; full control over rate-limit handling and matching logic. Tradeoff = ongoing maintenance of two API integrations.
+**Polling cadence:** 15 min for IG Stories (24h ephemeral); 1 hour for everything else. Cron only polls deals in DELIVERY substages with unmatched `posting_schedule[]` entries.
+**oAuth token storage:** per-talent tokens captured during Phase 1 onboarding platform connection step. Refresh handled by the orchestrator's auth layer.
+**Env vars:** `META_APP_ID`, `META_APP_SECRET`, `TIKTOK_CLIENT_KEY`, `TIKTOK_CLIENT_SECRET`.
+
+### Phase 4.8 invoice — Phyllo unified API for other platforms (deferred — v2)
+**Role:** v2 expands deliverable detection coverage to YouTube, LinkedIn, X, podcast, Substack via a single unified API. v0.1 = manual URL entry for these platforms (agent enters post URL after talent posts).
+**Why Phyllo for v2:** maintaining 5+ additional direct API integrations (YouTube Data API + LinkedIn Marketing API + X API v2 + RSS parsers + Substack RSS) is engineering-heavy. Phyllo provides one auth flow, one API contract, handles platform breakage, supports webhooks for real-time detection.
+**Phyllo evaluation notes:** per-creator monthly pricing (~$50-200/creator/mo depending on tier). Economics work if creator roster is small-medium; at scale, direct APIs may win. Re-evaluate at v2 build time.
+**Alternative considered:** Modash (similar coverage; more analytics-focused). To re-evaluate at v2 build time.
+**v0.1 placeholder:** schema field `posted_detection.method = "phyllo_auto"` exists; `talent.platforms[]` already captures handles for these platforms (for display + manual URL validation).
+**Env var when wired:** `PHYLLO_API_KEY`.
+
+### Phase 4.8 invoice — markdown → PDF rendering (v0.1 in-process)
+**Role:** Phase 4.8 renders invoice composed markdown to PDF for agent send. Same renderer stack as contract pack: Puppeteer (headless Chromium) for v0.1 default; pandoc as alternate.
+**Why no Word artefact:** invoices are PDF-only by convention. Agent edits happen pre-send via the orchestrator UI (which re-renders the PDF on each edit); no need for an editable Word intermediate.
+**Env vars:** none.
+
+### Phase 4.8 invoice — payment + accounting integrations (deferred — v2)
+**Role:** v0.1 = manual payment tracking (agent sets `payment_received_at` + `payment_method` when funds confirmed; daily overdue cron notifies agent for follow-up). v2 = webhook-driven auto-population from accounting integrations.
+**v2 vendor options:**
+- **Stripe Invoices** — auto-send invoice via Stripe; `invoice.paid` webhook auto-populates `payment_received_at` + `payment_amount_received_usd` + `payment_reference`. Also enables `viewed_by_brand` state via `invoice.viewed` webhook.
+- **Xero** — UK/global accounting integration; sync invoice + payment status both directions.
+- **QuickBooks** — US accounting integration; same pattern.
+- **Wave** — free tier for small agencies.
+**Schema already shaped:** `invoice_pack.payment_state` has `external_invoice_id` + `payment_reference` + `agent_review.send_method` enum supporting `stripe_invoice_send` / `xero_send` / `quickbooks_send`. Webhook handlers populate on payment events.
+**Env vars when wired:** `STRIPE_API_KEY` / `XERO_CLIENT_ID` / `QUICKBOOKS_CLIENT_ID` (already noted in Phase 4 vendor integrations row).
+
 ### Phase 4.7 contract pack — markdown → Word + PDF rendering (v0.1 in-process)
 **Role:** Phase 4.7 (`docs/contract_pack_workflow.md`) generates contract drafts from talent-per markdown templates. Renders `composed_markdown` to three artefacts:
 - `contract.md` — markdown source-of-truth (built-in writer)
@@ -215,6 +248,8 @@ This is what the orchestrator will need configured by v0.1:
 | `APOLLO_API_KEY` | Apollo contact discovery (Phase 3a v0.1) | **Yes** (when Phase 3a enrichment runs) |
 | `LINKEDIN_API_KEY` | LinkedIn enrichment + search (Phase 3a v0.1; specific API tier per user-provided access) | **Yes** (when Phase 3a enrichment runs) |
 | `SMARTLEAD_API_KEY` | Smartlead outreach send + sequence backend (Phase 3b v0.1) | **Yes** (when Phase 3b outreach runs) |
+| `META_APP_ID` + `META_APP_SECRET` | Meta Graph API for Phase 4.8 IG deliverable detection (oAuth flow; per-talent tokens stored in talent profile) | **Yes** (when Phase 4.8 detection runs for IG talent) |
+| `TIKTOK_CLIENT_KEY` + `TIKTOK_CLIENT_SECRET` | TikTok Display API for Phase 4.8 TikTok deliverable detection (oAuth flow) | **Yes** (when Phase 4.8 detection runs for TikTok talent) |
 | `SCRAPECREATORS_API_KEY` | TikTok/IG/Threads/Pinterest in `last30days` (Search 16) | No (deferred) |
 | `OPENROUTER_API_KEY` | Perplexity Sonar fallback in `last30days` | No (deferred) |
 | `OWLER_API_KEY` | Owler competitor maintenance | No (deferred) |
@@ -226,6 +261,7 @@ This is what the orchestrator will need configured by v0.1:
 | `DOCUSIGN_API_KEY` | Contract e-sign (Phase 4 v2) | No (v2) |
 | `STRIPE_API_KEY` | Invoicing + payment confirmation (Phase 4 v2) | No (v2) |
 | `XERO_CLIENT_ID` | Accounting integration (Phase 4 v2) | No (v2) |
+| `PHYLLO_API_KEY` | Phyllo unified creator API for Phase 4.8 expansion to YouTube/LinkedIn/X/podcast/Substack detection | No (v2) |
 
 This inventory is the source of truth — when adding a new vendor, append to this table.
 

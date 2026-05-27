@@ -1,0 +1,309 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://nativ2/schemas/invoice_pack.schema.json",
+  "title": "Invoice Pack",
+  "description": "Phase 4.8 — a versioned invoice generated from the deal's contract-derived invoice schedule + agency invoice template. Lighter weight than contract pack (most fields deterministic; 0-1 LLM passes). Multiple invoice packs per deal supported via `deal.close.invoice_schedule[]` (e.g. 50/50 NET-30 produces 2 invoice packs). Each pack fires when its `trigger_condition` is met (contract_executed / all_deliverables_live / first_post_live / specific_date / manual). Agent reviews rendered PDF before sending. Sending is the approval — no separate gate (lighter than contract's legal review). Payment tracked manually in v0.1; v2 webhooks from Stripe/Xero/QuickBooks auto-populate. Stored at `data/deals/{deal_id}/invoice_packs/v{N}.json` (gitignored). See `docs/invoice_workflow.md`.",
+  "type": "object",
+  "required": ["invoice_pack_id", "deal_id", "schedule_sequence", "version", "is_latest", "generation", "context_snapshot", "merge_field_values", "line_items", "amounts", "agent_review", "payment_state", "created_at"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+
+    "invoice_pack_id": {
+      "type": "string",
+      "pattern": "^inv_[a-z0-9_-]+_seq[0-9]+_v[0-9]+$",
+      "description": "Globally unique. Format: `inv_{deal_id_short}_seq{N}_v{M}` where N is the schedule_sequence (which entry in invoice_schedule this fulfils) and M is the version (revisions to this specific invoice). Example: `inv_2026_q2_alo-yoga_jane-doe_seq2_v1` = second scheduled invoice for the deal, first version."
+    },
+    "deal_id": {
+      "type": "string",
+      "pattern": "^deal_pipeline_[a-z0-9_-]+$"
+    },
+    "schedule_sequence": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Which entry in `deal.close.invoice_schedule[]` this invoice fulfils. For a single-invoice deal this is always 1. For 50/50 split it's 1 (upfront) or 2 (completion)."
+    },
+    "version": { "type": "integer", "minimum": 1 },
+    "parent_version": { "type": "integer", "minimum": 1 },
+    "is_latest": {
+      "type": "boolean",
+      "description": "Exactly one is_latest=true per (deal_id, schedule_sequence). When a v2 of invoice seq=2 is generated, v1 of seq=2 flips to false but v1 of seq=1 is untouched."
+    },
+
+    "generation": {
+      "type": "object",
+      "required": ["trigger", "generated_at"],
+      "additionalProperties": false,
+      "properties": {
+        "trigger": {
+          "type": "string",
+          "enum": ["schedule_trigger_fired", "agent_initiated", "agent_regenerate", "brand_revision_request", "amendment_invoice"],
+          "description": "schedule_trigger_fired: cron detected the schedule entry's trigger_condition met (e.g. all_deliverables_live). agent_initiated: agent manually fired (e.g. for `manual` trigger entries). agent_regenerate: NL feedback regen of this invoice. brand_revision_request: brand asked for a change (line item description, tax adjustment) → new version. amendment_invoice: post-execution amendment created a new invoice via the contract amendment_log flow."
+        },
+        "trigger_condition_fired": {
+          "type": "string",
+          "enum": ["contract_executed", "first_post_live", "all_deliverables_live", "specific_date", "manual"],
+          "description": "Which condition from the invoice_schedule entry actually fired. Captured for audit."
+        },
+        "fired_at": { "type": "string", "format": "date-time", "description": "When the trigger condition was met (vs `generated_at` which is when generation completed)." },
+        "regeneration_feedback": { "type": "string", "description": "NL feedback for regenerate triggers." },
+        "generated_at": { "type": "string", "format": "date-time" },
+        "generated_by_agent_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]*$",
+          "description": "Agent who triggered. Null/absent for cron-triggered (schedule_trigger_fired) generations."
+        },
+        "llm_model": { "type": "string", "description": "Only present if any LLM passes ran (e.g. narrative line item drafting). Many invoices generate with 0 LLM passes." },
+        "llm_passes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["pass_name", "input_tokens", "output_tokens"],
+            "additionalProperties": false,
+            "properties": {
+              "pass_name": { "type": "string", "enum": ["line_item_narrative", "compose_refinement", "section_regen"] },
+              "model": { "type": "string" },
+              "input_tokens": { "type": "integer", "minimum": 0 },
+              "output_tokens": { "type": "integer", "minimum": 0 },
+              "cached_tokens": { "type": "integer", "minimum": 0 },
+              "cost_usd": { "type": "number", "minimum": 0 },
+              "duration_ms": { "type": "integer", "minimum": 0 }
+            }
+          }
+        }
+      }
+    },
+
+    "context_snapshot": {
+      "type": "object",
+      "required": ["captured_at"],
+      "additionalProperties": false,
+      "properties": {
+        "captured_at": { "type": "string", "format": "date-time" },
+        "contract_pack_id_at_gen": {
+          "type": "string",
+          "pattern": "^cp_[a-z0-9_-]+_v[0-9]+$",
+          "description": "Which executed contract pack version this invoice was generated against. Anchors line-item descriptions + amounts to the contract that authorised them."
+        },
+        "talent_billing_entity_snapshot": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Frozen copy of `talent.billing_entity` at generation time. Talent legal-name changes after invoice generation don't retroactively rewrite issued invoices."
+        },
+        "brand_legal_entity_snapshot": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Frozen copy of `contract_pack.context_snapshot.brand_legal_entity_at_gen`. Same anchoring rationale."
+        },
+        "agency_invoice_template_version": {
+          "type": "string",
+          "description": "Value of `agency_profile.invoice_template.template_version` at generation. Template changes don't retroactively rewrite issued invoices."
+        },
+        "invoice_schedule_entry_snapshot": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Frozen copy of the `deal.close.invoice_schedule[sequence]` entry being fulfilled."
+        },
+        "matched_posts": {
+          "type": "array",
+          "description": "If trigger_condition involved post detection (first_post_live / all_deliverables_live), captures the matched posts. Each entry references the posting_schedule[] entry that triggered.",
+          "items": {
+            "type": "object",
+            "required": ["deliverable_ref", "post_url", "posted_at"],
+            "additionalProperties": false,
+            "properties": {
+              "deliverable_ref": { "type": "string" },
+              "post_url": { "type": "string", "format": "uri" },
+              "posted_at": { "type": "string", "format": "date-time" },
+              "detection_method": { "type": "string", "enum": ["meta_graph_auto", "tiktok_api_auto", "agent_confirmed_suggestion", "manual_url_entry"] }
+            }
+          }
+        }
+      }
+    },
+
+    "merge_field_values": {
+      "type": "array",
+      "description": "Same shape as contract_pack.merge_field_values[]. Each value tagged with field, value, source, confidence. Invoice merge fields are highly deterministic (legal names, amounts, dates pulled from contract + talent + agency) — `low`/`missing` confidence on critical fields surfaces before send.",
+      "items": {
+        "type": "object",
+        "required": ["field", "source"],
+        "additionalProperties": false,
+        "properties": {
+          "field": { "type": "string" },
+          "value": {},
+          "source": {
+            "type": "string",
+            "enum": ["talent_billing_entity", "agency_profile", "agency_invoice_template", "deal_proposal", "contract_pack", "schedule_entry", "computed", "agent_input", "default"]
+          },
+          "source_path": { "type": "string" },
+          "confidence": { "type": "string", "enum": ["high", "medium", "low", "missing"] },
+          "needs_review": { "type": "boolean", "default": false },
+          "agent_overridden": { "type": "boolean", "default": false },
+          "agent_override_note": { "type": "string" }
+        }
+      }
+    },
+
+    "line_items": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Line items composing the invoice. Auto-generated from the schedule entry's percentage applied to deal.proposal.fee_usd, broken down per deliverable. LLM optionally drafts the `description` text if the agency template uses `{{narrative_line_items}}` placeholder.",
+      "items": {
+        "type": "object",
+        "required": ["description", "quantity", "unit_price_usd", "amount_usd"],
+        "additionalProperties": false,
+        "properties": {
+          "deliverable_ref": { "type": "string", "description": "Reference to `deal.proposal.deliverables[].` entry this line item represents. Null for non-deliverable line items (e.g. expense reimbursement)." },
+          "description": { "type": "string", "description": "Human-readable line item. LLM-drafted or template-default." },
+          "quantity": { "type": "integer", "minimum": 1 },
+          "unit_price_usd": { "type": "number", "minimum": 0 },
+          "amount_usd": { "type": "number", "minimum": 0, "description": "quantity × unit_price_usd. Computed; redundant for clarity in rendered output." },
+          "narrative_drafted_by_llm": { "type": "boolean", "default": false, "description": "True if description was LLM-generated. False if template-default or agent-edited." }
+        }
+      }
+    },
+
+    "amounts": {
+      "type": "object",
+      "required": ["subtotal_usd", "total_usd", "currency"],
+      "additionalProperties": false,
+      "description": "Computed totals. subtotal_usd = sum of line_items[].amount_usd. tax handling per agency_profile.invoice_template.tax_handling.",
+      "properties": {
+        "subtotal_usd": { "type": "number", "minimum": 0 },
+        "tax_rate": { "type": "number", "minimum": 0, "maximum": 1, "description": "Decimal (0.20 = 20%). From agency_profile.invoice_template.default_tax_rate or per-deal override." },
+        "tax_amount_usd": { "type": "number", "minimum": 0 },
+        "tax_label": { "type": "string", "description": "What this tax is called on the rendered invoice (e.g. 'VAT', 'Sales Tax', 'GST')." },
+        "total_usd": { "type": "number", "minimum": 0 },
+        "currency": { "type": "string", "pattern": "^[A-Z]{3}$", "default": "USD" },
+        "fx_rate_to_usd": { "type": "number", "minimum": 0, "description": "If the deal's contract specifies a non-USD currency, this captures the FX rate used at generation. Both the original currency amount and the USD-normalised amount may be rendered." }
+      }
+    },
+
+    "composed_markdown": {
+      "type": "string",
+      "description": "Final composed invoice markdown — agency template with merge fields substituted, line_items table inserted, amounts table inserted, payment instructions appended. Source-of-truth for the PDF render."
+    },
+
+    "agent_review": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Soft gate. Agent reviews rendered PDF + can edit any merge field / line item / template content. Edits regenerate the PDF. Clicking 'Send' sets sent_at — sending IS the approval (no separate 'approve' event like contracts). All fields optional — absence of `sent_at` means the invoice is still in draft.",
+      "properties": {
+        "viewed_at": { "type": "string", "format": "date-time", "description": "When agent first opened the rendered PDF." },
+        "sent_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When agent clicked Send. ABSENT = invoice is in draft state. Setting this transitions payment_state.status from `draft` to `sent`."
+        },
+        "sent_by_agent_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+        "send_method": {
+          "type": "string",
+          "enum": ["manual_email", "stripe_invoice_send", "xero_send", "quickbooks_send", "other"],
+          "default": "manual_email",
+          "description": "v0.1: always manual_email (agent emails the PDF). v2: API-driven send via Stripe Invoices / Xero / QuickBooks auto-populates this + the external invoice_id."
+        },
+        "sent_to_email": { "type": "string", "format": "email", "description": "Recipient on the brand side. Captured for audit + reminder follow-up." }
+      }
+    },
+
+    "export_artifacts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["type", "status"],
+        "additionalProperties": false,
+        "properties": {
+          "type": { "type": "string", "enum": ["invoice_md", "invoice_pdf"], "description": "v0.1: markdown source + PDF only. No Word — invoices are typically PDF-only artefacts." },
+          "status": { "type": "string", "enum": ["rendered", "pending", "failed"] },
+          "path": { "type": "string" },
+          "size_bytes": { "type": "integer", "minimum": 0 },
+          "rendered_at": { "type": "string", "format": "date-time" },
+          "rendered_by": { "type": "string", "enum": ["markdown_writer", "puppeteer_pdf", "pandoc"] },
+          "error": { "type": "string" }
+        }
+      }
+    },
+
+    "payment_state": {
+      "type": "object",
+      "required": ["status"],
+      "additionalProperties": false,
+      "description": "Payment lifecycle for this specific invoice. Multiple invoice packs per deal each track independently. The deal's auto-archive trigger requires ALL invoices to have status=paid.",
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": ["draft", "sent", "viewed_by_brand", "paid", "overdue", "disputed", "void"],
+          "description": "draft: agent hasn't sent yet. sent: agent_review.sent_at set, awaiting payment. viewed_by_brand: v2 only (Stripe/etc. webhook for invoice viewed). paid: payment_received_at set. overdue: due_at < now and not paid. disputed: brand has formally disputed (agent sets manually). void: invoice cancelled."
+        },
+        "due_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Payment due. Computed as sent_at + agency_profile.invoice_template.default_payment_terms_days (or schedule_entry.payment_terms_days override). Used by overdue cron."
+        },
+        "payment_received_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "v0.1: agent sets manually when funds confirmed. v2: webhook from Stripe/Xero/QuickBooks auto-populates."
+        },
+        "payment_method": { "type": "string", "enum": ["bank_transfer", "wire", "ach", "stripe", "paypal", "wise", "check", "other"] },
+        "payment_amount_received_usd": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Actual amount received (may differ from amounts.total_usd due to FX or partial payment). If partial, status stays `sent` with a reconciliation_note explaining."
+        },
+        "payment_reference": {
+          "type": "string",
+          "description": "Bank transaction reference / Stripe charge ID / wire reference. For reconciliation."
+        },
+        "external_invoice_id": {
+          "type": "string",
+          "description": "v2: Stripe invoice id / Xero invoice id / etc. when sent via external provider."
+        },
+        "reconciliation_note": { "type": "string", "description": "Free-text for partial payment / fx adjustment / written-off remainder explanations." }
+      }
+    },
+
+    "payment_reminder_log": {
+      "type": "array",
+      "description": "Audit trail of overdue follow-ups. Daily overdue cron appends `agent_notification` entries; agent appends `agent_email_sent` / `phone_followup` / `escalation` entries when they act.",
+      "items": {
+        "type": "object",
+        "required": ["at", "type"],
+        "additionalProperties": false,
+        "properties": {
+          "at": { "type": "string", "format": "date-time" },
+          "type": { "type": "string", "enum": ["agent_notification", "agent_email_sent", "phone_followup", "escalation", "brand_response_received"] },
+          "days_overdue": { "type": "integer", "minimum": 0 },
+          "note": { "type": "string" },
+          "by_agent_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" }
+        }
+      }
+    },
+
+    "agent_edits": {
+      "type": "array",
+      "description": "Direct edits to invoice fields. Edits before send don't increment version (draft mutability). Edits after send create a new version (sent invoices are immutable — must void + re-issue).",
+      "items": {
+        "type": "object",
+        "required": ["edit_id", "edited_at", "edit_type", "target"],
+        "additionalProperties": false,
+        "properties": {
+          "edit_id": { "type": "string", "pattern": "^edit_[a-z0-9]+$" },
+          "edited_at": { "type": "string", "format": "date-time" },
+          "edited_by_agent_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+          "edit_type": {
+            "type": "string",
+            "enum": ["merge_field_override", "line_item_edit", "amounts_override", "composed_markdown_edit", "payment_state_update", "payment_reminder_added"]
+          },
+          "target": { "type": "string" },
+          "before_excerpt": { "type": "string" },
+          "after_excerpt": { "type": "string" }
+        }
+      }
+    },
+
+    "created_at": { "type": "string", "format": "date-time" },
+    "updated_at": { "type": "string", "format": "date-time" }
+  }
+}

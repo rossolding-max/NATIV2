@@ -18,6 +18,7 @@ Build an AI-powered assistant that helps an influencer (or a roster of influence
 | 4.5 | **Discovery Call Prep** | v0.1 spec + schema shipped | Auto-drafts agenda + briefing notes + slide deck (live + leave-behind variants + speaker notes) when a LEAD-stage deal hits `initial_call_scheduled`. 3-pass Claude Sonnet pipeline + Exa external research. Pre-generation guidance + natural-language feedback loop creates versioned regenerations. Slide skill (provided separately) handles HTML/PDF/PPT export with direct user editing + NL feedback per slide. Agency branding from Phase 0. |
 | 4.6 | **Proposal Pack** | v0.1 spec + schema shipped | Agent-initiated commercial proposal builder for PROPOSAL substage. Forks discovery deck content + adds proposal-specific sections (executive summary, objectives recap, deliverables, fee, usage rights, exclusivity, timeline, exclusions). 5-stage pipeline: context augmentation (upload briefs/notes/transcripts → parse + summarise) → hybrid discovery debrief extraction → commercial gate (LLM proposes, agent must confirm before render) → 3-pass Sonnet slide generation → render. Bidirectional link to `deal.proposal.negotiation_log[]` for brand pushback handling. v0.1 file parsing: pypdf + python-docx. v2 adds external transcript-link references (Otter / Fireflies / Grain). |
 | 4.7 | **Contract Pack** | v0.1 spec + schema shipped | Agent-initiated contract draft builder for CONTRACT substage. 7-stage pipeline: context augmentation (upload brand legal info, brand-requested clauses, prior contracts) → merge field extraction (talent legal entity from `billing_entity`, commercials from `deal.proposal.*`) → conditional clause evaluation (LLM decides include/exclude per `{{#if}}` block: GDPR, exclusivity, IP, paid social) → narrative drafting (LLM fills `{{narrative_*}}` placeholders) → compose → HARD LEGAL REVIEW GATE → render (markdown source-of-truth + Word .docx + PDF). Per-talent template (captured in Phase 1 onboarding Step 7.5) with markdown + merge fields + conditional sections + narrative placeholders. Brand-redline-response regen type. v0.1 e-sign = manual; v2 = DocuSign / PandaDoc / HelloSign. |
+| 4.8 | **Invoice Pipeline** | v0.1 spec + schema shipped | Three-layer system. (1) Detection: cron polls Meta Graph + TikTok Display APIs (v0.1; v2 = Phyllo for YouTube/LinkedIn/X/podcast/Substack) every 15min-1hr, scores candidate posts against `posting_schedule[]` via time/handle/hashtag/format signals, surfaces matches to agent for confirmation. (2) Generation: LLM auto-parses contract's `payment_terms` into `invoice_schedule[]` (one-time agent gate); each schedule entry fires its own invoice_pack at its trigger_condition (contract_executed / first_post_live / all_deliverables_live / specific_date / manual); deterministic merge field extraction + optional LLM narrative line items + compose + render PDF. Agent reviews + sends (soft gate; sending IS the approval). (3) Tracking: per-invoice payment_state with status enum (draft/sent/viewed/paid/overdue/disputed/void); daily overdue cron with reminder log; v0.1 manual `payment_received_at`; v2 Stripe/Xero/QuickBooks webhook auto-populates. Multi-invoice from v0.1. Agency-wide template captured in Phase 0 Step 5.5. All invoices paid + final KPIs + final report → auto-archive to Phase 1.5. |
 
 ## End-to-end data flow
 
@@ -26,7 +27,8 @@ Build an AI-powered assistant that helps an influencer (or a roster of influence
 │ Phase 0  AGENCY SETUP (one-time, prerequisite to Phase 1)          │
 │   docs/agency_setup_workflow.md                                    │
 │   schemas/agency_profile.schema.json                               │
-│     8-step setup: agency identity → visual branding → primary    │
+│     9-step setup: agency identity → visual branding → primary    │
+│     agent → DNS → mailbox → signature → invoice template →        │
 │     agent → DNS records →                                          │
 │     sending mailbox provisioning → signature template → 2-4 week  │
 │     warmup → validation                                            │
@@ -195,6 +197,39 @@ Build an AI-powered assistant that helps an influencer (or a roster of influence
 │   schemas/contract_pack.schema.json        │   │
 │   output: data/deals/{deal_id}/            │   │
 │     contract_packs/v{N}.json (gitignored)  │   │
+└──────────┬─────────────────────────────────┘   │
+           │ contract_executed → schedule parse  │
+           │ all_deliverables_live → invoice     │
+           ▼                                     │
+┌────────────────────────────────────────────┐   │
+│ Phase 4.8  INVOICE PIPELINE                │   │
+│   docs/invoice_workflow.md                 │   │
+│     Layer 1 — DETECTION                    │   │
+│       Cron polls Meta Graph (IG) + TikTok  │   │
+│       Display APIs every 15min-1hr; scores │   │
+│       candidates vs posting_schedule[];    │   │
+│       agent confirms each match.           │   │
+│       v2: Phyllo for YouTube/LinkedIn/X/   │   │
+│       podcast/Substack.                    │   │
+│     Layer 2 — GENERATION                   │   │
+│       LLM parses contract.payment_terms →  │   │
+│       invoice_schedule[] (1-time gate).    │   │
+│       Each entry fires invoice_pack at     │   │
+│       trigger_condition (contract_executed │   │
+│       / all_deliverables_live / etc.).     │   │
+│       Deterministic merge + optional LLM   │   │
+│       narrative line items + PDF render.   │   │
+│       Agent reviews + sends (soft gate).   │   │
+│     Layer 3 — TRACKING                     │   │
+│       Per-invoice payment_state. Daily     │   │
+│       overdue cron. v0.1 manual; v2 Stripe │   │
+│       /Xero/QuickBooks webhook.            │   │
+│     All paid + final KPIs + final report   │   │
+│     → auto-archive to Phase 1.5.           │   │
+│   schemas/invoice_pack.schema.json         │   │
+│   output: data/deals/{deal_id}/            │   │
+│     invoice_packs/seq{N}_v{M}.json         │   │
+│     (gitignored)                           │   │
 └────────────────────────────────────────────┘   │
                                                  ▼
                                   ┌─────────────────────────┐
@@ -243,6 +278,7 @@ The fields below were not in the original request but were added because later p
 - `schemas/discovery_prep_pack.schema.json` — JSON Schema for Phase 4.5 discovery-call prep packs. Versioned (v1, v2, v3…) bundles of briefing notes (multi-section markdown, agent-only, includes commercial range), agenda (sections + durations + talking points), and slides[] (structured JSON: live_body + leave_behind_extension + speaker_notes + sources per slide). Generation block captures pre-generation guidance + regeneration feedback + LLM provenance (model + token usage + cached tokens + cost). Context snapshot freezes upstream data including Exa external research (queries + summaries + URLs). agent_edits[] audit log for direct edits. export_artifacts[] tracks rendered HTML/PDF/PPT files. Validates files under `data/deals/{deal_id}/prep_packs/` (gitignored).
 - `schemas/proposal_pack.schema.json` — JSON Schema for Phase 4.6 proposal packs. Versioned commercial proposals with five layered sections: (1) generation provenance (5 trigger types including `negotiation_response` with bidirectional log ref); (2) context snapshot (forked_from_prep_pack_id + discovery_debrief_snapshot + optional Exa research refresh); (3) context_artefacts[] (uploaded files with parser metadata, parsed text, LLM summary, extracted signals, relevance tags, exclude toggle); (4) commercial_proposal (LLM-proposed deliverables/fee/usage_rights/exclusivity/timeline/exclusions/payment_terms with rationale per field, plus the gate: confirmed_at + confirmed_by_agent_id + confirmed_overrides[]); (5) slides[] (16-value type enum including forked types from discovery + proposal-specific: executive_summary, objectives_recap, recommendation, deliverables, timeline, investment, usage_rights, exclusivity, exclusions, agency_process, next_steps_proposal; live_body adds `table` for deliverables/timeline/investment). export_artifacts[].status enum includes `blocked_by_commercial_gate`. agent_edits[] includes `commercial_override` and `context_artefact_*` types. Validates files under `data/deals/{deal_id}/proposal_packs/` (gitignored).
 - `schemas/contract_pack.schema.json` — JSON Schema for Phase 4.7 contract packs. Versioned contract drafts with eight layered sections: (1) generation provenance (6 trigger types including `brand_redline_response` and `amendment_request`); (2) context snapshot (template_version_used + proposal_pack_id_at_gen + talent_billing_entity_snapshot + brand_legal_entity_at_gen with signatory info); (3) context_artefacts[] with contract-specific types (brand_legal_info / brand_requested_clauses / prior_contract / brand_redline / talent_redline); (4) merge_field_values[] (each with confidence enum high/medium/low/missing + source enum + needs_review flag); (5) conditional_clause_decisions[] (each with decided_by + applicability_rationale + agent_overridden); (6) narrative_sections[] (LLM-drafted with sources[] + word_count); (7) composed_markdown (canonical contract source-of-truth); (8) legal_review (the gate — required flag, reviewer_id, blocking_issues[] auto-populated, approved_at + approved_by_agent_id, previous_approvals[] audit of edit-reset-reapprove cycles). export_artifacts[].status enum includes `blocked_by_legal_gate`. agent_edits[] includes 7 edit types and the `trivial_edit_override` flag for typos. Validates files under `data/deals/{deal_id}/contract_packs/` (gitignored).
+- `schemas/invoice_pack.schema.json` — JSON Schema for Phase 4.8 invoice packs. Versioned per-schedule-sequence invoices (`inv_..._seq{N}_v{M}` IDs). Eight sections: (1) generation provenance (5 trigger types: schedule_trigger_fired / agent_initiated / agent_regenerate / brand_revision_request / amendment_invoice; captures which trigger_condition fired); (2) context snapshot (contract_pack_id_at_gen + talent_billing_entity_snapshot + brand_legal_entity_snapshot + invoice_schedule_entry_snapshot + matched_posts[] with detection methods); (3) merge_field_values[] (same shape as contract_pack with invoice-specific source enum); (4) line_items[] (deliverable_ref + description + quantity + unit_price + amount + narrative_drafted_by_llm flag); (5) amounts (subtotal + tax_rate + tax_amount + tax_label + total + currency + fx_rate_to_usd); (6) composed_markdown (canonical invoice source-of-truth); (7) agent_review (soft gate — viewed_at + sent_at + send_method enum supporting v2 stripe_invoice_send / xero_send / quickbooks_send + sent_to_email); (8) payment_state (status 7-value enum + due_at + payment_received_at + method enum + amount + reference + external_invoice_id + reconciliation_note). payment_reminder_log[] for overdue cron audit. agent_edits[] for draft mutability + post-send immutability. Validates files under `data/deals/{deal_id}/invoice_packs/` (gitignored).
 - `schemas/talent.schema.json` — JSON Schema (Draft 2020-12) describing the talent profile.
 - `schemas/brand_candidates.schema.json` — JSON Schema for the per-talent Brand Discovery output. Validates every file written by the orchestrator under `data/brand_candidates/` (the folder itself is gitignored — generated artifact, not source).
 - `schemas/brand_contact.schema.json` — JSON Schema for per-brand contact records (Phase 3a). Validates every file under `data/brand_contacts/` (gitignored — contacts are PII and vendor data is licensed).
@@ -263,11 +299,12 @@ The fields below were not in the original request but were added because later p
 - `scripts/build_affinity.py` — builder script with all authored data and inline validation. Single source of truth for the three affinity files; re-run to regenerate them.
 - `scripts/enrich_brand_map.py` — adds the 5 metadata fields per brand to `brand_industry_map.json`. Re-runnable; honest-gaps policy (omit fields where the curated value is unknown).
 - `docs/recommendation_algorithm.md` — draft spec for how the app combines all of the above into a ranked list of industries to target for a given talent. Forward-looking contract for when the app is built.
-- `docs/agency_setup_workflow.md` — Phase 0 one-time setup before any talent onboards. 8-step process: agency identity, visual branding (logo + colors + fonts — feeds every downstream agency artefact), primary agent, DNS records (SPF/DKIM/DMARC), sending mailbox provisioning via Smartlead, signature template (CAN-SPAM-compliant), 2-4 week warmup, final validation. v0.1 single-agent constraint documented; v2 expansion plan for multi-agent rosters.
+- `docs/agency_setup_workflow.md` — Phase 0 one-time setup before any talent onboards. 9-step process: agency identity, visual branding (logo + colors + fonts — feeds every downstream agency artefact), primary agent, DNS records (SPF/DKIM/DMARC), sending mailbox provisioning via Smartlead, signature template (CAN-SPAM-compliant), invoice template (numbering format + tax handling + payment instructions — feeds Phase 4.8 invoice generator), 2-4 week warmup, final validation. v0.1 single-agent constraint documented; v2 expansion plan for multi-agent rosters.
 - `docs/deal_lifecycle_workflow.md` — Phase 4 spec for the deal pipeline. Defines the 5-stage lifecycle (LEAD → PROPOSAL → CONTRACT → DELIVERY → CLOSE), per-stage substages and data blocks, full state machine with valid transitions, structured loss reasons (budget / timing / competitor_won / internal_pivot / talent_no_fit / terms_disagreed / unresponsive / compliance_block / other), auto-archive on close into Phase 1.5 brand_deals, integration touchpoints with Phase 3b outreach (interested reply triggers deal creation) and Phase 1.5 (close triggers archive), notifications + reminders driven by `next_action_due_at`, failure handling, and the v2 vendor-integration roadmap (DocuSign / PandaDoc / HelloSign for e-sign; Stripe / Xero / QuickBooks for invoicing).
 - `docs/discovery_prep_workflow.md` — Phase 4.5 spec for the discovery-call prep generator. Defines the trigger (`substage = initial_call_scheduled`), 3-pass Sonnet generation pipeline with prompt-caching across briefing/agenda/slides passes, Exa external research integration, default 10-slide deck structure mapped to slide-type layouts, three rendered output variants from one source (live deck + leave-behind deck + speaker notes), versioning model with pre-generation guidance + natural-language feedback regeneration loop (v1 stays locked unless agent asks; agent can target whole-pack / section / per-slide regen), direct slide editing via the slide skill, slide-skill integration contract (input/output shape + on_edit/on_feedback callbacks), failure handling, storage layout, v0.1 explicit non-goals, and 7 open questions for v0.2.
 - `docs/proposal_pack_workflow.md` — Phase 4.6 spec for the commercial proposal pack generator. Defines the agent-initiated trigger (substage = `proposal_drafting`), 5-stage generation pipeline (context augmentation → hybrid debrief extraction → commercial gate → 3-pass Sonnet slide generation → render), file upload + parsing (pypdf / python-docx / text reader for v0.1; external transcript-link references for v2), the commercial gate mechanics (LLM proposes, agent must confirm before slides render, confirmed values copy into canonical `deal.proposal.*`), default 15-slide deck structure with 4 slides forked from the discovery prep pack, negotiation tie-in (bidirectional link to `deal.proposal.negotiation_log[].proposal_pack_version`), storage layout, integration touchpoints, 9 failure handling scenarios, and 7 open questions for v0.2 including counter-offer detection, win/loss pricing-model calibration, auto-contract-draft seeding.
 - `docs/contract_pack_workflow.md` — Phase 4.7 spec for the contract pack generator. Defines the agent-initiated trigger (substage = `contract_drafting`), 7-stage generation pipeline (context augmentation → merge field extraction → conditional clause evaluation → narrative drafting → compose → HARD legal review gate → render), per-talent template structure (markdown + merge fields + `{{#if}}` conditionals + `{{narrative_*}}` placeholders) captured in Phase 1 onboarding Step 7.5, full example template markdown demonstrating ~20 merge fields + 4 conditional blocks + 4 narrative placeholders, the legal review gate mechanics (blocking_issues auto-populated from low-confidence fields; edits reset gate; trivial_edit_override for typos; previous_approvals[] audit trail), brand-redline-response handling, storage layout, integration touchpoints with `talent.contract_template` + `talent.billing_entity` + Phase 4.6 proposal pack, 10 failure handling scenarios, and 7 open questions for v0.2 including brand-side legal review automation, counter-template handling, structured JSONLogic clause conditions.
+- `docs/invoice_workflow.md` — Phase 4.8 spec for the invoice pipeline. Three layers: (1) deliverable detection via Meta Graph + TikTok Display APIs in v0.1 (Phyllo for YouTube/LinkedIn/X/podcast/Substack in v2), cron cadence (15min stories / 1hr other), candidate scoring algorithm with time_window + brand_handle + campaign_hashtag + content_type signals, confidence routing (≥80/50-79/<50), agent confirmation flow, per-platform API endpoints + rate limits + oAuth scope notes; (2) invoice generation including LLM parse of contract `payment_terms` into structured `invoice_schedule[]` with one-time agent gate, per-trigger invoice pack pipeline (Stages A-E), invoice numbering atomic increment, multi-invoice from v0.1 with `seq{N}_v{M}` naming; (3) payment tracking with status enum + daily overdue cron + reminder log + auto-archive interaction. Storage layout, integration touchpoints across Phases 0/1/4.6/4.7, consolidated 9 failure handling scenarios, cost profile, 7 v0.1 non-goals, 8 v0.2 open questions including detection signal tuning + auto-reminder + per-jurisdiction tax + Stripe Connect for marketplace flows.
 - `docs/onboarding_workflow.md` — draft spec for how a user adds a new talent: web wizard with OAuth platform connections (paste-fallback), media-pack extraction by LLM, adaptive questionnaire for gaps, hybrid similar-talent seeding (user + AI suggestions), and a background AI research pass that populates similar-talent records. The per-talent sender-domain section was removed: outreach now uses the agency's pre-warmed mailbox from Phase 0.
 - `docs/brand_discovery.md` — draft spec for the long-list generator. **16 independent searches** runnable today (re-engagement, network expansion, affinity expansion, geo, life-stage, constraint-aware, graph, recently-funded via web search, **trending/rising brands via the [`last30days` skill](https://github.com/mvanhorn/last30days-skill) — multi-source social momentum signal across Reddit/X/TikTok/YouTube/HN/etc., run as a monthly cron**) merged with multi-source scoring. Monthly cron drives re-engagement with per-brand cool-downs. Future-versions section lists 12 more searches that need external data (Crunchbase API as a structured upgrade to Search 15, live `#ad` scraping, affiliate networks, creator marketplaces, EMV reports, etc.). Both structural enrichments (`brand_industry_map` metadata + `brand_competitors` graph) are now shipped and used by Searches 3, 4, 10, 14.
 - `docs/vendor_roadmap.md` — single source of truth for external-service decisions. Confirms **Exa** as the v0.1 web-search provider (Search 15). Catalogues deferred vendors with criteria for when to add each: ScrapeCreators (Search 16 visual platforms), Owler (competitor maintenance), Modash/HypeAuditor (brand DB bulk import), Exploding Topics (pre-trend detection), Product Hunt API (day-of launches), Tribe Dynamics EMV (top-spending brands per category), SimilarWeb (audience-overlap competitors), Crunchbase (structured funding data), Apollo (Phase 3 outreach contact discovery), plus alternatives for each. Includes the env-var inventory for all current + deferred services.
@@ -895,3 +932,88 @@ All gitignored. Same file caps: 25MB/file, 100MB/deal.
 
 ### Cost profile
 Per-pack: 4-6 Sonnet passes (artefact summary + merge extract + clause evaluate + narrative draft + compose). Heavily cached from proposal pack context. ~30-40k input tokens + ~10-15k output tokens (less than proposal — contract is more deterministic). Estimated $0.20-0.40 per generation. Typical deal: 1-3 versions (less iteration than proposal — once approved, redlines trigger targeted regen, not full rebuild).
+
+---
+
+## Phase 4.8 — Invoice Pipeline
+
+### Output
+Versioned invoice packs per deal at `data/deals/{deal_id}/invoice_packs/seq{N}_v{M}.json` (gitignored). Multi-invoice from v0.1 (e.g. 50/50 NET-30 produces 2 packs). Each pack: merge field values + line items + amounts + composed markdown + payment state + rendered PDF. Validated against `schemas/invoice_pack.schema.json`. The deal's `close.invoice_schedule[]` is the LLM-parsed payment plan that drives generation; `close.invoice_pack_ids[]` is the flat FK list of all packs; `close.all_invoices_paid_at` gates auto-archive.
+
+### Trigger + locked-in decisions
+- **Three layers**: detection (cron polls platform APIs → agent confirms post matches) → generation (LLM parses contract.payment_terms → schedule → per-entry invoice_pack at trigger) → tracking (per-invoice payment_state with overdue cron).
+- **v0.1 detection: IG + TikTok via direct platform APIs** (Meta Graph + TikTok Display). Other platforms via agent manual URL entry. v2 = Phyllo unified API for YouTube/LinkedIn/X/podcast/Substack.
+- **Hybrid detection flow**: cron scores candidates via time_window + brand_handle + campaign_hashtag + content_type signals (≥80 strong suggest / 50-79 weak / <50 log-only); agent confirms each match before `posted_at` is set.
+- **Multi-invoice from v0.1**: LLM auto-parses `contract_pack.commercial_proposal.payment_terms` (free-text like "50/50 NET-30") into structured `invoice_schedule[]`; one-time agent confirmation gate; schedule locks. Each entry has trigger_condition enum (contract_executed / first_post_live / all_deliverables_live / specific_date / manual).
+- **Agency-wide invoice template** captured in Phase 0 Step 5.5. Talent billing entity pulls from `talent.billing_entity`; brand entity from `contract_pack.context_snapshot.brand_legal_entity_at_gen`.
+- **Soft agent gate**: agent reviews rendered PDF + can edit before send; sending IS the approval (no separate "approve" event). Sent invoices immutable — edits create new versions.
+- **Payment tracking v0.1**: agent sets `payment_received_at` manually + daily overdue cron notifies for follow-up. v2: Stripe/Xero/QuickBooks webhook auto-populates.
+
+### Detection layer
+```
+Cron every 15min (stories) / 1hr (other) for active DELIVERY deals:
+  For each unmatched posting_schedule[] entry:
+    Query Meta Graph API (IG) or TikTok Display API for recent posts
+    Score candidates against expected deliverable:
+      time_window (±48h)       40 pts
+      brand_handle (@brand)    30 pts
+      campaign_hashtag         20 pts
+      content_type match       10 pts
+    ≥80 = strong suggest in UI; 50-79 = weak suggest; <50 = log only
+    Agent confirms → posted_at + post_url + posted_detection block set
+  When ALL posting_schedule[] entries have posted_at:
+    → substage = performance_window
+    → evaluate invoice_schedule[] for trigger fires
+```
+
+### Generation layer
+```
+Schedule parse (once per deal, on contract_executed_at):
+  LLM input:  "50% upon contract execution, 50% upon final delivery; NET-30"
+  LLM output: [{seq:1, %:50, trigger:contract_executed, terms:30, desc:"..."},
+               {seq:2, %:50, trigger:all_deliverables_live, terms:30, desc:"..."}]
+  Agent confirms → schedule locks
+
+Per invoice pack (fires when schedule entry's trigger met):
+  Stage A: Deterministic merge field extraction (talent.billing_entity +
+           agency_profile + contract_pack.brand_legal_entity + computed
+           invoice_number / dates / line_items / amounts)
+  Stage B: Optional LLM narrative for {{narrative_line_items}} (0-1 passes)
+  Stage C: Compose markdown
+  Stage D: Render PDF (Puppeteer or pandoc) — no Word artefact
+  Stage E: Agent review (soft gate — edits regenerate; send = approve)
+           sent_at set → payment_state.status: draft → sent → due_at computed
+```
+
+### Tracking layer
+- Per-invoice `payment_state` with status enum: `draft` / `sent` / `viewed_by_brand` (v2) / `paid` / `overdue` / `disputed` / `void`
+- Daily overdue cron: any invoice where `due_at < now AND status: sent` → notify agent + append to `payment_reminder_log[]`. Cadence: day 1, then every 7 days.
+- v0.1: agent manually sets `payment_received_at` + `payment_method` + `payment_reference` + optional `reconciliation_note`
+- v2: Stripe webhook on `invoice.paid` auto-populates; schema already shaped via `external_invoice_id` + `payment_reference` fields
+
+### Integration
+- **Phase 0 `agency_profile.invoice_template`** — agency-wide template (markdown source, numbering format, tax handling, payment instructions). Captured Phase 0 Step 5.5.
+- **Phase 1 `talent.billing_entity`** — FROM party on every invoice.
+- **Phase 1 `talent.platforms[]`** — oAuth tokens for Meta Graph + TikTok Display polling.
+- **Phase 4.6 `deal.proposal.fee_usd` + `deliverables[]`** — total + per-deliverable references for line items.
+- **Phase 4.7 `contract_pack.commercial_proposal.payment_terms`** — LLM parse source.
+- **Phase 4.7 `contract_pack.context_snapshot.brand_legal_entity_at_gen`** — TO party on every invoice.
+- **`deal.delivery.posting_schedule[].posted_detection`** — detection provenance per match.
+- **`deal.close.all_invoices_paid_at`** — computed; gates auto-archive.
+- **Phase 4 CLOSE substages** — `invoice_sent` = at least one pack sent; `invoice_paid` = all schedule entries paid. Substage transitions driven by aggregate state.
+
+### Storage
+```
+data/deals/{deal_id}/
+  invoice_packs/
+    seq1_v1.json + seq1_v1_artifacts/{invoice.md, invoice.pdf}
+    seq2_v1.json + seq2_v1_artifacts/{invoice.md, invoice.pdf}
+    seq2_v2.json + seq2_v2_artifacts/...  # revision
+```
+All gitignored. Naming includes seq + version so both visible in filename.
+
+### Cost profile
+**Per-pack LLM:** $0.05-0.15 (much lighter than other packs; often 0 LLM passes).
+**Per-deal LLM:** one schedule parse on contract execution (~$0.02) + per-invoice generation.
+**Platform APIs (v0.1):** Meta Graph free; TikTok Display free.
+**Phyllo (v2):** ~$50-200/creator/month for unified API across YouTube/LinkedIn/X/podcast/Substack.

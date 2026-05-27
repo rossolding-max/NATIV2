@@ -124,6 +124,74 @@
 
     "billing_entity": { "$ref": "#/$defs/billingEntity" },
 
+    "invoice_template": {
+      "type": "object",
+      "description": "Agency-wide invoice template used by the Phase 4.8 invoice pack generator (`docs/invoice_workflow.md`). Captured in Phase 0 agency setup. One template for all talent + deals; talent-specific billing entity is pulled from `talent.billing_entity` at generation time. Invoices are highly deterministic so this template is mostly merge fields + a payment-instructions block — far fewer placeholders than the per-talent contract template.",
+      "additionalProperties": false,
+      "properties": {
+        "markdown_source": {
+          "type": "string",
+          "description": "Invoice template body in markdown. Supports `{{merge_field}}` substitution. Optional `{{narrative_line_items}}` placeholder enables LLM-drafted per-line-item descriptions; absent = literal deliverable descriptions used. Renders to PDF via Puppeteer/pandoc."
+        },
+        "invoice_number_prefix": {
+          "type": "string",
+          "default": "INV-",
+          "description": "String prefix on every invoice number. e.g. 'INV-' produces INV-2026-0001."
+        },
+        "invoice_number_format": {
+          "type": "string",
+          "default": "{prefix}{YYYY}-{seq:04d}",
+          "description": "Format string for invoice numbers. Tokens: `{prefix}`, `{YYYY}`, `{YY}`, `{MM}`, `{seq:0Nd}` (zero-padded sequence). Default produces INV-2026-0042 style."
+        },
+        "invoice_number_sequence": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1,
+          "description": "Auto-incrementing per-agency sequence counter. Persisted on the agency_profile — generator reads + increments atomically on each new invoice. Per-agency (not per-talent or per-deal) so numbering is contiguous across the whole agency."
+        },
+        "default_payment_terms_days": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 30,
+          "description": "Default days from sent_at to due_at. Per-invoice can override (e.g. NET-15, NET-45 deals)."
+        },
+        "due_date_calculation": {
+          "type": "string",
+          "enum": ["calendar_days", "business_days"],
+          "default": "calendar_days"
+        },
+        "tax_handling": {
+          "type": "string",
+          "enum": ["none", "vat_inclusive", "vat_added", "sales_tax"],
+          "default": "none",
+          "description": "none: no tax line. vat_inclusive: total already includes VAT (rendered as 'inclusive of VAT'). vat_added: subtotal + tax_amount = total (UK/EU pattern). sales_tax: same math as vat_added with sales tax labelling (US pattern)."
+        },
+        "default_tax_rate": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Decimal default tax rate (0.20 = 20%). Applied when tax_handling is vat_added / vat_inclusive / sales_tax. Per-invoice override available."
+        },
+        "tax_label": {
+          "type": "string",
+          "description": "Label on the rendered tax line (e.g. 'VAT', 'Sales Tax', 'GST'). Derived from tax_handling but overridable for unusual cases."
+        },
+        "payment_instructions_markdown": {
+          "type": "string",
+          "description": "Block rendered into the invoice footer. Bank details / IBAN / SWIFT / Stripe payment link / PayPal address. Supports merge fields for per-invoice substitution (e.g. `{{invoice_number}}` as bank reference)."
+        },
+        "invoice_footer": {
+          "type": "string",
+          "description": "Legal text appended to the invoice (e.g. 'Late payment subject to 8% statutory interest per the Late Payment of Commercial Debts (Interest) Act 1998.'). Optional."
+        },
+        "template_version": {
+          "type": "string",
+          "description": "Updated whenever markdown_source / numbering / tax settings change. Captured in `invoice_pack.context_snapshot.agency_invoice_template_version` for traceability."
+        },
+        "template_updated_at": { "type": "string", "format": "date-time" }
+      }
+    },
+
     "created_at": { "type": "string", "format": "date-time" },
     "updated_at": { "type": "string", "format": "date-time" }
   },

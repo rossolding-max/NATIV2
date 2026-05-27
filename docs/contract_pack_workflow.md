@@ -282,6 +282,7 @@ Same file size caps as Phase 4.6: 25MB/file, 100MB/deal total. Larger files via 
 | **`deal.contract.amendment_log[]`** | Post-execution amendments use `trigger: amendment_request` to create a new contract_pack version that writes here rather than replacing executed contract. |
 | **Phase 0 agency_profile** | Agency name, address, signatory info merge into contract. |
 | **`data/contract_template_starters/`** | (gitignored) Agency-curated starter templates that Phase 1 onboarding copies + edits per talent. |
+| **Phase 4.8 invoice pack** | Downstream artefact. On `deal.contract.contract_executed_at`, the orchestrator LLM-parses `commercial_proposal.llm_proposed.payment_terms` (e.g. "50% upon contract execution, 50% upon final delivery; NET-30") into a structured `deal.close.invoice_schedule[]`. Agent confirms once (gate). Each schedule entry then fires its own invoice_pack when its trigger_condition is met. The contract pack id is captured in `invoice_pack.context_snapshot.contract_pack_id_at_gen` for traceability. See `docs/invoice_workflow.md`. |
 
 ## Failure handling
 

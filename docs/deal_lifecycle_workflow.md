@@ -223,11 +223,12 @@ Agent then sends manually (v0.1) or via e-sign (v2). NL feedback regen creates v
 **Data captured (`deal.delivery`):**
 - `production_kickoff_at`, `products_shipped_*_at`
 - `content_drafts[]` — per-deliverable versioned drafts with brand review status
-- `posting_schedule[]` — scheduled + actual post URLs
+- `posting_schedule[]` — scheduled + actual post URLs + `posted_detection` block (Phase 4.8 detection provenance: method enum, match_score 0-100, match_signals, agent_confirmed_at/by)
 - `performance_capture_window_*` timestamps — drive when the platform-API auto-pull cron starts/stops refreshing KPIs
 
 **Cross-system integration:**
 - `content_drafts[].draft_url` + `posting_schedule[].post_url` — the actual content references
+- **Phase 4.8 detection layer** (`docs/invoice_workflow.md`): cron polls Meta Graph + TikTok Display APIs every 15 min (stories) or 1 hour (other formats) for the talent's recent posts; scores candidates against `posting_schedule[]` via time_window + brand_handle + campaign_hashtag + content_type signals; surfaces suggestions to agent for confirmation. When all `posted_at` populated, substage → `performance_window` and invoice schedule trigger evaluation fires. v0.1 = IG + TikTok direct; other platforms via agent manual URL entry; v2 = Phyllo unified API for YouTube/LinkedIn/X/podcast/Substack.
 - Performance capture window aligns with Phase 1.5 brand_deals KPI auto-refresh: when the window opens, the cron starts pulling `kpis.*` from IG/TikTok/YouTube Insights APIs for the `post_url` URLs
 
 **Exits:**
@@ -246,15 +247,25 @@ Agent then sends manually (v0.1) or via e-sign (v2). NL feedback regen creates v
 - `archived` — auto-archive fires → Phase 1.5 brand_deals entry created
 
 **Data captured (`deal.close`):**
-- `invoice_id` (external), `invoice_attachment_id`, `invoice_provider` (v0.1: `manual`; v2: `stripe_invoices` / `xero` / `quickbooks`)
-- `invoice_amount_usd`, `invoice_currency`, `invoice_sent_at`, `payment_due_at`
-- `payment_received_at`, `payment_method`
+- `invoice_schedule[]` — LLM-parsed from `contract_pack.commercial_proposal.payment_terms` on contract execution; one-time agent gate; locks once confirmed. Each entry has sequence + percentage + amount_usd + trigger_condition + payment_terms_days + description + invoice_pack_id (back-FK to generated pack)
+- `invoice_pack_ids[]` — flat FK list to all invoice pack versions ever generated (across all schedule sequences and revisions)
+- `all_invoices_paid_at` — computed max payment_received_at across all packs once every schedule entry fulfilled + paid
 - `final_performance_report_attachment_id`
 - `final_kpis` — snapshot in brand_deal.kpis shape (carries directly to Phase 1.5 on archive)
 - `archived_to_brand_deal_id` — FK to the auto-created entry in `data/brand_deals/{talent_id}.json`
 - `archived_at`
 
-**Auto-archive trigger:** when `payment_received_at` is set AND `final_kpis` is populated AND `final_performance_report_attachment_id` is set, the orchestrator fires the archive:
+**Invoice pipeline (Phase 4.8):**
+
+Each `invoice_schedule[]` entry fires its own invoice pack when its `trigger_condition` is met (`contract_executed` / `first_post_live` / `all_deliverables_live` / `specific_date` / `manual`). Per `docs/invoice_workflow.md`:
+1. LLM-parse `contract.payment_terms` → propose schedule → agent confirms (one-time gate); schedule locks
+2. Cron evaluates trigger conditions on each deal-state change; fires invoice_pack generation when met
+3. Generation: deterministic merge field extraction → optional LLM narrative for line items → compose markdown → render PDF
+4. Agent reviews PDF (soft gate) → sends manually; sending IS the approval
+5. Payment tracked per-invoice; daily overdue cron notifies agent for follow-up
+6. When all invoices paid + final_kpis + final_report → auto-archive fires
+
+**Auto-archive trigger:** when `all_invoices_paid_at` is set (computed: every schedule entry has invoice_pack with `payment_state.status: paid`) AND `final_kpis` is populated AND `final_performance_report_attachment_id` is set, the orchestrator fires the archive:
 1. Build a Phase 1.5 brand_deal record from this deal's data (deliverables, fee, usage_rights, KPIs, etc.)
 2. Set `originated_from_pitch_enrollment_id` on the new brand_deal to this deal's `originating_enrollment_id` (closes the outreach → deal loop)
 3. Write to `data/brand_deals/{talent_id}.json`
