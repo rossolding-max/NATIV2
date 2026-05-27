@@ -12,7 +12,7 @@ Cassette-based end-to-end tests live in
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, ClassVar
 
 from app.agents.base import Agent, ToolSpec
 
@@ -69,7 +69,7 @@ def test_unit__agent_anthropic_tool_specs_serialises_catalog() -> None:
     )
 
     class _ToolAgent(Agent):
-        tools = {"echo": spec}
+        tools: ClassVar[dict[str, ToolSpec]] = {"echo": spec}
 
     agent = _ToolAgent()
     result = agent._anthropic_tool_specs()  # type: ignore[attr-defined]

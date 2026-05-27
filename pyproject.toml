@@ -77,6 +77,9 @@ dev = [
     "datamodel-code-generator>=0.25",
 ]
 
+[project.scripts]
+nativ = "app.cli.main:app"
+
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"

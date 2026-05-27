@@ -66,9 +66,7 @@ def llm_cassette(request: pytest.FixtureRequest) -> Generator[Any, None, None]:
     from vcr.record_mode import RecordMode
 
     record_mode = (
-        RecordMode.NEW_EPISODES
-        if request.config.getoption("--llm-record")
-        else RecordMode.ONCE
+        RecordMode.NEW_EPISODES if request.config.getoption("--llm-record") else RecordMode.ONCE
     )
     cassette_path = CASSETTE_DIR / f"{request.node.name}.yaml"
     CASSETTE_DIR.mkdir(parents=True, exist_ok=True)
