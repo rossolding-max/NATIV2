@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import re
 from typing import Any
 from uuid import uuid4
 
@@ -13,39 +12,17 @@ from alembic import command
 from app.errors import ConflictError, NotFoundError
 
 
-@pytest.fixture
-def _m4_migrated_db(postgres_container: Any, monkeypatch: pytest.MonkeyPatch) -> Any:  # pyright: ignore[reportUnusedFunction]
+@pytest.fixture(scope="module")
+def _m4_migrated_db(postgres_container: Any) -> Any:  # pyright: ignore[reportUnusedFunction]
     """Migrate the testcontainer Postgres to head. Sync — Alembic's env.py
     internally calls ``asyncio.run(...)``, which conflicts with an outer
     running loop (i.e. with async fixtures). Keep migration sync; let the
     session fixture below open the async session separately.
+
+    ``postgres_container`` (conftest) has already mutated app.config.settings
+    to the testcontainer DSN, so the migration's env.py sees the right URL.
     """
     from pathlib import Path
-
-    url = postgres_container.get_connection_url().replace("+psycopg2", "")
-    match = re.match(
-        r"postgresql(?:\+\w+)?://(?P<user>[^:]+):(?P<pw>[^@]+)@(?P<host>[^:]+):(?P<port>\d+)/(?P<db>.+)",
-        url,
-    )
-    assert match is not None
-    monkeypatch.setenv("POSTGRES_USER", match["user"])
-    monkeypatch.setenv("POSTGRES_PASSWORD", match["pw"])
-    monkeypatch.setenv("POSTGRES_HOST", match["host"])
-    monkeypatch.setenv("POSTGRES_PORT", match["port"])
-    monkeypatch.setenv("POSTGRES_DB", match["db"])
-    monkeypatch.setenv("DB_MASTER_KEY", "test-master-key-32-bytes-base64==")
-    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-test-stub")
-
-    import app.config as app_config
-    from app.config import Settings, get_settings
-
-    get_settings.cache_clear()
-    # Persistently rebuild app.config.settings from the monkeypatched env,
-    # so the alembic env.py (which does ``from app.config import settings``
-    # at module load) sees the testcontainer DSN. We do NOT auto-revert at
-    # teardown because subsequent M0/M1 fixtures (test_brand_import etc.)
-    # rely on the settings instance staying in sync with monkeypatched env.
-    app_config.settings = Settings()  # type: ignore[call-arg]
 
     repo = Path(__file__).resolve().parents[2]
     cfg = Config(str(repo / "alembic.ini"))
@@ -56,8 +33,8 @@ def _m4_migrated_db(postgres_container: Any, monkeypatch: pytest.MonkeyPatch) ->
 
 @pytest.fixture
 async def m4_session(_m4_migrated_db: Any) -> Any:  # pyright: ignore[reportUnusedFunction]
-    """Yield an AsyncSession against the (already-migrated) testcontainer Postgres."""
-    # Rebuild the async engine + sessionmaker against the env we just bound.
+    """Yield an AsyncSession; truncate agency_profile between tests."""
+    from sqlalchemy import text
     from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
     from app.config import settings as live_settings
@@ -65,6 +42,9 @@ async def m4_session(_m4_migrated_db: Any) -> Any:  # pyright: ignore[reportUnus
     engine = create_async_engine(live_settings.database_url_async, future=True)
     session_factory = async_sessionmaker(engine, expire_on_commit=False)
     async with session_factory() as session:
+        # Each test starts with an empty singleton row.
+        await session.execute(text("TRUNCATE TABLE agency_profile CASCADE"))
+        await session.commit()
         yield session
     await engine.dispose()
 

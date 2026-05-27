@@ -93,7 +93,23 @@ def _docker_check() -> None:  # pyright: ignore[reportUnusedFunction]
 
 @pytest.fixture(scope="session")
 def postgres_container(_docker_check: None) -> Generator[object, None, None]:
-    """Session-scoped Postgres 16 container with pgcrypto installed."""
+    """Session-scoped Postgres 16 container with pgcrypto installed.
+
+    Also re-binds ``app.config.settings`` to the testcontainer DSN. Without
+    this rebind, every M0/M1 fixture's ``monkeypatch.setenv(POSTGRES_*)``
+    + ``get_settings.cache_clear()`` pattern would still leave the
+    already-imported module-level ``app.config.settings`` instance
+    stale (with the default ``127.0.0.1:5432`` values that don't match
+    the testcontainer's dynamic port). M3 + earlier hid this by skipping
+    testcontainer-backed tests when Docker was unreachable; once Docker
+    is available in CI, the pre-existing fixtures need the rebind to
+    actually work.
+
+    Direct attribute assignment (NOT ``monkeypatch.setattr``) so the
+    binding persists for the whole session.
+    """
+    import re
+
     from testcontainers.postgres import PostgresContainer  # type: ignore[import-untyped]
 
     container = PostgresContainer("postgres:16-alpine")
@@ -102,10 +118,28 @@ def postgres_container(_docker_check: None) -> Generator[object, None, None]:
         # Enable pgcrypto on the test DB.
         import psycopg  # type: ignore[import-not-found]
 
-        with psycopg.connect(container.get_connection_url().replace("+psycopg2", "")) as conn:
+        url = container.get_connection_url().replace("+psycopg2", "")
+        with psycopg.connect(url) as conn:
             with conn.cursor() as cur:
                 cur.execute("CREATE EXTENSION IF NOT EXISTS pgcrypto;")
             conn.commit()
+
+        match = re.match(
+            r"postgresql(?:\+\w+)?://(?P<user>[^:]+):(?P<pw>[^@]+)@"
+            r"(?P<host>[^:]+):(?P<port>\d+)/(?P<db>.+)",
+            url,
+        )
+        if match is not None:
+            from pydantic import SecretStr
+
+            from app.config import settings as live_settings
+
+            live_settings.postgres_user = match["user"]
+            live_settings.postgres_password = SecretStr(match["pw"])
+            live_settings.postgres_host = match["host"]
+            live_settings.postgres_port = int(match["port"])
+            live_settings.postgres_db = match["db"]
+
         yield container
     finally:
         container.stop()
@@ -126,12 +160,26 @@ def redis_container(_docker_check: None) -> Generator[object, None, None]:
 
 @pytest.fixture(scope="session")
 def minio_container(_docker_check: None) -> Generator[object, None, None]:
-    """Session-scoped MinIO container."""
+    """Session-scoped MinIO container.
+
+    Also re-binds ``app.config.settings.s3_*`` to the testcontainer URL —
+    same reasoning as the ``postgres_container`` rebind above.
+    """
     from testcontainers.minio import MinioContainer  # type: ignore[import-untyped]
 
     container = MinioContainer()
     container.start()
     try:
+        from pydantic import AnyHttpUrl, SecretStr
+
+        from app.config import settings as live_settings
+
+        cfg = container.get_config()
+        live_settings.s3_endpoint_url = AnyHttpUrl(f"http://{cfg['endpoint']}")
+        live_settings.s3_access_key = cfg["access_key"]
+        live_settings.s3_secret_key = SecretStr(cfg["secret_key"])
+        live_settings.s3_force_path_style = True
+
         yield container
     finally:
         container.stop()

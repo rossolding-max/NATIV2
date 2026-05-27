@@ -13,7 +13,6 @@ Confirms the final agency_profile row passes schema validation with
 from __future__ import annotations
 
 import contextlib
-import re
 from pathlib import Path
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -23,7 +22,7 @@ import pytest
 import respx
 from alembic.config import Config
 from httpx import ASGITransport, AsyncClient
-from pydantic import AnyHttpUrl, SecretStr
+from pydantic import SecretStr
 
 from alembic import command
 
@@ -42,50 +41,24 @@ def _m4_setup_env(  # pyright: ignore[reportUnusedFunction]
     minio_container: Any,
     monkeypatch: pytest.MonkeyPatch,
 ) -> Any:
-    """Sync fixture — points env + settings at the testcontainers + migrates.
+    """Sync fixture — migrates + creates the bucket + binds test-only settings.
+
+    ``postgres_container`` and ``minio_container`` (conftest) have already
+    mutated ``app.config.settings`` to the testcontainer URLs. We just
+    overlay test-only attributes (bucket name, smartlead api key) via
+    monkeypatch.setattr (those revert at teardown — fine since these
+    attributes are M4-specific).
 
     Migration runs in a sync context because Alembic's ``env.py`` calls
     ``asyncio.run(...)``, which conflicts with an outer running loop.
     """
-    url = postgres_container.get_connection_url().replace("+psycopg2", "")
-    match = re.match(
-        r"postgresql(?:\+\w+)?://(?P<user>[^:]+):(?P<pw>[^@]+)@(?P<host>[^:]+):(?P<port>\d+)/(?P<db>.+)",
-        url,
-    )
-    assert match is not None
-    monkeypatch.setenv("POSTGRES_USER", match["user"])
-    monkeypatch.setenv("POSTGRES_PASSWORD", match["pw"])
-    monkeypatch.setenv("POSTGRES_HOST", match["host"])
-    monkeypatch.setenv("POSTGRES_PORT", match["port"])
-    monkeypatch.setenv("POSTGRES_DB", match["db"])
-    monkeypatch.setenv("DB_MASTER_KEY", "test-master-key-32-bytes-base64==")
-    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-test-stub")
+    # Lazy import so we don't pull app.config in at module collection.
+    from app.config import settings as app_settings
 
-    minio_cfg = minio_container.get_config()
-    minio_endpoint = f"http://{minio_cfg['endpoint']}"
-
-    # Lazy import so app.config isn't loaded at module collection time —
-    # that would freeze settings to default env, breaking downstream tests.
-    import app.config as app_config
-    from app.config import Settings, get_settings
-
-    get_settings.cache_clear()
-    # Rebuild app.config.settings from the (now-monkeypatched) env. We
-    # PERSIST the rebuild past fixture teardown so subsequent M1 fixtures
-    # (test_brand_import / test_pgcrypto / test_alembic_*) see the same
-    # testcontainer DSN — those fixtures monkeypatch.setenv() but never
-    # rebuild the settings instance themselves.
-    app_config.settings = Settings()  # type: ignore[call-arg]
-    app_settings = app_config.settings
-
-    monkeypatch.setattr(app_settings, "s3_endpoint_url", AnyHttpUrl(minio_endpoint))
-    monkeypatch.setattr(app_settings, "s3_access_key", minio_cfg["access_key"])
-    monkeypatch.setattr(app_settings, "s3_secret_key", SecretStr(minio_cfg["secret_key"]))
     monkeypatch.setattr(app_settings, "s3_bucket", _TEST_BUCKET)
-    monkeypatch.setattr(app_settings, "s3_force_path_style", True)
     monkeypatch.setattr(app_settings, "smartlead_api_key", SecretStr("sk-smartlead-test"))
 
-    # Migrate (sync — uses asyncio.run internally).
+    # Migrate.
     repo = Path(__file__).resolve().parents[3]
     cfg = Config(str(repo / "alembic.ini"))
     cfg.set_main_option("script_location", str(repo / "alembic"))
