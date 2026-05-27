@@ -301,22 +301,20 @@ async def refresh_dns_status(
     mailboxes: list[dict[str, Any]] = list(data.get("sending_mailboxes") or [])
     if not mailboxes:
         # Step 3 can run BEFORE Step 4 (mailbox provisioning) — initialise
-        # the placeholder mailbox slot so DNS state has a home.
+        # a placeholder so the schema-allowed ``dns_records_verified`` flag
+        # has a home.
         mailboxes = [
             {
-                "email": "",
-                "agent_id": "",
+                "email": f"placeholder@{domain}",
+                "agent_id": "placeholder",
                 "purpose": "named_agent_outreach",
                 "warmup_status": "pending",
             }
         ]
-    mailboxes[0]["dns_records"] = {
-        "spf": result.spf.value,
-        "dkim": result.dkim.value,
-        "dmarc": result.dmarc.value,
-        "dkim_selector": result.dkim_selector,
-        "checked_at": datetime.now(UTC).isoformat(),
-    }
+    # Persist only the schema-allowed boolean — the actual SPF/DKIM/DMARC
+    # values + last-checked-at are returned in the API response below for
+    # debugging but NOT stored in the JSONB blob (schema's
+    # ``sendingMailbox`` has ``additionalProperties: false``).
     mailboxes[0]["dns_records_verified"] = result.all_verified
     diff = {"sending_mailboxes": mailboxes}
 

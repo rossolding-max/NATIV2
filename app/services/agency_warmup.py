@@ -76,7 +76,9 @@ async def _poll_once() -> dict[str, Any]:
 
         previous = mbox.get("warmup_status")
         mbox["warmup_status"] = translated
-        mbox["warmup_last_polled_at"] = datetime.now(UTC).isoformat()
+        # ``warmup_last_polled_at`` is NOT in the JSON Schema's
+        # ``sendingMailbox`` shape (additionalProperties: false). If we
+        # need that diagnostic later, add it to the schema first.
         if translated == "complete" and previous != "complete":
             mbox["completed_warmup_at"] = datetime.now(UTC).isoformat()
 
