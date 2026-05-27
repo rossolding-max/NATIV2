@@ -25,18 +25,23 @@ depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
-    """Add ``memo.retrieval_count`` column with default 0."""
-    op.add_column(
-        "memo",
-        sa.Column(
-            "retrieval_count",
-            sa.Integer(),
-            nullable=False,
-            server_default="0",
-        ),
+    """Add ``memo.retrieval_count`` column with default 0.
+
+    Uses ``IF NOT EXISTS`` because M1's migration 0002 uses
+    ``Base.metadata.create_all()`` which picks up the M2-updated model
+    definition + creates the column eagerly. Without IF NOT EXISTS this
+    migration fails on fresh-DB CI runs (where 0002 + 0003 apply
+    back-to-back against an empty DB). In production, where 0002 has
+    already deployed before 0003 lands, IF NOT EXISTS is a no-op safety
+    net.
+    """
+    # Raw SQL to use Postgres's IF NOT EXISTS clause.
+    op.execute(
+        "ALTER TABLE memo ADD COLUMN IF NOT EXISTS retrieval_count "
+        "INTEGER NOT NULL DEFAULT 0"
     )
 
 
 def downgrade() -> None:
     """Drop the column."""
-    op.drop_column("memo", "retrieval_count")
+    op.execute("ALTER TABLE memo DROP COLUMN IF EXISTS retrieval_count")

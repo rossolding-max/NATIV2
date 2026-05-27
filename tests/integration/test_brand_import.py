@@ -25,9 +25,9 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+from alembic.config import Config
 
 from alembic import command
-from alembic.config import Config
 
 REPO = Path(__file__).resolve().parents[2]
 SOURCE_FILE = REPO / "data" / "brand_industry_map.json"
