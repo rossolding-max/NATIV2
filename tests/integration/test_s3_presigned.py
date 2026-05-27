@@ -14,14 +14,14 @@ import httpx
 import pytest
 from pydantic import AnyHttpUrl, SecretStr
 
-from app.config import settings as app_settings
-
 _TEST_BUCKET = "m4-test-bucket"
 
 
 @pytest.fixture
 def _minio_bound(minio_container: Any, monkeypatch: pytest.MonkeyPatch) -> Any:  # pyright: ignore[reportUnusedFunction]
     """Point app settings at the testcontainer + create the bucket."""
+    # Lazy import — see note in test_smartlead_email_account.py.
+    from app.config import settings as app_settings
     from app.utils import s3 as s3_util
 
     config = minio_container.get_config()

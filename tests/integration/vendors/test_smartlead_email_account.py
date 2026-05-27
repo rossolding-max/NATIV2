@@ -15,13 +15,17 @@ import pytest
 import respx
 from pydantic import SecretStr
 
-from app.config import settings as app_settings
 from app.errors import IntegrationRateLimitError
 from app.vendors import _http_client
 
 
 @pytest.fixture(autouse=True)
 def _vendor_settings(monkeypatch: pytest.MonkeyPatch) -> Any:  # pyright: ignore[reportUnusedFunction]
+    # Import lazily so app.config isn't loaded at module collection time —
+    # that would freeze ``app.config.settings`` to default env vars, which
+    # breaks downstream tests that monkeypatch POSTGRES_* + cache_clear().
+    from app.config import settings as app_settings
+
     monkeypatch.setattr(app_settings, "smartlead_api_key", SecretStr("sk-smartlead-test"))
     _http_client.reset_client_for_tests()
     yield
