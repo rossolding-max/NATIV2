@@ -4,17 +4,39 @@
 
 default: true
 
-# Allow longer lines (we use 100-col paragraphs for tables + readability)
-MD013:
-  line_length: 200
-  code_blocks: false  # don't check code block line lengths
-  tables: false       # tables can exceed (wide column tables are unavoidable)
+# Disable line-length entirely. Spec docs include lines well >600 chars
+# (taxonomy + KPI enum prose). Hard wrapping in prose is anti-pattern.
+MD013: false
+
+# Blank lines around lists not required — the spec uses inline lists frequently.
+MD032: false
+
+# Blank lines around headings not required.
+MD022: false
+
+# List indentation can vary (numbered + bulleted mixed in places).
+MD007: false
+
+# Allow ordered/unordered list mixing (the spec uses both freely).
+MD030: false
+
+# Blank lines around fenced code blocks not required (inline code blocks in prose).
+MD031: false
+
+# Ordered-list prefix sequencing not enforced (docs occasionally restart numbering mid-section).
+MD029: false
+
+# Blank lines around tables not required (data_lineage.md inlines many tables).
+MD058: false
 
 # Inline HTML allowed (we use <br> + tables + the occasional <details>)
 MD033: false
 
 # First line need not be h1 (some docs start with status indicator)
 MD041: false
+
+# Multiple H1s allowed (contract templates use top-level headings per clause).
+MD025: false
 
 # Allow duplicate headings (we use ## Examples, ## Acceptance multiple times)
 MD024:

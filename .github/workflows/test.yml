@@ -1,0 +1,133 @@
+name: PR Gate
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: ["feature/**", "fix/**", "chore/**"]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHON_VERSION: "3.12"
+  UV_VERSION: "latest"
+
+jobs:
+  lint-and-format:
+    name: Lint + Format + Typecheck
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v3
+        with:
+          version: ${{ env.UV_VERSION }}
+          enable-cache: true
+      - name: Set up Python
+        run: uv python install ${{ env.PYTHON_VERSION }}
+      - name: Install dependencies
+        run: uv sync --all-extras
+      - name: Ruff lint
+        run: uv run ruff check . --output-format=github
+      - name: Ruff format
+        run: uv run ruff format --check .
+      - name: Pyright
+        run: uv run pyright
+
+  schemas:
+    name: Schemas (drift + validation)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v3
+        with:
+          version: ${{ env.UV_VERSION }}
+          enable-cache: true
+      - run: uv python install ${{ env.PYTHON_VERSION }}
+      - run: uv sync --all-extras
+      - name: Pydantic codegen drift check
+        run: uv run python scripts/verify_pydantic_codegen.py
+      - name: JSON Schema validation
+        run: |
+          uv run python -c "
+          import json
+          import sys
+          from pathlib import Path
+          from jsonschema import Draft202012Validator
+          errors = []
+          for f in Path('schemas').rglob('*.schema.json'):
+              try:
+                  Draft202012Validator.check_schema(json.loads(f.read_text()))
+              except Exception as e:
+                  errors.append(f'{f}: {e}')
+          if errors:
+              print('\n'.join(errors))
+              sys.exit(1)
+          print(f'OK: {len(list(Path(\"schemas\").rglob(\"*.schema.json\")))} schema(s) valid')
+          "
+
+  unit:
+    name: Unit tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v3
+        with:
+          version: ${{ env.UV_VERSION }}
+          enable-cache: true
+      - run: uv python install ${{ env.PYTHON_VERSION }}
+      - run: uv sync --all-extras
+      - name: Run unit tests (no fail-under; coverage combined in integration job)
+        env:
+          POSTGRES_PASSWORD: ci-postgres-pw
+          DB_MASTER_KEY: ci-master-key-base64-32-chars-long==
+          ANTHROPIC_API_KEY: sk-ant-ci-stub
+        run: |
+          uv run coverage erase
+          uv run pytest tests/unit/ --cov=app --cov-report= -q
+      - name: Upload unit coverage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-unit
+          path: .coverage
+          include-hidden-files: true
+          retention-days: 1
+
+  integration:
+    name: Integration tests + combined coverage gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: [unit]
+    services:
+      docker:
+        image: docker:24-dind
+        options: --privileged
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v3
+        with:
+          version: ${{ env.UV_VERSION }}
+          enable-cache: true
+      - run: uv python install ${{ env.PYTHON_VERSION }}
+      - run: uv sync --all-extras
+      - name: Download unit coverage artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage-unit
+      - name: Run integration tests with combined coverage gate
+        env:
+          POSTGRES_PASSWORD: ci-postgres-pw
+          DB_MASTER_KEY: ci-master-key-base64-32-chars-long==
+          ANTHROPIC_API_KEY: sk-ant-ci-stub
+          TESTCONTAINERS_RYUK_DISABLED: "true"
+        run: |
+          # `--cov-append` adds integration coverage to the unit job's .coverage file.
+          # Final `--cov-fail-under=70` is the gate against the merged total (unit + integration).
+          uv run pytest tests/integration/ \
+            --cov=app --cov-append \
+            --cov-report=term --cov-report=xml \
+            --cov-fail-under=70 -q

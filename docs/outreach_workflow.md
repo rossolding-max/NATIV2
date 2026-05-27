@@ -329,7 +329,7 @@ When `email_replied` fires:
    Classify this reply to a cold pitch. Outcome is ONE of:
      interested | declined | out_of_office | unrelated |
      unsubscribe_request | needs_more_info | wrong_person_routed
-   
+
    Extract structured signals:
      asked_for_pricing: bool
      asked_for_meeting: bool

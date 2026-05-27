@@ -11,7 +11,7 @@
 | # | Milestone | Unlocks |
 |---|---|---|
 | M0 | Repo foundation | Everything below |
-| M1 | Data layer (all 15 schemas → ORM) | M2 + all phase work |
+| M1 | Data layer (all 17 schemas → ORM) | M2 + all phase work |
 | M2 | Agent infrastructure (Claude Agent SDK + memo store) | M11-M15 |
 | M3 | Vendor wrappers (Smartlead, Exa, Apollo, LinkedIn, Meta Graph, TikTok) | M4-M9 + M14 |
 | M4 | Phase 0 (Agency Setup) | M5-M15 |
@@ -35,7 +35,7 @@ Each milestone documented below with: inputs (what must exist) + outputs (delive
 
 ## M0 — Repo foundation
 
-**Inputs:** existing spec (15 schemas + 15 workflow docs).
+**Inputs:** existing spec (17 schemas — 16 domain + 1 shared `kpi_metric` — + 15 workflow docs).
 
 **Outputs:**
 - `pyproject.toml` (Poetry or uv)
@@ -43,7 +43,7 @@ Each milestone documented below with: inputs (what must exist) + outputs (delive
 - `app/` skeleton: `app/api/`, `app/agents/`, `app/models/`, `app/vendors/`, `app/services/`, `app/tasks/`, `app/utils/`
 - Alembic init; first migration (empty)
 - `app/main.py` FastAPI app with health endpoint + Sentry init
-- `app/celery_app.py` with all 4 queues registered + Beat schedule stub
+- `app/celery_app.py` with 2 queues registered (`default`, `llm_heavy`) + Beat schedule stub. v2 adds `vendor_apis` + `rendering` per V2-SCALE-01.
 - `tests/` skeleton with pytest config
 - GitHub Actions CI: lint (ruff) + typecheck (pyright) + tests + datamodel-code-generator drift check
 - `.env.example` with all env vars enumerated
@@ -54,12 +54,12 @@ Each milestone documented below with: inputs (what must exist) + outputs (delive
 
 ---
 
-## M1 — Data layer (all 15 schemas → ORM)
+## M1 — Data layer (all 17 schemas → ORM)
 
 **Inputs:** M0.
 
 **Outputs:**
-- `app/models/pydantic/` auto-generated from all 15 schemas
+- `app/models/pydantic/` auto-generated from all 17 schemas (16 domain + 1 shared)
 - `app/models/sqla/` hand-written for: `agency_profile`, `talent`, `brand_industry_map`, `brand_candidate`, `brand_contact`, `brand_deal`, `pitch_template`, `pitch_angle`, `pitch_enrollment`, `deal`, `discovery_prep_pack`, `proposal_pack`, `contract_pack`, `invoice_pack`, `performance_report_pack`, `memo`
 - Alembic migration applying all tables with indexes + pgcrypto extension
 - `app/utils/encryption.py` (pgcrypto wrappers for sensitive columns)
@@ -71,7 +71,7 @@ Each milestone documented below with: inputs (what must exist) + outputs (delive
 **Skip notes:** N/A (foundation).
 
 **Interdependency checks before next milestone:**
-- All 15 schemas have corresponding Pydantic + SQLAlchemy models
+- All 17 schemas (16 domain + 1 shared) have corresponding Pydantic + SQLAlchemy models
 - `pgcrypto` extension installed; encryption helpers tested
 - Multi-tenant-ready: every domain table has `agency_id` UUID column
 - Pack tables enforce uniqueness on `(deal_id, version)` where applicable

@@ -1,0 +1,25 @@
+{
+  "python.defaultInterpreterPath": ".venv/bin/python",
+  "python.analysis.typeCheckingMode": "strict",
+  "[python]": {
+    "editor.defaultFormatter": "charliermarsh.ruff",
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.organizeImports.ruff": "explicit"
+    }
+  },
+  "ruff.lint.run": "onType",
+  "files.exclude": {
+    "**/__pycache__": true,
+    ".venv": true,
+    "htmlcov": true,
+    ".pytest_cache": true,
+    ".ruff_cache": true
+  },
+  "files.associations": {
+    "*.schema.json": "json"
+  },
+  "yaml.schemas": {
+    "https://json.schemastore.org/github-workflow.json": ".github/workflows/*.yml"
+  }
+}

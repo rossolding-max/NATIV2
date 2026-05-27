@@ -84,7 +84,7 @@ __pycache__/
 
 # ─── uv venv + lock auxiliaries ──────────────────────────────────────
 .venv/
-.python-version
+# .python-version IS committed — declares the exact Python runtime (3.12.x).
 # uv.lock IS committed (reproducible builds); per pyproject.toml convention
 
 # ─── Coverage + test artefacts ───────────────────────────────────────
