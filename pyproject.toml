@@ -47,6 +47,9 @@ dependencies = [
     # CLI (M2 nativ test)
     "typer>=0.12",
     "prompt-toolkit>=3.0",
+    # Vendor HTTP retry/backoff (M3 vendor wrappers).
+    # Async-native, respects Retry-After headers via wait_combine.
+    "tenacity>=9.0",
 ]
 
 [project.optional-dependencies]
