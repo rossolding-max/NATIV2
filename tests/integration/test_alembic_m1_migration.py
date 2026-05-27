@@ -91,9 +91,9 @@ def test_integration__m1_migration_creates_all_16_tables(
     """``alembic upgrade head`` applies 0001 + 0002; 16 tables present + pgcrypto."""
     command.upgrade(m1_alembic_cfg, "head")
     tables = _tables_present(postgres_container)
-    assert EXPECTED_TABLES.issubset(
-        tables
-    ), f"Missing tables: {EXPECTED_TABLES - tables}\nGot: {sorted(tables)}"
+    assert EXPECTED_TABLES.issubset(tables), (
+        f"Missing tables: {EXPECTED_TABLES - tables}\nGot: {sorted(tables)}"
+    )
     assert _pgcrypto_present(postgres_container), "pgcrypto extension must be installed"
 
 
