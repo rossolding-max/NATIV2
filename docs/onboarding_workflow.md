@@ -483,6 +483,57 @@ SIMILAR TALENT RESEARCH:
 
 ---
 
+## M5 implementation notes (shipped vs deferred)
+
+M5 ships the workflow end-to-end behind the `/api/v1/talents` REST surface
+and a `nativ test phase 1` Typer wizard:
+
+- **Step 1 (Seed)**: country-aware timezone + disclosure-style defaulting
+  (US/UK/CA/AU/DE/FR/IE/NZ + a US fallback).
+- **Step 2 (OAuth)**: **Meta + TikTok** only. YouTube + Twitch +
+  LinkedIn-OAuth + Pinterest + Snap deferred to a later milestone.
+  PKCE (TikTok) + long-lived tokens (Meta) persisted into the new
+  `talent_vault` table via the `EncryptedString` (pgcrypto) decorator.
+- **Step 3 (Media pack)**: pypdf + python-docx parsing live; Claude
+  vision image-inlining live; structured LLM extraction is opt-in via
+  `run_llm_extraction` (defaults to off — the real LLM-driven pass
+  arrives with the M11 discovery-prep pack so cassette infrastructure
+  is shared).
+- **Step 5 (Questionnaire)**: rule-table-based adaptive logic over
+  `field_path` notation. LLM-driven branching deferred to a follow-up
+  once M11+ shows which fields actually need conversational follow-up.
+- **Step 6 (Brand history)**: 3-step fallback — exact match in
+  `data/brand_industry_map.json` → Exa-search-backed LLM stub
+  (placeholder; the real Exa+LLM lands with the M7 brand-discovery loop)
+  → `source = unknown` for manual override.
+- **Step 7 (Similar talent)**: manual seeds live plus a
+  `build_suggestion_prompt` helper; the LLM call itself is wired in M7
+  alongside the brand-discovery suggestion loop (shared infrastructure).
+  HypeAuditor / CreatorIQ / Modash integration is v2.
+- **Step 7.5 (Contract template)**: GAP-08 server-side version bump
+  (mirrors M4's GAP-07 invoice fix) plus 3 inline starter templates
+  (`management`, `talent-agency`, `brand-paid-promotion`).
+- **Step 9 (Background research)**: Celery task
+  `kick_off_brand_discovery` fires on `/activate` and writes a stub
+  `data/brand_candidates/current/{talent_id}.json`; the actual 16-search
+  Exa + Claude loop documented in `docs/brand_discovery.md` lands in M7.
+
+Cross-field activation guard (`check_ready_for_activation`):
+- ≥ 1 platform with `api_credentials.scope_validated_at` set,
+- every `previous_brands[]` entry has a non-null `industry_id`,
+- `billing_entity.legal_name` present.
+
+Per-patch full-schema validation is **off** — incremental patches can
+leave the row temporarily invalid by design; validation runs at
+`/activate` time only (M4 lesson carried forward).
+
+CLI: `uv run nativ test phase 1` walks the 10 steps. Step 2 prints the
+authorize URL + state, then asks the operator to paste back the
+redirected callback URL (`?code=…&state=…`); `--skip-oauth` plus
+`--skip-activate` give a deterministic `--auto` smoke run.
+
+---
+
 ## Open questions for v0.2
 
 1. **Re-onboarding cadence.** When should we prompt the user to refresh the whole profile? Rate cards drift, audience demos shift, exclusivities expire. Quarterly nudge? Auto-detect significant changes?

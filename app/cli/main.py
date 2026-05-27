@@ -39,23 +39,30 @@ test_app.add_typer(fixtures_app, name="fixtures", help="Fixture loading + status
 from pathlib import Path  # noqa: E402
 
 from app.cli.phase0_setup import DEFAULT_API_BASE, run_wizard  # noqa: E402
+from app.cli.phase1_onboarding import run_wizard as run_phase1_wizard  # noqa: E402
 
 
 @test_app.command()
 def phase(
-    phase_id: str = typer.Argument(..., help="Phase to walk through (e.g. '0', '4.5')."),
+    phase_id: str = typer.Argument(..., help="Phase to walk through (e.g. '0', '1')."),
     auto: bool = typer.Option(False, "--auto", help="Non-interactive mode."),
     skip_warmup: bool = typer.Option(
         False, "--skip-warmup", help="Phase 0 only: skip warmup poll."
     ),
+    skip_oauth: bool = typer.Option(
+        False, "--skip-oauth", help="Phase 1 only: skip driving Meta/TikTok OAuth callback."
+    ),
+    skip_activate: bool = typer.Option(
+        False, "--skip-activate", help="Phase 1 only: skip the final /activate call."
+    ),
     api_base_url: str = typer.Option(
-        DEFAULT_API_BASE, "--api-base-url", help="Phase 0 only: base URL of the running API."
+        DEFAULT_API_BASE, "--api-base-url", help="Base URL of the running API."
     ),
     logo: Path | None = typer.Option(  # noqa: B008
         None, "--logo", help="Phase 0 only: local logo file to upload."
     ),
 ) -> None:
-    """Interactive phase walkthrough. M4 ships Phase 0; M5-M16 add their own."""
+    """Interactive phase walkthrough. M4 ships Phase 0; M5 adds Phase 1."""
     if phase_id == "0":
         run_wizard(
             api_base_url=api_base_url,
@@ -64,9 +71,17 @@ def phase(
             logo_path=logo,
         )
         return
+    if phase_id == "1":
+        run_phase1_wizard(
+            api_base_url=api_base_url,
+            auto=auto,
+            skip_oauth=skip_oauth,
+            skip_activate=skip_activate,
+        )
+        return
     typer.echo(
         f"`nativ test phase {phase_id}` is not implemented yet. "
-        "M4 ships Phase 0; M5-M16 land per-milestone (see docs/project_plan.md)."
+        "M4 ships Phase 0; M5 ships Phase 1; M6-M16 land per-milestone."
     )
 
 

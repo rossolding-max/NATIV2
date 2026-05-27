@@ -32,7 +32,7 @@
 - `GET /` — fetch person profile by LinkedIn URL.
 - `GET /get-company-by-domain` — resolve domain → company profile + employee counts.
 - `GET /get-profile-posts` — recent activity feed for outreach personalisation.
-**Env var:** `RAPIDAPI_KEY`. Deprecated alias `LINKEDIN_API_KEY` is honoured at config-load time (M3 backfill) but will be removed at M5.
+**Env var:** `RAPIDAPI_KEY`. Deprecated alias `LINKEDIN_API_KEY` is honoured at config-load time (M3 backfill); slated for removal after M8 when the contact-CRM is the only remaining caller.
 **Cost:** per RapidAPI subscription tier (Basic / Pro / Ultra / Mega). Tier choice depends on per-talent enrichment volume.
 **Future RapidAPI vendors:** if we adopt more, the gateway boilerplate moves to `app/vendors/_rapidapi_client.py`; until then it's inlined in `linkedin.py`.
 **v0.1 scope is enrichment only — NOT outreach.** Reading profile data + last-activity dates only. Sending LinkedIn messages / InMails / connection requests is **deferred to v2** — see `docs/outreach_workflow.md` § "Email-only in v0.1". When v2 ships LinkedIn-channel sending, we'll evaluate sender vendors (Sales Navigator API vs third-party platforms like Closely / Expandi / La Growth Machine) against LinkedIn's automation-policy enforcement.
@@ -61,7 +61,7 @@
 - **TikTok Display API**: `GET /v2/video/list/`. Requires `video.list` scope. Rate limit 100 calls/day per user (tight — guides cron cadence).
 **Why direct (not Phyllo) in v0.1:** narrower platform surface in v0.1 (IG + TikTok cover most influencer partnerships); avoids per-creator monthly Phyllo cost; full control over rate-limit handling and matching logic. Tradeoff = ongoing maintenance of two API integrations.
 **Polling cadence:** 15 min for IG Stories (24h ephemeral); 1 hour for everything else. Cron only polls deals in DELIVERY substages with unmatched `posting_schedule[]` entries.
-**oAuth token storage:** per-talent tokens captured during Phase 1 onboarding platform connection step. Refresh handled by the orchestrator's auth layer.
+**oAuth token storage:** per-talent tokens captured during Phase 1 onboarding platform connection step (live at M5: `talent_vault` table, column-level pgcrypto via `EncryptedString`). Callback routes at `/api/v1/webhooks/{meta,tiktok}/oauth_callback` consume Redis-stored CSRF state (+ PKCE verifier for TikTok), exchange the code, test the granted scopes with a lightweight read call, and stamp `scope_validated_at` on success. Refresh handled by the orchestrator's auth layer.
 **Env vars:** `META_APP_ID`, `META_APP_SECRET`, `TIKTOK_CLIENT_KEY`, `TIKTOK_CLIENT_SECRET`.
 
 ### Phase 4.8 invoice — Phyllo unified API for other platforms (deferred — v2)
