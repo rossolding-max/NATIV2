@@ -2,6 +2,8 @@
 
 This file gives Claude Code (and other AI assistants) durable context about this codebase. Read first when starting any work in this repo.
 
+> **Human dev team picking up the build?** Read `docs/build_kickoff.md` instead/first — it's the human-facing orientation memo. This file is reference material for AI assistants working in the repo.
+
 ---
 
 ## What this is
