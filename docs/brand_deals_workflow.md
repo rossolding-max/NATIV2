@@ -253,6 +253,52 @@ Search 1  (citation    (warm-intro
 | Deal record is missing `ended_at` (still active) | `renewal_eligibility_date` stays null; deal isn't surfaced by Search 1 |
 | Schema validation fails on save | Surface inline errors; talent fixes before save |
 
+## M6 implementation notes (shipped vs deferred)
+
+M6 ships the REST + service surface for brand-deal capture and the KPI
+honesty-floor enforcement. Routes (all under `/api/v1`):
+
+| Endpoint | Action |
+|---|---|
+| `POST   /talents/{talent_id}/brand-deals` | Create deal + auto-link the matching `talent.data.previous_brands[]` light entry by `deal_id` FK |
+| `GET    /talents/{talent_id}/brand-deals?outcome=…` | List per-talent (optional outcome filter — indexed column) |
+| `GET    /brand-deals/{deal_id}` | Fetch by id |
+| `PATCH  /brand-deals/{deal_id}` | Deep-merge JSONB + re-run honesty-floor validation |
+| `POST   /brand-deals/{deal_id}/outcome` | Set the indexed outcome enum (writes the column + JSONB mirror) |
+| `DELETE /brand-deals/{deal_id}` | Soft-delete (sets `is_deleted = true`) |
+
+**Honesty floor enforced server-side.** Every populated KPI must carry
+`value` + `source` (from the shared `kpiMetric` schema) + `as_of` (M6
+extension). The validator returns 422 with a structured `field` path
+so the UI can surface inline errors. Suspicious-but-allowed values
+(engagement_rate_pct > 100, > 30% unusually high, future as_of) are
+logged as `brand_deal_suspicious_value` events for the agent to review.
+
+**Industry inference reuses M5.** When the caller omits `industry_id`,
+`brand_history_enrichment.resolve_industry(brand_name)` fires — exact
+match in `data/brand_industry_map.json`, then Exa+LLM fallback. M6
+fails the create with 422 if no industry can be resolved (since
+downstream phases need it for filtering).
+
+**Memo skeleton wired.** Each create emits an idempotent
+`memo_type="brand_deal_kpi_pattern"` memo with
+`scope="industry_pattern"` and tags `{talent_ids, brand_ids,
+industry_ids, deal_ids, topics: ["kpi_insight"]}` so M7 brand-discovery
+retrieval has data to read against. Real LLM-driven pattern
+classification lands with M7.
+
+**Out of scope for M6:**
+- **Media-pack extraction → brand_deal** (Path 1 in this doc) — deferred
+  to V2; the agent is the source of truth, not a drifting PDF.
+- **Platform-API nightly auto-pull** (Path 3) — deferred to M7/M9 when
+  the deal pipeline + post-detection cron land.
+- **`archived_from_deal_id` bidirectional FK** — M6 ships the column;
+  M9's deal-close handler writes it.
+- **Cool-down + renewal-eligibility computation** — fields persist; M7
+  Search 1 reads them.
+- **`vs_industry_benchmark`** — field persists; M11/M15 packs derive
+  it.
+
 ## Open questions for v0.2
 
 1. **Industry benchmarks file** — the big v2 deliverable that unlocks `past_campaign_beat_benchmark` (currently dormant). Source: a curated `data/industry_kpi_benchmarks.json` from Influencer Marketing Hub / HypeAuditor / Tribe Dynamics public reports. ~20 industries × 5 platforms × ~6 metrics = ~600 benchmark values to author.

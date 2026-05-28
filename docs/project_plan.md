@@ -213,13 +213,15 @@ Each milestone documented below with: inputs (what must exist) + outputs (delive
 
 **Inputs:** M5.
 
-**Outputs:**
-- `app/api/brand_deals.py`: CRUD + ingestion endpoints
-- 3 ingestion paths (per `docs/brand_deals_workflow.md`): media pack extraction, questionnaire-guided entry, ad-hoc add
-- KPI honesty-floor enforcement (every metric has `source` + `as_of`)
-- `app/services/kpi_validation.py`: validates kpiMetric shape + flags suspicious values
+**Outputs (shipped):**
+- `app/api/brand_deals.py`: 6 endpoints — `POST /talents/{id}/brand-deals` (create + auto-link to `talent.data.previous_brands[]`), `GET /talents/{id}/brand-deals?outcome=…`, `GET /brand-deals/{deal_id}`, `PATCH /brand-deals/{deal_id}` (deep-merge JSONB + re-validate KPIs), `POST /brand-deals/{deal_id}/outcome`, `DELETE /brand-deals/{deal_id}` (soft).
+- `app/services/kpi_validation.py`: honesty-floor enforcement — every populated `kpiMetric` must carry `value` + `source` + `as_of`; suspicious-value flagging (engagement_rate_pct > 100, > 30% unusually high, future as_of) is non-blocking.
+- `app/services/brand_deal_service.py`: orchestration — `create_deal` (resolves industry via M5's `resolve_industry`, creates `brand` row on first sight, derives `deal_id` slug, auto-links to `previous_brands[]`); `patch_deal` (mirrors scalar columns to indexed slots); `set_outcome`; `memo_kpi_pattern` skeleton (`memo_type="brand_deal_kpi_pattern"` + `scope="industry_pattern"` so M7 retrieval has data).
+- `app/repositories/brand_deal.py`: `find_by_talent`, `find_by_outcome`, `patch_deal_data`, `set_scalar_columns`, `set_outcome_column`.
+- Ingestion path 2 (questionnaire-guided / REST-driven) ships fully. Paths 1 (media-pack extraction → brand_deal) and 3 (platform-API nightly auto-pull) explicitly deferred per the M5.1 product call (agent is source of truth) and to M7/M9 respectively.
+- Tests: ~50 new (17 KPI honesty floor + 10 service unit + 5 repo integration + 11 REST integration + e2e happy path).
 
-**Acceptance:** real talent's past deals imported; per-talent `data/brand_deals/{talent_id}.json` shape preserved in DB.
+**Acceptance:** real talent's past deals captured via REST; KPI honesty floor enforced on every write; auto-link to `talent.data.previous_brands[]` keeps the index in sync.
 
 **Skip notes:** if skipped, M11 prep pack lacks comparable case studies (omits "Recent work" slide); M15 performance report lacks `vs_talent_historical` benchmark (omitted with note).
 
