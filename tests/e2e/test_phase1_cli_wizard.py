@@ -102,7 +102,11 @@ def test_e2e__phase1_wizard_auto_mode_walks_full_flow() -> None:
         db_session.async_session_factory = original_factory
 
     assert final["status"] in {"onboarding", "active"}
-    assert final["data"].get("contract_template", {}).get("based_on_starter_template_id")
+    # Confirm Step 1 seed landed (name + initial platform handle) — the wizard
+    # no longer adopts a contract template in auto mode (contract template
+    # adoption moved out of the talent wizard per the 2026-05-28 redesign).
+    assert final["name"] == "Wizard Talent"
+    assert final["data"].get("platforms")
 
 
 class _StarletteToHttpxProxy:

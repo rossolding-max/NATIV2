@@ -133,6 +133,11 @@ ignore = [
 [tool.ruff.lint.per-file-ignores]
 "tests/**/*.py" = ["S", "ARG"]
 "scripts/**/*.py" = ["S"]
+# Both files carry long human-readable prose strings (questionnaire help
+# text + wizard help text) where forced 100-char wrapping would hurt
+# readability for marginal benefit.
+"app/services/questionnaire.py" = ["E501"]
+"app/cli/phase1_onboarding.py" = ["E501"]
 
 [tool.ruff.format]
 quote-style = "double"
