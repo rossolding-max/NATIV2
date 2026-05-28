@@ -43,7 +43,7 @@ async def session(_m6_migrated_db: Any) -> Any:  # pyright: ignore[reportUnusedF
     await engine.dispose()
 
 
-async def _seed_talent(s: Any, talent_id: str = "jane-doe") -> str:
+async def _seed_talent(s: Any, talent_id: str = "m6-test-talent") -> str:
     await s.execute(
         text(
             "INSERT INTO talent (talent_id, name, status, data, agency_id, "
@@ -53,8 +53,8 @@ async def _seed_talent(s: Any, talent_id: str = "jane-doe") -> str:
         ),
         {
             "tid": talent_id,
-            "name": "Jane Doe",
-            "data": json.dumps({"id": talent_id, "name": "Jane Doe"}),
+            "name": "M6 Test Talent",
+            "data": json.dumps({"id": talent_id, "name": "M6 Test Talent"}),
             "agency": str(_TEST_AGENCY_ID),
         },
     )
@@ -107,14 +107,20 @@ async def test_integration__find_by_talent__returns_all_deals(session: Any) -> N
     await _seed_talent(session)
     await _seed_brand(session)
     await _make_deal(
-        session, deal_id=f"deal_2025_a_{uuid4().hex[:6]}", talent_id="jane-doe", brand_id="gymshark"
+        session,
+        deal_id=f"deal_2025_a_{uuid4().hex[:6]}",
+        talent_id="m6-test-talent",
+        brand_id="gymshark",
     )
     await _make_deal(
-        session, deal_id=f"deal_2024_a_{uuid4().hex[:6]}", talent_id="jane-doe", brand_id="gymshark"
+        session,
+        deal_id=f"deal_2024_a_{uuid4().hex[:6]}",
+        talent_id="m6-test-talent",
+        brand_id="gymshark",
     )
 
     repo = BrandDealRepository(session, agency_id=_TEST_AGENCY_ID)
-    deals = await repo.find_by_talent("jane-doe")
+    deals = await repo.find_by_talent("m6-test-talent")
     assert len(deals) == 2
 
 
@@ -124,20 +130,20 @@ async def test_integration__find_by_outcome__filters_correctly(session: Any) -> 
     await _make_deal(
         session,
         deal_id=f"deal_a_{uuid4().hex[:6]}",
-        talent_id="jane-doe",
+        talent_id="m6-test-talent",
         brand_id="gymshark",
         outcome="successful",
     )
     await _make_deal(
         session,
         deal_id=f"deal_b_{uuid4().hex[:6]}",
-        talent_id="jane-doe",
+        talent_id="m6-test-talent",
         brand_id="gymshark",
         outcome="underperformed",
     )
 
     repo = BrandDealRepository(session, agency_id=_TEST_AGENCY_ID)
-    successful = await repo.find_by_outcome("jane-doe", "successful")
+    successful = await repo.find_by_outcome("m6-test-talent", "successful")
     assert len(successful) == 1
     assert successful[0].outcome == "successful"
 
@@ -146,7 +152,7 @@ async def test_integration__patch_deal_data__deep_merges_jsonb(session: Any) -> 
     await _seed_talent(session)
     await _seed_brand(session)
     deal_id = f"deal_2025_acme_{uuid4().hex[:6]}"
-    await _make_deal(session, deal_id=deal_id, talent_id="jane-doe", brand_id="gymshark")
+    await _make_deal(session, deal_id=deal_id, talent_id="m6-test-talent", brand_id="gymshark")
     repo = BrandDealRepository(session, agency_id=_TEST_AGENCY_ID)
     updated = await repo.patch_deal_data(
         deal_id, {"fee_usd": 5000, "kpis": {"reach": {"value": 1_000_000}}}
@@ -165,7 +171,7 @@ async def test_integration__set_outcome_column__updates_indexed_column(session: 
     await _seed_brand(session)
     deal_id = f"deal_2025_acme_{uuid4().hex[:6]}"
     await _make_deal(
-        session, deal_id=deal_id, talent_id="jane-doe", brand_id="gymshark", outcome="pending"
+        session, deal_id=deal_id, talent_id="m6-test-talent", brand_id="gymshark", outcome="pending"
     )
     repo = BrandDealRepository(session, agency_id=_TEST_AGENCY_ID)
     updated = await repo.set_outcome_column(deal_id, "successful")

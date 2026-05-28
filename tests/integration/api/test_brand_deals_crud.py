@@ -82,14 +82,14 @@ async def m6_app(_m6_setup_env: Any) -> Any:  # pyright: ignore[reportUnusedFunc
 async def _seed_talent(
     db_session_factory: Any,
     *,
-    talent_id: str = "jane-doe",
+    talent_id: str = "m6-test-talent",
     previous_brands: list[dict[str, Any]] | None = None,
 ) -> str:
     """Insert a minimal talent row. Picks up app.state.agency_id at lifespan."""
     import json as _json
     from uuid import UUID
 
-    data = {"id": talent_id, "name": "Jane Doe"}
+    data = {"id": talent_id, "name": "M6 Test Talent"}
     if previous_brands is not None:
         data["previous_brands"] = previous_brands  # type: ignore[assignment]
     async with db_session_factory() as s:
@@ -105,7 +105,7 @@ async def _seed_talent(
             ),
             {
                 "tid": talent_id,
-                "name": "Jane Doe",
+                "name": "M6 Test Talent",
                 "data": _json.dumps(data),
                 "agency": str(UUID(int=0)),
             },
@@ -143,10 +143,12 @@ async def test_integration__create_brand_deal__happy_path(m6_app: AsyncClient) -
 
     await _seed_talent(async_session_factory)
 
-    r = await m6_app.post("/api/v1/talents/jane-doe/brand-deals", json=_make_valid_deal_payload())
+    r = await m6_app.post(
+        "/api/v1/talents/m6-test-talent/brand-deals", json=_make_valid_deal_payload()
+    )
     assert r.status_code == 201, r.text
     body = r.json()["data"]
-    assert body["talent_id"] == "jane-doe"
+    assert body["talent_id"] == "m6-test-talent"
     assert body["brand_id"] == "gymshark"
     assert body["outcome"] == "successful"
     assert body["fee_usd"] == 5000
@@ -158,19 +160,19 @@ async def test_integration__list_brand_deals__filters_by_outcome(m6_app: AsyncCl
 
     await _seed_talent(async_session_factory)
     await m6_app.post(
-        "/api/v1/talents/jane-doe/brand-deals",
+        "/api/v1/talents/m6-test-talent/brand-deals",
         json=_make_valid_deal_payload(outcome="successful"),
     )
     await m6_app.post(
-        "/api/v1/talents/jane-doe/brand-deals",
+        "/api/v1/talents/m6-test-talent/brand-deals",
         json=_make_valid_deal_payload(brand_name="Nike", outcome="underperformed"),
     )
 
-    r_all = await m6_app.get("/api/v1/talents/jane-doe/brand-deals")
+    r_all = await m6_app.get("/api/v1/talents/m6-test-talent/brand-deals")
     assert r_all.status_code == 200
     assert len(r_all.json()["data"]) == 2
 
-    r_filtered = await m6_app.get("/api/v1/talents/jane-doe/brand-deals?outcome=successful")
+    r_filtered = await m6_app.get("/api/v1/talents/m6-test-talent/brand-deals?outcome=successful")
     assert r_filtered.status_code == 200
     rows = r_filtered.json()["data"]
     assert len(rows) == 1
@@ -182,7 +184,7 @@ async def test_integration__get_brand_deal_by_id(m6_app: AsyncClient) -> None:
 
     await _seed_talent(async_session_factory)
     created = await m6_app.post(
-        "/api/v1/talents/jane-doe/brand-deals", json=_make_valid_deal_payload()
+        "/api/v1/talents/m6-test-talent/brand-deals", json=_make_valid_deal_payload()
     )
     deal_id = created.json()["data"]["brand_deal_id"]
 
@@ -196,7 +198,7 @@ async def test_integration__patch_brand_deal__merges_jsonb(m6_app: AsyncClient) 
 
     await _seed_talent(async_session_factory)
     created = await m6_app.post(
-        "/api/v1/talents/jane-doe/brand-deals", json=_make_valid_deal_payload()
+        "/api/v1/talents/m6-test-talent/brand-deals", json=_make_valid_deal_payload()
     )
     deal_id = created.json()["data"]["brand_deal_id"]
 
@@ -217,7 +219,7 @@ async def test_integration__set_outcome_endpoint(m6_app: AsyncClient) -> None:
 
     await _seed_talent(async_session_factory)
     created = await m6_app.post(
-        "/api/v1/talents/jane-doe/brand-deals",
+        "/api/v1/talents/m6-test-talent/brand-deals",
         json=_make_valid_deal_payload(outcome="pending"),
     )
     deal_id = created.json()["data"]["brand_deal_id"]
@@ -236,7 +238,7 @@ async def test_integration__soft_delete_brand_deal(m6_app: AsyncClient) -> None:
 
     await _seed_talent(async_session_factory)
     created = await m6_app.post(
-        "/api/v1/talents/jane-doe/brand-deals", json=_make_valid_deal_payload()
+        "/api/v1/talents/m6-test-talent/brand-deals", json=_make_valid_deal_payload()
     )
     deal_id = created.json()["data"]["brand_deal_id"]
 
@@ -245,7 +247,7 @@ async def test_integration__soft_delete_brand_deal(m6_app: AsyncClient) -> None:
     assert r.json()["data"]["is_deleted"] is True
 
     # Soft-deleted rows are excluded from default queries.
-    r_after = await m6_app.get("/api/v1/talents/jane-doe/brand-deals")
+    r_after = await m6_app.get("/api/v1/talents/m6-test-talent/brand-deals")
     assert r_after.status_code == 200
     assert r_after.json()["data"] == []
 
@@ -260,7 +262,7 @@ async def test_integration__honesty_floor__missing_as_of_rejected(m6_app: AsyncC
     bad = _make_valid_deal_payload(
         kpis={"reach": {"value": 100, "source": "platform_verified"}}  # missing as_of
     )
-    r = await m6_app.post("/api/v1/talents/jane-doe/brand-deals", json=bad)
+    r = await m6_app.post("/api/v1/talents/m6-test-talent/brand-deals", json=bad)
     assert r.status_code == 422
     body = r.json()
     assert "errors" in body
@@ -274,7 +276,7 @@ async def test_integration__honesty_floor__missing_source_rejected(m6_app: Async
     bad = _make_valid_deal_payload(
         kpis={"reach": {"value": 100, "as_of": _TODAY}}  # missing source
     )
-    r = await m6_app.post("/api/v1/talents/jane-doe/brand-deals", json=bad)
+    r = await m6_app.post("/api/v1/talents/m6-test-talent/brand-deals", json=bad)
     assert r.status_code == 422
     body = r.json()
     assert "errors" in body
@@ -289,7 +291,7 @@ async def test_integration__auto_link_existing_previous_brand(m6_app: AsyncClien
         previous_brands=[{"brand": "Gymshark", "industry_id": "activewear"}],
     )
     created = await m6_app.post(
-        "/api/v1/talents/jane-doe/brand-deals", json=_make_valid_deal_payload()
+        "/api/v1/talents/m6-test-talent/brand-deals", json=_make_valid_deal_payload()
     )
     deal_id = created.json()["data"]["brand_deal_id"]
 
@@ -297,7 +299,7 @@ async def test_integration__auto_link_existing_previous_brand(m6_app: AsyncClien
     async with async_session_factory() as s:
         result = await s.execute(
             text("SELECT data FROM talent WHERE talent_id = :tid"),
-            {"tid": "jane-doe"},
+            {"tid": "m6-test-talent"},
         )
         row = result.first()
     assert row is not None
@@ -314,14 +316,14 @@ async def test_integration__auto_link_appends_when_no_match(m6_app: AsyncClient)
 
     await _seed_talent(async_session_factory, previous_brands=[])
     created = await m6_app.post(
-        "/api/v1/talents/jane-doe/brand-deals", json=_make_valid_deal_payload()
+        "/api/v1/talents/m6-test-talent/brand-deals", json=_make_valid_deal_payload()
     )
     deal_id = created.json()["data"]["brand_deal_id"]
 
     async with async_session_factory() as s:
         result = await s.execute(
             text("SELECT data FROM talent WHERE talent_id = :tid"),
-            {"tid": "jane-doe"},
+            {"tid": "m6-test-talent"},
         )
         row = result.first()
     assert row is not None

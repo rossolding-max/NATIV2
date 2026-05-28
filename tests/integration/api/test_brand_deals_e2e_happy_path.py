@@ -74,7 +74,7 @@ async def m6_app(_m6_e2e_setup: Any) -> Any:  # pyright: ignore[reportUnusedFunc
         db_session.async_session_factory = original_factory
 
 
-async def _seed_talent(db_session_factory: Any, *, talent_id: str = "jane-doe") -> str:
+async def _seed_talent(db_session_factory: Any, *, talent_id: str = "m6-test-talent") -> str:
     """Insert a minimal talent row with a single existing light brand entry."""
     import json as _json
     from uuid import UUID
@@ -89,11 +89,11 @@ async def _seed_talent(db_session_factory: Any, *, talent_id: str = "jane-doe") 
             ),
             {
                 "tid": talent_id,
-                "name": "Jane Doe",
+                "name": "M6 Test Talent",
                 "data": _json.dumps(
                     {
                         "id": talent_id,
-                        "name": "Jane Doe",
+                        "name": "M6 Test Talent",
                         "previous_brands": [{"brand": "Gymshark", "industry_id": "activewear"}],
                     }
                 ),
@@ -131,31 +131,31 @@ async def test_e2e__three_deals_across_outcomes(m6_app: AsyncClient) -> None:
     # Create three deals across three outcomes.
     deal_a = (
         await m6_app.post(
-            "/api/v1/talents/jane-doe/brand-deals",
+            "/api/v1/talents/m6-test-talent/brand-deals",
             json=_deal("Gymshark", "successful_renewed", fee=8000),
         )
     ).json()["data"]
     deal_b = (
         await m6_app.post(
-            "/api/v1/talents/jane-doe/brand-deals",
+            "/api/v1/talents/m6-test-talent/brand-deals",
             json=_deal("Nike", "successful", fee=12000),
         )
     ).json()["data"]
     deal_c = (
         await m6_app.post(
-            "/api/v1/talents/jane-doe/brand-deals",
+            "/api/v1/talents/m6-test-talent/brand-deals",
             json=_deal("Adidas", "underperformed", fee=4000),
         )
     ).json()["data"]
 
     # All three landed.
-    all_deals = (await m6_app.get("/api/v1/talents/jane-doe/brand-deals")).json()["data"]
+    all_deals = (await m6_app.get("/api/v1/talents/m6-test-talent/brand-deals")).json()["data"]
     assert len(all_deals) == 3
     assert {d["brand_id"] for d in all_deals} == {"gymshark", "nike", "adidas"}
 
     # Filter by outcome.
     successful = (
-        await m6_app.get("/api/v1/talents/jane-doe/brand-deals?outcome=successful")
+        await m6_app.get("/api/v1/talents/m6-test-talent/brand-deals?outcome=successful")
     ).json()["data"]
     assert {d["brand_id"] for d in successful} == {"nike"}
 
@@ -182,14 +182,14 @@ async def test_e2e__three_deals_across_outcomes(m6_app: AsyncClient) -> None:
     assert r_delete.status_code == 200, r_delete.text
 
     # After soft-delete, list shows only the surviving two.
-    surviving = (await m6_app.get("/api/v1/talents/jane-doe/brand-deals")).json()["data"]
+    surviving = (await m6_app.get("/api/v1/talents/m6-test-talent/brand-deals")).json()["data"]
     assert len(surviving) == 2
     assert deal_b["brand_deal_id"] not in {d["brand_deal_id"] for d in surviving}
 
     # Auto-link to talent.data.previous_brands[] kept the index in sync.
     async with async_session_factory() as s:
         result = await s.execute(
-            text("SELECT data FROM talent WHERE talent_id = 'jane-doe'"),
+            text("SELECT data FROM talent WHERE talent_id = 'm6-test-talent'"),
         )
         row = result.first()
     assert row is not None
