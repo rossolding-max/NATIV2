@@ -1,4 +1,4 @@
-"""Step 6 — brand-history industry inference.
+"""Step 6 — brand-history industry inference + bulk-text parsing.
 
 For each ``previous_brands[]`` entry, derive ``industry_id``:
 
@@ -9,11 +9,18 @@ For each ``previous_brands[]`` entry, derive ``industry_id``:
 
 On confirmed inference, the new (name → industry_id) pair is written back
 to the seed map so future onboardings benefit (idempotent reimport).
+
+Bulk-text path (``parse_name_list_from_text``): accept a free-form text
+blob — e.g. ``"Dunkin' Donuts MLB CVS Dearfoams Ray Ban Cumberland Farms
+Jägermeister Kevin's Natural Foods Waterboy Dr. Squatch"`` — and run a
+short Claude call to tidy it into a clean list of canonical names. Used
+by Step 6 (previous_brands) and Step 7 (similar_talent).
 """
 
 from __future__ import annotations
 
 import json
+import re
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
@@ -116,6 +123,86 @@ async def resolve_industry(brand_name: str) -> IndustryInference:
     if exact is not None:
         return exact
     return await resolve_via_exa_llm(brand_name)
+
+
+_JSON_FENCE_RE = re.compile(r"```(?:json)?\s*(.*?)```", re.DOTALL)
+
+
+def _strip_json_fence(text: str) -> str:
+    m = _JSON_FENCE_RE.search(text)
+    return m.group(1).strip() if m else text.strip()
+
+
+async def parse_name_list_from_text(
+    raw_text: str,
+    *,
+    kind: str = "brands",
+) -> list[str]:
+    """LLM-tidy a free-text blob into a list of canonical names.
+
+    ``kind`` is ``brands`` or ``creators`` and selects the prompt
+    framing. Returns an empty list if the input is empty or the LLM
+    can't recover any names.
+    """
+    text = raw_text.strip()
+    if not text:
+        return []
+
+    from app.agents.llm_client import get_async_anthropic
+    from app.config import settings
+
+    instructions = "brand names" if kind == "brands" else "creator / influencer names"
+    prompt = (
+        f"Parse the following free-form text into a clean JSON list of {instructions}.\n"
+        "Rules:\n"
+        '- Output a JSON object {"names": ["...", "..."]}.\n'
+        "- One canonical entry per name. Strip leading/trailing punctuation.\n"
+        "- Preserve the user's capitalisation + diacritics (e.g. 'Jägermeister').\n"
+        "- Drop obvious non-names (filler words, headings, dates).\n"
+        "- Do NOT invent entries the source doesn't mention.\n"
+        "- Return ONLY the JSON object. No prose, no markdown fences.\n\n"
+        f"SOURCE TEXT:\n{text}"
+    )
+
+    client = get_async_anthropic()
+    log.info("brand_history_bulk_tidy_started", kind=kind, source_len=len(text))
+    try:
+        response = await client.messages.create(
+            model=settings.anthropic_default_model,
+            max_tokens=1500,
+            messages=[{"role": "user", "content": prompt}],
+        )
+    except Exception as exc:
+        log.warning("brand_history_bulk_tidy_failed", kind=kind, error=str(exc))
+        return []
+
+    text_parts: list[str] = []
+    for block in getattr(response, "content", []) or []:
+        if getattr(block, "type", None) == "text":
+            text_parts.append(getattr(block, "text", "") or "")
+    raw = "".join(text_parts)
+    try:
+        body = json.loads(_strip_json_fence(raw))
+    except json.JSONDecodeError:
+        log.warning("brand_history_bulk_tidy_not_json", kind=kind, raw=raw[:200])
+        return []
+    names = body.get("names")
+    if not isinstance(names, list):
+        return []
+    cleaned: list[str] = []
+    seen: set[str] = set()
+    for n in names:
+        if not isinstance(n, str):
+            continue
+        n_clean = n.strip()
+        if not n_clean:
+            continue
+        key = n_clean.lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        cleaned.append(n_clean)
+    return cleaned
 
 
 def merge_inference_into_brands(

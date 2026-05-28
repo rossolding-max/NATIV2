@@ -26,10 +26,19 @@
       "pattern": "^[a-z0-9][a-z0-9-]*$"
     },
     "name": {
-      "type": "string"
+      "type": "string",
+      "description": "Public / stage name used in outreach + on the talent's media kit."
+    },
+    "legal_name": {
+      "type": "string",
+      "description": "Legal name for contracts and invoices when distinct from `name`. v0.1 captured at onboarding so Phase 4.7 contract pack doesn't need to ask later."
     },
     "pronouns": {
       "type": "string"
+    },
+    "gender_identity": {
+      "type": "string",
+      "description": "Free-form gender identity (the talent's preferred descriptor). Suggested presets: female, male, non-binary, prefer-not-to-say, or a self-describe value. Used by Phase 2 brand discovery to filter for campaigns with gender-targeted briefs."
     },
     "age": {
       "type": "integer",
@@ -39,6 +48,44 @@
     "date_of_birth": {
       "type": "string",
       "format": "date"
+    },
+    "career_start_year": {
+      "type": "integer",
+      "minimum": 1950,
+      "maximum": 2099,
+      "description": "Year the talent started creating professionally. Powers credibility-signal copy in Phase 4.5 discovery prep packs (\"creating since 2018\")."
+    },
+    "professional_roles": {
+      "type": "array",
+      "description": "Other professional hats the talent wears beyond \"content creator\". Boosts Phase 2 brand-discovery scoring for category-adjacent campaigns (e.g. fitness brands love athlete-creators).",
+      "items": {
+        "type": "string",
+        "enum": [
+          "creator",
+          "actor",
+          "comedian",
+          "athlete",
+          "musician",
+          "model",
+          "writer",
+          "podcaster",
+          "speaker",
+          "founder",
+          "executive",
+          "journalist",
+          "chef",
+          "designer"
+        ]
+      },
+      "uniqueItems": true
+    },
+    "content_pillars": {
+      "type": "array",
+      "description": "Signature content formats the talent is known for, beyond the broader `content_niches`. e.g. \"morning routines\", \"GRWM\", \"behind-the-scenes\", \"long-form interviews\". Free-form strings, captured during onboarding.",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
     },
     "location": {
       "type": "object",

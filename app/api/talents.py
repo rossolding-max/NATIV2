@@ -95,7 +95,25 @@ class MediaPackExtractRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     s3_keys: list[str] = Field(default_factory=list)
-    run_llm_extraction: bool = False
+    run_llm_extraction: bool = True
+
+
+class ReconcileDecisionPayload(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    field_path: str
+    action: str = Field(..., pattern=r"^(accept|edit|reject)$")
+    edited_value: Any = None
+    source_artefact_id: str | None = None
+
+
+class ReconcileRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    decisions: list[ReconcileDecisionPayload]
+    # Caller echoes the candidates back so the server doesn't need to
+    # re-extract — keeps the endpoint stateless. Keyed by field_path.
+    candidates: dict[str, Any] = Field(default_factory=dict)
 
 
 class ResolveIndustryRequest(BaseModel):
@@ -110,6 +128,14 @@ class AddSimilarTalentRequest(BaseModel):
     name: str
     handles: list[str] = Field(default_factory=list)
     slug: str | None = None
+
+
+class BulkTextRequest(BaseModel):
+    """Free-text blob for the LLM-tidy bulk-parse endpoints."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    text: str = Field(..., min_length=1)
 
 
 class AdoptContractTemplateRequest(BaseModel):
@@ -355,6 +381,48 @@ async def media_pack_extract(
     )
 
 
+@router.post("/{talent_id}/reconcile")
+async def reconcile(
+    payload: ReconcileRequest,
+    request: Request,
+    talent_id: str,
+    session: AsyncSession = Depends(get_db),  # noqa: B008
+) -> APIResponse[Any]:
+    """Step 4 — apply operator decisions against Step-3 extraction candidates.
+
+    Each decision is one of ``accept`` / ``edit`` / ``reject``. The
+    accepted/edited values deep-merge into ``talent.data`` and an audit
+    trail lands under ``data.extraction_provenance``.
+    """
+    _warn_missing_idempotency(request)
+    agency_id = _agency_id_from_request(request)
+    repo = TalentRepository(session, agency_id=agency_id)
+    await _get_talent_or_404(repo, talent_id)
+
+    from app.services.talent_reconciliation import (
+        ReconciliationDecision,
+        build_reconciliation_patch,
+    )
+
+    decisions = [
+        ReconciliationDecision(
+            field_path=d.field_path,
+            action=d.action,  # type: ignore[arg-type]
+            edited_value=d.edited_value,
+            source_artefact_id=d.source_artefact_id,
+        )
+        for d in payload.decisions
+    ]
+    patch = build_reconciliation_patch(decisions, candidates_by_path=payload.candidates)
+    if not patch:
+        return _envelope({"applied": 0, "data": None})
+
+    service = TalentOnboardingService(repo)
+    merged = await service.apply_data_patch(talent_id, patch)
+    await session.commit()
+    return _envelope({"applied": len(decisions), "data": merged})
+
+
 @router.post("/{talent_id}/questionnaire/next")
 async def questionnaire_next(
     request: Request,
@@ -372,9 +440,10 @@ async def questionnaire_next(
         {
             "complete": False,
             "field_path": question.field_path,
-            "prompt": question.prompt,
+            "label": question.label,
             "kind": question.kind,
             "required": question.required,
+            "choices_source": question.choices_source,
         }
     )
 
@@ -421,6 +490,93 @@ async def resolve_brand_industry(
     )
 
 
+@router.post("/{talent_id}/brand-history/bulk")
+async def brand_history_bulk(
+    payload: BulkTextRequest,
+    request: Request,
+    talent_id: str,
+    session: AsyncSession = Depends(get_db),  # noqa: B008
+) -> APIResponse[Any]:
+    """Step 6 (bulk) — paste a free-text blob of past brand collaborations.
+
+    An LLM parses + tidies into a clean list, then each entry passes
+    through ``resolve_industry`` so the ``previous_brands[]`` array
+    gets ``industry_id`` populated where the seed map / Exa lookup
+    knows the answer.
+    """
+    _warn_missing_idempotency(request)
+    agency_id = _agency_id_from_request(request)
+    repo = TalentRepository(session, agency_id=agency_id)
+    row = await _get_talent_or_404(repo, talent_id)
+
+    names = await brand_history_enrichment.parse_name_list_from_text(payload.text, kind="brands")
+    entries: list[dict[str, Any]] = []
+    for name in names:
+        inference = await brand_history_enrichment.resolve_industry(name)
+        entry: dict[str, Any] = {"brand": name}
+        if inference.industry_id is not None:
+            entry["industry_id"] = inference.industry_id
+            entry["industry_inference_source"] = inference.source
+            entry["industry_inference_confidence"] = inference.confidence
+        entries.append(entry)
+
+    existing = list(row.data.get("previous_brands") or [])
+    # Append-only merge — dedupe by lowercase brand name.
+    seen = {str(e.get("brand", "")).strip().lower() for e in existing}
+    new_entries = [e for e in entries if e["brand"].strip().lower() not in seen]
+    merged_list = existing + new_entries
+
+    service = TalentOnboardingService(repo)
+    merged = await service.apply_data_patch(talent_id, {"previous_brands": merged_list})
+    await session.commit()
+    return _envelope(
+        {
+            "data": merged,
+            "parsed_count": len(names),
+            "added_count": len(new_entries),
+            "entries": new_entries,
+        }
+    )
+
+
+@router.post("/{talent_id}/similar-talent/bulk")
+async def similar_talent_bulk(
+    payload: BulkTextRequest,
+    request: Request,
+    talent_id: str,
+    session: AsyncSession = Depends(get_db),  # noqa: B008
+) -> APIResponse[Any]:
+    """Step 7 (bulk) — paste a free-text blob of comparable creators."""
+    _warn_missing_idempotency(request)
+    agency_id = _agency_id_from_request(request)
+    repo = TalentRepository(session, agency_id=agency_id)
+    row = await _get_talent_or_404(repo, talent_id)
+
+    names = await brand_history_enrichment.parse_name_list_from_text(payload.text, kind="creators")
+    existing = list(row.data.get("similar_talent") or [])
+    seen = {str(s.get("id") or "").strip().lower() for s in existing}
+    new_seeds: list[dict[str, Any]] = []
+    for name in names:
+        seed = similar_talent.build_seed_entry(name=name, handles=[])
+        if seed["id"].strip().lower() in seen:
+            continue
+        seen.add(seed["id"].strip().lower())
+        new_seeds.append(seed)
+    merged_list = existing + new_seeds
+
+    service = TalentOnboardingService(repo)
+    merged = await service.apply_data_patch(talent_id, {"similar_talent": merged_list})
+    await session.commit()
+    return _envelope(
+        {
+            "data": merged,
+            "parsed_count": len(names),
+            "added_count": len(new_seeds),
+            "entries": new_seeds,
+        }
+    )
+
+
 @router.post("/{talent_id}/similar-talent")
 async def add_similar_talent(
     payload: AddSimilarTalentRequest,
@@ -428,7 +584,9 @@ async def add_similar_talent(
     talent_id: str,
     session: AsyncSession = Depends(get_db),  # noqa: B008
 ) -> APIResponse[Any]:
-    """Step 7 — append a manual similar-talent seed."""
+    """Step 7 — append a single manual similar-talent seed (kept for parity
+    with the M5 REST surface; the wizard uses the /bulk endpoint).
+    """
     _warn_missing_idempotency(request)
     agency_id = _agency_id_from_request(request)
     repo = TalentRepository(session, agency_id=agency_id)
