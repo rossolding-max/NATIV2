@@ -272,6 +272,8 @@ Rate-limit enforcement happens at the vendor-wrapper layer (Redis-backed counter
 | `brand_handle_refresh` | weekly Sun 04:00 | Re-fetch `brand_industry_map.brands[].social_handles` via Exa to detect rebrands |
 | `kick_off_brand_discovery` | trigger-only (M7 v0.1) | Phase 2 brand discovery — fires on talent `/activate` + manual `POST /brand-discovery/run`. Periodic re-discovery deferred (no beat entry) until there's a real cost budget conversation |
 | `kick_off_contact_enrichment` | trigger-only (M8 v0.1) | Phase 3a contact enrichment — fires on manual `POST /brands/{id}/contact-enrichment/run`. Auto-trigger from M7's snapshot writer deferred to M8.1; LLM-heavy when Step 4 (Exa + Claude) fires |
+| `kick_off_outreach_generation` | trigger-only (M9 v0.1) | Phase 3b outreach generation — fires on manual `POST /talents/{id}/outreach-generation/run`. Auto-fire on M8 qualified contacts deferred to M9.1 (gated by `settings.outreach_auto_enroll`). Per-step LLM cost: Opus step 1 + Haiku steps 2+ |
+| `enrollment_state_sync` | every 5 min (M9 v0.1) | Phase 3b — reconciles active `pitch_enrollment` rows against Smartlead campaign status to catch missed webhooks |
 | `enrollment_state_sync` | every 5min | Sync Smartlead enrollment states; classify replies; trigger deal creation on `interested` |
 | `auto_archive_trigger_check` | every 15min | Find deals where all_invoices_paid_at + final_kpis + final_report all set; fire archive |
 | `phase_4_5_auto_fire` | every 5min | Find deals transitioning to `initial_call_scheduled`; fire prep pack generation |
@@ -364,6 +366,25 @@ retrieval has data to read against.
 | `GET /api/v1/brand-contacts/{contact_id}` | Fetch one |
 | `PATCH /api/v1/brand-contacts/{contact_id}` | Agent workflow patch — `do_not_contact`, `do_not_contact_reason`, `opt_out_at`, `tags`, `notes`. Deep-merges JSONB + syncs the scalar mirror columns |
 | `POST /api/v1/brands/{brand_id}/contact-enrichment/run` | Trigger the 9-step contact-enrichment pipeline for one brand. Returns 202 Accepted; the Celery task does the work. Optional body `{"talent_id": "...", "target_titles": ["VP Marketing", ...]}` — `talent_id` enables per-talent cooldown filtering; `target_titles` overrides the default set picked from the brand's industry category |
+
+**Phase 3b enrollments REST surface** (M9 — `app/api/enrollments.py`):
+
+| Endpoint | Action |
+|---|---|
+| `GET /api/v1/talents/{talent_id}/enrollments?state=...` | List enrollments for a talent (optional state filter) |
+| `GET /api/v1/brands/{brand_id}/enrollments` | List enrollments for a brand |
+| `GET /api/v1/enrollments/{enrollment_id}` | Fetch one (full step content + engagement summary) |
+| `PATCH /api/v1/enrollments/{enrollment_id}` | Workflow update — `user_notes`, `state` |
+| `POST /api/v1/enrollments/{enrollment_id}/approve` | **Step-1 manual approval gate.** Transitions `awaiting_approval` → `active` and pushes the campaign to Smartlead inline (create-or-find campaign + add lead + push sequence) |
+| `POST /api/v1/talents/{talent_id}/outreach-generation/run` | Manual generation trigger. Body `{"contact_id": "...", "brand_id": "...", "template_id?": "..."}`. Enqueues `kick_off_outreach_generation` Celery task; returns 202 |
+| `POST /api/v1/enrollments/{enrollment_id}/kill` | Immediate manual kill. Body `{"reason": "..."}`. Sets `state="killed"` + records `killed_at` + `kill_reason` |
+
+**Phase 3b Smartlead webhooks** (M9 — `app/api/webhooks/smartlead.py`):
+
+| Endpoint | Action |
+|---|---|
+| `POST /api/v1/webhooks/smartlead/email_event` | Engagement events (sent / opened / clicked / bounced / unsubscribed). HMAC-SHA256 verify via `X-Smartlead-Signature`; Redis dedupe on `(campaign_id, lead_id, event_type, occurred_at)` with 24h TTL. Bounce → kill enrollment + mark contact email bounced. Unsubscribe → contact DNC + cross-roster kill of every active enrollment for that contact |
+| `POST /api/v1/webhooks/smartlead/reply` | Reply event. Same HMAC + dedupe; classifies via Haiku (7 outcomes); on `interested` creates Phase-4 Deal with bidirectional FK (GAP-06 audit gate); routes other outcomes to kill/pause |
 
 The discovery orchestrator (`app/services/discovery/orchestrator.py`)
 runs the Core 8 searches concurrently, merges sources by `brand_id`,

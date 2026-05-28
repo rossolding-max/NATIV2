@@ -285,17 +285,18 @@ Each milestone documented below with: inputs (what must exist) + outputs (delive
 
 **Inputs:** M8.
 
-**Outputs:**
-- `app/services/outreach/`: template selection + angle evaluation (per `docs/outreach_workflow.md`) + per-step AI generation
-- `app/agents/outreach_generator.py`: uses `writer` subagent
-- Smartlead push (campaign + leads + step content)
-- Webhook handlers: `POST /webhooks/smartlead/email_event` + `POST /webhooks/smartlead/reply`
-- Reply classification: dedicated classifier prompt (Opus 4.7 per locked LLM tier)
-- `app/tasks/enrollment_state_sync.py`: 5-min Celery task syncing Smartlead state
-- **Audit Tier 1 G3 fix:** on `interested` reply, create Phase 4 deal + bidirectionally set `pitch_enrollment.created_deal_id` ↔ `deal.originating_enrollment_id` + populate `deal.originating_decision_role_at_pitch`
-- Analytics aggregation script (`scripts/analyze_outreach.py` already exists; extends with funnel-to-deal metrics)
+**Outputs (shipped — full v0.1 chain):**
+- `app/services/outreach/` package — template selector, angle filter (13 high-signal triggers; rest fail-soft), per-step LLM generator (Opus step 1, Haiku steps 2+; ≤3 validation retries), policy filter (DNC + active-enrollment + 14-day cooldown), loopback writers (`brand_contact.pitch_history[]` + `brand_deal.last_re_engagement_pitch_date`), Smartlead push, reply classifier (Haiku, 7 outcomes), deal creator (GAP-06 bidirectional FK in one transaction), orchestrator, atomic JSON snapshot writer.
+- 3 default templates in `data/pitch_templates/` (buyer-direct-pitch 4 steps, influencer-warm-intro 3 steps, champion-activation 2 steps) + 42-angle seed (`data/pitch_angles.json`) + `scripts/seed_pitch_{angles,templates}.py` idempotent importers.
+- `app/services/outreach_reply_handler.py` — webhook reply pipeline (classify → side-effect routing).
+- `app/services/outreach_generation_task.py` — Celery task wrapping the orchestrator.
+- `app/services/enrollment_state_sync.py` — 5-min Celery beat task reconciling Smartlead campaign status.
+- `app/api/enrollments.py` — 7 REST endpoints across 3 routers (list-by-talent, list-by-brand, get, patch, approve [Step-1 gate; pushes Smartlead inline], outreach-generation/run [Celery enqueue], kill).
+- `app/api/webhooks/smartlead.py` — 2 webhook handlers with HMAC-SHA256 verification + Redis 24h-TTL dedupe on `(campaign_id, lead_id, event_type, occurred_at)`. Bounce kills enrollment + marks contact email bounced; unsubscribe sets contact DNC + cross-roster kill.
+- **GAP-06 audit fix:** `interested` reply creates Phase-4 Deal in `lead`/`new_lead` (or `initial_call_scheduled` if `asked_for_meeting`) with `originating_enrollment_id` + `originating_decision_role_at_pitch` snapshot, and bidirectionally UPDATEs `pitch_enrollment.created_deal_id` — both ops in one DB transaction.
+- 59 unit tests (template + angle + generator + policy + classifier + deal-creator + reply-handler + smartlead-push + loopback + orchestrator) + 17 integration tests (5 repo + 11 REST + 6 webhook including reply→deal bidirectional FK round-trip).
 
-**Acceptance:** real outreach campaign sent; replies received; classifier accuracy >85% on labelled test set; `interested` reply triggers deal creation with full bidirectional FK setup.
+**Acceptance:** real outreach campaign sent; replies received; classifier accuracy >85% on labelled test set; `interested` reply triggers deal creation with full bidirectional FK setup. Manual approval gate on Step 1 enforced.
 
 **Skip notes:** if skipped, agent manually creates Phase 4 deals in LEAD; `originating_enrollment_id` null on those deals.
 

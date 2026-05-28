@@ -1,0 +1,42 @@
+{
+  "$schema": "https://nativ2/schemas/pitch_template.schema.json",
+  "template_id": "champion-activation",
+  "version": "1.0.0",
+  "name": "Champion — activation (2 steps)",
+  "description": "For known internal advocates (champion_for_talents). Doesn't ask for a deal — asks for a warm intro / internal endorsement. Short, warm, low-friction.",
+  "target_decision_role": "champion",
+  "steps": [
+    {
+      "step_number": 1,
+      "intent": "warm_intro_request",
+      "timing_offset_days": 0,
+      "channel": "email",
+      "preferred_angle_categories": [
+        "mutual_connection",
+        "values_alignment",
+        "re_engagement"
+      ],
+      "excluded_angle_categories": [],
+      "ai_model_override": "claude-opus-4-7"
+    },
+    {
+      "step_number": 2,
+      "intent": "break_up_door_open",
+      "timing_offset_days": 7,
+      "channel": "email",
+      "preferred_angle_categories": [],
+      "excluded_angle_categories": [],
+      "ai_model_override": "claude-haiku-4-5"
+    }
+  ],
+  "success_criteria": {
+    "target_reply_rate": 0.35,
+    "target_positive_reply_rate": 0.08
+  },
+  "guardrails": {
+    "max_body_chars": 400,
+    "max_subject_chars": 50,
+    "require_can_spam_unsubscribe": true,
+    "tone": "warm_casual"
+  }
+}

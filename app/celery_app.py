@@ -30,6 +30,8 @@ def _build_app() -> Celery:
             "app.services.agency_warmup",
             "app.services.talent_background_research",
             "app.services.contact_enrichment_task",
+            "app.services.outreach_generation_task",
+            "app.services.enrollment_state_sync",
         ],
     )
 
@@ -55,6 +57,13 @@ def _build_app() -> Celery:
                 # M4: hourly cadence reuses the Phase-4.8 "other" cron until
                 # a dedicated warmup interval is added.
                 "schedule": float(settings.cron_phase_4_8_detection_other_seconds),
+                "options": {"queue": "default"},
+            },
+            "enrollment-state-sync": {
+                # M9: reconcile active enrollments with Smartlead every 5 min
+                # to catch any webhook misses (network failures, dedupe bugs).
+                "task": "app.services.enrollment_state_sync.enrollment_state_sync",
+                "schedule": 300.0,
                 "options": {"queue": "default"},
             },
         },

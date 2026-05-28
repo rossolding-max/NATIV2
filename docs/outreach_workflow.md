@@ -489,6 +489,64 @@ For a 10-talent roster with each talent running ~50 active enrollments per month
 
 Compares favourably to e.g. dedicated agencies charging $2,500+/mo for cold outreach as a service.
 
+## M9 implementation notes (shipped vs deferred)
+
+M9 v0.1 ships the **complete generation → real outreach → reply →
+deal-creation chain** described above. No schema migration: the M1
+``pitch_template`` / ``pitch_angle`` / ``pitch_enrollment`` / ``deal``
+tables + Pydantic codegen + M3 Smartlead client + M3 HMAC webhook helper
+all reused as-is.
+
+**Shipped:**
+
+| Layer | Module / file |
+|---|---|
+| 3 default templates | ``data/pitch_templates/{buyer-direct-pitch,influencer-warm-intro,champion-activation}.json`` |
+| 42-angle library + seed | ``data/pitch_angles.json`` (pre-authored); ``scripts/seed_pitch_angles.py`` + ``scripts/seed_pitch_templates.py`` idempotent importers |
+| Template selector (decision_role → template) | ``app/services/outreach/template_selector.py`` |
+| Angle filter (13 high-signal triggers; rest fail-soft to False) | ``app/services/outreach/angle_filter.py`` |
+| Per-step LLM generator (Opus step 1, Haiku steps 2+; ≤3 retries on validation failure) | ``app/services/outreach/step_generator.py`` |
+| Policy filter (DNC + active-enrollment + 14-day cross-talent cooldown) | ``app/services/outreach/policy_filter.py`` |
+| Loopback writers (``brand_contact.pitch_history[]``, ``brand_deal.last_re_engagement_pitch_date``) | ``app/services/outreach/loopback_writers.py`` |
+| Orchestrator (persists in ``awaiting_approval`` per Step-1 manual gate) | ``app/services/outreach/orchestrator.py`` |
+| Smartlead push (find-or-create campaign + add lead + push sequence) | ``app/services/outreach/smartlead_push.py`` |
+| Reply classifier (Haiku, 7 outcomes, structured signals, fail-soft) | ``app/services/outreach/reply_classifier.py`` |
+| Deal creator (GAP-06 bidirectional FK in single DB transaction) | ``app/services/outreach/deal_creator.py`` |
+| Webhook reply pipeline (classify → side-effect routing) | ``app/services/outreach_reply_handler.py`` |
+| JSON snapshot writer (current + immutable runs/) | ``app/services/outreach/snapshot.py`` |
+| Celery task: generation | ``app/services/outreach_generation_task.py`` |
+| Celery beat task: 5-min state sync | ``app/services/enrollment_state_sync.py`` |
+| REST router (7 endpoints, 3 routers) | ``app/api/enrollments.py`` |
+| Smartlead webhook receivers (email_event + reply, HMAC + Redis dedup 24h TTL) | ``app/api/webhooks/smartlead.py`` |
+
+**Locked v0.1 decisions:**
+- **Manual trigger only.** Auto-enroll from M8 is OFF in v0.1; flip ON in M9.1 once we measure reply rate + cost-per-run on real campaigns.
+- **One Smartlead campaign per (talent, template).** Up to 3 campaigns per active talent.
+- **Step-1 manual approval is permanent.** Every Step-1 email goes to the review queue; agent clicks ``POST /enrollments/{id}/approve`` to release.
+- **Email channel only.** Schema ``channel`` enum locked to ``email``; LinkedIn DM/InMail/connection defer to v2.
+- **3 templates ship; gatekeeper is manual.** Gatekeeper-classified contacts surface a UI badge but no auto-template.
+- **LLM tiers per spec.** Step-1 generation = Opus 4.7; Steps 2+ = Haiku 4.5; reply classifier = Haiku 4.5.
+
+**Deferred to M9.1+:**
+- Auto-enroll on M8 qualified/speculative contacts.
+- Auto-approve for follow-up Steps 2+ (Step 1 stays permanently manual).
+- Closed-loop angle strength tuning from reply-rate analytics.
+- Multi-step engagement branching.
+- A/B testing infrastructure.
+- Reply auto-draft for human review.
+- Calendar booking integration on interested + asked_for_meeting.
+- Bounce-rate template throttling.
+- Talent voice profile (currently inferred from ``talent.bio``).
+- Smartlead campaign segmentation by vertical for warmup optimisation.
+
+**Trigger surfaces in v0.1:**
+- ``POST /api/v1/talents/{talent_id}/outreach-generation/run`` — Celery enqueue with body ``{"contact_id": "...", "brand_id": "...", "template_id?": "..."}``.
+- ``POST /api/v1/enrollments/{enrollment_id}/approve`` — Step-1 release + inline Smartlead push.
+- ``POST /api/v1/enrollments/{enrollment_id}/kill`` — manual kill (records reason).
+- ``POST /api/v1/webhooks/smartlead/email_event`` + ``POST /api/v1/webhooks/smartlead/reply`` — Smartlead-driven (HMAC verified).
+
+---
+
 ## Open questions for v0.2 / v0.3
 
 1. **LinkedIn outreach channels (v2)** — **explicitly deferred from v0.1.** The schema currently restricts `channel` to `email` only. When v2 ships LinkedIn-send integration, the enum will re-add `linkedin_message` / `linkedin_inmail` / `linkedin_connection` and the orchestrator will route those steps through whichever LinkedIn-send vendor is chosen at that time. v0.1 to v2 transition involves: vendor selection (LinkedIn's official Sales Navigator API vs third-party like Closely / Expandi / La Growth Machine), automation-policy review (LinkedIn's anti-automation enforcement is aggressive), and per-talent LinkedIn account warmup. None of these are blockers for v0.1 — email-only ships now.
