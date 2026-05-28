@@ -20,10 +20,16 @@ from typing import Any, Literal
 
 from app.services.discovery import (
     search_1_reengagement,
+    search_2_similar_talent_brands,
     search_3_competitors,
+    search_4_competitors_of_similar,
     search_5_7_industry_tiers,
+    search_8_parent_sibling_niche,
     search_9_demographic_bridge,
     search_10_geographic,
+    search_11_life_stage,
+    search_12_complementary_to_exclusivity,
+    search_14_2nd_degree_graph,
     search_15_exa_newly_funded,
 )
 from app.services.discovery._models import (
@@ -42,16 +48,24 @@ from app.utils.taxonomies import Taxonomies, get_taxonomies
 log = get_logger(__name__)
 
 
-# Searches shipped in the v0.1 M7 Core 8 subset. Search 15 (Exa-driven)
-# lands in Commit 2; the deterministic 7 below run in Commit 1.
+# M7 shipped the Core 8 (1, 3, 5-7, 9, 10, 15). M7.1 adds the
+# deterministic graph-walk searches (2, 4, 8, 11, 12, 14) plus the
+# LLM-driven values search (13) and the last30days trending search (16).
+# Search 13 + 16 are added by M7.1 Commit 2.
 DEFAULT_ENABLED_SEARCHES: tuple[str, ...] = (
     "search_1_reengagement",
+    "search_2_similar_talent_brands",
     "search_3_competitors",
+    "search_4_competitors_of_similar",
     "search_5_primary_industry",
     "search_6_secondary_industry",
     "search_7_tertiary_industry",
+    "search_8_parent_sibling_niche",
     "search_9_demographic_bridge",
     "search_10_geographic",
+    "search_11_life_stage",
+    "search_12_complementary_to_exclusivity",
+    "search_14_2nd_degree_graph",
     "search_15_exa_newly_funded",
 )
 
@@ -152,11 +166,28 @@ async def run_discovery(
             "search_1_reengagement",
             lambda: search_1_reengagement.run(brand_deals=brand_deals, today=today),
         )
+    if "search_2_similar_talent_brands" in enabled:
+        _run_safely(
+            "search_2_similar_talent_brands",
+            lambda: search_2_similar_talent_brands.run(
+                similar_talent=list(talent_data.get("similar_talent") or []),
+                brand_industry_map=bim,
+            ),
+        )
     if "search_3_competitors" in enabled:
         _run_safely(
             "search_3_competitors",
             lambda: search_3_competitors.run(
                 previous_brands=previous_brands,
+                taxonomies=tax,
+                brand_industry_map=bim,
+            ),
+        )
+    if "search_4_competitors_of_similar" in enabled:
+        _run_safely(
+            "search_4_competitors_of_similar",
+            lambda: search_4_competitors_of_similar.run(
+                similar_talent=list(talent_data.get("similar_talent") or []),
                 taxonomies=tax,
                 brand_industry_map=bim,
             ),
@@ -191,6 +222,15 @@ async def run_discovery(
                 brand_industry_map=bim,
             ),
         )
+    if "search_8_parent_sibling_niche" in enabled:
+        _run_safely(
+            "search_8_parent_sibling_niche",
+            lambda: search_8_parent_sibling_niche.run(
+                content_niches=content_niches,
+                taxonomies=tax,
+                brand_industry_map=bim,
+            ),
+        )
     if "search_9_demographic_bridge" in enabled:
         _run_safely(
             "search_9_demographic_bridge",
@@ -205,6 +245,32 @@ async def run_discovery(
             "search_10_geographic",
             lambda: search_10_geographic.run(
                 audience_demographics=audience,
+                brand_industry_map=bim,
+            ),
+        )
+    if "search_11_life_stage" in enabled:
+        _run_safely(
+            "search_11_life_stage",
+            lambda: search_11_life_stage.run(
+                audience_demographics=audience,
+                brand_industry_map=bim,
+            ),
+        )
+    if "search_12_complementary_to_exclusivity" in enabled:
+        _run_safely(
+            "search_12_complementary_to_exclusivity",
+            lambda: search_12_complementary_to_exclusivity.run(
+                brand_preferences=brand_preferences,
+                taxonomies=tax,
+                brand_industry_map=bim,
+            ),
+        )
+    if "search_14_2nd_degree_graph" in enabled:
+        _run_safely(
+            "search_14_2nd_degree_graph",
+            lambda: search_14_2nd_degree_graph.run(
+                previous_brands=previous_brands,
+                taxonomies=tax,
                 brand_industry_map=bim,
             ),
         )
