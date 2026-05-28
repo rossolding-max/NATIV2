@@ -36,7 +36,6 @@ _ALLOWED_TOP_LEVEL: frozenset[str] = frozenset(
         "expected_value_usd",
         "expected_close_date",
         "primary_contact_id",
-        "additional_contact_ids",
     }
 )
 
