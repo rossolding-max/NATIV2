@@ -1,0 +1,69 @@
+{
+  "$schema": "https://nativ2/schemas/pitch_template.schema.json",
+  "template_id": "buyer-direct-pitch",
+  "version": "1.0.0",
+  "name": "Buyer — direct pitch (4 steps)",
+  "description": "Default sequence for contacts classified as buyer (can say yes + holds budget). Lead with strongest competitive / similar-talent angle, then alternate angle types across 4 steps with widening intervals.",
+  "target_decision_role": "buyer",
+  "steps": [
+    {
+      "step_number": 1,
+      "intent": "first_touch_strongest_angle",
+      "timing_offset_days": 0,
+      "channel": "email",
+      "preferred_angle_categories": [
+        "competitive_proof",
+        "similar_talent_precedent",
+        "re_engagement"
+      ],
+      "excluded_angle_categories": [],
+      "ai_model_override": "claude-opus-4-7"
+    },
+    {
+      "step_number": 2,
+      "intent": "follow_up_different_angle",
+      "timing_offset_days": 3,
+      "channel": "email",
+      "preferred_angle_categories": [
+        "demographic_match",
+        "niche_fit",
+        "brand_momentum"
+      ],
+      "excluded_angle_categories": [
+        "competitive_proof"
+      ],
+      "ai_model_override": "claude-haiku-4-5"
+    },
+    {
+      "step_number": 3,
+      "intent": "follow_up_with_creative_concept",
+      "timing_offset_days": 7,
+      "channel": "email",
+      "preferred_angle_categories": [
+        "creative_concept",
+        "performance_proof"
+      ],
+      "excluded_angle_categories": [],
+      "ai_model_override": "claude-haiku-4-5"
+    },
+    {
+      "step_number": 4,
+      "intent": "break_up_door_open",
+      "timing_offset_days": 14,
+      "channel": "email",
+      "preferred_angle_categories": [],
+      "excluded_angle_categories": [],
+      "ai_model_override": "claude-haiku-4-5"
+    }
+  ],
+  "success_criteria": {
+    "target_reply_rate": 0.15,
+    "target_positive_reply_rate": 0.04
+  },
+  "guardrails": {
+    "max_body_chars": 600,
+    "max_subject_chars": 60,
+    "require_can_spam_unsubscribe": true,
+    "tone": "direct_professional"
+  }
+}

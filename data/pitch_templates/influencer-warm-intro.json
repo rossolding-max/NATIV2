@@ -1,0 +1,54 @@
+{
+  "$schema": "https://nativ2/schemas/pitch_template.schema.json",
+  "template_id": "influencer-warm-intro",
+  "version": "1.0.0",
+  "name": "Influencer — warm intro (3 steps)",
+  "description": "For contacts who influence the decision but don't sign off (mid-tier marketers at large brands). Warmer tone; leads with mutual connection / values alignment instead of direct asks.",
+  "target_decision_role": "influencer",
+  "steps": [
+    {
+      "step_number": 1,
+      "intent": "first_touch_strongest_angle",
+      "timing_offset_days": 0,
+      "channel": "email",
+      "preferred_angle_categories": [
+        "similar_talent_precedent",
+        "values_alignment",
+        "mutual_connection"
+      ],
+      "excluded_angle_categories": [],
+      "ai_model_override": "claude-opus-4-7"
+    },
+    {
+      "step_number": 2,
+      "intent": "follow_up_with_proof_or_case_study",
+      "timing_offset_days": 5,
+      "channel": "email",
+      "preferred_angle_categories": [
+        "performance_proof",
+        "demographic_match"
+      ],
+      "excluded_angle_categories": [],
+      "ai_model_override": "claude-haiku-4-5"
+    },
+    {
+      "step_number": 3,
+      "intent": "break_up_door_open",
+      "timing_offset_days": 12,
+      "channel": "email",
+      "preferred_angle_categories": [],
+      "excluded_angle_categories": [],
+      "ai_model_override": "claude-haiku-4-5"
+    }
+  ],
+  "success_criteria": {
+    "target_reply_rate": 0.20,
+    "target_positive_reply_rate": 0.03
+  },
+  "guardrails": {
+    "max_body_chars": 550,
+    "max_subject_chars": 60,
+    "require_can_spam_unsubscribe": true,
+    "tone": "warm_casual"
+  }
+}
