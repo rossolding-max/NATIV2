@@ -167,11 +167,15 @@ async def trigger_brand_discovery(
 
     from app.celery_app import app as celery_app
 
+    # Fall back to the sentinel UUID when no agency is bound to the
+    # request (matches M8 trigger + brand-deals endpoints).
+    effective_agency = agency_id or UUID(int=0)
+
     enqueued = False
     try:
         celery_app.send_task(
             "app.services.talent_background_research.kick_off_brand_discovery",
-            args=[talent_id, enabled_searches],
+            args=[talent_id, str(effective_agency), enabled_searches],
         )
         enqueued = True
     except Exception as exc:

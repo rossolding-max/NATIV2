@@ -670,9 +670,10 @@ async def activate(
     try:
         from app.celery_app import app as celery_app
 
+        effective_agency = agency_id or UUID(int=0)
         celery_app.send_task(
             "app.services.talent_background_research.kick_off_brand_discovery",
-            args=[talent_id],
+            args=[talent_id, str(effective_agency)],
         )
     except Exception as exc:
         log.warning(
