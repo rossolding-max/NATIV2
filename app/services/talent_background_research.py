@@ -20,7 +20,10 @@ from app.utils.logging import get_logger
 log = get_logger(__name__)
 
 
-async def _kick_off_async(talent_id: str) -> dict[str, Any]:
+async def _kick_off_async(
+    talent_id: str,
+    enabled_searches: list[str] | None = None,
+) -> dict[str, Any]:
     """Run the M7 pipeline + persist results (DB + JSON snapshot)."""
     from sqlalchemy.ext.asyncio import async_sessionmaker
 
@@ -49,6 +52,7 @@ async def _kick_off_async(talent_id: str) -> dict[str, Any]:
             talent_id=talent_id,
             talent_data=dict(talent_row.data or {}),
             brand_deals=brand_deals,
+            enabled_searches=tuple(enabled_searches) if enabled_searches else None,
         )
 
         # Persist DB rows for kept candidates (blocked stay in JSON snapshot only).
@@ -77,10 +81,15 @@ async def _kick_off_async(talent_id: str) -> dict[str, Any]:
 
 
 @celery_app.task(name="app.services.talent_background_research.kick_off_brand_discovery")
-def kick_off_brand_discovery(talent_id: str) -> dict[str, Any]:
+def kick_off_brand_discovery(
+    talent_id: str,
+    enabled_searches: list[str] | None = None,
+) -> dict[str, Any]:
     """Celery entry point — bridges async to sync via ``async_to_sync``.
 
     M5 shipped the stub; M7 replaces the body with the real pipeline.
-    Same task name + signature keeps M5 callers working unchanged.
+    M7.1 added the optional ``enabled_searches`` arg — None/missing runs
+    every search in the catalog; a list narrows the run. Same task name
+    keeps M5 callers (which only pass ``talent_id``) working unchanged.
     """
-    return async_to_sync(_kick_off_async)(talent_id)
+    return async_to_sync(_kick_off_async)(talent_id, enabled_searches)

@@ -39,6 +39,7 @@ from app.services.discovery._models import (
     DiscoveryRunResult,
     QualifiedCandidate,
 )
+from app.services.discovery.catalog import default_enabled_searches
 from app.services.discovery.policy_filter import apply_filters
 from app.services.discovery.qualification import (
     DEFAULT_QUALIFICATION_THRESHOLD,
@@ -50,30 +51,12 @@ from app.utils.taxonomies import Taxonomies, get_taxonomies
 log = get_logger(__name__)
 
 
-# M7 shipped the Core 8 (1, 3, 5-7, 9, 10, 15). M7.1 adds the
-# deterministic graph-walk searches (2, 4, 8, 11, 12, 14), the
-# LLM-driven values search (13), and the last30days trending search
-# (16). Search 13 is included in the default set; Search 16 is gated
-# behind ``settings.enable_last30days_discovery`` because the skill
-# needs real OpenAI + xAI API keys.
-DEFAULT_ENABLED_SEARCHES: tuple[str, ...] = (
-    "search_1_reengagement",
-    "search_2_similar_talent_brands",
-    "search_3_competitors",
-    "search_4_competitors_of_similar",
-    "search_5_primary_industry",
-    "search_6_secondary_industry",
-    "search_7_tertiary_industry",
-    "search_8_parent_sibling_niche",
-    "search_9_demographic_bridge",
-    "search_10_geographic",
-    "search_11_life_stage",
-    "search_12_complementary_to_exclusivity",
-    "search_13_values_aligned",
-    "search_14_2nd_degree_graph",
-    "search_15_exa_newly_funded",
-    "search_16_last30days_trending",
-)
+# Full set sourced from ``catalog.py`` (single source of truth).
+# Callers can pass ``enabled_searches=<subset>`` to ``run_discovery`` to
+# narrow the run. Search 16 is gated additionally behind
+# ``settings.enable_last30days_discovery`` because the skill needs real
+# OpenAI + xAI API keys.
+DEFAULT_ENABLED_SEARCHES: tuple[str, ...] = default_enabled_searches()
 
 # Score thresholds for tier assignment (when no re-engage tag).
 _TIER_THRESHOLDS: list[tuple[float, str]] = [

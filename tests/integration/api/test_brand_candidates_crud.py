@@ -188,8 +188,76 @@ async def test_integration__trigger_brand_discovery_run_202(m7_app: AsyncClient)
     with patch("app.celery_app.app.send_task", return_value=None) as mock_send:
         r = await m7_app.post(f"/api/v1/talents/{_TEST_TALENT_ID}/brand-discovery/run")
     assert r.status_code == 202, r.text
-    assert r.json()["data"]["enqueued"] is True
+    body = r.json()["data"]
+    assert body["enqueued"] is True
+    assert body["enabled_searches"] is None  # omitted -> run all (the default)
     mock_send.assert_called_once()
+    # When no body is sent the Celery task arg list should carry [talent_id, None].
+    sent_args = mock_send.call_args.kwargs.get("args")
+    assert sent_args == [_TEST_TALENT_ID, None]
+
+
+async def test_integration__trigger_run__with_search_subset(m7_app: AsyncClient) -> None:
+    """POST body with ``searches`` narrows the Celery task arg."""
+    with patch("app.celery_app.app.send_task", return_value=None) as mock_send:
+        r = await m7_app.post(
+            f"/api/v1/talents/{_TEST_TALENT_ID}/brand-discovery/run",
+            json={"searches": ["search_1_reengagement", "search_5_primary_industry"]},
+        )
+    assert r.status_code == 202, r.text
+    body = r.json()["data"]
+    assert body["enabled_searches"] == ["search_1_reengagement", "search_5_primary_industry"]
+    sent_args = mock_send.call_args.kwargs.get("args")
+    assert sent_args == [
+        _TEST_TALENT_ID,
+        ["search_1_reengagement", "search_5_primary_industry"],
+    ]
+
+
+async def test_integration__trigger_run__unknown_search_name_422(m7_app: AsyncClient) -> None:
+    r = await m7_app.post(
+        f"/api/v1/talents/{_TEST_TALENT_ID}/brand-discovery/run",
+        json={"searches": ["search_1_reengagement", "search_99_typo"]},
+    )
+    assert r.status_code == 422, r.text
+    payload = r.json()
+    # The error envelope echoes the unknown names so a UI can highlight them.
+    assert any("search_99_typo" in str(e) for e in payload.get("errors") or [])
+
+
+async def test_integration__trigger_run__empty_searches_list_422(m7_app: AsyncClient) -> None:
+    """Empty list is a probable client bug — reject with 422 rather than silently no-op."""
+    r = await m7_app.post(
+        f"/api/v1/talents/{_TEST_TALENT_ID}/brand-discovery/run",
+        json={"searches": []},
+    )
+    assert r.status_code == 422, r.text
+
+
+async def test_integration__trigger_run__dedupes_repeated_searches(m7_app: AsyncClient) -> None:
+    """If a caller passes the same search twice we collapse to a single run entry."""
+    with patch("app.celery_app.app.send_task", return_value=None) as mock_send:
+        r = await m7_app.post(
+            f"/api/v1/talents/{_TEST_TALENT_ID}/brand-discovery/run",
+            json={"searches": ["search_1_reengagement", "search_1_reengagement"]},
+        )
+    assert r.status_code == 202, r.text
+    sent_args = mock_send.call_args.kwargs.get("args")
+    assert sent_args == [_TEST_TALENT_ID, ["search_1_reengagement"]]
+
+
+async def test_integration__discovery_searches_catalog(m7_app: AsyncClient) -> None:
+    """The catalog endpoint lists all 16 searches with name/label/description/weight."""
+    r = await m7_app.get("/api/v1/brand-discovery/searches")
+    assert r.status_code == 200, r.text
+    items = r.json()["data"]
+    assert len(items) == 16
+    names = [i["name"] for i in items]
+    assert "search_1_reengagement" in names
+    assert "search_16_last30days_trending" in names
+    by_name = {i["name"]: i for i in items}
+    assert by_name["search_13_values_aligned"]["requires_llm"] is True
+    assert by_name["search_16_last30days_trending"]["requires_external_skill"] is True
 
 
 async def test_integration__trigger_run__missing_talent_404(m7_app: AsyncClient) -> None:

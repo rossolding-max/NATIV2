@@ -194,6 +194,7 @@ app.include_router(brand_deals_router.talent_scoped_router, prefix="/api/v1")
 app.include_router(brand_deals_router.top_level_router, prefix="/api/v1")
 app.include_router(brand_candidates_router.talent_scoped_router, prefix="/api/v1")
 app.include_router(brand_candidates_router.top_level_router, prefix="/api/v1")
+app.include_router(brand_candidates_router.discovery_router, prefix="/api/v1")
 
 
 @app.exception_handler(NATIV2Error)
