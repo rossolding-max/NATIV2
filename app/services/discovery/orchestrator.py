@@ -24,6 +24,7 @@ from app.services.discovery import (
     search_5_7_industry_tiers,
     search_9_demographic_bridge,
     search_10_geographic,
+    search_15_exa_newly_funded,
 )
 from app.services.discovery._models import (
     CandidateSource,
@@ -51,6 +52,7 @@ DEFAULT_ENABLED_SEARCHES: tuple[str, ...] = (
     "search_7_tertiary_industry",
     "search_9_demographic_bridge",
     "search_10_geographic",
+    "search_15_exa_newly_funded",
 )
 
 # Score thresholds for tier assignment (when no re-engage tag).
@@ -135,6 +137,16 @@ async def run_discovery(
             log.warning("discovery_search_failed", search=name, error=str(exc))
             errors.append(f"{name}: {exc!s}")
 
+    async def _run_safely_async(name: str, coro: Any) -> None:
+        try:
+            result = await coro
+            if result:
+                all_sources.extend(result)
+            searches_run.append(name)
+        except Exception as exc:
+            log.warning("discovery_search_failed", search=name, error=str(exc))
+            errors.append(f"{name}: {exc!s}")
+
     if "search_1_reengagement" in enabled:
         _run_safely(
             "search_1_reengagement",
@@ -196,6 +208,26 @@ async def run_discovery(
                 brand_industry_map=bim,
             ),
         )
+
+    if "search_15_exa_newly_funded" in enabled:
+        # Use the industries that already surfaced via Search 5/6/7 as
+        # the seed; if none, fall back to industries inferred from the
+        # talent's content niches via the affinity primary tier.
+        top_industries: list[str] = []
+        for src in all_sources:
+            if (
+                src.search_tag in {"primary_industry", "secondary_industry"}
+                and src.industry_id not in top_industries
+            ):
+                top_industries.append(src.industry_id)
+        if top_industries:
+            await _run_safely_async(
+                "search_15_exa_newly_funded",
+                search_15_exa_newly_funded.run(
+                    top_industry_ids=top_industries,
+                    brand_industry_map=bim,
+                ),
+            )
 
     # Merge sources by brand, build qualified candidates.
     grouped = _merge_sources(all_sources)

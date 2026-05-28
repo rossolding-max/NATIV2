@@ -1,19 +1,15 @@
-"""Step 9 — background AI research kickoff (Celery task).
+"""Step 9 / M7 — background brand-discovery kickoff (Celery task).
 
-Skeletal in M5: the task fires from ``POST /api/v1/talents/{id}/activate``
-once the talent reaches ``status='active'``. It writes a placeholder file
-at ``data/brand_candidates/current/{talent_id}.json`` and logs the work
-it WOULD do. M7 (Brand Discovery) fills in the 16-search Exa + Claude
-pipeline per ``docs/brand_discovery.md``.
+Fires from ``POST /api/v1/talents/{id}/activate`` (M5) and from the new
+``POST /api/v1/talents/{id}/brand-discovery/run`` endpoint. Runs the
+M7 discovery orchestrator, upserts the resulting ``brand_candidate``
+rows, and writes the per-talent JSON snapshot.
 
-Fire-and-forget — the ``/activate`` endpoint must NOT block on this.
+Fire-and-forget — the calling endpoint must NOT block on this.
 """
 
 from __future__ import annotations
 
-import json
-from datetime import UTC, datetime
-from pathlib import Path
 from typing import Any
 
 from asgiref.sync import async_to_sync
@@ -25,38 +21,66 @@ log = get_logger(__name__)
 
 
 async def _kick_off_async(talent_id: str) -> dict[str, Any]:
-    """Write the brand-candidates stub + log the deferred work."""
-    repo = Path(__file__).resolve().parents[2]
-    out_dir = repo / "data" / "brand_candidates" / "current"
-    out_dir.mkdir(parents=True, exist_ok=True)
-    out_file = out_dir / f"{talent_id}.json"
+    """Run the M7 pipeline + persist results (DB + JSON snapshot)."""
+    from sqlalchemy.ext.asyncio import async_sessionmaker
 
-    now = datetime.now(UTC).isoformat()
-    stub = {
-        "talent_id": talent_id,
-        "status": "pending_m7",
-        "seeded_at": now,
-        "note": (
-            "M5 ships this stub. M7 (Brand Discovery) implements the "
-            "16-search Exa + Claude pipeline per docs/brand_discovery.md."
-        ),
-    }
-    out_file.write_text(json.dumps(stub, indent=2))
+    from app.db.session import engine
+    from app.repositories.brand_candidate import BrandCandidateRepository
+    from app.repositories.brand_deal import BrandDealRepository
+    from app.repositories.talent import TalentRepository
+    from app.services.discovery.orchestrator import run_discovery
+    from app.services.discovery.snapshot import _candidate_to_dict, write_snapshot
+
+    factory = async_sessionmaker(engine, expire_on_commit=False)
+    async with factory() as session:
+        talents = TalentRepository(session)
+        deals = BrandDealRepository(session)
+        candidates_repo = BrandCandidateRepository(session)
+
+        talent_row = await talents.get_by_talent_id(talent_id)
+        if talent_row is None:
+            log.warning("brand_discovery_talent_missing", talent_id=talent_id)
+            return {"talent_id": talent_id, "status": "talent_missing"}
+
+        deal_rows = await deals.find_by_talent(talent_id, limit=500)
+        brand_deals = [dict(d.data or {}) for d in deal_rows]
+
+        result = await run_discovery(
+            talent_id=talent_id,
+            talent_data=dict(talent_row.data or {}),
+            brand_deals=brand_deals,
+        )
+
+        # Persist DB rows for kept candidates (blocked stay in JSON snapshot only).
+        payloads = [_candidate_to_dict(c) for c in result.candidates]
+        await candidates_repo.upsert_run_batch(talent_id, payloads, agency_id=talent_row.agency_id)
+        await session.commit()
+
+    snapshot_path = write_snapshot(result)
 
     log.info(
-        "talent_background_research_seeded",
+        "brand_discovery_run_complete",
         talent_id=talent_id,
-        stub_path=str(out_file),
+        search_run_id=result.search_run_id,
+        candidates=len(result.candidates),
+        blocked=len(result.blocked),
+        snapshot=str(snapshot_path),
     )
-    return stub
+    return {
+        "talent_id": talent_id,
+        "search_run_id": result.search_run_id,
+        "candidates": len(result.candidates),
+        "blocked": len(result.blocked),
+        "searches_run": result.searches_run,
+        "errors": result.errors,
+    }
 
 
 @celery_app.task(name="app.services.talent_background_research.kick_off_brand_discovery")
 def kick_off_brand_discovery(talent_id: str) -> dict[str, Any]:
-    """Celery entry point — wraps the async stub via ``async_to_sync``.
+    """Celery entry point — bridges async to sync via ``async_to_sync``.
 
-    Following the M4 pattern: ``asyncio.run`` would close the event loop
-    between back-to-back tasks on the same worker, so ``async_to_sync``
-    preserves the loop.
+    M5 shipped the stub; M7 replaces the body with the real pipeline.
+    Same task name + signature keeps M5 callers working unchanged.
     """
     return async_to_sync(_kick_off_async)(talent_id)
