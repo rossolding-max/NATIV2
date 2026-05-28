@@ -271,6 +271,7 @@ Rate-limit enforcement happens at the vendor-wrapper layer (Redis-backed counter
 | `talent_stats_refresh` | weekly Sun 03:00 | Refresh `talent.platforms[].stats.*` for active talents |
 | `brand_handle_refresh` | weekly Sun 04:00 | Re-fetch `brand_industry_map.brands[].social_handles` via Exa to detect rebrands |
 | `kick_off_brand_discovery` | trigger-only (M7 v0.1) | Phase 2 brand discovery — fires on talent `/activate` + manual `POST /brand-discovery/run`. Periodic re-discovery deferred (no beat entry) until there's a real cost budget conversation |
+| `kick_off_contact_enrichment` | trigger-only (M8 v0.1) | Phase 3a contact enrichment — fires on manual `POST /brands/{id}/contact-enrichment/run`. Auto-trigger from M7's snapshot writer deferred to M8.1; LLM-heavy when Step 4 (Exa + Claude) fires |
 | `enrollment_state_sync` | every 5min | Sync Smartlead enrollment states; classify replies; trigger deal creation on `interested` |
 | `auto_archive_trigger_check` | every 15min | Find deals where all_invoices_paid_at + final_kpis + final_report all set; fire archive |
 | `phase_4_5_auto_fire` | every 5min | Find deals transitioning to `initial_call_scheduled`; fire prep pack generation |
@@ -353,6 +354,16 @@ retrieval has data to read against.
 | `PATCH /api/v1/brand-candidates/{candidate_id}` | Agent workflow patch — `status`, `assigned_to`, `user_notes`, `pitch_history`. JSONB deep-merge; preserves the `status` column / JSONB shadow consistency |
 | `POST /api/v1/talents/{talent_id}/brand-discovery/run` | Enqueue a manual rerun. Returns 202 Accepted; the Celery task does the work (`app.services.talent_background_research.kick_off_brand_discovery`). Optional body `{"searches": ["search_1_reengagement", ...]}` narrows the run; omit/`null` runs all 16. Unknown names return 422 |
 | `GET /api/v1/brand-discovery/searches` | Return the 16-search catalog (name + label + description + weight + `requires_llm` / `requires_external_skill` flags). A UI consumes this to render a multi-select picker |
+
+**Phase 3a brand-contacts REST surface** (M8 — `app/api/brand_contacts.py`):
+
+| Endpoint | Action |
+|---|---|
+| `GET /api/v1/brands/{brand_id}/contacts` | List enriched contacts at a brand (optional `?decision_role=` / `?qualification_tier=`) |
+| `GET /api/v1/talents/{talent_id}/pitchable-contacts?brand_id=...` | Contacts at the named brand that this talent is allowed to pitch right now (filters out DNC + 14-day per-talent cooldown) |
+| `GET /api/v1/brand-contacts/{contact_id}` | Fetch one |
+| `PATCH /api/v1/brand-contacts/{contact_id}` | Agent workflow patch — `do_not_contact`, `do_not_contact_reason`, `opt_out_at`, `tags`, `notes`. Deep-merges JSONB + syncs the scalar mirror columns |
+| `POST /api/v1/brands/{brand_id}/contact-enrichment/run` | Trigger the 9-step contact-enrichment pipeline for one brand. Returns 202 Accepted; the Celery task does the work. Optional body `{"talent_id": "...", "target_titles": ["VP Marketing", ...]}` — `talent_id` enables per-talent cooldown filtering; `target_titles` overrides the default set picked from the brand's industry category |
 
 The discovery orchestrator (`app/services/discovery/orchestrator.py`)
 runs the Core 8 searches concurrently, merges sources by `brand_id`,
