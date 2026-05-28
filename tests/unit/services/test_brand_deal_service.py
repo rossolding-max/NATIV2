@@ -25,6 +25,7 @@ def _make_service() -> tuple[BrandDealService, MagicMock, MagicMock, MagicMock]:
     deals.create = AsyncMock(side_effect=lambda inst: inst)
     deals.patch_deal_data = AsyncMock()
     deals.set_outcome_column = AsyncMock()
+    deals.set_scalar_columns = AsyncMock()
 
     talents.get_by_talent_id = AsyncMock()
     talents.patch_data = AsyncMock()

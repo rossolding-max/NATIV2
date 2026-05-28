@@ -27,6 +27,7 @@ from fastapi.responses import JSONResponse
 from sqlalchemy import text
 
 from app.api import agencies as agencies_router
+from app.api import brand_deals as brand_deals_router
 from app.api import talents as talents_router
 from app.api.middleware import RequestContextMiddleware
 from app.api.responses import APIError, APIResponse, make_meta
@@ -188,6 +189,8 @@ app.add_middleware(RequestContextMiddleware)
 app.include_router(agencies_router.router, prefix="/api/v1")
 app.include_router(talents_router.router, prefix="/api/v1")
 app.include_router(oauth_callbacks_router.router, prefix="/api/v1")
+app.include_router(brand_deals_router.talent_scoped_router, prefix="/api/v1")
+app.include_router(brand_deals_router.top_level_router, prefix="/api/v1")
 
 
 @app.exception_handler(NATIV2Error)

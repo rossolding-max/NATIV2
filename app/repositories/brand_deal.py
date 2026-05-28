@@ -93,6 +93,35 @@ class BrandDealRepository(BaseRepository[BrandDeal]):
         await self._session.refresh(instance)
         return instance
 
+    async def set_scalar_columns(
+        self,
+        deal_id: str,
+        *,
+        fee_usd: Any = ...,
+        started_at: Any = ...,
+        ended_at: Any = ...,
+    ) -> BrandDeal:
+        """Set any of the indexed scalar columns. ``...`` sentinel skips a field.
+
+        Mirrors a PATCH against ``data`` so the API response (which reads
+        from the scalar columns) stays in sync with the JSONB blob.
+        """
+        instance = await self.get_by_id(deal_id)
+        if instance is None:
+            raise NotFoundError(
+                f"brand_deal {deal_id!r} not found", detail={"brand_deal_id": deal_id}
+            )
+        if fee_usd is not ...:
+            instance.fee_usd = fee_usd
+        if started_at is not ...:
+            instance.started_at = started_at
+        if ended_at is not ...:
+            instance.ended_at = ended_at
+        instance.last_updated_at = datetime.now(UTC)
+        await self._session.flush()
+        await self._session.refresh(instance)
+        return instance
+
     async def set_outcome_column(self, deal_id: str, outcome: str) -> BrandDeal:
         """Write the indexed scalar ``outcome`` column + bump ``last_updated_at``."""
         stmt = (

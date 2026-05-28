@@ -239,6 +239,18 @@ class BrandDealService:
 
         updated = await self._deals.patch_deal_data(deal_id, sanitised)
 
+        # Mirror scalar columns into their indexed slots when the patch
+        # touches them — the API response reads from these columns.
+        mirror_kwargs: dict[str, Any] = {}
+        if "fee_usd" in sanitised:
+            mirror_kwargs["fee_usd"] = sanitised["fee_usd"]
+        if "started_at" in sanitised:
+            mirror_kwargs["started_at"] = _coerce_started_at(sanitised["started_at"])
+        if "ended_at" in sanitised:
+            mirror_kwargs["ended_at"] = _coerce_started_at(sanitised["ended_at"])
+        if mirror_kwargs:
+            updated = await self._deals.set_scalar_columns(deal_id, **mirror_kwargs)
+
         # Mirror outcome into the indexed column if the patch touched it.
         new_outcome = sanitised.get("outcome")
         if new_outcome and new_outcome != instance.outcome:
