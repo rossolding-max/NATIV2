@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 from typing import Any
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import UUID, uuid4
 
 import pytest
@@ -223,10 +223,17 @@ async def test_integration__approve_enrollment_pushes_to_smartlead(
         "lead_id": "L99",
         "campaign_name": f"{_TEST_TALENT_ID}::buyer-direct-pitch",
     }
-    with patch(
-        "app.services.outreach.smartlead_push.push_to_smartlead",
-        AsyncMock(return_value=fake_meta),
-    ) as mock_push:
+    # Patch BOTH the SmartleadClient constructor (CI has no API key, so
+    # the constructor raises before push_to_smartlead is reached) AND
+    # the push helper itself. Targets are the source-module paths because
+    # the approve endpoint imports them inline at call time.
+    with (
+        patch("app.vendors.smartlead.SmartleadClient", return_value=MagicMock()),
+        patch(
+            "app.services.outreach.smartlead_push.push_to_smartlead",
+            AsyncMock(return_value=fake_meta),
+        ) as mock_push,
+    ):
         r = await m9_app.post(f"/api/v1/enrollments/{eid}/approve")
     assert r.status_code == 200, r.text
     body = r.json()["data"]
