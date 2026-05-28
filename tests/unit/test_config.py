@@ -131,3 +131,41 @@ def test_unit__settings_derived_dsns_contain_credentials(
 
     sync_dsn = s.database_url_sync
     assert sync_dsn.startswith("postgresql+psycopg://")
+
+
+def test_unit__empty_redis_password_normalised_to_none(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """``REDIS_PASSWORD=`` (empty) must parse to ``None``, not ``SecretStr("")``.
+
+    Without this normalisation, ``_rate_limiter`` and ``_oauth_state``
+    would forward ``AUTH ""`` to a passwordless Redis and crash with
+    ``AuthenticationError``. Discovered during the M5 docker-compose
+    smoke when Phase 0 mailbox provisioning 500'd through the rate
+    limiter.
+    """
+    env = {**_VALID_ENV, "REDIS_PASSWORD": ""}
+    s = _make(monkeypatch, env)
+    assert s.redis_password is None
+
+
+def test_unit__nonempty_redis_password_preserved(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A real ``REDIS_PASSWORD`` value still arrives as a populated ``SecretStr``."""
+    env = {**_VALID_ENV, "REDIS_PASSWORD": "hunter2"}
+    s = _make(monkeypatch, env)
+    assert s.redis_password is not None
+    assert s.redis_password.get_secret_value() == "hunter2"
+
+
+def test_unit__redis_password_with_inline_dotenv_comment_is_none(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """python-dotenv leaves trailing ``# comment`` as the value when the line is
+    ``REDIS_PASSWORD=                # comment``. The validator must strip
+    that and resolve to ``None``.
+    """
+    env = {**_VALID_ENV, "REDIS_PASSWORD": "   # empty for local-only"}
+    s = _make(monkeypatch, env)
+    assert s.redis_password is None

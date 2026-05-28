@@ -14,6 +14,7 @@ from pydantic import (
     AnyHttpUrl,
     Field,
     SecretStr,
+    field_validator,
     model_validator,
 )
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -174,6 +175,28 @@ class Settings(BaseSettings):
     enforce_template_version_bump: bool = True
 
     # ── Validators ───────────────────────────────────────────────────
+    @field_validator("redis_password", mode="before")
+    @classmethod
+    def _empty_redis_password_is_none(cls, value: object) -> object:
+        # An empty ``REDIS_PASSWORD=`` in .env parses to ``""`` and then
+        # wraps as ``SecretStr("")`` — but every Redis consumer checks
+        # ``if password is not None``, so the wrapper would force an
+        # ``AUTH ""`` command and fail against a Redis with no password.
+        # Treat the empty string as "no password configured" at parse time.
+        #
+        # Also defend against python-dotenv leaving a trailing inline
+        # comment as the value when the .env line is shaped like
+        # ``REDIS_PASSWORD=                  # comment``: dotenv keeps
+        # the literal `# comment` because there's no value before it.
+        # See docs/configuration.md for the canonical .env layout.
+        if isinstance(value, SecretStr):
+            value = value.get_secret_value()
+        if isinstance(value, str):
+            stripped = value.strip()
+            if not stripped or stripped.startswith("#"):
+                return None
+        return value
+
     @model_validator(mode="after")
     def _validate_external_bind(self) -> Settings:
         if self.nativ2_bind_host != "127.0.0.1" and not self.nativ2_external_bind_confirmed:
