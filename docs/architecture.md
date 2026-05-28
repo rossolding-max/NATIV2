@@ -351,7 +351,8 @@ retrieval has data to read against.
 | `GET /api/v1/talents/{talent_id}/brand-candidates?tier=primary` | List per-talent (optional `tier` filter; uses the indexed column) |
 | `GET /api/v1/brand-candidates/{candidate_id}` | Fetch one |
 | `PATCH /api/v1/brand-candidates/{candidate_id}` | Agent workflow patch — `status`, `assigned_to`, `user_notes`, `pitch_history`. JSONB deep-merge; preserves the `status` column / JSONB shadow consistency |
-| `POST /api/v1/talents/{talent_id}/brand-discovery/run` | Enqueue a manual rerun. Returns 202 Accepted; the Celery task does the work (`app.services.talent_background_research.kick_off_brand_discovery`) |
+| `POST /api/v1/talents/{talent_id}/brand-discovery/run` | Enqueue a manual rerun. Returns 202 Accepted; the Celery task does the work (`app.services.talent_background_research.kick_off_brand_discovery`). Optional body `{"searches": ["search_1_reengagement", ...]}` narrows the run; omit/`null` runs all 16. Unknown names return 422 |
+| `GET /api/v1/brand-discovery/searches` | Return the 16-search catalog (name + label + description + weight + `requires_llm` / `requires_external_skill` flags). A UI consumes this to render a multi-select picker |
 
 The discovery orchestrator (`app/services/discovery/orchestrator.py`)
 runs the Core 8 searches concurrently, merges sources by `brand_id`,
