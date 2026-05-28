@@ -107,6 +107,12 @@ class Settings(BaseSettings):
     exa_api_key: SecretStr | None = None
     exa_base_url: AnyHttpUrl = Field(default=AnyHttpUrl("https://api.exa.ai"))
 
+    # ── Discovery: last30days skill (M7 Search 16) ───────────────────
+    # Off by default — the skill needs real OpenAI + xAI API keys and
+    # produces only a modest signal weight (0.06). Flip on per-env once
+    # the skill's auth + cost guards are configured for your installation.
+    enable_last30days_discovery: bool = False
+
     apollo_api_key: SecretStr | None = None
     # RapidAPI gateway key. Used by LinkedInScraperClient (RapidAPI's
     # "Real-Time LinkedIn Scraper API" at linkedin-data-api.p.rapidapi.com).
