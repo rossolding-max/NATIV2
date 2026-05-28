@@ -375,6 +375,48 @@ These feed into:
 
 ---
 
+## M8 implementation notes (shipped vs deferred)
+
+M8 v0.1 ships the **full 9-step pipeline** described above (Steps 2 → 3
+→ 4 → 5 → 6 → 8 + qualification + policy filter) plus the REST surface
++ Celery task that fires the pipeline on a manual trigger. No schema
+migration was required — the M1 ``brand_contact`` table + Pydantic
+codegen + ``EncryptedString`` email column + the M3 Apollo / LinkedIn
+vendor wrappers covered everything.
+
+**Shipped:**
+
+| Layer | Module / file |
+|---|---|
+| Step 2 — Apollo employee search | ``app/services/contact_enrichment/step_2_apollo_search.py`` |
+| Step 3 — LinkedIn profile enrichment | ``app/services/contact_enrichment/step_3_linkedin_enrich.py`` |
+| Step 4 — Exa + Claude web-search fallback | ``app/services/contact_enrichment/step_4_web_fallback.py`` |
+| Step 5 — strict email-verification honesty floor | ``app/services/contact_enrichment/step_5_email_verify.py`` |
+| Step 6 — Claude ``decision_role`` classifier (one batched call per run) | ``app/services/contact_enrichment/step_6_decision_role.py`` |
+| Step 8 — dedupe + merge (linkedin > name+domain > email) | ``app/services/contact_enrichment/step_8_dedupe_merge.py`` |
+| Qualification scoring | ``app/services/contact_enrichment/qualification.py`` |
+| Policy filter (DNC + per-talent 14-day cooldown) | ``app/services/contact_enrichment/policy_filter.py`` |
+| Orchestrator entry point | ``app/services/contact_enrichment/orchestrator.py`` |
+| Atomic dual-write JSON snapshot | ``app/services/contact_enrichment/snapshot.py`` |
+| Celery task | ``app/services/contact_enrichment_task.py`` |
+| REST router (5 endpoints) | ``app/api/brand_contacts.py`` |
+
+**Locked v0.1 decisions:**
+- **Manual trigger only.** No auto-fire from M7's snapshot writer; users hit ``POST /api/v1/brands/{brand_id}/contact-enrichment/run`` themselves. Auto-trigger lands in M8.1 once we measure verified-email rate + cost-per-run on real brands.
+- **Strict honesty floor on emails.** Step 5 keeps emails only when Apollo SMTP returns ``verified`` or ``catchall``. No pattern-guessing, no third-party verification (Hunter / NeverBounce). A brand with weak Apollo coverage may surface zero contacts — that's the right trade-off in v0.1.
+- **Single batched LLM call for ``decision_role``.** Mirrors Search 13's pattern. Cap 12 candidates per brand keeps the prompt token-light. Falls back to ``unknown`` on any LLM error.
+
+**Deferred to M8.1+:**
+- Auto-trigger from M7's snapshot writer when ``brand_candidate.tier == "primary"`` AND ``qualification.tier ∈ {qualified, speculative}``.
+- Champion-detection automation (Q7 above) — auto-set ``champion_for_talents`` from ``pitch_history`` where outcome ≥ ``meeting_booked``.
+- Manual ``field_overrides[]`` layer (Q6) — currently every enrichment re-classifies; a user-flipped ``decision_role`` needs to survive without re-classification.
+- AOR explicit handling (Q8).
+- Paid email verification (Hunter / NeverBounce) — strict Apollo-only honesty floor in v0.1.
+- Cross-talent contact-fatigue cap (Q5) — per-talent 14-day cooldown ships; the aggregate "max N contacts pitched per week per talent" cap defers to M9 where outreach-volume signal is real.
+- Quarterly email re-verify cron + annual LinkedIn re-pull cron — v0.1 only records ``last_enriched_at`` and ``last_verified_at``; cadence decisions defer.
+
+---
+
 ## Open questions for v0.2
 
 1. **LinkedIn API scope** — depends on which API you're providing access to. Standard LinkedIn (REST), Sales Navigator API, or partnership-tier. Schema accommodates all; workflow steps may need tightening once scope is known.

@@ -262,13 +262,15 @@ Each milestone documented below with: inputs (what must exist) + outputs (delive
 
 **Inputs:** M7.
 
-**Outputs:**
-- `app/services/contact_enrichment.py`: Apollo + LinkedIn enrichment per `docs/contact_enrichment_workflow.md`
-- `app/services/decision_role.py`: classification heuristic + LLM tagging (decision_role enum)
-- `app/api/brand_contacts.py`: CRUD + enrichment trigger endpoints
-- Honour-opt-out hygiene: `do_not_contact` enforced across all enrollment creation paths
+**Outputs (shipped — full 9-step pipeline):**
+- `app/services/contact_enrichment/` package — Steps 2 (Apollo search), 3 (LinkedIn enrich), 4 (Exa + Claude web-search fallback), 5 (strict email honesty floor), 6 (Claude `decision_role` classifier — single batched call per run), 8 (dedupe + merge), qualification + policy filter, orchestrator.
+- `app/services/contact_enrichment/snapshot.py` — atomic dual-write JSON snapshot (`data/brand_contacts/current/{brand_id}.json` + immutable `data/brand_contacts/runs/{brand_id}/{run_id}.json`). Preserves workflow-state fields across runs.
+- `app/services/contact_enrichment_task.py` — Celery task `kick_off_contact_enrichment(brand_id, agency_id, talent_id?, target_titles?)` fired by the new REST trigger.
+- `app/repositories/brand_contact.py` extensions: `find_by_brand`, `find_pitchable_for_talent`, `upsert_run_batch` (workflow-state preserved), `patch_workflow_state`, `set_scalar_columns`.
+- `app/api/brand_contacts.py` — five REST endpoints (list per brand, list pitchable per talent, get by id, patch workflow state, trigger enrichment run).
+- 63 unit tests across 9 modules; 5 integration tests for the repo (workflow-state preservation); 11 integration tests for the REST surface (happy + 404 paths + Celery enqueue assertions).
 
-**Acceptance:** contacts surfaced for top-N brand_candidates; verified email rate > 70%; `decision_role` populated with rationale.
+**Acceptance:** contacts surfaced on real brand via `POST /brand-contact-enrichment/run`; verified email rate > 70%; `decision_role` populated with rationale; manual trigger only in v0.1 (auto-fire from M7 deferred to M8.1).
 
 **Skip notes:** if skipped, agent manually enters contact details when creating enrollment; `decision_role` defaulted to `unknown`.
 
