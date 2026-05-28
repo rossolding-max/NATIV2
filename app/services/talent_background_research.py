@@ -11,6 +11,7 @@ Fire-and-forget — the calling endpoint must NOT block on this.
 from __future__ import annotations
 
 from typing import Any
+from uuid import UUID
 
 from asgiref.sync import async_to_sync
 
@@ -22,6 +23,7 @@ log = get_logger(__name__)
 
 async def _kick_off_async(
     talent_id: str,
+    agency_id: str | None = None,
     enabled_searches: list[str] | None = None,
 ) -> dict[str, Any]:
     """Run the M7 pipeline + persist results (DB + JSON snapshot)."""
@@ -34,11 +36,21 @@ async def _kick_off_async(
     from app.services.discovery.orchestrator import run_discovery
     from app.services.discovery.snapshot import _candidate_to_dict, write_snapshot
 
+    # async_to_sync spins a fresh event loop per task invocation; the
+    # SQLAlchemy async engine's pool keeps connections bound to the
+    # previous (now-closed) loop. Drop them so the next checkout binds
+    # to THIS task's loop.
+    await engine.dispose()
+
+    # The caller (REST trigger or /activate) passes the request-scoped
+    # agency UUID; fall back to the zero sentinel for single-tenant deploys
+    # where no agency is bound.
+    agency_uuid = UUID(agency_id) if agency_id else UUID(int=0)
     factory = async_sessionmaker(engine, expire_on_commit=False)
     async with factory() as session:
-        talents = TalentRepository(session)
-        deals = BrandDealRepository(session)
-        candidates_repo = BrandCandidateRepository(session)
+        talents = TalentRepository(session, agency_id=agency_uuid)
+        deals = BrandDealRepository(session, agency_id=agency_uuid)
+        candidates_repo = BrandCandidateRepository(session, agency_id=agency_uuid)
 
         talent_row = await talents.get_by_talent_id(talent_id)
         if talent_row is None:
@@ -83,13 +95,16 @@ async def _kick_off_async(
 @celery_app.task(name="app.services.talent_background_research.kick_off_brand_discovery")
 def kick_off_brand_discovery(
     talent_id: str,
+    agency_id: str | None = None,
     enabled_searches: list[str] | None = None,
 ) -> dict[str, Any]:
     """Celery entry point — bridges async to sync via ``async_to_sync``.
 
     M5 shipped the stub; M7 replaces the body with the real pipeline.
-    M7.1 added the optional ``enabled_searches`` arg — None/missing runs
-    every search in the catalog; a list narrows the run. Same task name
-    keeps M5 callers (which only pass ``talent_id``) working unchanged.
+    M7.1 added the optional ``enabled_searches`` arg. The smoke-test
+    surfaced a second gap: the worker had no way to learn the
+    request-scoped ``agency_id``, so it always fell back to the zero
+    UUID and 404'd on agency-scoped talents. Both REST callers
+    (``/activate`` + ``/brand-discovery/run``) now pass it explicitly.
     """
-    return async_to_sync(_kick_off_async)(talent_id, enabled_searches)
+    return async_to_sync(_kick_off_async)(talent_id, agency_id, enabled_searches)

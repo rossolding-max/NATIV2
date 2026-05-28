@@ -35,6 +35,12 @@ async def _kick_off_async(
     from app.services.contact_enrichment.orchestrator import run_enrichment
     from app.services.contact_enrichment.snapshot import _contact_to_dict, write_snapshot
 
+    # async_to_sync spins a fresh event loop per task invocation; the
+    # SQLAlchemy async engine's pool keeps connections bound to the
+    # previous (now-closed) loop. Drop them so the next checkout binds
+    # to THIS task's loop.
+    await engine.dispose()
+
     agency_uuid = UUID(agency_id)
     factory = async_sessionmaker(engine, expire_on_commit=False)
     async with factory() as session:

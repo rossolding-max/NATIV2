@@ -10,7 +10,10 @@ hourly cadence borrowed from ``cron_phase_4_8_detection_other_seconds``.
 
 from __future__ import annotations
 
+from typing import Any
+
 from celery import Celery
+from celery.signals import worker_process_init
 from kombu import Queue
 
 from app.config import settings
@@ -26,6 +29,7 @@ def _build_app() -> Celery:
             "app.tasks.pack_generation",
             "app.services.agency_warmup",
             "app.services.talent_background_research",
+            "app.services.contact_enrichment_task",
         ],
     )
 
@@ -60,3 +64,17 @@ def _build_app() -> Celery:
 
 
 app: Celery = _build_app()
+
+
+@worker_process_init.connect
+def _init_taxonomies_per_worker(**_kwargs: Any) -> None:  # pyright: ignore[reportUnusedFunction]
+    """Load the taxonomy singleton in each forked worker process.
+
+    The FastAPI app does this in its lifespan; Celery workers don't run the
+    lifespan, so the discovery + contact-enrichment orchestrators crash with
+    "Taxonomies not initialised" without this hook. Fires once per worker
+    process (prefork model).
+    """
+    from app.utils.taxonomies import init_taxonomies
+
+    init_taxonomies()

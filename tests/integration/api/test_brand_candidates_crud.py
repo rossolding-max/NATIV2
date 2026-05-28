@@ -192,9 +192,10 @@ async def test_integration__trigger_brand_discovery_run_202(m7_app: AsyncClient)
     assert body["enqueued"] is True
     assert body["enabled_searches"] is None  # omitted -> run all (the default)
     mock_send.assert_called_once()
-    # When no body is sent the Celery task arg list should carry [talent_id, None].
+    # Celery args: [talent_id, agency_id, enabled_searches]. Without an
+    # agency bound to the request, agency_id falls back to the zero UUID.
     sent_args = mock_send.call_args.kwargs.get("args")
-    assert sent_args == [_TEST_TALENT_ID, None]
+    assert sent_args == [_TEST_TALENT_ID, str(_SENTINEL_AGENCY_ID), None]
 
 
 async def test_integration__trigger_run__with_search_subset(m7_app: AsyncClient) -> None:
@@ -210,6 +211,7 @@ async def test_integration__trigger_run__with_search_subset(m7_app: AsyncClient)
     sent_args = mock_send.call_args.kwargs.get("args")
     assert sent_args == [
         _TEST_TALENT_ID,
+        str(_SENTINEL_AGENCY_ID),
         ["search_1_reengagement", "search_5_primary_industry"],
     ]
 
@@ -243,7 +245,7 @@ async def test_integration__trigger_run__dedupes_repeated_searches(m7_app: Async
         )
     assert r.status_code == 202, r.text
     sent_args = mock_send.call_args.kwargs.get("args")
-    assert sent_args == [_TEST_TALENT_ID, ["search_1_reengagement"]]
+    assert sent_args == [_TEST_TALENT_ID, str(_SENTINEL_AGENCY_ID), ["search_1_reengagement"]]
 
 
 async def test_integration__discovery_searches_catalog(m7_app: AsyncClient) -> None:
