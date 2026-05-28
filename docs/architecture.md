@@ -325,6 +325,25 @@ Every phase tolerates missing upstream data with documented degraded behaviour. 
 
 All webhooks validate signature/HMAC before processing.
 
+**Phase 1.5 brand-deals REST surface** (M6 — `app/api/brand_deals.py`):
+
+| Endpoint | Action |
+|---|---|
+| `POST /api/v1/talents/{talent_id}/brand-deals` | Create deal; resolves `industry_id` via M5 inference; auto-links into `talent.data.previous_brands[]` via `deal_id` FK |
+| `GET /api/v1/talents/{talent_id}/brand-deals?outcome=…` | List per-talent (optional outcome filter; uses the indexed `outcome` column) |
+| `GET /api/v1/brand-deals/{deal_id}` | Fetch one by id |
+| `PATCH /api/v1/brand-deals/{deal_id}` | Deep-merge into JSONB `data`; mirror scalar columns (`fee_usd` / `started_at` / `ended_at`) into their indexed slots; re-run KPI honesty-floor validation |
+| `POST /api/v1/brand-deals/{deal_id}/outcome` | Set the indexed `outcome` enum + JSONB mirror |
+| `DELETE /api/v1/brand-deals/{deal_id}` | Soft-delete (`is_deleted = true`) |
+
+The KPI honesty floor (`app/services/kpi_validation.py`) rejects any
+write where a populated metric is missing `value` / `source` / `as_of`,
+or where `as_of` is in the future. Suspicious values
+(engagement_rate_pct > 100, > 30% unusually high) are logged but the
+write proceeds. Each create emits a stub
+`memo_type="brand_deal_kpi_pattern"` memo so M7 cross-talent
+retrieval has data to read against.
+
 ## 11. Observability instrumentation
 
 **Sentry:**
