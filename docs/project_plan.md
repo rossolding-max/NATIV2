@@ -236,8 +236,8 @@ Each milestone documented below with: inputs (what must exist) + outputs (delive
 
 **Inputs:** M6 + M3.
 
-**Outputs (shipped — Core 8):**
-- `app/services/discovery/` package — Searches **1, 3, 5, 6, 7, 9, 10, 15** of the 16 in `docs/brand_discovery.md`. The remaining 8 (2, 4, 8, 11, 12, 13, 14, 16) plus the `last30days` skill defer to M7.1.
+**Outputs (shipped — all 16 searches after M7.1):**
+- `app/services/discovery/` package — all 16 searches from `docs/brand_discovery.md`. M7 shipped the Core 8 (1, 3, 5, 6, 7, 9, 10, 15); M7.1 added the remaining 8 (2, 4, 8, 11, 12, 13, 14, 16). Search 16 wraps the existing `~/.claude/skills/last30days/` skill via subprocess and is gated behind `settings.enable_last30days_discovery` (off by default — needs OpenAI + xAI keys).
 - `app/services/discovery/qualification.py` — signal-based 0-1 score; signals: active_creator_program (+0.30), macro/premium tier (+0.20), established_company (+0.10), recent_funding (+0.10), follower-count boost/penalty, b2b vertical (-0.20), micro/nano (-0.15). Tier: qualified ≥0.60, speculative 0.30-0.60, unqualified <0.30 (default threshold 0.30; per-talent override deferred).
 - `app/services/discovery/policy_filter.py` — partitions into kept + blocked. Blocks: `blocked_industries`, active `exclusivities`, `do_not_recontact` brand_ids. Warns: sensitive industries not in `preferred_industries`.
 - `app/services/discovery/orchestrator.py` — runs enabled searches, merges sources by `brand_id`, scores (cap-summed weights), tiers (re-engage tag wins over score), qualifies, filters, returns `DiscoveryRunResult`.
@@ -245,7 +245,7 @@ Each milestone documented below with: inputs (what must exist) + outputs (delive
 - `app/services/talent_background_research.py` — M5 stub body replaced; the Celery task now runs the orchestrator, upserts `brand_candidate` rows, writes the JSON snapshot. Same task name + signature.
 - `app/repositories/brand_candidate.py` — `find_by_talent` / `find_by_tier` / `upsert_run_batch` (preserves workflow-state on update) / `patch_workflow_state`.
 - `app/api/brand_candidates.py` — 4 REST endpoints: GET list (with `?tier=`), GET by id, PATCH workflow, POST manual rerun (202 + enqueue).
-- 62 tests across deterministic searches, qualification, policy filter, orchestrator, Search 15 (Exa+LLM mocked), repo workflow-state preservation, and REST surface.
+- 101 unit tests across all 16 deterministic + LLM-driven searches, qualification, policy filter, orchestrator, Search 15 (Exa+LLM mocked), Search 13 (Anthropic mocked), Search 16 (subprocess mocked) + 10 integration tests covering repo workflow-state preservation and REST surface.
 
 **Acceptance:** discovery run for real talent produces ranked candidates as `brand_candidate` rows AND `data/brand_candidates/current/{talent_id}.json`; workflow-state survives reruns; honesty floor enforced (no unqualified candidates surface).
 

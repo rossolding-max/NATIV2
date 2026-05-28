@@ -524,12 +524,14 @@ JSON shape:
 
 ## M7 implementation notes (shipped vs deferred)
 
-M7 ships the **Core 8** subset of the 16 searches plus the qualification
-+ policy-filter layers + the REST surface + the Celery task that fires
-on `/activate`. The remaining searches and the trending-skill defer to
-M7.1.
+M7 shipped the **Core 8** subset of the 16 searches plus the
+qualification + policy-filter layers + the REST surface + the Celery
+task that fires on `/activate`. **M7.1 added the remaining 8 searches**
+on top: 6 deterministic graph-walk searches, the LLM-driven
+values-aligned classifier, and the `last30days` trending skill
+subprocess wrap.
 
-**Shipped:**
+**Shipped in M7 (Core 8):**
 
 | # | Search | Why in Core 8 |
 |---|---|---|
@@ -540,15 +542,18 @@ M7.1.
 | 10 | Geographic alignment | Free lift on top of industry matches; deterministic |
 | 15 | Newly-funded via Exa + Claude | The only "discover net-new brands" path; expensive but unique value |
 
-**Deferred to M7.1:**
-- **Search 2** — brands similar talents have worked with (graph traversal across `talent.similar_talent[].previous_brands[]`).
-- **Search 4** — competitors of similar talents' brands (2nd-degree competitor graph).
-- **Search 8** — parent + sibling niche walk (extends Search 5/6/7 via the niche taxonomy).
-- **Search 11** — life-stage signal (dominant age band → life-stage industries).
-- **Search 12** — complementary categories around active exclusivities (positive-space inversion of the exclusivity block).
-- **Search 13** — values-aligned brands (LLM classification against `values_red_lines`).
-- **Search 14** — 2nd-degree graph expansion (competitors-of-competitors).
-- **Search 16** — trending brands via `last30days` skill — needs the skill itself built (Reddit + X + TikTok + HN + Bluesky + Brave + GitHub scrapers + LLM synthesis). Substantial scope; lands when outreach signal hunger justifies it.
+**Shipped in M7.1 (remaining 8):**
+
+| # | Search | Weight | Notes |
+|---|---|---|---|
+| 2 | Similar-talent brands | 0.10–0.20 | Walks `talent.similar_talent[].previous_brands[]`; weight scales with mention count |
+| 4 | Competitors of similar-talent brands | 0.10 | Composes Search 2 + Search 3 (one extra graph hop) |
+| 8 | Parent + sibling niche walk | 0.08 | Extends Search 5/6/7 via the niche taxonomy parent/sibling pointers |
+| 11 | Life-stage signal | 0.04 | Inline IAB-derived age-band → industry mapping (13-17 / 18-24 / 25-34 / 35-44 / 45-54 / 55+) |
+| 12 | Complementary to active exclusivities | 0.05 | Positive-space inversion of the exclusivity block — adjacent industries the audience already responds to |
+| 13 | Values-aligned (LLM classifier) | 0.05 | One Claude call per run; batches top 50 already-surfaced candidates against the talent's `values_aligned_themes` + `values_red_lines` |
+| 14 | 2nd-degree competitor graph | 0.03 | Competitors-of-competitors; excludes 1st-hop set to avoid double-counting Search 3/4 |
+| 16 | Trending via `last30days` skill | 0.06 | Subprocess to `~/.claude/skills/last30days/scripts/last30days.py`; mines Reddit + X items for known brand-name mentions; gated behind `settings.enable_last30days_discovery` since the skill needs OpenAI + xAI keys |
 
 **Scoring** is `min(1.0, Σ source-weights)`. Tier is `re-engage` if any source tagged it (regardless of score), else `primary` ≥ 0.50, `secondary` ≥ 0.25, `tertiary` ≥ 0.10. Below 0.10 dropped.
 
