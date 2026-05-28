@@ -236,14 +236,18 @@ Each milestone documented below with: inputs (what must exist) + outputs (delive
 
 **Inputs:** M6 + M3.
 
-**Outputs:**
-- `app/services/discovery/`: per-search modules (Search 1-16 from `docs/brand_discovery.md`)
-- `app/services/qualification.py`: signal-based qualification scoring (per `schemas/brand_candidates.schema.json` qualificationSignal)
-- `app/services/policy_filter.py`: exclusions (blocked_industries, active_exclusivities) + warnings (sensitive_category, etc.)
-- `app/tasks/discovery_run.py`: Celery task firing monthly per talent
-- `app/services/brand_enrichment.py`: refreshes `brand_industry_map` + **captures `social_handles` per platform** (audit Tier 1 G1 fix)
+**Outputs (shipped — Core 8):**
+- `app/services/discovery/` package — Searches **1, 3, 5, 6, 7, 9, 10, 15** of the 16 in `docs/brand_discovery.md`. The remaining 8 (2, 4, 8, 11, 12, 13, 14, 16) plus the `last30days` skill defer to M7.1.
+- `app/services/discovery/qualification.py` — signal-based 0-1 score; signals: active_creator_program (+0.30), macro/premium tier (+0.20), established_company (+0.10), recent_funding (+0.10), follower-count boost/penalty, b2b vertical (-0.20), micro/nano (-0.15). Tier: qualified ≥0.60, speculative 0.30-0.60, unqualified <0.30 (default threshold 0.30; per-talent override deferred).
+- `app/services/discovery/policy_filter.py` — partitions into kept + blocked. Blocks: `blocked_industries`, active `exclusivities`, `do_not_recontact` brand_ids. Warns: sensitive industries not in `preferred_industries`.
+- `app/services/discovery/orchestrator.py` — runs enabled searches, merges sources by `brand_id`, scores (cap-summed weights), tiers (re-engage tag wins over score), qualifies, filters, returns `DiscoveryRunResult`.
+- `app/services/discovery/snapshot.py` — atomic JSON snapshot writer (current + immutable per-run) that preserves agent workflow-state across runs (status, assigned_to, user_notes, pitch_history, legal_entity_override, first_surfaced_at).
+- `app/services/talent_background_research.py` — M5 stub body replaced; the Celery task now runs the orchestrator, upserts `brand_candidate` rows, writes the JSON snapshot. Same task name + signature.
+- `app/repositories/brand_candidate.py` — `find_by_talent` / `find_by_tier` / `upsert_run_batch` (preserves workflow-state on update) / `patch_workflow_state`.
+- `app/api/brand_candidates.py` — 4 REST endpoints: GET list (with `?tier=`), GET by id, PATCH workflow, POST manual rerun (202 + enqueue).
+- 62 tests across deterministic searches, qualification, policy filter, orchestrator, Search 15 (Exa+LLM mocked), repo workflow-state preservation, and REST surface.
 
-**Acceptance:** discovery run for real talent produces ranked candidates file (`data/brand_candidates/current/{talent_id}.json`); brand_industry_map updates with social_handles for newly discovered brands.
+**Acceptance:** discovery run for real talent produces ranked candidates as `brand_candidate` rows AND `data/brand_candidates/current/{talent_id}.json`; workflow-state survives reruns; honesty floor enforced (no unqualified candidates surface).
 
 **Skip notes:** if skipped, agent manually creates `brand_candidate` rows on-demand when starting outreach; downstream Phase 4.8 detection degrades if `brand.social_handles` absent for that brand.
 
