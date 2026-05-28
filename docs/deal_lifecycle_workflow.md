@@ -411,3 +411,48 @@ v2 sub-spec — a proposed new doc `docs/contract_invoicing_integration.md` (not
 5. **Stage SLA tracking** — typical lead → close timeline is 30-90 days. If a deal sits in a stage longer than the SLA, flag for review. Per-stage SLA configurable per agency.
 6. **Deal-to-deal cloning** — for repeat brands, "duplicate previous deal" speeds up proposal stage massively. v0.2: clone-from-template button that prefills proposal block from the matching brand's most recent successful deal.
 7. **Pipeline export** — agencies often need a CSV / PDF export of the pipeline for monthly reports to talents. v0.2 adds export endpoints.
+
+## M10 implementation notes (shipped)
+
+The M10 build implements the state machine, audit log, REST surface, and two beat-driven crons documented above. Key choices made during implementation:
+
+### State machine
+- Lives at `app/services/deal_lifecycle/`. `transitions.py` holds the static `TRANSITIONS` dict (substage → frozenset of allowed targets), `TERMINAL_SUBSTAGES`, `WON_SUBSTAGE = "archived"`, and the `AUTO_ADVANCE` map (`qualified → proposal_drafting`, `terms_agreed → contract_drafting`, `contract_executed → pre_production`).
+- `state_machine.transition(...)` returns a `StageTransitionPlan` with 1 or 2 ordered `StageTransitionStep`s; auto-advance step is `by_agent_id="system"`.
+- Stage-agnostic substages (`lost`, `killed`, `paused`) keep the deal's current stage when transitioned in. `paused` has no outbound edges in the table — the orchestrator resumes via the previous substage (v0.2 will surface this in the UI; v0.1 expects an agent to set the resumed substage explicitly).
+
+### Audit trail
+- Lives at `deal.data.stage_history[]`. Every transition appends one entry per step (so auto-advance produces 2 entries). Each entry: `{stage, substage, at, by_agent_id, note?}`. `PATCH /deals/{id}` refuses `data.stage_history` writes — append-only.
+
+### REST surface
+- 9 endpoints registered across `talent_scoped_router` (`/talents/{tid}/deals`), `brand_scoped_router` (`/brands/{bid}/deals`), and `top_level_router` (`/deals/...`).
+- `GET /deals/due-for-action` is declared before `GET /deals/{deal_id}` so FastAPI's first-match routing wins on the literal segment.
+- `POST /deals` lands the row in `lead / new_lead` AND writes an opening `stage_history[]` entry tagged `by_agent_id=<creator>` so the audit log starts at row 1.
+- `POST /deals/{id}/transition` body: `{target_substage, by_agent_id?, note?}`. Response includes `chain` so the UI shows both steps when auto-advance fires.
+- `POST /deals/{id}/loss` body: `{reason, lost_at_stage?, competitor_brand?, notes?, by_agent_id?}`. `PATCH /deals/{id}` refuses any diff containing `substage="lost"` or `data.loss` and tells the caller to use the dedicated endpoint. Invalid loss reasons return 422 with the canonical reason list in the error message.
+- `PATCH /deals/{id}` allow-lists the editable scalars + the JSONB nested paths. Top-level allowed scalars: `next_action_due_at`, `expected_value_usd`, `expected_close_date`, `primary_contact_id`. JSONB allow-list: `user_notes`, `lead`, `proposal`, `contract`, `delivery` (Tier-1 G2 — `delivery.campaign_hashtags[]` editable), `close`, `attachments`, `notes`, `next_action`.
+
+### Celery beat tasks
+- `phase_4_5_auto_fire` (5 min): walks `find_ready_for_prep_pack` (substage = `initial_call_scheduled`, `latest_prep_pack_id IS NULL`, debounce stamp ≥ 1 hour old) and calls `celery_app.send_task("app.tasks.pack_generation.generate_pack", kwargs={pack_type="discovery_prep", ...})`. Stamps `deal.data.prep_pack_enqueued_at` so the next tick skips us until either M11 writes `latest_prep_pack_id` or the hour debounce expires.
+- `auto_archive_trigger_check` (15 min): walks `find_ready_for_archive` (substage = `post_campaign_reporting` + all 3 close gates set) and transitions to `archived` via the orchestrator. M16 fills in the corresponding `brand_deal` closing-row write.
+- Both tasks are structured as `process_*` pure helpers + thin `_run_async` bootstrap (engine.dispose → sessionmaker → repo → helper → commit) so unit tests can exercise the helper with mocked repo + send_task.
+
+### Locked v0.1 decisions
+1. **Fire-and-trust enqueue** — `phase_4_5_auto_fire` enqueues against the M2 generic dispatcher; per-pack agent lives in M11. No stub generator in M10.
+2. **Auto-cross-stage transitions** ship in v0.1 (single click → 2 entries in audit trail).
+3. **Dedicated `POST /deals/{id}/loss`** — `PATCH` route refuses `substage="lost"` writes to keep loss capture structured.
+4. **No schema migration; no Pydantic codegen.** Everything M10 needs already lives in `schemas/deal.schema.json`, the SQLA model, and the Pydantic codegen.
+5. **Stage history is the only audit log** — append-only at `deal.data.stage_history[]`, no separate audit table.
+6. **Manual-only `POST /deals` lands in lead/new_lead** with an opening history entry. M9's automatic creation from `interested` replies remains the primary writer.
+7. **"Least-progressed wins"** — deal-level substage tracks the LEAST-progressed deliverable when `delivery.content_drafts[]` has mixed per-deliverable states. v0.1 documents the rule; the rollup computation ships in M14 alongside the per-deliverable UI surface.
+
+### Deferred to M10.1+
+- Per-deliverable kanban UX (schema supports it; UI defers to M14).
+- Deal cloning ("duplicate previous deal for repeat-brand campaigns").
+- Stage SLA tracking + overdue flagging.
+- LLM-suggested `next_action` on transitions.
+- Pipeline forecasting view (`expected_value × probability(stage)`).
+- Pipeline CSV / PDF export.
+- Cross-deal "deal series" parent for one brand signing a talent for multiple campaigns at once.
+- Daily morning-summary cron (overdue `next_action_due_at` digest).
+- Brand_deal closing-row write on archive → M16.

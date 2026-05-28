@@ -311,23 +311,26 @@ Each milestone documented below with: inputs (what must exist) + outputs (delive
 
 **Inputs:** M9.
 
-**Outputs:**
-- `app/api/deals.py`: CRUD + state transition endpoints
-- `app/services/deal_state_machine.py`: enforces valid substage transitions per `docs/deal_lifecycle_workflow.md` § State machine
-- Stage history audit log (append-only `stage_history[]`)
-- Next-action reminder cron (daily; finds overdue `next_action_due_at`; surfaces to agent)
-- Loss-reason capture + analytics: `loss.reason` × `lost_at_stage` cross-tab
-- Per-deliverable vs deal-level state computation (audit Tier 2 R4 fix — "least-progressed wins" rule)
+**Outputs (shipped):**
+- `app/services/deal_lifecycle/` package — `transitions.py` (static TRANSITIONS table for 28 substages + TERMINAL_SUBSTAGES + AUTO_ADVANCE map), `state_machine.transition()` (returns 1- or 2-step chain; raises `BusinessRuleError` with allowed-targets in `detail`), `loss_reasons.validate_reason()` + `lost_at_stage_for()`, `orchestrator.apply_transition()` + `orchestrator.record_loss()` (mutates `deal.stage` + `deal.substage` + `is_terminal` + `is_won` + appends `data.stage_history[]`).
+- `app/repositories/deal.py` extensions — `find_by_talent` / `find_by_brand` / `find_by_stage` / `find_due_for_action` finders, pipeline scanners `find_ready_for_prep_pack` (1-hour debounce on `data.prep_pack_enqueued_at`) + `find_ready_for_archive` (3-gate close check), `insert_manual_deal` (opening `stage_history` entry), `patch_workflow_state` with guards (refuses direct `stage` / `substage` / `data.loss` / `data.stage_history` writes).
+- `app/api/deals.py` — 9 endpoints across talent-scoped + brand-scoped + top-level routers (`GET .../deals`, `GET /deals/due-for-action`, `GET /deals/{id}`, `GET /deals/{id}/stage-history`, `POST /deals`, `PATCH /deals/{id}`, `POST /deals/{id}/transition`, `POST /deals/{id}/loss`). Transition endpoint returns the full chain (so the UI shows both steps when auto-advance fires).
+- 2 Celery beat tasks: `app/services/deal_phase_4_5_auto_fire_task.phase_4_5_auto_fire` (5-min; enqueues `app.tasks.pack_generation.generate_pack(pack_type="discovery_prep", ...)` for deals at `initial_call_scheduled` + no prep pack) and `app/services/deal_auto_archive_task.auto_archive_trigger_check` (15-min; archives deals once all 3 close gates pass).
+- Auto-cross-stage transitions: agent transition to `qualified` chains to `proposal_drafting`; `terms_agreed` chains to `contract_drafting`; `contract_executed` chains to `pre_production`. Each auto-advance writes its own `stage_history[]` entry with `by_agent_id="system"`.
+- Audit fixes: Tier-1 G2 (`data.delivery.campaign_hashtags[]` editable via PATCH); Tier-2 R4 ("least-progressed wins" documented in workflow doc; ships in M14 alongside the per-deliverable kanban surface).
 
-**Acceptance:** deals progress through LEAD → PROPOSAL → CONTRACT → DELIVERY → CLOSE manually via API; invalid transitions rejected; lost deals tagged with structured reasons.
+**Tests:** 30 unit (state machine + transitions table sanity + loss reasons + orchestrator audit + auto-advance) + 10 unit task tests (`process_ready_deals` + `process_ready_archives`) + 20 integration REST tests (`tests/integration/api/test_deals_crud.py`) + 12 integration repository tests (`tests/integration/test_deal_repository.py`). Total: 605 unit + 32 M10 integration.
+
+**Acceptance (met):** deals progress through LEAD → PROPOSAL → CONTRACT → DELIVERY → CLOSE manually via API; invalid transitions rejected with allowed-targets in error detail; lost deals tagged with structured reasons via `POST /deals/{id}/loss`; auto-advance chains visible in REST response + stage_history.
 
 **Skip notes:** N/A (Phase 4 is required for any pack work).
 
-**Interdependency checks:**
-- State machine table (31 substages) fully implemented
-- `deal.proposal.negotiation_log[].proposal_pack_version` bidirectional with proposal pack versions
-- `deal.contract.amendment_log[].contract_pack_version` bidirectional with contract pack versions
-- `deal.delivery.campaign_hashtags[]` field accepts agent input (audit Tier 1 G2 fix)
+**Deferred to M10.1+ / later milestones:**
+- Discovery / Proposal / Contract / Performance-Report pack generators → M11–M15.
+- Performance detection + KPI capture → M14 (writes `posting_schedule[]` + `interim_kpi_snapshots[]`).
+- Brand_deal closing-row write on archive → M16.
+- Per-deliverable kanban UI + "least-progressed wins" computation surface → M14.
+- Deal cloning, pipeline forecasting (`expected_value × probability(stage)`), stage SLA tracking, LLM-suggested next_action, pipeline CSV/PDF export, daily morning-summary digest → v0.2.
 
 ---
 
