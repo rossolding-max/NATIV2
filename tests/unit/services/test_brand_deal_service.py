@@ -22,7 +22,11 @@ def _make_service() -> tuple[BrandDealService, MagicMock, MagicMock, MagicMock]:
     brands = MagicMock()
 
     deals.get_by_id = AsyncMock(return_value=None)
-    deals.create = AsyncMock(side_effect=lambda inst: inst)
+
+    async def _passthrough_create(inst: Any) -> Any:
+        return inst
+
+    deals.create = AsyncMock(side_effect=_passthrough_create)
     deals.patch_deal_data = AsyncMock()
     deals.set_outcome_column = AsyncMock()
     deals.set_scalar_columns = AsyncMock()

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
+from typing import Any
 
 import pytest
 
@@ -117,7 +118,7 @@ def test_unit__omitted_metric_is_legal_absence() -> None:
 # ── validate_deal_against_schema ──────────────────────────────────────
 
 
-def _make_minimal_deal() -> dict:
+def _make_minimal_deal() -> dict[str, Any]:
     return {
         "deal_id": "deal_2025_acme_abc123",
         "brand_id": "acme",
