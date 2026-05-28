@@ -270,7 +270,7 @@ Rate-limit enforcement happens at the vendor-wrapper layer (Redis-backed counter
 | `invoice_overdue_reminders` | daily 09:00 | Find sent invoices with due_at < now; append to `payment_reminder_log`; notify agent |
 | `talent_stats_refresh` | weekly Sun 03:00 | Refresh `talent.platforms[].stats.*` for active talents |
 | `brand_handle_refresh` | weekly Sun 04:00 | Re-fetch `brand_industry_map.brands[].social_handles` via Exa to detect rebrands |
-| `discovery_run` | monthly (per talent) | Phase 2 brand discovery long-list refresh |
+| `kick_off_brand_discovery` | trigger-only (M7 v0.1) | Phase 2 brand discovery — fires on talent `/activate` + manual `POST /brand-discovery/run`. Periodic re-discovery deferred (no beat entry) until there's a real cost budget conversation |
 | `enrollment_state_sync` | every 5min | Sync Smartlead enrollment states; classify replies; trigger deal creation on `interested` |
 | `auto_archive_trigger_check` | every 15min | Find deals where all_invoices_paid_at + final_kpis + final_report all set; fire archive |
 | `phase_4_5_auto_fire` | every 5min | Find deals transitioning to `initial_call_scheduled`; fire prep pack generation |
@@ -343,6 +343,27 @@ or where `as_of` is in the future. Suspicious values
 write proceeds. Each create emits a stub
 `memo_type="brand_deal_kpi_pattern"` memo so M7 cross-talent
 retrieval has data to read against.
+
+**Phase 2 brand-candidates REST surface** (M7 — `app/api/brand_candidates.py`):
+
+| Endpoint | Action |
+|---|---|
+| `GET /api/v1/talents/{talent_id}/brand-candidates?tier=primary` | List per-talent (optional `tier` filter; uses the indexed column) |
+| `GET /api/v1/brand-candidates/{candidate_id}` | Fetch one |
+| `PATCH /api/v1/brand-candidates/{candidate_id}` | Agent workflow patch — `status`, `assigned_to`, `user_notes`, `pitch_history`. JSONB deep-merge; preserves the `status` column / JSONB shadow consistency |
+| `POST /api/v1/talents/{talent_id}/brand-discovery/run` | Enqueue a manual rerun. Returns 202 Accepted; the Celery task does the work (`app.services.talent_background_research.kick_off_brand_discovery`) |
+
+The discovery orchestrator (`app/services/discovery/orchestrator.py`)
+runs the Core 8 searches concurrently, merges sources by `brand_id`,
+scores `min(1.0, Σ weights)`, assigns tier (`re-engage` if any source
+carries that tag, else `primary` ≥ 0.50, `secondary` ≥ 0.25, `tertiary`
+≥ 0.10), runs qualification + policy filter, then writes both
+`brand_candidate` DB rows and the JSON snapshot at
+`data/brand_candidates/current/{talent_id}.json` + the immutable
+per-run snapshot at `data/brand_candidates/runs/{talent_id}/run_{ts}.json`.
+Workflow-state fields (`status`, `assigned_to`, `user_notes`,
+`pitch_history`, `legal_entity_override`, `first_surfaced_at`) are
+preserved across runs.
 
 ## 11. Observability instrumentation
 

@@ -522,6 +522,50 @@ JSON shape:
 
 ---
 
+## M7 implementation notes (shipped vs deferred)
+
+M7 ships the **Core 8** subset of the 16 searches plus the qualification
++ policy-filter layers + the REST surface + the Celery task that fires
+on `/activate`. The remaining searches and the trending-skill defer to
+M7.1.
+
+**Shipped:**
+
+| # | Search | Why in Core 8 |
+|---|---|---|
+| 1 | Re-engagement (M6 cool-down + de-spam) | Highest-signal source (weight 0.60); reads the M6 brand_deal fields that landed last milestone |
+| 3 | Competitors of previous brands | Deterministic graph walk via `data/brand_competitors.json`; instant signal |
+| 5/6/7 | Primary / secondary / tertiary industries from niches | The discovery-volume floor; without these the candidate list is empty for new talent |
+| 9 | Demographic bridge (IAB segment overlap) | Free lift once talent audience demos exist; deterministic |
+| 10 | Geographic alignment | Free lift on top of industry matches; deterministic |
+| 15 | Newly-funded via Exa + Claude | The only "discover net-new brands" path; expensive but unique value |
+
+**Deferred to M7.1:**
+- **Search 2** — brands similar talents have worked with (graph traversal across `talent.similar_talent[].previous_brands[]`).
+- **Search 4** — competitors of similar talents' brands (2nd-degree competitor graph).
+- **Search 8** — parent + sibling niche walk (extends Search 5/6/7 via the niche taxonomy).
+- **Search 11** — life-stage signal (dominant age band → life-stage industries).
+- **Search 12** — complementary categories around active exclusivities (positive-space inversion of the exclusivity block).
+- **Search 13** — values-aligned brands (LLM classification against `values_red_lines`).
+- **Search 14** — 2nd-degree graph expansion (competitors-of-competitors).
+- **Search 16** — trending brands via `last30days` skill — needs the skill itself built (Reddit + X + TikTok + HN + Bluesky + Brave + GitHub scrapers + LLM synthesis). Substantial scope; lands when outreach signal hunger justifies it.
+
+**Scoring** is `min(1.0, Σ source-weights)`. Tier is `re-engage` if any source tagged it (regardless of score), else `primary` ≥ 0.50, `secondary` ≥ 0.25, `tertiary` ≥ 0.10. Below 0.10 dropped.
+
+**Qualification** is a separate 0-1 layer: signals (active creator program +0.30, macro tier +0.20, public/series-A funding +0.10, follower-count adjustments, b2b penalty -0.20). Default include threshold 0.30; per-talent override is a settings-level constant for v0.1.
+
+**Policy filter** runs last: `blocked_industries` hard-block, active `exclusivities` industry-level block, `do_not_recontact` per brand-id block, sensitive industries kept-with-warning unless in `preferred_industries`.
+
+**Output destination:** both `brand_candidate` rows (DB, indexed `(talent_id, brand_id)` unique; agent workflow state lives here) AND `data/brand_candidates/current/{talent_id}.json` (regenerated from DB) + immutable per-run snapshot at `data/brand_candidates/runs/{talent_id}/run_{ts}.json`. Snapshot writer preserves the workflow-state fields (status, assigned_to, user_notes, pitch_history, legal_entity_override, first_surfaced_at) across runs.
+
+**Trigger:** M5's `/activate` Celery task body now runs the real orchestrator (replaces the stub). Manual rerun via `POST /api/v1/talents/{id}/brand-discovery/run`. No periodic beat schedule — re-discovery cron defers until there's a real cost budget.
+
+**Cool-down + de-spam:** Search 1 reads M6's `ended_at` + `cool_down_override_days` (default 180) for eligibility, and extends the cool-down 50% if `last_re_engagement_pitch_date` is within the recency window (default 30 days). M9 outreach writes the pitch date when an outreach fires — closing the loop.
+
+**Cost guard:** Search 15 fan-out caps at 3 industries × 2 queries × 5 results per run (≤30 Exa calls + 1 Claude call per industry). `settings.llm_budget_per_pack_usd` is a hard kill; M2 budget plumbing already enforces.
+
+---
+
 ## Open questions for v0.2
 
 1. **Search-result freshness.** Should candidate lists carry a freshness TTL per source? E.g. `primary_industry` matches are valid 30 days; `demographic_bridge` matches re-evaluate weekly if the talent's audience demos shift.
