@@ -1,0 +1,248 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://nativ2/schemas/call_transcript.schema.json",
+  "title": "Call Transcript",
+  "description": "v2 (post-M16) — captures a recorded conversation (discovery call, pitch call, catch-up, negotiation, follow-up) involving one or more brand_contacts. Linked optionally to a deal (active pipeline), an enrollment (the outreach that produced the call), and one or more talents the agency was representing. The transcript itself is a large artefact stored in S3/MinIO; this schema records the metadata + structured summary + provenance. LLM-driven summary + action-item extraction happens on upload (Claude Haiku) and lands inline so the CRM person profile can render it without re-reading the raw file.\n\nWhy a standalone schema (not folded into brand_contact): transcripts can be 50-500KB raw, JSONB rows become unwieldy; multiple back-references (contact, deal, enrollment, talent) make a separate table cleaner; access control + retention policy is per-transcript not per-contact.",
+  "type": "object",
+  "required": [
+    "transcript_id",
+    "kind",
+    "occurred_at",
+    "uploaded_by_agent_id",
+    "uploaded_at",
+    "linked_contact_ids",
+    "raw_file"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+    "agency_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Multi-tenant scope. Required in v2 SaaS. All cross-record queries MUST filter by agency_id."
+    },
+
+    "transcript_id": {
+      "type": "string",
+      "pattern": "^tx_[a-z0-9_-]+$",
+      "description": "Globally unique id. Format: `tx_{yyyymmdd}_{slug}_{hex8}`, e.g. `tx_20260529_lulu-x-jane-discovery_a1b2c3d4`."
+    },
+
+    "kind": {
+      "type": "string",
+      "enum": [
+        "discovery_call",
+        "pitch_call",
+        "catch_up",
+        "negotiation",
+        "follow_up",
+        "renewal_check_in",
+        "performance_review",
+        "intro_meeting",
+        "internal_brief",
+        "other"
+      ],
+      "description": "Conversation type. Drives default UI labels + filters."
+    },
+
+    "occurred_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the call actually happened (NOT the upload time)."
+    },
+    "duration_minutes": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 600
+    },
+
+    "attendees": {
+      "type": "array",
+      "description": "Everyone on the call. Mix of agency-side + brand-side + talent-side participants. Each entry tries to resolve to a known entity (agent_id / contact_id / talent_id) but accepts a free-text fallback for guest attendees the agent recognises but isn't in the system yet.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "side": { "type": "string", "enum": ["agency", "brand", "talent", "external"] },
+          "display_name": { "type": "string" },
+          "title": { "type": "string" },
+          "agent_id": { "type": "string", "description": "FK to agency_profile.agents[].agent_id" },
+          "contact_id": { "type": "string", "pattern": "^bc_[a-z0-9_-]+$", "description": "FK to brand_contact.contact_id" },
+          "talent_id": { "type": "string", "description": "FK to talent.talent_id" },
+          "email": { "type": "string", "format": "email", "description": "Captured from calendar invite; encrypted at rest." }
+        },
+        "required": ["side", "display_name"]
+      }
+    },
+
+    "linked_contact_ids": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^bc_[a-z0-9_-]+$" },
+      "minItems": 1,
+      "description": "Required. brand_contact ids this transcript is filed under. Usually 1 (the brand-side participant) but a multi-stakeholder call can list several. Each contact's call_transcript_ids[] gets this transcript_id appended."
+    },
+    "linked_deal_id": {
+      "type": "string",
+      "pattern": "^deal_pipeline_[a-z0-9_-]+$",
+      "description": "Optional FK to the active pipeline deal this call relates to (e.g. a negotiation transcript on a deal in substage=`negotiation`). If set, the transcript surfaces on the deal's M10 history view."
+    },
+    "linked_brand_deal_id": {
+      "type": "string",
+      "pattern": "^bd_[a-z0-9_-]+$",
+      "description": "Optional FK to a historical brand_deal row. Used when the call relates to a previously-closed deal (renewal_check_in / performance_review / catch_up on a past relationship)."
+    },
+    "linked_enrollment_id": {
+      "type": "string",
+      "pattern": "^enr_[a-z0-9_-]+$",
+      "description": "Optional FK to the pitch_enrollment that produced this call (e.g. an `interested` reply led to a discovery_call → the transcript references the enrollment that triggered it)."
+    },
+    "linked_talent_ids": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Talents the agency was representing on this call. A pitch_call about Jane Doe lists [\"jane-fitstar\"]; a multi-talent brief might list several."
+    },
+
+    "source": {
+      "type": "string",
+      "enum": [
+        "manual_upload",
+        "otter_ai",
+        "fireflies_ai",
+        "grain",
+        "gong",
+        "chorus",
+        "zoom_cloud_recording",
+        "google_meet_gemini",
+        "ms_teams",
+        "tactiq",
+        "other"
+      ],
+      "description": "Where the transcript came from. v2 ships manual_upload (agent drops a .txt / .md / .vtt / .docx) + Otter / Fireflies / Grain via API integration. Vendor selection per `docs/vendor_roadmap.md` — Phase 4.6 § call transcript links."
+    },
+
+    "language": {
+      "type": "string",
+      "pattern": "^[a-z]{2}(-[A-Z]{2})?$",
+      "default": "en",
+      "description": "BCP-47 language tag. Auto-detected on upload; agent can override."
+    },
+
+    "recording_consent_obtained": {
+      "type": "boolean",
+      "description": "Compliance flag — did all call participants explicitly consent to recording? Required for some regions (EU two-party-consent jurisdictions, California). UI surfaces this prominently on upload; defaults False. Transcripts without consent are flagged + access-restricted to the uploading agent."
+    },
+    "consent_basis": {
+      "type": "string",
+      "enum": [
+        "verbal_at_call_start",
+        "calendar_invite_disclosure",
+        "platform_default_notice",
+        "written_pre_call",
+        "not_obtained",
+        "unknown"
+      ]
+    },
+
+    "raw_file": {
+      "type": "object",
+      "description": "Reference to the actual transcript file in object storage. Never inlined.",
+      "required": ["object_key", "mime_type", "size_bytes"],
+      "additionalProperties": false,
+      "properties": {
+        "object_key": {
+          "type": "string",
+          "description": "S3/MinIO object key. Convention: `transcripts/{agency_id}/{yyyy}/{mm}/{transcript_id}.{ext}`."
+        },
+        "mime_type": {
+          "type": "string",
+          "enum": ["text/plain", "text/markdown", "text/vtt", "application/json", "application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"]
+        },
+        "size_bytes": { "type": "integer", "minimum": 1, "maximum": 52428800, "description": "Up to 50MB per file." },
+        "checksum_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "original_filename": { "type": "string" }
+      }
+    },
+
+    "summary_markdown": {
+      "type": "string",
+      "maxLength": 16384,
+      "description": "LLM-generated structured summary (Claude Haiku) — sections: tl;dr / key_takeaways / objections_raised / next_steps_agreed. Regenerable via POST /api/v1/call-transcripts/{id}/resummarize. Agent can edit inline; edits are preserved across regenerations."
+    },
+    "summary_generated_at": { "type": "string", "format": "date-time" },
+    "summary_llm_model": { "type": "string" },
+
+    "key_quotes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["speaker", "quote"],
+        "properties": {
+          "speaker": { "type": "string", "description": "Display name of speaker, or contact_id reference." },
+          "speaker_contact_id": { "type": "string", "pattern": "^bc_[a-z0-9_-]+$" },
+          "quote": { "type": "string", "maxLength": 1024 },
+          "timestamp_in_call_seconds": { "type": "integer", "minimum": 0 },
+          "sentiment": { "type": "string", "enum": ["positive", "neutral", "cautious", "negative"] }
+        }
+      },
+      "description": "Quotable moments for the agent to reference in follow-ups or the next pack. LLM-extracted on upload."
+    },
+
+    "action_items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["description", "owner_side"],
+        "properties": {
+          "description": { "type": "string", "maxLength": 512 },
+          "owner_side": { "type": "string", "enum": ["agency", "brand", "talent", "shared"] },
+          "owner_display_name": { "type": "string" },
+          "owner_agent_id": { "type": "string" },
+          "owner_contact_id": { "type": "string", "pattern": "^bc_[a-z0-9_-]+$" },
+          "due_date": { "type": "string", "format": "date" },
+          "status": { "type": "string", "enum": ["open", "in_progress", "done", "dropped"], "default": "open" }
+        }
+      },
+      "description": "Structured to-dos extracted by the LLM. Open items roll up into the agent's daily/weekly digest. Closing an action_item is a PATCH operation; status changes are audit-logged."
+    },
+
+    "sentiment_overall": {
+      "type": "string",
+      "enum": ["positive", "neutral", "cautious", "negative", "mixed"],
+      "description": "Aggregate read of the conversation tone (LLM-classified)."
+    },
+    "topics_discussed": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Free-form short tags pulled by the LLM — e.g. [\"pricing\", \"exclusivity\", \"q3-launch\", \"renewal\"]."
+    },
+
+    "memo_ids_created": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^memo_[a-z0-9_-]+$" },
+      "description": "Memos auto-created from this transcript (action_items that map onto strategic insights become memo rows tagged with the right brand_ids / talent_ids / topics). Read back by future M11+ packs."
+    },
+
+    "is_sensitive": {
+      "type": "boolean",
+      "default": false,
+      "description": "Agent can mark transcripts containing confidential business info (e.g. brand's internal budget figures) as sensitive. Sensitive transcripts: (a) excluded from default cross-talent prep-pack context, (b) require explicit per-request access, (c) audit-logged on every read."
+    },
+    "retention_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "keep_until": { "type": "string", "format": "date", "description": "Auto-delete on this date. Default: 7 years from occurred_at." },
+        "legal_hold": { "type": "boolean", "default": false, "description": "When true, blocks auto-deletion regardless of keep_until." }
+      }
+    },
+
+    "uploaded_by_agent_id": { "type": "string" },
+    "uploaded_at": { "type": "string", "format": "date-time" },
+    "last_updated_at": { "type": "string", "format": "date-time" },
+
+    "agent_notes": {
+      "type": "string",
+      "description": "Free-text agent annotations on top of the LLM summary. Survives summary regeneration."
+    }
+  }
+}

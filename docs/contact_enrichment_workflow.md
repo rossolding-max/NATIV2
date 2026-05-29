@@ -185,6 +185,13 @@ Heuristic guidance:
 ```
 Placeholders are surfaced in the agency dashboard as "you have 3 unfilled IM Manager roles across 3 brands" so they can be manually filled.
 
+**v2 expansion — backfilled placeholders from M6 (`source: manual_backfill_m6`):**
+There is a second class of placeholder in v2: contacts the agent typed in directly during M6 brand-deal backfill (see `docs/brand_deals_workflow.md` v2 spec). Those contacts:
+- arrive with `is_placeholder=true` AND `verification_sources=[{source: "manual_backfill_m6"}]` so the M8 pipeline can tell them apart from coverage-gap placeholders.
+- carry agent-entered data the agent vouched for (name + title + LinkedIn + email + phone + IG/TikTok) at confidence 0.7.
+- already have `historical_deal_ids[]` populated (the backfilled deal that created them).
+- When this enrichment pipeline runs on them, the merge step (Step 8) PRESERVES the agent-entered values when Apollo/LinkedIn returns conflicting data — agent input wins over vendor guess. The pipeline flips `is_placeholder` to false once at least one vendor confirms the person exists at the brand.
+
 ### Step 8 — Dedup + merge
 **Logic:** within a brand, two records may describe the same person (Apollo + LinkedIn often return the same contact from different angles). Merge by:
 
@@ -427,3 +434,4 @@ vendor wrappers covered everything.
 6. **Manual override layer** — if a user manually corrects a contact's `decision_role` (e.g. flips an LLM-assigned `influencer` to `buyer` because they have inside knowledge), the next enrichment cycle must respect that. Propose: `field_overrides[]` array similar to the brand-enrichment v0.2 proposal.
 7. **Champion-detection automation** — when a talent has a verified prior campaign with a contact, auto-set `champion_for_talents` to include that talent_id. Today this requires manual tagging; should be derived from `pitch_history` where `outcome: meeting_booked` or later.
 8. **AOR (Agency of Record) handling** — when a brand has `creator_program_presence: ["agency_of_record"]`, contacts at the AOR are gatekeepers. Currently captured as separate contacts at the AOR brand_id. Worth modelling AOR relationships explicitly (e.g. `agency_of_record_for: ["nike", "adidas"]` on a contact at the AOR).
+9. **CRM person-profile view + cross-deal history + call transcripts (v2)** — v0.1 ships a brand-scoped contact list. v2 ships a person-centric profile that aggregates every brand_deal (historical) + every active pipeline deal + every recorded call transcript for one human. Full spec in `docs/brand_deals_workflow.md` v2 section + `schemas/call_transcript.schema.json`. Two new array fields land on `brand_contact.contact`: `historical_deal_ids[]` (back-references populated by M6 backfill + M16 archive) and `call_transcript_ids[]` (back-references populated on transcript upload). Plus a new `manual_backfill_m6` enum value on `verification_sources[].source` so the M8 pipeline can distinguish agent-vouched data from vendor-fetched data and preserve agent values during merge.

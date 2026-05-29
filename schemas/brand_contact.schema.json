@@ -419,6 +419,22 @@
             "$ref": "#/$defs/pitchHistoryEntry"
           }
         },
+        "historical_deal_ids": {
+          "type": "array",
+          "description": "v2 NEW. Back-references to brand_deal.deal_id rows where this contact was main_brand_contact_id (or appeared in additional_brand_contact_ids[]). Populated in two ways: (a) M6 backfill wizard creates a brand_deal AND appends the new id here in one transaction, (b) M16 archive task appends archived deal ids when pipeline deals close (source=closed_from_pipeline). Active pipeline deals are NOT in this list \u2014 those are joined live from the deal table via WHERE primary_contact_id=contact_id. PRESERVED across enrichment runs.",
+          "items": {
+            "type": "string",
+            "pattern": "^bd_[a-z0-9_-]+$"
+          }
+        },
+        "call_transcript_ids": {
+          "type": "array",
+          "description": "v2 NEW. Back-references to call_transcript.transcript_id rows linking this contact. Appended on transcript upload via POST /api/v1/brand-contacts/{id}/call-transcripts or POST /api/v1/call-transcripts (when linked_contact_ids[] includes this contact). The CRM person-profile view renders the full transcript list with date / kind / summary excerpt / linked deal. PRESERVED across enrichment runs.",
+          "items": {
+            "type": "string",
+            "pattern": "^tx_[a-z0-9_-]+$"
+          }
+        },
         "do_not_contact": {
           "type": "boolean",
           "default": false,
@@ -463,6 +479,7 @@
                   "linkedin_api",
                   "exa_web_search",
                   "manual_entry",
+                  "manual_backfill_m6",
                   "brand_website_scrape",
                   "ai_inference"
                 ]

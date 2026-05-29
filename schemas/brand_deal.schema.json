@@ -441,7 +441,15 @@
         "main_brand_contact_id": {
           "type": "string",
           "pattern": "^[a-z0-9][a-z0-9-]*$",
-          "description": "FK to a contact_id in `data/brand_contacts/{brand_id}.json`. The person at the brand who ran this campaign. Powers warm-intro identification \u2014 when this person changes brands, we know we have a warm relationship to leverage."
+          "description": "FK to a contact_id in `data/brand_contacts/{brand_id}.json`. The person at the brand who ran this campaign. Powers warm-intro identification \u2014 when this person changes brands, we know we have a warm relationship to leverage. v2 RULE TIGHTENING: still optional in the schema, but the M6 backfill wizard now prompts for it on every deal, and the M16 auto-archive path REFUSES to archive a pipeline deal that has no primary_contact_id (forces the agent to fill it in before close)."
+        },
+        "additional_brand_contact_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9-]*$"
+          },
+          "description": "v2 NEW. Secondary contacts on the deal (e.g. legal + procurement, or a champion who introduced you to the buyer). Each id's brand_contact.historical_deal_ids[] gets this deal_id appended in the same transaction."
         },
         "agency_contact_id": {
           "type": "string",
@@ -457,6 +465,25 @@
           "type": "string",
           "pattern": "^deal_pipeline_[a-z0-9_-]+$",
           "description": "Optional FK to the Phase 4 pipeline deal (`data/deals/{deal_id}.json`) that this historical brand_deal was auto-archived from. Closes the bidirectional link: the pipeline deal's `close.archived_to_brand_deal_id` points here, and this field points back. Anyone reviewing this archived deal can navigate to the full pipeline history."
+        },
+        "source": {
+          "type": "string",
+          "enum": [
+            "backfilled_at_onboarding",
+            "closed_from_pipeline",
+            "manual_import",
+            "data_migration"
+          ],
+          "default": "backfilled_at_onboarding",
+          "description": "v2 NEW. Discriminator on how this row entered the brand_deal table: (a) backfilled_at_onboarding = M6 wizard captured a deal the talent recalled, (b) closed_from_pipeline = M16 auto-archive wrote it when a pipeline deal hit stage=archived (archived_from_deal_id will also be set), (c) manual_import = CSV/etc bulk import, (d) data_migration = v0.1→v2 backfill of pre-existing rows. Drives downstream analytics (close-rate by source) and the CRM person-profile UI grouping."
+        },
+        "call_transcript_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^tx_[a-z0-9_-]+$"
+          },
+          "description": "v2 NEW. FK list to call_transcript rows linked to this historical deal — e.g. the discovery call that started the conversation, the renewal check-in 6 months after delivery, the post-mortem performance review. Read by M11 prep packs for repeat-brand pitches (\"last call you had with Sarah at Lululemon ended with...\")."
         },
         "data_sources": {
           "type": "array",
