@@ -7,6 +7,7 @@ from unittest.mock import MagicMock
 from app.services.discovery._industry_expansion import (
     expand_past_deal_industries_bidirectionally,
     extract_industries_from_deals,
+    extract_industries_from_previous_brands,
 )
 
 
@@ -109,3 +110,26 @@ def test_unit__deal_extract__skips_non_dict_or_missing_industry() -> None:
         {"industry_id": "fintech"},  # only industry_id
     ]
     assert extract_industries_from_deals(deals) == ["fintech"]
+
+
+# ── extract_industries_from_previous_brands (M7.6) ────────────────
+
+
+def test_unit__previous_brands_extract__same_shape_as_deals() -> None:
+    """previous_brands entries follow the same dict shape; extractor dedups."""
+    previous_brands = [
+        {"brand": "Dunkin'", "industry_id": "quick-service-restaurants"},
+        {"brand": "CVS", "industry_id": "drug-stores"},
+        {"brand": "Cumberland Farms", "industry_id": "quick-service-restaurants"},  # dup industry
+    ]
+    out = extract_industries_from_previous_brands(previous_brands)
+    assert out == ["quick-service-restaurants", "drug-stores"]
+
+
+def test_unit__previous_brands_extract__skips_non_dict_or_missing_industry() -> None:
+    previous_brands = [
+        {"brand": "X"},
+        "not a dict",
+        {"industry_id": "toys"},
+    ]
+    assert extract_industries_from_previous_brands(previous_brands) == ["toys"]

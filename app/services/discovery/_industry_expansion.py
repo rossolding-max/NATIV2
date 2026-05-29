@@ -63,3 +63,22 @@ def extract_industries_from_deals(brand_deals: list[Any]) -> list[str]:
             out.append(industry_id)
             seen.add(industry_id)
     return out
+
+
+def extract_industries_from_previous_brands(previous_brands: list[Any]) -> list[str]:
+    """M7.6 — pull deduped industry_ids from ``talent.previous_brands[]``.
+
+    Same dict shape as brand_deals (each entry has ``industry_id``).
+    Talents typically have past brand relationships without a full deal
+    record; this lets the bidirectional walk fire for those brands too.
+    """
+    out: list[str] = []
+    seen: set[str] = set()
+    for entry in previous_brands:
+        if not isinstance(entry, dict):
+            continue
+        industry_id = entry.get("industry_id")
+        if industry_id and industry_id not in seen:
+            out.append(industry_id)
+            seen.add(industry_id)
+    return out

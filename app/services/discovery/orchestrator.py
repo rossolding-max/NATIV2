@@ -43,6 +43,7 @@ from app.services.discovery._geographic_filter import (
 from app.services.discovery._industry_expansion import (
     expand_past_deal_industries_bidirectionally,
     extract_industries_from_deals,
+    extract_industries_from_previous_brands,
 )
 from app.services.discovery._models import (
     CandidateSource,
@@ -154,9 +155,15 @@ async def _compute_industry_expansions(
     affinity_industries = _industries_from_niche_affinity(content_niches, taxonomies)
     affinity_set = set(affinity_industries)
 
-    # Bidirectional walk from past-deal sub-industries.
+    # Bidirectional walk from past-deal sub-industries. M7.6 — also
+    # include previous_brands industries so talents with past brand
+    # history (but no full deal record) still benefit from the walk.
     deal_industries = extract_industries_from_deals(brand_deals)
-    walked = expand_past_deal_industries_bidirectionally(deal_industries, taxonomies)
+    previous_brand_industries = extract_industries_from_previous_brands(
+        list(talent_data.get("previous_brands") or [])
+    )
+    combined = list(dict.fromkeys(deal_industries + previous_brand_industries))
+    walked = expand_past_deal_industries_bidirectionally(combined, taxonomies)
     walk_extras = [x for x in walked if x not in affinity_set]
 
     # LLM softener.

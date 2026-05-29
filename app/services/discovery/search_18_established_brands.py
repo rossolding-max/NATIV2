@@ -252,6 +252,10 @@ async def run(
             queries=queries,
             results_per_query=results_per_query,
         )
+        # M7.6 — fire 2-Exa-call enrichment for brands missing IG/TikTok.
+        from app.services.discovery._social_enrichment import enrich_extracted_brands_inplace
+
+        await enrich_extracted_brands_inplace(extracted, seed_brands)
         for cand in extracted:
             name = cand["brand_name"].strip()
             # M7.4 — canonicalise against the seed map so e.g.
