@@ -205,7 +205,7 @@ async def run_discovery(
     talent_data: dict[str, Any],
     brand_deals: list[Any],
     enabled_searches: tuple[str, ...] | None = None,
-    qualification_threshold: float = DEFAULT_QUALIFICATION_THRESHOLD,
+    qualification_threshold: float = DEFAULT_QUALIFICATION_THRESHOLD,  # noqa: ARG001 — kept for v0.1 callers; M7.4 dropped the hard floor in the orchestrator
     taxonomies: Taxonomies | None = None,
     brand_industry_map: dict[str, Any] | None = None,
     today: Any = None,
@@ -485,9 +485,10 @@ async def run_discovery(
     grouped = _merge_sources(all_sources)
     qualified: list[QualifiedCandidate] = []
     for brand_id, sources in grouped.items():
+        # M7.4 — score is informational metadata only. No drop based on
+        # score or tier thresholds; the agent sees every candidate that
+        # surfaced from any search and decides what to do with it.
         score = min(1.0, sum(s.weight for s in sources))
-        if score < _TIER_THRESHOLDS[-1][0]:
-            continue  # below the lowest tier threshold
         tags = {s.search_tag for s in sources}
         tier = _assign_tier(score=score, tags=tags)
         first_source = sources[0]
@@ -512,8 +513,10 @@ async def run_discovery(
             and q_tier in {"qualified", "speculative"}
         ):
             tier = "emerging"  # type: ignore[assignment]
-        if q_score < qualification_threshold:
-            continue  # dropped by qualification floor
+        # M7.4 — qualification_threshold is informational. The
+        # qualification tier (qualified/speculative/unqualified) is
+        # already attached to the candidate; the agent can filter at the
+        # REST layer when they want to.
         qualified.append(
             QualifiedCandidate(
                 brand_id=brand_id,

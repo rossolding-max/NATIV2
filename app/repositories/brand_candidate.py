@@ -67,14 +67,19 @@ class BrandCandidateRepository(BaseRepository[BrandCandidate]):
         include_deleted: bool = False,
         limit: int = 500,
     ) -> list[BrandCandidate]:
-        """All candidates for a talent (highest score first)."""
+        """All candidates for a talent (alphabetical by brand_id).
+
+        M7.4 — sort is neutral so score / tier don't smuggle in a
+        ranking. Score is still on every row for callers that want to
+        re-order client-side.
+        """
         stmt = (
             select(BrandCandidate)
             .where(
                 self._base_filter(include_deleted=include_deleted),
                 BrandCandidate.talent_id == talent_id,
             )
-            .order_by(BrandCandidate.score.desc().nulls_last(), BrandCandidate.brand_id)
+            .order_by(BrandCandidate.brand_id)
             .limit(limit)
         )
         result = await self._session.execute(stmt)
@@ -87,7 +92,7 @@ class BrandCandidateRepository(BaseRepository[BrandCandidate]):
         *,
         include_deleted: bool = False,
     ) -> list[BrandCandidate]:
-        """Per-talent filter on the indexed ``tier`` column."""
+        """Per-talent filter on the indexed ``tier`` column (alphabetical)."""
         stmt = (
             select(BrandCandidate)
             .where(
@@ -95,7 +100,7 @@ class BrandCandidateRepository(BaseRepository[BrandCandidate]):
                 BrandCandidate.talent_id == talent_id,
                 BrandCandidate.tier == tier,
             )
-            .order_by(BrandCandidate.score.desc().nulls_last(), BrandCandidate.brand_id)
+            .order_by(BrandCandidate.brand_id)
         )
         result = await self._session.execute(stmt)
         return list(result.scalars().all())

@@ -280,17 +280,17 @@ async def test_integration__get_candidate__missing_404(m7_app: AsyncClient) -> N
 # ── M7.3 qualification filter ───────────────────────────────────────
 
 
-async def test_integration__list__qualification_default_filters_unqualified(
+async def test_integration__list__qualification_default_returns_all(
     m7_app: AsyncClient,
 ) -> None:
-    """Default ?qualification= behaviour drops unqualified rows from the list."""
+    """M7.4 — default ?qualification= surfaces every candidate (score /
+    tier / qualification_tier are visible metadata only)."""
     from app.db.session import async_session_factory
 
     await _seed_candidate(
         async_session_factory, brand_id="gymshark", qualification_tier="qualified"
     )
     await _seed_candidate(async_session_factory, brand_id="nike", qualification_tier="speculative")
-    # Unqualified row — should be excluded from default view.
     await _seed_candidate(
         async_session_factory,
         brand_id="lululemon",
@@ -300,7 +300,8 @@ async def test_integration__list__qualification_default_filters_unqualified(
     r = await m7_app.get(f"/api/v1/talents/{_TEST_TALENT_ID}/brand-candidates")
     assert r.status_code == 200, r.text
     brands = {row["brand_id"] for row in r.json()["data"]}
-    assert brands == {"gymshark", "nike"}
+    # All three surface in the default response now.
+    assert brands == {"gymshark", "nike", "lululemon"}
 
 
 async def test_integration__list__qualification_all_surfaces_long_tail(

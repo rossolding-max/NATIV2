@@ -104,10 +104,11 @@ async def test_unit__orchestrator__reengage_tag_overrides_tier() -> None:
 
 
 @pytest.mark.asyncio
-async def test_unit__orchestrator__below_threshold_dropped() -> None:
-    """A candidate with score < 0.10 (lowest tier) is dropped."""
+async def test_unit__orchestrator__low_score_candidate_still_surfaces() -> None:
+    """M7.4 — score is informational; no threshold drop. A tertiary-tier
+    candidate at 0.06 still lands in result.candidates (the agent
+    decides what to do with low-confidence hits)."""
     tax = _make_taxonomies()
-    # Use the tertiary tier so the score is 0.06 — below the 0.10 floor.
     tax.niche_industry_affinity = {"groups": [{"niche_id": "beauty", "tertiary": ["telehealth"]}]}
     bim = _brand_map(
         {
@@ -125,7 +126,11 @@ async def test_unit__orchestrator__below_threshold_dropped() -> None:
         taxonomies=tax,
         brand_industry_map=bim,
     )
-    assert result.candidates == []
+    # Pre-M7.4 this was dropped at score < 0.10. Now it surfaces with the
+    # score visible on the row.
+    hims = next((c for c in result.candidates if c.brand_id == "hims"), None)
+    assert hims is not None
+    assert hims.score == pytest.approx(0.06)
 
 
 @pytest.mark.asyncio

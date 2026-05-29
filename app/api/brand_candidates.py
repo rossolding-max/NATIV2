@@ -50,7 +50,7 @@ _QUALIFICATION_PATTERN = (
     r"^((qualified|speculative|unqualified)"
     r"(,(qualified|speculative|unqualified))*|all)$"
 )
-_DEFAULT_QUALIFICATION_FILTER = "qualified,speculative"
+_DEFAULT_QUALIFICATION_FILTER = "all"
 
 
 # ── Request models ───────────────────────────────────────────────────
