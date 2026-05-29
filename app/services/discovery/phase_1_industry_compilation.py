@@ -29,7 +29,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from app.services.discovery import _industry_softener
+from app.services.discovery import _industry_softener, _phase_1_relevance_filter
 from app.services.discovery._industry_adjacency import adjacent_industries
 from app.services.discovery._industry_expansion import (
     expand_past_deal_industries_bidirectionally,
@@ -376,13 +376,18 @@ async def compile_industry_universe(
     talent_data: dict[str, Any],
     brand_deals: list[Any],
     taxonomies: Taxonomies,
-) -> list[tuple[IndustryProposal, list[IndustryProposal]]]:
-    """Run all Phase 1 signal sources and return (winner, alternates) pairs.
+) -> tuple[list[tuple[IndustryProposal, list[IndustryProposal]]], list[dict[str, Any]]]:
+    """Run all Phase 1 signal sources; return (proposals, removed_by_llm).
 
-    Each pair has one IndustryProposal (the highest-priority rationale)
-    plus a list of alternate IndustryProposals (other sources that also
-    surfaced this industry). The caller (orchestrator) turns this into
-    a list of IndustryReviewItem records persisted for Phase 1.5.
+    First return: list of (winner, alternates) IndustryProposal pairs.
+    Second return: list of dicts ``{industry_id, reason,
+    original_source, original_rationale}`` for proposals the M7.7+ LLM
+    relevance filter pruned before they reached the operator.
+
+    The relevance filter (Haiku) runs AFTER the deterministic sources
+    and BEFORE the softener, so the softener generates its suggestions
+    against a clean current-industry list. Affinity + direct past-brand
+    + direct similar-talent proposals are protected from filtering.
     """
     content_niches = [n for n in (talent_data.get("content_niches") or []) if isinstance(n, str)]
     previous_brands = list(talent_data.get("previous_brands") or [])
@@ -426,7 +431,16 @@ async def compile_industry_universe(
         )
     )
 
-    # Softener LAST so it sees the full current_industries list for its prompt.
+    # M7.7+ — LLM relevance filter on the deterministic union. Prunes
+    # mechanical taxonomy/adjacency noise (e.g. womenswear added to a
+    # dad-life male creator) before the softener generates suggestions.
+    # Affinity + direct past-brand + direct similar-talent items are
+    # protected by the filter; mock-LLM falls open on failure.
+    proposals, removed_by_llm = await _phase_1_relevance_filter.filter_irrelevant_proposals(
+        proposals, talent_data
+    )
+
+    # Softener LAST so it sees the FILTERED current_industries list.
     current_industry_ids = list(dict.fromkeys(p.industry_id for p in proposals))
     proposals.extend(
         await _softener_proposals(
@@ -436,4 +450,4 @@ async def compile_industry_universe(
         )
     )
 
-    return _dedup_with_alternates(proposals)
+    return _dedup_with_alternates(proposals), removed_by_llm

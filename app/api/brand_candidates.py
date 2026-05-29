@@ -278,7 +278,7 @@ async def _trigger_v2_full_build(
     )
     from app.utils.taxonomies import get_taxonomies
 
-    pairs = await compile_industry_universe(
+    pairs, removed_by_llm = await compile_industry_universe(
         talent_data=dict(talent_row.data or {}),
         brand_deals=[],  # full_build only uses talent_data; deals fold in at Phase 2/3
         taxonomies=get_taxonomies(),
@@ -310,6 +310,10 @@ async def _trigger_v2_full_build(
             "review_url": f"/api/v1/talents/{talent_id}/industry-review",
             "approve_url": f"/api/v1/talents/{talent_id}/industry-review/approve",
             "proposed_industry_count": len(items),
+            # M7.7+ — LLM relevance filter pruned these. Operator can
+            # PATCH-add any back if they disagree.
+            "removed_by_llm_count": len(removed_by_llm),
+            "removed_by_llm": removed_by_llm,
         }
     )
 

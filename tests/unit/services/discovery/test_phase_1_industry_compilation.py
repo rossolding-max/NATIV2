@@ -14,6 +14,26 @@ from app.services.discovery.phase_1_industry_compilation import (
 )
 
 
+@pytest.fixture(autouse=True)
+def _mock_relevance_filter():  # pyright: ignore[reportUnusedFunction]
+    """Stub the M7.7+ LLM relevance filter so tests don't hit Anthropic.
+
+    Pass-through: returns (input proposals, no removals). Individual
+    tests that want to exercise the filter can override via their own
+    patch.
+    """
+
+    async def passthrough(proposals, talent_data, **_kw):  # type: ignore[no-untyped-def]
+        return list(proposals), []
+
+    with patch(
+        "app.services.discovery.phase_1_industry_compilation"
+        "._phase_1_relevance_filter.filter_irrelevant_proposals",
+        new=passthrough,
+    ):
+        yield
+
+
 def _mock_tax(
     *,
     niche_groups: list[dict[str, Any]] | None = None,
@@ -99,7 +119,7 @@ async def test_unit__compile__kevin_shaped_surfaces_affinity_plus_walk() -> None
         "app.services.discovery.phase_1_industry_compilation._industry_softener.run",
         new=AsyncMock(return_value=["streaming-services"]),
     ):
-        pairs = await compile_industry_universe(
+        pairs, _removed = await compile_industry_universe(
             talent_data=talent_data, brand_deals=[], taxonomies=tax
         )
 
@@ -137,7 +157,7 @@ async def test_unit__compile__multi_source_dedup_keeps_highest_priority() -> Non
         "app.services.discovery.phase_1_industry_compilation._industry_softener.run",
         new=AsyncMock(return_value=[]),
     ):
-        pairs = await compile_industry_universe(
+        pairs, _removed = await compile_industry_universe(
             talent_data=talent_data, brand_deals=[], taxonomies=tax
         )
     qsr = next((w, a) for w, a in pairs if w.industry_id == "restaurants-qsr")
@@ -176,7 +196,7 @@ async def test_unit__compile__similar_talent_industries_seed_walk() -> None:
         "app.services.discovery.phase_1_industry_compilation._industry_softener.run",
         new=AsyncMock(return_value=[]),
     ):
-        pairs = await compile_industry_universe(
+        pairs, _removed = await compile_industry_universe(
             talent_data=talent_data, brand_deals=[], taxonomies=tax
         )
     by_id = {winner.industry_id: winner for winner, _ in pairs}
@@ -209,7 +229,7 @@ async def test_unit__compile__adjacency_surfaces_cross_sector_pair() -> None:
         "app.services.discovery.phase_1_industry_compilation._industry_softener.run",
         new=AsyncMock(return_value=[]),
     ):
-        pairs = await compile_industry_universe(
+        pairs, _removed = await compile_industry_universe(
             talent_data=talent_data, brand_deals=[], taxonomies=tax
         )
     by_id = {winner.industry_id: winner for winner, _ in pairs}
@@ -233,7 +253,7 @@ async def test_unit__compile__no_softener_when_disabled() -> None:
         "app.services.discovery.phase_1_industry_compilation._industry_softener.run",
         new=AsyncMock(return_value=[]),
     ):
-        pairs = await compile_industry_universe(
+        pairs, _removed = await compile_industry_universe(
             talent_data={"content_niches": ["dad-life"], "previous_brands": []},
             brand_deals=[],
             taxonomies=tax,
