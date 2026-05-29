@@ -138,6 +138,22 @@ class Settings(BaseSettings):
     # the gap between the two. Off cuts Phase 2 cost by ~33%.
     discovery_growth_enabled: bool = True
 
+    # ── Discovery: M7.7 v2 architecture ─────────────────────────────
+    # When True, the brand-discovery Celery task uses the v2 phased
+    # orchestrator (run_discovery_v2) — Phase 1 industry compilation +
+    # Phase 1.5 human-review + Phase 2 brand universe build + Phase 3
+    # talent-specific + Phase 4 signal overlay. When False, the legacy
+    # M7.6 path (run_discovery) is used.
+    discovery_v2_enabled: bool = True
+
+    # The Phase 4 signal overlay runs on every discovery run AND
+    # monthly via Celery beat for active talents. Off disables both.
+    discovery_phase_4_monthly_enabled: bool = True
+
+    # Default values themes for the Phase 3 S13 standalone search when
+    # the talent has none configured. Empty = no-op.
+    discovery_values_search_default_themes: list[str] = Field(default_factory=list)
+
     # ── Discovery: paid social ad signal (M7.2 Search 17) ────────────
     # Off by default — Search 17 requires a Meta Ad Library token and hits
     # TikTok's unofficial public endpoint. Enable per-agency once the
