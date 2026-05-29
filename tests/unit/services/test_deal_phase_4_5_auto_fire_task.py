@@ -29,7 +29,7 @@ async def test_unit__auto_fire__enqueues_one_task_per_ready_deal() -> None:
 
     result = await process_ready_deals(repo, send_task=send_task, now=when)
 
-    assert result == {"status": "ok", "enqueued": 2, "errors": []}
+    assert result == {"status": "ok", "enqueued": 2, "skipped_gated": 0, "errors": []}
     assert send_task.call_count == 2
     # Args shape: name + kwargs.
     for call, deal_id in zip(send_task.call_args_list, ["deal_a", "deal_b"], strict=True):
@@ -96,7 +96,7 @@ async def test_unit__auto_fire__no_ready_deals_returns_zero_enqueued() -> None:
 
     result = await process_ready_deals(repo, send_task=send_task, now=datetime.now(UTC))
 
-    assert result == {"status": "ok", "enqueued": 0, "errors": []}
+    assert result == {"status": "ok", "enqueued": 0, "skipped_gated": 0, "errors": []}
     send_task.assert_not_called()
 
 

@@ -188,6 +188,18 @@ class Settings(BaseSettings):
     max_concurrent_pack_generations_per_agency: int = Field(default=5, ge=1)
     pack_generation_timeout_seconds: int = Field(default=1800, ge=1)
 
+    # ── Phase 4.5 discovery prep pack (M11) ──────────────────────────
+    enable_phase_4_5_auto_fire: bool = False
+    """Gate the M10 5-min cron's send_task: when False, the cron still walks
+    find_ready_for_prep_pack() and stamps data.prep_pack_enqueued_at, but
+    does NOT enqueue a pack-generation task. Manual POST /prep-pack/generate
+    works regardless. Default False until 3-5 manual packs smoke-tested."""
+
+    discovery_prep_model: str = "claude-opus-4-7"
+    """LLM identifier used for all 4 passes of the discovery prep pack. v0.1
+    default Opus 4.7; settings override allows downshift to claude-sonnet-4-6
+    for cost optimisation."""
+
     # ── Safety toggles ───────────────────────────────────────────────
     require_idempotency_key_on_writes: bool = True
     enforce_template_version_bump: bool = True

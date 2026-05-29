@@ -300,3 +300,49 @@ All gitignored — commercial data + research summaries + agency branded artefac
 5. **Slide A/B testing** — agencies could generate 2 variants of slide 7 (the fit_angle) and pick the stronger one. v2.
 6. **Branding override per deal** — for co-branded campaigns or white-label work, override agency branding with a deal-specific brand kit. v2.
 7. **Speaker notes audio rehearsal** — TTS the speaker notes so the agent can listen on a commute. v2.
+
+## M11 implementation notes (shipped)
+
+M11 wires the first real AI pack on top of the M2 agent infrastructure + M10 Phase 4 deal lifecycle. Key v0.1 choices:
+
+### Model + cadence
+- **Opus 4.7 for all 4 passes** (`settings.discovery_prep_model="claude-opus-4-7"`). The schema's description text mentions Sonnet because the original spec was drafted that way; the project_plan binding (line 344) chose Opus 4.7 as the v0.1 quality benchmark. Sonnet 4.6 is the v0.1.1 cost-optimisation target — flipping the setting is the only change required.
+- **Auto-fire stays gated** behind `settings.enable_phase_4_5_auto_fire` (default `False`). The M10 5-min cron still walks `find_ready_for_prep_pack()` and stamps `data.prep_pack_enqueued_at` for the 1-hour debounce, but does not `send_task` until the flag flips on. Manual `POST /deals/{id}/prep-pack/generate` works regardless and is the canonical v0.1 trigger until 3-5 manual packs have been smoke-tested.
+
+### 4 passes (not 3)
+The workflow doc's "3-pass" line refers to the writer passes. The shipped coordinator runs FOUR passes:
+- **Pass 0 — researcher** (memo + Exa tools): reads existing memos, runs 3-5 Exa queries (capped at 5 per pack by `app.agents.tools.exa_tools.MAX_QUERIES_PER_BIND`), writes one `brand_observation` memo, returns a research summary preserving URLs.
+- **Pass 1 — writer / briefing**: produces structured `briefing_notes` JSON.
+- **Pass 2 — writer / agenda**: produces `agenda` JSON conditioned on the briefing.
+- **Pass 3 — writer / slides**: produces `slides[]` JSON conditioned on briefing + agenda + writes one `talent_pattern` memo on positioning.
+
+The static prefix (`talent + agency + brand + deal`) is marked `cache_control: ephemeral` on every pass so passes 1-3 hit the Anthropic prompt cache.
+
+### Regen surface
+v0.1 ships **full-pack regen only**. `POST /deals/{id}/prep-pack/regenerate` body `{feedback, pre_generation_guidance?, by_agent_id?}` looks up the latest version, threads its `version` as `parent_version` into the dispatcher with `trigger="agent_full_regenerate"`, and the new v2 is written by the persistence service (which flips v1's `is_latest` to false before INSERT). **Section-targeted regen** (`agent_section_regenerate`, `agent_per_slide_regenerate`, `target_sections[]`) defers to M11.1; the JSON schema already supports the future shape so no schema churn is needed.
+
+### Persistence + storage
+`app.services.prep_pack_persistence.persist_prep_pack` runs one transaction: `mark_prior_versions_not_latest` (mandatory ordering — the `ix_prep_pack_latest_per_deal` partial-unique index rejects two `is_latest=true` rows per deal) -> INSERT new row -> write 4 markdown artefacts + `v{N}.json` via the M2 `pack_storage` helper -> mirror `prep_pack_id` to `deal.latest_prep_pack_id` + append to `deal.data.lead.discovery_prep_pack_ids[]`. Filesystem storage at `data/deals/{deal_id}/discovery_prep/v{N}/`; S3/MinIO migration defers per `pack_storage.py:6`.
+
+### Memo writes
+Two per generation, both bound at agent construction:
+- **Researcher** writes `brand_observation` (scope `brand_relationship`, tagged with `brand_ids=[brand_id]`). Captures the new campaign / cultural / competitor learnings the Exa queries surfaced.
+- **Writer (slides pass)** writes `talent_pattern` (scope `talent_pattern`, tagged with `talent_ids=[talent_id]`). Captures how this talent should be positioned for this brand call.
+
+Briefing + agenda writers don't have memo tools bound — they only produce structured output.
+
+### Bundle composer
+`app.agents.bundles.compose_for_discovery_prep` now wires the four fields M2 left as empty stubs:
+- `brand_contact` via the deal's `primary_contact_id` -> `BrandContactRepository.get_by_id`, falling back to `find_by_brand[0]` for the brand when no primary is set.
+- `comparable_brand_deals` via `BrandDealRepository.find_by_talent` capped at 5 (ordered by recency).
+- `top_pitch_angles` via `PitchAngleRepository.find_all` capped at 5 (ordered by `authored_strength_score`).
+- `agency_profile` via `AgencyProfileRepository.get_singleton` (M4 singleton).
+
+### Deferred to M11.1+
+- Section-targeted regen (`agent_section_regenerate`, `agent_per_slide_regenerate`).
+- HTML / PDF / PPTX rendering — V2-PACK-01 (Jinja2 + Playwright + slide skill); first invocation of renderer subagent lives in M12 (proposal pack).
+- Agency-branded export (logo / colors / fonts).
+- S3/MinIO migration for the artefact paths.
+- Closed-loop quality learning (LLM observes agent edits to refine future gens).
+- Cassette-based LLM integration test of the full pipeline — current coverage = unit-level 4-pass sequence test + integration-level REST surface; full E2E with recorded LLM calls defers to M11.1.
+- Langfuse per-call span emission (base infra exists but per-call spans were M2 TBD; covered by a dedicated observability milestone).

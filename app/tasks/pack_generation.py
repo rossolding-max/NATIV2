@@ -27,16 +27,25 @@ def generate_pack(
     deal_id: str,
     agency_id: str,
     agent_id: str,
+    *,
+    pre_generation_guidance: str | None = None,
+    regeneration_feedback: str | None = None,
+    parent_version: int | None = None,
 ) -> dict[str, Any]:
     """Generate a pack via the appropriate pack-specific coordinator.
 
-    Returns the PackResult.model_dump() so Celery can serialise it.
+    The ``pre_generation_guidance``, ``regeneration_feedback``, and
+    ``parent_version`` kwargs are M11+ additions for discovery prep
+    pack regen flows. Pack subclasses that accept them must declare
+    them in their ``__init__``; the dispatcher only forwards them when
+    the kwarg is non-None to keep older subclasses' signatures intact.
     """
     log.info(
         "pack_generation_celery_task_started",
         pack_type=pack_type,
         deal_id=deal_id,
         agent_id=agent_id,
+        parent_version=parent_version,
     )
 
     async def _run() -> dict[str, Any]:
@@ -60,8 +69,18 @@ def generate_pack(
             raise ValueError(f"Unknown pack_type: {pack_type}")
 
         async with async_session_factory() as session:
-            agent = cls(session, agency_id=UUID(agency_id), agent_id=agent_id)
+            kwargs: dict[str, Any] = {
+                "agency_id": UUID(agency_id),
+                "agent_id": agent_id,
+            }
+            # Only thread M11 kwargs to subclasses that accept them.
+            if pack_type == "discovery_prep":
+                kwargs["pre_generation_guidance"] = pre_generation_guidance
+                kwargs["regeneration_feedback"] = regeneration_feedback
+                kwargs["parent_version"] = parent_version
+            agent = cls(session, **kwargs)
             result = await agent.run(deal_id)
+            await session.commit()
             return result.model_dump(mode="json")
 
     # async_to_sync preserves the event loop for the next task on the same

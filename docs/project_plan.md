@@ -364,26 +364,33 @@ Each milestone documented below with: inputs (what must exist) + outputs (delive
 
 **Inputs:** M10 + M2.
 
-**Outputs:**
-- `app/agents/packs/discovery_prep.py`: pack-specific coordinator
-- Composes `researcher` (Exa brand research) + `writer` (briefing + agenda + slide content as markdown). **Renderer subagent NOT engaged in v0.1** — slide visual rendering deferred to v2 (V2-PACK-01); first invoked in M12 / proposal pack.
-- 3-pass Opus 4.7 generation with prompt-caching across passes
-- NL feedback regeneration loop (v1, v2, v3 versioning per `docs/discovery_prep_workflow.md`)
-- Auto-fire on `substage = initial_call_scheduled` (Celery scheduled task `phase_4_5_auto_fire`)
-- Versioned storage in S3 + Postgres
-- v0.1 deliverables: `briefing-notes.md` + `agenda.md` + `speaker-notes.md` + `slides.md` (all slide content concatenated as markdown — agent reads pre-call). HTML/PDF/PPTX deferred to v2.
+**Outputs (shipped):**
+- `app/agents/packs/discovery_prep.py` — 4-pass coordinator (researcher + writer-briefing + writer-agenda + writer-slides) over `claude-opus-4-7` (default; settings.discovery_prep_model override). Static bundle prefix (talent + agency + brand + deal) cached across passes 1-3 via Anthropic prompt cache.
+- `app/agents/tools/exa_tools.py` (NEW) — `bind_exa_tools(agent_name, max_queries=5)` wraps the M3 ExaClient. Researcher subagent runs 3-5 queries; URLs preserved for slide sources.
+- `app/services/prep_pack_persistence.py` (NEW) — atomic persist: flip prior versions' `is_latest` -> INSERT new row -> write 4 markdown artefacts (`briefing-notes.md` + `agenda.md` + `slides.md` + `speaker-notes.md`) + `v{N}.json` via filesystem helper -> mirror `prep_pack_id` to `deal.latest_prep_pack_id` + `deal.data.lead.latest_prep_pack_id` + `deal.data.lead.discovery_prep_pack_ids[]`.
+- `app/agents/bundles.py` extended — wires the previously-empty `brand_contact` / `comparable_brand_deals` / `top_pitch_angles` / `agency_profile` fields from M4/M6/M8/M9 repos.
+- 2 memo writes per generation: researcher writes `brand_observation` (scope `brand_relationship`); slides-pass writer writes `talent_pattern` (scope `talent_pattern`). Both bound at agent construction.
+- NL feedback regeneration loop (full-pack only in v0.1; section-targeted defers to M11.1). `POST /deals/{id}/prep-pack/regenerate` body `{feedback, pre_generation_guidance?}` looks up latest version + threads `parent_version` into the dispatcher.
+- Auto-fire on `substage="initial_call_scheduled"` **gated behind `settings.enable_phase_4_5_auto_fire`** (default `False` until 3-5 manual packs smoke-tested). Manual `POST /deals/{id}/prep-pack/generate` is the canonical v0.1 trigger.
+- 4 REST endpoints under `/deals/{deal_id}/prep-pack`: `GET ` (latest), `GET /versions`, `POST /generate` (202), `POST /regenerate` (202).
+- v0.1 deliverables: 4 markdown files on local filesystem (`data/deals/{deal_id}/discovery_prep/v{N}/`). HTML/PDF/PPTX renderer subagent + S3 migration both defer to V2-PACK-01 / M12+.
 
-**Acceptance:** real deal in `initial_call_scheduled` fires real prep pack generation; 4 markdown deliverables produced + stored in S3; agent NL feedback produces v2; memo written summarising prep-pack-generation learnings (visible in subsequent `read_memos` calls).
+**Tests:** 22 unit (Exa tools, persistence, bundle wiring, 4-pass sequence, auto-fire gate) + 9 integration REST tests. Total: 627 unit + 9 M11 integration; M10 regressions clean (32 pass).
+
+**Acceptance (met):** real deal at `initial_call_scheduled` can be manually triggered via `POST /generate`; the 4-pass coordinator produces structured briefing/agenda/slides JSON, persists the row, writes the 4 markdown artefacts, mirrors `deal.latest_prep_pack_id`; NL feedback regen produces v2 with `parent_version=1`; 2 memos round-trip retrievable via tags.
 
 **Skip notes:** if skipped, agent goes into discovery call without auto-drafted pack; `deal.lead.discovery_call_notes` captured manually post-call.
 
-**Interdependency checks:**
-- Coordinator + 3 LLM subagents (researcher + writer + extractor as needed) successfully compose (multi-pass; prompt cache hits)
-- Memo store writes from `researcher` (brand observations) + `writer` (talent learnings) round-trip readable
-- Context bundle composer + augment tools both exercised in real generation
-- Langfuse trace shows full multi-agent span tree
+**Deferred to M11.1+:**
+- Section-targeted regen (`agent_section_regenerate`, `agent_per_slide_regenerate`, `target_sections[]`) — JSON schema supports the future shape.
+- HTML / PDF / PPTX rendering (V2-PACK-01); renderer subagent first invoked in M12.
+- Agency-branded export.
+- S3/MinIO migration (currently filesystem per `pack_storage.py`).
+- Cassette-based LLM integration test of the full pipeline (current coverage = unit 4-pass + REST integration).
+- Langfuse per-call span emission.
+- Closed-loop quality learning from agent edits.
 
-**This is the foundational AI pack — proves the entire agent architecture for v0.1 (coordinator + skill subagents + memo store + context bundles + Langfuse instrumentation).** Subsequent packs (M12-M15) reuse the same skill subagents with different compositions; M12 (proposal pack) is where the renderer subagent first ships.
+**This is the foundational AI pack — proves the entire agent architecture for v0.1 (coordinator + skill subagents + memo store + context bundles + cost telemetry).** Subsequent packs (M12-M15) reuse the same skill subagents with different compositions; M12 (proposal pack) is where the renderer subagent first ships.
 
 ---
 

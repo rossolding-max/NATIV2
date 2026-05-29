@@ -39,31 +39,42 @@ async def process_ready_deals(
     send_task: _SendTaskFn,
     now: datetime,
     limit: int = _PER_TICK_CAP,
+    auto_fire_enabled: bool = True,
 ) -> dict[str, Any]:
     """Pure helper — load ready deals, enqueue prep-pack tasks, stamp debounce.
 
     Caller owns the session + commit; this helper just orchestrates
     repo reads, ``send_task`` calls, and the debounce-stamp write.
+
+    When ``auto_fire_enabled=False`` (the M11 v0.1 default while smoke-
+    testing manual pack runs), we skip ``send_task`` entirely. The debounce
+    stamp is still written so the next tick doesn't keep finding the same
+    deals — this lets the flag flip on later without a backlog avalanche.
     """
     ready = await repo.find_ready_for_prep_pack(limit=limit)
     now_iso = now.isoformat()
     enqueued = 0
+    skipped_gated = 0
     errors: list[str] = []
 
     for deal in ready:
-        try:
-            send_task(
-                "app.tasks.pack_generation.generate_pack",
-                kwargs={
-                    "pack_type": "discovery_prep",
-                    "deal_id": deal.deal_id,
-                    "agency_id": str(deal.agency_id),
-                    "agent_id": "system",
-                },
-            )
-        except Exception as exc:
-            errors.append(f"deal={deal.deal_id}: {exc!s}")
-            continue
+        if auto_fire_enabled:
+            try:
+                send_task(
+                    "app.tasks.pack_generation.generate_pack",
+                    kwargs={
+                        "pack_type": "discovery_prep",
+                        "deal_id": deal.deal_id,
+                        "agency_id": str(deal.agency_id),
+                        "agent_id": "system",
+                    },
+                )
+            except Exception as exc:
+                errors.append(f"deal={deal.deal_id}: {exc!s}")
+                continue
+            enqueued += 1
+        else:
+            skipped_gated += 1
 
         # Stamp the debounce marker so the next 5-min tick skips us
         # until either the pack lands (latest_prep_pack_id set by M11)
@@ -71,9 +82,13 @@ async def process_ready_deals(
         data = dict(deal.data or {})
         data["prep_pack_enqueued_at"] = now_iso
         deal.data = data
-        enqueued += 1
 
-    return {"status": "ok", "enqueued": enqueued, "errors": errors}
+    return {
+        "status": "ok",
+        "enqueued": enqueued,
+        "skipped_gated": skipped_gated,
+        "errors": errors,
+    }
 
 
 async def _run_async(agency_id: str | None = None) -> dict[str, Any]:
@@ -86,17 +101,24 @@ async def _run_async(agency_id: str | None = None) -> dict[str, Any]:
     agency_uuid = UUID(agency_id) if agency_id else UUID(int=0)
     factory = async_sessionmaker(engine, expire_on_commit=False)
 
+    from app.config import settings
+
     async with factory() as session:
         repo = DealRepository(session, agency_id=agency_uuid)
         result = await process_ready_deals(
-            repo, send_task=celery_app.send_task, now=datetime.now(UTC)
+            repo,
+            send_task=celery_app.send_task,
+            now=datetime.now(UTC),
+            auto_fire_enabled=settings.enable_phase_4_5_auto_fire,
         )
         await session.commit()
 
     log.info(
         "phase_4_5_auto_fire_complete",
         enqueued=result["enqueued"],
+        skipped_gated=result.get("skipped_gated", 0),
         errors=len(result["errors"]),
+        auto_fire_enabled=settings.enable_phase_4_5_auto_fire,
     )
     return result
 

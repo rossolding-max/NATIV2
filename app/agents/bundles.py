@@ -25,9 +25,13 @@ from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.errors import NotFoundError
+from app.repositories.agency_profile import AgencyProfileRepository
 from app.repositories.brand import BrandRepository
+from app.repositories.brand_contact import BrandContactRepository
+from app.repositories.brand_deal import BrandDealRepository
 from app.repositories.deal import DealRepository
 from app.repositories.memo import MemoRepository
+from app.repositories.pitch_angle import PitchAngleRepository
 from app.repositories.talent import TalentRepository
 
 PackType = Literal[
@@ -175,6 +179,70 @@ async def compose_for_discovery_prep(
         limit=memo_limit,
     )
 
+    # M11 — wire the previously-empty placeholder fields.
+    agency_repo = AgencyProfileRepository(session, agency_id)
+    agency_row = await agency_repo.get_singleton()
+    agency_profile_payload: dict[str, Any] = {"agency_id": str(agency_id)}
+    if agency_row is not None:
+        agency_profile_payload["name"] = agency_row.name
+        agency_profile_payload["status"] = agency_row.status
+        agency_profile_payload.update(agency_row.data or {})
+
+    brand_contact_payload: dict[str, Any] | None = None
+    contact_repo = BrandContactRepository(session, agency_id=agency_id)
+    if deal.primary_contact_id:
+        contact = await contact_repo.get_by_id(deal.primary_contact_id)
+        if contact is not None:
+            brand_contact_payload = {
+                "contact_id": contact.contact_id,
+                "brand_id": contact.brand_id,
+                "name": contact.name,
+                "decision_role": contact.decision_role,
+                "email": contact.email,
+                "do_not_contact": bool(contact.do_not_contact),
+                **(contact.data or {}),
+            }
+    if brand_contact_payload is None:
+        # Fallback: first non-DNC contact for the brand.
+        contacts = await contact_repo.find_by_brand(deal.brand_id, limit=1)
+        if contacts:
+            c = contacts[0]
+            brand_contact_payload = {
+                "contact_id": c.contact_id,
+                "brand_id": c.brand_id,
+                "name": c.name,
+                "decision_role": c.decision_role,
+                "email": c.email,
+                "do_not_contact": bool(c.do_not_contact),
+                **(c.data or {}),
+            }
+
+    brand_deal_repo = BrandDealRepository(session, agency_id=agency_id)
+    raw_brand_deals = await brand_deal_repo.find_by_talent(deal.talent_id, limit=20)
+    comparable_brand_deals_payload = [
+        {
+            "brand_deal_id": d.brand_deal_id,
+            "brand_id": d.brand_id,
+            "talent_id": d.talent_id,
+            "outcome": d.outcome,
+            "last_updated_at": d.last_updated_at.isoformat() if d.last_updated_at else None,
+            **(d.data or {}),
+        }
+        for d in raw_brand_deals[:5]
+    ]
+
+    pitch_angle_repo = PitchAngleRepository(session, agency_id=agency_id)
+    raw_angles = await pitch_angle_repo.find_all()
+    top_pitch_angles_payload = [
+        {
+            "angle_id": a.angle_id,
+            "category": a.category,
+            "headline": getattr(a, "headline", None),
+            "authored_strength_score": float(a.authored_strength_score),
+        }
+        for a in raw_angles[:5]
+    ]
+
     return ContextBundle(
         metadata=ContextBundleMetadata(
             pack_type="discovery_prep",
@@ -188,10 +256,7 @@ async def compose_for_discovery_prep(
             "status": talent.status,
             **talent.data,
         },
-        agency_profile={
-            "agency_id": str(agency_id),
-            "note": "M2 ships a stub; M4 populates from agency_profile table",
-        },
+        agency_profile=agency_profile_payload,
         deal_record={
             "deal_id": deal.deal_id,
             "stage": deal.stage,
@@ -206,10 +271,10 @@ async def compose_for_discovery_prep(
             "industry_id": brand.industry_id,
             **brand.data,
         },
-        brand_contact=None,  # M8 populates
-        comparable_brand_deals=[],  # M6 populates brand_deal table
-        top_pitch_angles=[],  # M9 placeholder
-        originating_enrollment=None,  # M9 populates
+        brand_contact=brand_contact_payload,
+        comparable_brand_deals=comparable_brand_deals_payload,
+        top_pitch_angles=top_pitch_angles_payload,
+        originating_enrollment=None,  # M11.1 — wire from deal.originating_enrollment_id
         relevant_memos=[
             {
                 "memo_id": m.memo_id,
