@@ -216,6 +216,11 @@ def append_discovered_brands(
             "first_surfaced_in_run": search_run_id,
             "discovered_at": now_iso,
         }
+        # M7.7 — first-class brand metadata for downstream Search 5/6/7 walks.
+        if payload.get("sub_industry_id"):
+            new_entry["sub_industry_id"] = payload["sub_industry_id"]
+        if payload.get("brand_category"):
+            new_entry["brand_category"] = payload["brand_category"]
         if payload.get("domain"):
             new_entry["domain"] = payload["domain"]
         if payload.get("social_handles"):

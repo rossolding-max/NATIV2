@@ -57,6 +57,10 @@ class QualifiedCandidate:
     # brand_candidate.data and gets written to brand_industry_map_discovered.
     domain: str | None = None
     social_handles: dict[str, str | None] | None = None
+    # M7.7 — first-class brand metadata. industry_id above stays as the
+    # leaf (sub-industry) for back-compat; these split it cleanly.
+    sub_industry_id: str | None = None
+    brand_category: Literal["emerging", "growth", "established"] | None = None
 
 
 @dataclass

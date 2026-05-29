@@ -91,6 +91,11 @@ async def _kick_off_async(
                 stub_data["domain"] = cand.domain
             if cand.social_handles:
                 stub_data["social_handles"] = cand.social_handles
+            # M7.7 — first-class brand metadata on the Brand DB row.
+            if cand.sub_industry_id:
+                stub_data["sub_industry_id"] = cand.sub_industry_id
+            if cand.brand_category:
+                stub_data["brand_category"] = cand.brand_category
             stub = Brand(
                 brand_id=cand.brand_id,
                 name=cand.brand_name,

@@ -552,11 +552,38 @@ async def run_discovery(
                     if value and brand_social.get(platform) is None:
                         brand_social[platform] = value
         any_social = any(v for v in brand_social.values())
+
+        # M7.7 — derive top-level industry + sub-industry from the
+        # first-source industry_id. brand_category comes from the first
+        # source whose tag is in the Phase 2 category set; None when the
+        # brand surfaced only via deterministic Phase 3 searches.
+        from app.services.discovery._industry_taxonomy import (
+            derive_top_level_and_sub_industry,
+        )
+
+        top_level_industry, sub_industry = derive_top_level_and_sub_industry(
+            first_source.industry_id, tax
+        )
+        category_by_tag: dict[str, str] = {
+            "exa_emerging": "emerging",
+            "exa_growth": "growth",
+            "exa_established": "established",
+            # Legacy M7.3-M7.6 tags map to the closest category.
+            "recently_funded": "emerging",
+            "established_exa_discovery": "established",
+        }
+        brand_category: str | None = None
+        for s in sources:
+            mapped = category_by_tag.get(s.search_tag)
+            if mapped is not None:
+                brand_category = mapped
+                break
+
         qualified.append(
             QualifiedCandidate(
                 brand_id=brand_id,
                 brand_name=first_source.brand_name,
-                industry_id=first_source.industry_id,
+                industry_id=top_level_industry,
                 score=score,
                 tier=tier,
                 sources=sources,
@@ -565,6 +592,8 @@ async def run_discovery(
                 qualification_signals=signals,
                 domain=brand_domain,
                 social_handles=brand_social if any_social else None,
+                sub_industry_id=sub_industry,
+                brand_category=brand_category,  # type: ignore[arg-type]
             )
         )
 

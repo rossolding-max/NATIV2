@@ -131,6 +131,13 @@ class Settings(BaseSettings):
     # Off this to keep the discovery run deterministic in tests / cheap.
     discovery_industry_softener_enabled: bool = True
 
+    # ── Discovery: M7.7 Phase 2 categories ──────────────────────────
+    # The Phase 2 brand-universe build fires per-industry Exa queries
+    # across emerging + established by default. M7.7 adds a "growth"
+    # category (mid-market / Series C+ / regional leaders) to close
+    # the gap between the two. Off cuts Phase 2 cost by ~33%.
+    discovery_growth_enabled: bool = True
+
     # ── Discovery: paid social ad signal (M7.2 Search 17) ────────────
     # Off by default — Search 17 requires a Meta Ad Library token and hits
     # TikTok's unofficial public endpoint. Enable per-agency once the

@@ -35,6 +35,9 @@ def derive_top_level_and_sub_industry(
       still gets a usable industry_id; caller can log a warning.
     """
     parent = taxonomies.get_industry_parent(industry_id)
-    if parent is None:
+    # Defensive: callers (orchestrator tests) sometimes pass MagicMock
+    # taxonomies whose get_industry_parent returns a Mock object instead
+    # of None. Only treat the return as a parent when it's a real string.
+    if not isinstance(parent, str) or not parent:
         return industry_id, None
     return parent, industry_id

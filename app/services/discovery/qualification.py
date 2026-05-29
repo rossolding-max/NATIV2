@@ -51,7 +51,17 @@ def _signal(*, name: str, value: float, detail: str) -> dict[str, Any]:
     return {"signal": name, "weight": value, "details": detail}
 
 
-EXA_DISCOVERY_TAGS: frozenset[str] = frozenset({"recently_funded", "established_exa_discovery"})
+EXA_DISCOVERY_TAGS: frozenset[str] = frozenset(
+    {
+        # M7.3 legacy tags (kept for backward compat with existing brand_candidate rows)
+        "recently_funded",
+        "established_exa_discovery",
+        # M7.7 Phase 2 tags
+        "exa_emerging",
+        "exa_growth",
+        "exa_established",
+    }
+)
 """Search tags that indicate a candidate came from Exa-driven discovery
 rather than the seed map. M7.3 — when these are present alongside a
 sufficient LLM confidence, the qualifier promotes net-new brands to

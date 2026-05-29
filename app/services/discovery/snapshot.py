@@ -49,6 +49,10 @@ def _candidate_to_dict(candidate: QualifiedCandidate) -> dict[str, Any]:
         "brand": candidate.brand_name,
         "brand_id": candidate.brand_id,
         "industry_id": candidate.industry_id,
+        # M7.7 — first-class brand metadata. industry_id stays as the leaf
+        # (sub-industry) for back-compat; these explicitly split it.
+        "sub_industry_id": candidate.sub_industry_id,
+        "brand_category": candidate.brand_category,
         "score": round(candidate.score, 3),
         "tier": candidate.tier,
         "found_in_searches": len({s.search_tag for s in candidate.sources}),
