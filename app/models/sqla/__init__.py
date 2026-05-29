@@ -18,6 +18,7 @@ from app.models.sqla.brand_deal import BrandDeal
 from app.models.sqla.contract_pack import ContractPack
 from app.models.sqla.deal import Deal
 from app.models.sqla.discovery_prep_pack import DiscoveryPrepPack
+from app.models.sqla.industry_review import IndustryReview
 from app.models.sqla.invoice_pack import InvoicePack
 from app.models.sqla.memo import Memo
 from app.models.sqla.performance_report_pack import PerformanceReportPack
@@ -37,6 +38,7 @@ __all__ = [
     "ContractPack",
     "Deal",
     "DiscoveryPrepPack",
+    "IndustryReview",
     "InvoicePack",
     "Memo",
     "PerformanceReportPack",
