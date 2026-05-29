@@ -145,9 +145,12 @@ async def _exa_global_funded(
             if dedup_key in seen:
                 continue
             seen.add(dedup_key)
-            weight = _S15_RESIDUAL_BASE_WEIGHT + (
-                _S15_RESIDUAL_MAX_WEIGHT - _S15_RESIDUAL_BASE_WEIGHT
-            ) * (float(confidence) - 0.70) / 0.30
+            weight = (
+                _S15_RESIDUAL_BASE_WEIGHT
+                + (_S15_RESIDUAL_MAX_WEIGHT - _S15_RESIDUAL_BASE_WEIGHT)
+                * (float(confidence) - 0.70)
+                / 0.30
+            )
             weight = max(_S15_RESIDUAL_BASE_WEIGHT, min(_S15_RESIDUAL_MAX_WEIGHT, weight))
             sources.append(
                 CandidateSource(

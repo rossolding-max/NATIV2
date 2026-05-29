@@ -20,6 +20,86 @@ Produce an **exhaustive** ranked list of brand-deal candidates for a given talen
 
 ---
 
+## M7.7 v2 architecture (4 phases)
+
+M7.7 restructures the 18-search catalog into 4 phases with a human-in-the-loop review step between Phase 1 and Phase 2. The pipeline runs in one of two modes:
+
+**Mode: `maintenance` (default)** — Phase 3 + Phase 4 only. Cheap (~$2-5 per run). Refreshes talent-specific signals (own past brands, similar-talent brands, Exa competitors, values-aligned) plus the monthly global overlay (S15-residual + S16 + S17). Daily-refreshable.
+
+**Mode: `full_build` (explicit REST flag)** — multi-step:
+1. **Phase 1** (free, in-memory): compile industry universe from niche affinity + bidirectional walk on past brands + audience demographics (S9 logic) + life-stage (S11) + exclusivity adjacency (S12) + LLM softener. Each industry tagged with a one-sentence rationale.
+2. **Phase 1.5** (pauses for human review): the proposed industry list is persisted to the `industry_review` table. The agency operator fetches via `GET /talents/{id}/industry-review`, adds/deselects via `PATCH`, then approves via `POST .../approve`. Approval enqueues Phase 2.
+3. **Phase 2** (~$30-80, expensive one-off): for each APPROVED industry, three Exa+Claude category sweeps — emerging / growth / established. Three distinct search tags emitted (`exa_emerging`, `exa_growth`, `exa_established`). Geography embedded in every query.
+4. **Phase 3 + Phase 4**: same as maintenance mode.
+
+### REST surface
+
+```
+POST   /api/v1/talents/{id}/brand-discovery/run
+       Body: {"mode": "maintenance" | "full_build", "searches": [...] | null}
+       - maintenance: 202 + enqueues kick_off_brand_discovery
+       - full_build: runs Phase 1 inline + returns 202 + review_url pointer
+
+GET    /api/v1/talents/{id}/industry-review
+       Returns the most-recent pending review with items + rationales.
+
+PATCH  /api/v1/talents/{id}/industry-review
+       Body: {"added": [{"industry_id", "rationale?"}], "removed": ["industry_id", ...]}
+
+POST   /api/v1/talents/{id}/industry-review/approve
+       Marks approved + enqueues Phase 2 Celery task. Immutable after.
+```
+
+### Phase 2 three categories
+
+- **Emerging**: 7 queries — newly funded / Series A-B / < 5 years / D2C / indie / to watch / startup. Tag `exa_emerging`.
+- **Growth (NEW)**: 7 queries closing the gap between emerging + established — Series C+, regional chains, mid-market, 5-15 year DTCs, 100+ employees, $50M+ revenue. Tag `exa_growth`. **`brand_category=growth` on the candidate row.**
+- **Established**: 6 queries — top brands, household names, mainstream. Tag `exa_established`.
+
+Phase 2 has NO industry cap. The operator decided scope at Phase 1.5.
+
+### First-class brand metadata (M7.7)
+
+Every M7.7 candidate carries these top-level fields on `brand_candidate.data`:
+- `industry_id` — the **top-level sector** (e.g. `sports-outdoor`).
+- `sub_industry_id` — the leaf (e.g. `sportswear`). `null` when industry has no parent.
+- `brand_category` — `"emerging" | "growth" | "established" | null`. Null when the brand surfaced only via deterministic Phase 3 searches.
+- `domain` — brand website (M7.5).
+- `social_handles` — `{instagram, tiktok, youtube, x, linkedin}` (M7.5).
+- `primary_source_search` — highest-weight source's tag (M7.4).
+
+These propagate to the discovered seed map (`data/brand_industry_map_discovered.json`) so future runs for OTHER talents pick up the metadata at Search 5/6/7 walk time.
+
+### Phase 3 — talent-specific (every run)
+
+- **S1** (unchanged): re-engagement from `brand_deal` history.
+- **S2** (unchanged): similar talent's past brands.
+- **S3 v2 (Exa-based)**: `"competitors of {brand}"` Exa query per past brand. Replaces M7.6's curated `brand_competitors.json` lookup that only covered ~290 brands.
+- **S4 v2 (Exa-based)**: same shape, walked over similar-talent's brands.
+- **S13 v2 (opt-in)**: per `(theme × industry)` Exa search — `"sustainable activewear brands US"`, `"female-founded grocery brands US"`. Opt-in via talent's `brand_preferences.values_aligned_themes[]` OR `settings.discovery_values_search_default_themes`. Emits `values_aligned_exa` tag.
+
+### Phase 4 — signal overlay (every run + monthly cron)
+
+- **S15-residual (NEW v2)**: industry-AGNOSTIC global trending funded sweep. 7 queries like `"top recently funded brands US 2026"`, `"YC-backed consumer brands US 2026"`, `"a16z-backed consumer brands US 2026"`. Emits `global_trending_funded` tag.
+- **S16** (gated, existing): last30days social trending skill.
+- **S17** (gated, existing): Meta Ad Library + TikTok paid social.
+
+**Monthly cron**: `app.services.discovery_phase_4_monthly.fan_out_to_active_talents` runs every 30 days, walks talents with a deal in the last 90 days OR a discovery run in the last 60 days, and enqueues a maintenance-mode run for each.
+
+### Deprecated in M7.7 (kept on disk for rollback)
+
+- S5/6/7 (industry tier walks) — replaced by Phase 2 Exa category sweeps.
+- S8 (parent/sibling niche) — replaced by Phase 1 industry compilation.
+- S9 (demographic bridge) — industry-derivation logic preserved in `_industry_from_audience.py`; brand-surfacing moved to Phase 2.
+- S11 (life stage) — same shape.
+- S12 (complementary exclusivity) — same shape.
+- S14 (2nd-degree graph) — folded into Phase 3 Exa S3/S4 transitive walks.
+- S18 (established Exa) — replaced by Phase 2's `exa_established` category.
+
+`settings.discovery_v2_enabled` (default True) controls whether the REST trigger uses the v2 path or the legacy M7.6 path. Set False to roll back.
+
+---
+
 ## Output: schema, storage, merge semantics
 
 **Schema:** [`schemas/brand_candidates.schema.json`](../schemas/brand_candidates.schema.json) (JSON Schema Draft 2020-12). This is the authoritative shape of every candidates file. Validate on every write.

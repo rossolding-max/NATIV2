@@ -221,9 +221,9 @@ async def _phase_2_async(
             brand_deals=brand_deals,
             approved_industries=approved_industries,
             values_search_enabled=bool(_settings.discovery_values_search_default_themes)
-            or bool((talent_row.data or {}).get("brand_preferences", {}).get(
-                "values_aligned_themes"
-            )),
+            or bool(
+                (talent_row.data or {}).get("brand_preferences", {}).get("values_aligned_themes")
+            ),
         )
 
         brands_repo = BrandRepository(session, agency_id=agency_uuid)
@@ -249,9 +249,7 @@ async def _phase_2_async(
             await brands_repo.create_or_skip(stub)
 
         payloads = [_candidate_to_dict(c) for c in result.candidates]
-        await candidates_repo.upsert_run_batch(
-            talent_id, payloads, agency_id=talent_row.agency_id
-        )
+        await candidates_repo.upsert_run_batch(talent_id, payloads, agency_id=talent_row.agency_id)
         await session.commit()
 
     appended_brands = append_discovered_brands(payloads, search_run_id=result.search_run_id)
@@ -278,9 +276,7 @@ async def _phase_2_async(
     }
 
 
-@celery_app.task(
-    name="app.services.talent_background_research.kick_off_phase_2_brand_universe"
-)
+@celery_app.task(name="app.services.talent_background_research.kick_off_phase_2_brand_universe")
 def kick_off_phase_2_brand_universe(
     talent_id: str,
     agency_id: str | None = None,

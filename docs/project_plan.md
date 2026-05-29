@@ -351,6 +351,36 @@ Each milestone documented below with: inputs (what must exist) + outputs (delive
 
 ---
 
+## M7.7 — Phase 2 (v2 architecture refactor — 4 phases + human-in-the-loop)
+
+**Inputs:** M7.6. Triggered by user wanting (a) Exa-based brand discovery instead of seed-map-bounded walks, (b) gap-free coverage between emerging + established, (c) human-in-the-loop industry review before expensive Exa fan-out, (d) one-off massive build + monthly maintenance cost shape.
+
+**Outputs (shipped):**
+- 4-phase architecture:
+  - **Phase 1** (`phase_1_industry_compilation.py`): composes affinity walk + bidirectional walk + softener + new `_industry_from_audience.py` / `_industry_from_life_stage.py` / `_industry_from_exclusivity.py` (extracts S9/S11/S12 industry-derivation logic). Returns `list[IndustryProposal]` each with rationale + source. Dedup priority: affinity > past-brand > similar-talent > bidirectional walk > audience > life-stage > exclusivity > softener > manual.
+  - **Phase 1.5** (`industry_review` SQLA model + REST endpoints): human-in-the-loop review queue. Three endpoints under `/talents/{id}/industry-review`: GET (fetch pending), PATCH (add/remove industries), POST `.../approve` (mark approved + enqueue Phase 2). One pending review per (talent, agency); supersedes prior pending.
+  - **Phase 2** (`phase_2_brand_universe_build.py`): per-industry Exa fan-out across 3 categories — emerging / **growth (NEW)** / established. NO cap on industries. Per-query Exa+Claude with M7.5 provenance. Three search tags: `exa_emerging`, `exa_growth`, `exa_established`. Phase 2 absorbs S5-S12, S14, S18.
+  - **Phase 3** (`phase_3_talent_specific.py`): wraps S1, S2, Exa-S3 (`_competitor_search_exa.py`), Exa-S4, S13 standalone (`_values_search.py`, opt-in).
+  - **Phase 4** (`phase_4_signal_overlay.py`): S15-residual rewritten as industry-AGNOSTIC global trending funded sweep + S16 (gated) + S17 (gated).
+- **First-class brand metadata**: `QualifiedCandidate` gains `sub_industry_id` + `brand_category`. Snapshot, discovered seed map, and Brand DB stub all carry them.
+- **REST**: `TriggerDiscoveryBody.mode: Literal["full_build", "maintenance"] = "maintenance"`. `full_build` runs Phase 1 inline + returns review URL pointer; operator approves to trigger Phase 2 Celery task (`kick_off_phase_2_brand_universe`).
+- **Monthly Phase 4 cron** (`discovery_phase_4_monthly.py` + Celery beat): walks active talents (deal in last 90d OR discovery in last 60d) and enqueues maintenance-mode runs.
+- **Config**: `discovery_v2_enabled` (default True; rollback to M7.6 via False), `discovery_growth_enabled` (default True), `discovery_phase_4_monthly_enabled` (default True), `discovery_values_search_default_themes` (default []).
+- 47 new unit tests + 8 integration tests for review queue + REST surface. 783+ total unit tests pass.
+
+**Acceptance (unit):** all phases produce expected outputs against mocked Exa+Claude. **Acceptance (live, pending Kevin smoke):** full_build → operator approves all 80+ industries → Phase 2 produces > 2000 candidates with 3 distinct `brand_category` tags + `sub_industry_id` set on most rows; discovered seed map grows by 1500+; subsequent maintenance run completes in < 2 min for < $5.
+
+**Skip notes:** Rollback via `discovery_v2_enabled=False` reverts to M7.6 legacy path. Deprecated search modules kept on disk through M7.7; M7.8 deletes them.
+
+**Interdependency checks:**
+- `industry_review` table migration (alembic 0005) runs before any v2 REST traffic.
+- `discovery_v2_enabled=True` requires the Phase 2 Celery task (`kick_off_phase_2_brand_universe`) to be registered (`app.services.talent_background_research`).
+- Geography embedded in every Phase 2 + Phase 3 + Phase 4 Exa query template so UK-only brands don't surface in the first place; M7.3 post-merge geo filter still runs as defence in depth.
+
+**Deferred to v0.2:** per-industry-vertical custom prompts; Phase 1 → Phase 2 incremental refresh; cross-talent discovered-brand promotion to curated; S16/S17 ungating (need vendor tokens); auto-expire pending reviews (14-day TTL); industry-review UI (REST surface ships M7.7; UI in a later milestone); deprecated search module deletion (kept for rollback through M7.7).
+
+---
+
 ## M8 — Phase 3a (Contact CRM)
 
 **Inputs:** M7.

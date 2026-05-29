@@ -683,9 +683,7 @@ async def run_discovery_v2_maintenance(
     if talent_countries:
         sources = filter_sources_by_geo(sources, _brand_lookup(bim), talent_countries)
 
-    qualified = _build_qualified_candidates(
-        sources=sources, brand_industry_map=bim, taxonomies=tax
-    )
+    qualified = _build_qualified_candidates(sources=sources, brand_industry_map=bim, taxonomies=tax)
     kept, blocked = apply_filters(
         qualified,
         talent_brand_preferences=dict(talent_data.get("brand_preferences") or {}),
@@ -779,9 +777,7 @@ async def run_discovery_v2_phase_2(
     if talent_countries:
         sources = filter_sources_by_geo(sources, _brand_lookup(bim), talent_countries)
 
-    qualified = _build_qualified_candidates(
-        sources=sources, brand_industry_map=bim, taxonomies=tax
-    )
+    qualified = _build_qualified_candidates(sources=sources, brand_industry_map=bim, taxonomies=tax)
     kept, blocked = apply_filters(
         qualified,
         talent_brand_preferences=dict(talent_data.get("brand_preferences") or {}),

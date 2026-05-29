@@ -14,7 +14,7 @@ The manual rerun enqueues the same Celery task that ``/activate`` fires
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Literal
 from uuid import UUID
 
 from fastapi import APIRouter, Body, Depends, Query, Request
@@ -72,9 +72,17 @@ class TriggerDiscoveryBody(BaseModel):
     ``searches=None`` or omitting the field runs every search in the
     catalog (default). ``searches=[...]`` narrows the run to those
     names; unknown names get a 422.
+
+    M7.7 — ``mode`` selects v2 architecture path:
+      - "maintenance" (default): Phase 3 + Phase 4 only. Cheap.
+        Uses the talent's existing seed map; no Phase 1.5 review.
+      - "full_build": Phase 1 industry compilation + persisted
+        IndustryReview for human review. The operator must approve
+        the review at /industry-review/approve to trigger Phase 2.
     """
 
     searches: list[str] | None = None
+    mode: Literal["full_build", "maintenance"] = "maintenance"
 
 
 # ── Helpers ──────────────────────────────────────────────────────────
@@ -217,10 +225,23 @@ async def trigger_brand_discovery(
             )
 
     from app.celery_app import app as celery_app
+    from app.config import settings
 
     # Fall back to the sentinel UUID when no agency is bound to the
     # request (matches M8 trigger + brand-deals endpoints).
     effective_agency = agency_id or UUID(int=0)
+
+    # M7.7 — full_build mode runs Phase 1 synchronously, persists the
+    # IndustryReview, then returns 202 pointing at the review URL.
+    # The operator must explicitly approve at /industry-review/approve
+    # to trigger Phase 2.
+    if payload.mode == "full_build" and settings.discovery_v2_enabled:
+        return await _trigger_v2_full_build(
+            talent_id=talent_id,
+            agency_id=effective_agency,
+            talent_row=row,
+            session=session,
+        )
 
     enqueued = False
     try:
@@ -235,9 +256,60 @@ async def trigger_brand_discovery(
     return _envelope(
         {
             "talent_id": talent_id,
+            "mode": payload.mode,
             "enqueued": enqueued,
             "task": "app.services.talent_background_research.kick_off_brand_discovery",
             "enabled_searches": enabled_searches,  # echoes None when running all
+        }
+    )
+
+
+async def _trigger_v2_full_build(
+    *,
+    talent_id: str,
+    agency_id: UUID,
+    talent_row: Any,
+    session: AsyncSession,
+) -> APIResponse[Any]:
+    """Run Phase 1 inline, persist IndustryReview, return pointer to review URL."""
+    from app.repositories.industry_review import IndustryReviewRepository
+    from app.services.discovery.phase_1_industry_compilation import (
+        compile_industry_universe,
+    )
+    from app.utils.taxonomies import get_taxonomies
+
+    pairs = await compile_industry_universe(
+        talent_data=dict(talent_row.data or {}),
+        brand_deals=[],  # full_build only uses talent_data; deals fold in at Phase 2/3
+        taxonomies=get_taxonomies(),
+    )
+    items: list[dict[str, Any]] = []
+    for winner, alternates in pairs:
+        items.append(
+            {
+                "industry_id": winner.industry_id,
+                "rationale": winner.rationale,
+                "source": winner.source,
+                "approved": True,
+                "alternate_rationales": [
+                    {"source": a.source, "rationale": a.rationale} for a in alternates
+                ],
+            }
+        )
+
+    reviews = IndustryReviewRepository(session, agency_id=agency_id)
+    review = await reviews.create_pending(talent_id=talent_id, items=items)
+    await session.commit()
+
+    return _envelope(
+        {
+            "talent_id": talent_id,
+            "mode": "full_build",
+            "phase": "1_complete",
+            "review_id": review.review_id,
+            "review_url": f"/api/v1/talents/{talent_id}/industry-review",
+            "approve_url": f"/api/v1/talents/{talent_id}/industry-review/approve",
+            "proposed_industry_count": len(items),
         }
     )
 
