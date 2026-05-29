@@ -1,20 +1,20 @@
-"""Search 15 — newly-funded brands discovered via Exa + Claude.
+"""Search 18 — established brands discovered via Exa (M7.3).
 
-For each of the top-N industries the talent's other searches already
-identified, run a focused Exa search (e.g. ``"<industry> D2C brand
-newly funded 2026"``), fetch contents, and ask Claude to extract a
-clean JSON list of ``{brand_name, suggested_industry_id, confidence,
-evidence}``.
+Mirror of Search 15 but targets ESTABLISHED brands in the talent's
+preferred industries — not just newly-funded ones. Search 15 catches
+the up-and-coming startups; Search 18 catches the mid-to-large brands
+that aren't in the 290-entry seed map yet (regional QSR chains,
+non-top-of-mind apparel labels, niche home-improvement brands, etc.).
 
-Each extracted brand is bucketed via M5's ``resolve_industry`` (exact
-match in the brand_industry_map, else Exa+LLM fallback). Brands not
-already in the seed map become net-new CandidateSources weight 0.10-0.15
-scaled by LLM confidence; the writeback to the seed map itself is
-stubbed (logs intent — actual merge needs a review queue, deferred
-to M7.1).
+Same Exa + LLM extraction pipeline as Search 15. Geographic context
+embedded in every query for higher hit-rate. Net-new brands surface as
+candidates with ``search_tag="established_exa_discovery"`` and the
+qualifier promotes them to ``tier="speculative"`` via the M7.3 emerging
+branch when LLM confidence >= 0.70.
 
-Cost guard: capped fan-out of top-N industries x queries x results so
-a single run stays inside ``settings.llm_budget_per_pack_usd``.
+Cost guard: 6 query variations per industry, 5 industries per run, 5
+results per query => ~150 Exa calls + ~30 Haiku extractions per run.
+Run-level cap respected via ``settings.discovery_max_industries_per_run``.
 """
 
 from __future__ import annotations
@@ -29,20 +29,12 @@ from app.utils.logging import get_logger
 log = get_logger(__name__)
 
 
-_SEARCH_TAG: str = "recently_funded"
-# M7.3 — bump from 0.10-0.15 to 0.20-0.30 scaled by LLM confidence so
-# emerging brands clear the 0.10 noise floor without needing the
-# qualification emerging-tier promotion. The promotion is still wired
-# in qualification.py for defence-in-depth.
+_SEARCH_TAG: str = "established_exa_discovery"
 _BASE_WEIGHT: float = 0.20
 _MAX_WEIGHT: float = 0.30
 
-# Cost-guard caps. M7.3 bumps queries-per-industry from 2 to 7 and the
-# per-run industry cap from 3 to 5 (via settings.discovery_max_industries_per_run).
-# Smoke: 5 industries x 7 queries x 5 results = ~175 Exa calls + ~35
-# Claude extractions per run. Override per-call via ``run(...)`` kwargs.
 DEFAULT_MAX_INDUSTRIES: int = 5
-DEFAULT_QUERIES_PER_INDUSTRY: int = 7
+DEFAULT_QUERIES_PER_INDUSTRY: int = 6
 DEFAULT_RESULTS_PER_QUERY: int = 5
 
 
@@ -62,27 +54,21 @@ def _slugify(name: str) -> str:
 def _build_queries_for_industry(
     industry_id: str, *, talent_country: str | None = None
 ) -> list[str]:
-    """M7.3 — seven complementary query variations per industry.
-
-    When the talent's country is known, embed it in every query for a
-    higher-relevance hit-rate. Falls back to global queries when the
-    country isn't available.
-    """
+    """Six query variations per industry, geo-embedded when available."""
     pretty = industry_id.replace("-", " ")
     geo = f" {talent_country}" if talent_country else ""
     return [
-        f"newly funded{geo} {pretty} brand 2026",
-        f"{pretty} startup{geo} Series A Series B 2026",
-        f"emerging{geo} {pretty} brand creator marketing",
-        f"new {pretty} D2C launch{geo} 2026",
-        f"indie {pretty} brand{geo} instagram tiktok",
+        f"top {pretty} brands{geo} 2026",
+        f"best {pretty} brands for influencer marketing{geo}",
+        f"{pretty} D2C brand directory{geo}",
+        f"{pretty} brands creator program{geo}",
+        f"established {pretty} brands instagram tiktok{geo}",
         f"{pretty} brands to watch{geo} 2026",
-        f"{pretty} startup creator partnership{geo}",
     ]
 
 
 def _build_extraction_prompt(*, industry_id: str, raw_contents: list[dict[str, Any]]) -> str:
-    """Compose the LLM prompt to extract brand candidates from page text."""
+    """Compose the LLM prompt to extract established brand candidates."""
     blocks: list[str] = []
     for entry in raw_contents:
         url = entry.get("url") or ""
@@ -92,29 +78,29 @@ def _build_extraction_prompt(*, industry_id: str, raw_contents: list[dict[str, A
     pages = "\n\n".join(blocks) or "(no pages)"
     return (
         f"You are reviewing web pages about the {industry_id!r} industry, looking for "
-        "BRAND names that are newly funded or newly launched.\n\n"
+        "ESTABLISHED brand names that operate creator marketing programs or are "
+        "known to work with influencers.\n\n"
         "Rules:\n"
         '- Output JSON: {"brands": [{"brand_name": str, '
         '"suggested_industry_id": str, "confidence": float 0-1, '
         '"evidence": str (short quote)}]}.\n'
         f"- Suggested industry MUST be the exact id {industry_id!r} unless the page "
         "makes clear the brand is in a different one.\n"
-        "- ONLY include brands explicitly named in the page text.\n"
-        '- Skip generic mentions ("the apparel category", "streetwear startups"). '
-        "Specific brand names only.\n"
-        "- Confidence 0.90+ = brand explicitly described as funded/launched; "
-        "0.70-0.89 = strong inference; below 0.70 = drop.\n"
+        "- ONLY include brands explicitly named in the page text — no generic mentions.\n"
+        "- Prefer brands the page describes as well-known / popular / mainstream / "
+        "leading. NEWLY FUNDED startups are out of scope here — Search 15 covers those.\n"
+        "- Confidence 0.90+ = brand explicitly described as established / leading / "
+        "well-known with examples; 0.70-0.89 = strong inference; below 0.70 = drop.\n"
         "- Return ONLY the JSON. No prose, no markdown fences.\n\n"
         f"PAGES:\n\n{pages}\n"
     )
 
 
 def _parse_llm_response(raw: str, *, fallback_industry_id: str) -> list[dict[str, Any]]:
-    """Parse the LLM JSON response into a list of brand candidate dicts."""
     try:
         body = json.loads(_strip_json_fence(raw))
     except json.JSONDecodeError:
-        log.warning("search_15_llm_response_not_json", raw=raw[:200])
+        log.warning("search_18_llm_response_not_json", raw=raw[:200])
         return []
     raw_brands = body.get("brands")
     if not isinstance(raw_brands, list):
@@ -146,12 +132,7 @@ async def _exa_search_and_extract(
     queries: list[str],
     results_per_query: int,
 ) -> list[dict[str, Any]]:
-    """Run the Exa searches + Claude extraction for one industry.
-
-    Returns a list of brand-candidate dicts. Errors land as log warnings;
-    the orchestrator's per-search try/except treats Search 15 as best-
-    effort.
-    """
+    """Run the Exa searches + Claude extraction for one industry."""
     from app.vendors.exa import ExaClient
 
     exa = ExaClient()
@@ -166,7 +147,7 @@ async def _exa_search_and_extract(
             )
         except Exception as exc:
             log.warning(
-                "search_15_exa_search_failed", industry=industry_id, query=query, error=str(exc)
+                "search_18_exa_search_failed", industry=industry_id, query=query, error=str(exc)
             )
             continue
         for r in resp.get("results", []) or []:
@@ -188,7 +169,7 @@ async def _exa_search_and_extract(
             messages=[{"role": "user", "content": prompt}],
         )
     except Exception as exc:
-        log.warning("search_15_llm_failed", industry=industry_id, error=str(exc))
+        log.warning("search_18_llm_failed", industry=industry_id, error=str(exc))
         return []
     text_parts: list[str] = []
     for block in getattr(response, "content", []) or []:
@@ -206,20 +187,13 @@ async def run(
     queries_per_industry: int = DEFAULT_QUERIES_PER_INDUSTRY,
     results_per_query: int = DEFAULT_RESULTS_PER_QUERY,
 ) -> list[CandidateSource]:
-    """Run Search 15 across the top-N industries; return new-brand candidates.
-
-    The orchestrator decides which industries are "top" — typically the
-    industries that already surfaced in Search 5/6/7 (primary tier hits).
-    M7.3 — ``talent_country`` (ISO-3166 alpha-2) embeds geography into
-    every Exa query for higher relevance; omit to fall back to global
-    queries.
-    """
+    """Run Search 18 across the top-N industries; return established net-new brands."""
     if not top_industry_ids:
         return []
 
     industries = list(dict.fromkeys(top_industry_ids))[:max_industries]
 
-    # Build a lookup so we can skip brands already in the seed map.
+    # Build the seed-map lookup so we skip brands already known.
     existing_brand_names: set[str] = set()
     raw_brands: list[Any] = brand_industry_map.get("brands") or []
     for entry in raw_brands:
@@ -247,19 +221,14 @@ async def run(
             name = cand["brand_name"].strip()
             name_lower = name.lower()
             if name_lower in existing_brand_names:
-                # Already in seed map — not net-new; skip (search 5/6/7 handle these).
                 continue
             brand_id = _slugify(name)
             if brand_id in seen:
                 continue
             seen.add(brand_id)
-            # M7.3 — scale weight 0.20 (conf 0.70) -> 0.30 (conf 1.00).
             confidence = cand["confidence"]
             weight = _BASE_WEIGHT + (_MAX_WEIGHT - _BASE_WEIGHT) * (confidence - 0.70) / 0.30
             weight = max(_BASE_WEIGHT, min(_MAX_WEIGHT, weight))
-            # Embed llm_confidence in the note so the qualifier can read
-            # it for the emerging-tier promotion path. Evidence quote
-            # follows after a separator (it's safe to truncate).
             evidence = (cand.get("evidence") or "")[:200]
             note = f"llm_confidence={confidence:.2f} | {evidence}".rstrip(" |")
             sources.append(
@@ -272,10 +241,8 @@ async def run(
                     note=note[:240],
                 )
             )
-            # Writeback to brand_industry_map.json is a stub for v0.1 —
-            # log the intent so M7.1 has a hook.
             log.info(
-                "search_15_brand_pending_writeback",
+                "search_18_brand_pending_writeback",
                 brand_name=name,
                 industry_id=cand["industry_id"],
                 confidence=confidence,

@@ -51,11 +51,17 @@ def _signal(*, name: str, value: float, detail: str) -> dict[str, Any]:
     return {"signal": name, "weight": value, "details": detail}
 
 
-_EXA_DISCOVERY_TAGS: set[str] = {"recently_funded", "established_exa_discovery"}
+EXA_DISCOVERY_TAGS: frozenset[str] = frozenset({"recently_funded", "established_exa_discovery"})
 """Search tags that indicate a candidate came from Exa-driven discovery
 rather than the seed map. M7.3 — when these are present alongside a
 sufficient LLM confidence, the qualifier promotes net-new brands to
-``speculative`` (0.30) instead of the v0.1 default ``unqualified`` (0.10)."""
+``speculative`` (0.30) instead of the v0.1 default ``unqualified`` (0.10).
+Public so the orchestrator can also use it to override tier to
+``"emerging"`` for net-new brands that surface only via Exa tags."""
+
+_EXA_DISCOVERY_TAGS = EXA_DISCOVERY_TAGS
+"""Legacy alias kept temporarily; will be removed after the
+deprecated callers (none in v0.1) are cleaned up."""
 
 
 def _max_llm_confidence_from_notes(notes: list[str]) -> float:

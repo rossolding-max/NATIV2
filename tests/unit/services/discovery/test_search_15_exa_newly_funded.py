@@ -73,8 +73,11 @@ async def test_unit__search_15__happy_path_extracts_new_brand() -> None:
     assert sources[0].brand_id == "alo-yoga"
     assert sources[0].industry_id == "activewear"
     assert sources[0].search_tag == "recently_funded"
-    # Weight scales with confidence — 0.90 -> ~0.117
-    assert 0.10 <= sources[0].weight <= 0.15
+    # M7.3 — weight scales with confidence in the 0.20-0.30 range
+    # (bumped from 0.10-0.15 to clear the qualification noise floor).
+    assert 0.20 <= sources[0].weight <= 0.30
+    # M7.3 — the note embeds llm_confidence for the qualifier to read.
+    assert "llm_confidence=" in sources[0].note
 
 
 @pytest.mark.asyncio

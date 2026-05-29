@@ -162,6 +162,18 @@ SEARCH_CATALOG: tuple[SearchInfo, ...] = (
         ),
         weight="0.20-0.30",
     ),
+    SearchInfo(
+        name="search_18_established_brands",
+        label="Established brands via Exa",
+        description=(
+            "Discovers established brands in the talent's preferred "
+            "industries via Exa + Claude extraction. Catches "
+            "mid-to-large brands not yet in the seed map. Geo-embedded "
+            "queries; net-new brands surface as tier='emerging'."
+        ),
+        weight="0.20-0.30",
+        requires_llm=True,
+    ),
 )
 
 

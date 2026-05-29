@@ -34,6 +34,11 @@ from app.services.discovery import (
     search_15_exa_newly_funded,
     search_16_last30days_trending,
     search_17_paid_social_signal,
+    search_18_established_brands,
+)
+from app.services.discovery._geographic_filter import (
+    extract_talent_countries,
+    filter_sources_by_geo,
 )
 from app.services.discovery._models import (
     CandidateSource,
@@ -265,6 +270,13 @@ async def run_discovery(
             ),
         )
 
+    # M7.3 — extract the talent's geo anchor once so Search 15 + 18 can
+    # embed it in their Exa queries. Falls back to location.country when
+    # audience_demographics is empty (Kevin's case).
+    _talent_countries = extract_talent_countries(talent_data)
+    _talent_country = _talent_countries[0] if _talent_countries else None
+    from app.config import settings as _cfg
+
     if "search_15_exa_newly_funded" in enabled:
         # Use the industries that already surfaced via Search 5/6/7 as
         # the seed; if none, fall back to industries inferred from the
@@ -280,8 +292,28 @@ async def run_discovery(
             await _run_safely_async(
                 "search_15_exa_newly_funded",
                 search_15_exa_newly_funded.run(
-                    top_industry_ids=top_industries,
+                    top_industry_ids=top_industries[: _cfg.discovery_max_industries_per_run],
                     brand_industry_map=bim,
+                    talent_country=_talent_country,
+                ),
+            )
+
+    if "search_18_established_brands" in enabled:
+        # M7.3 — mirror of Search 15 for established brands; same industry seed.
+        top_industries_18: list[str] = []
+        for src in all_sources:
+            if (
+                src.search_tag in {"primary_industry", "secondary_industry"}
+                and src.industry_id not in top_industries_18
+            ):
+                top_industries_18.append(src.industry_id)
+        if top_industries_18:
+            await _run_safely_async(
+                "search_18_established_brands",
+                search_18_established_brands.run(
+                    top_industry_ids=top_industries_18[: _cfg.discovery_max_industries_per_run],
+                    brand_industry_map=bim,
+                    talent_country=_talent_country,
                 ),
             )
 
@@ -338,12 +370,23 @@ async def run_discovery(
             ),
         )
 
-    # Merge sources by brand, build qualified candidates.
-    grouped = _merge_sources(all_sources)
+    # Build the seed-map name->entry index once; used by both the geo
+    # filter and the per-brand qualification lookup.
     raw_brands: list[Any] = bim.get("brands") or []
     brand_lookup = {
         str(b.get("name", "")).strip().lower(): b for b in raw_brands if isinstance(b, dict)
     }
+
+    # M7.3 — apply the shared geographic filter to the aggregated
+    # sources BEFORE merge. Drops brands whose sells_in_countries is an
+    # explicit list NOT including any of the talent's countries (Tesco
+    # case for US-based Kevin). Net-new (Exa) brands not in the seed
+    # map pass through unaltered.
+    if _talent_countries:
+        all_sources = filter_sources_by_geo(all_sources, brand_lookup, _talent_countries)
+
+    # Merge sources by brand, build qualified candidates.
+    grouped = _merge_sources(all_sources)
     qualified: list[QualifiedCandidate] = []
     for brand_id, sources in grouped.items():
         score = min(1.0, sum(s.weight for s in sources))
@@ -353,7 +396,26 @@ async def run_discovery(
         tier = _assign_tier(score=score, tags=tags)
         first_source = sources[0]
         brand_entry = brand_lookup.get(first_source.brand_name.strip().lower())
-        q_score, q_tier, signals = qualify_candidate(brand_entry)
+        # M7.3 — pass tags + notes so the qualifier can promote net-new
+        # Exa-discovered brands to "emerging" when LLM confidence >= 0.70.
+        q_score, q_tier, signals = qualify_candidate(
+            brand_entry,
+            source_tags=tags,
+            source_notes=[s.note for s in sources],
+        )
+        # M7.3 — when the brand surfaces only via Exa-discovery tags
+        # (recently_funded / established_exa_discovery) AND qualification
+        # promoted it to speculative+, override tier="emerging" so the
+        # UI distinguishes long-tail net-new brands from the seed-map
+        # tier system.
+        from app.services.discovery.qualification import EXA_DISCOVERY_TAGS
+
+        if (
+            brand_entry is None
+            and tags <= EXA_DISCOVERY_TAGS
+            and q_tier in {"qualified", "speculative"}
+        ):
+            tier = "emerging"  # type: ignore[assignment]
         if q_score < qualification_threshold:
             continue  # dropped by qualification floor
         qualified.append(

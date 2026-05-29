@@ -135,6 +135,9 @@ async def test_unit__orchestrator__blocked_industry_partitioned() -> None:
             "company_stage": "public",
         }
     )
+    # Restrict to deterministic searches — the Exa-driven 15/18 hit live
+    # APIs and would surface many other cosmetics brands, breaking the
+    # `len(result.blocked) == 1` invariant.
     result = await run_discovery(
         talent_id="t1",
         talent_data={
@@ -144,6 +147,7 @@ async def test_unit__orchestrator__blocked_industry_partitioned() -> None:
         brand_deals=[],
         taxonomies=tax,
         brand_industry_map=bim,
+        enabled_searches=("search_5_primary_industry",),
     )
     assert result.candidates == []
     assert len(result.blocked) == 1
