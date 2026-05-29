@@ -12,7 +12,6 @@ this (replacing the M5 stub body). REST callers also reach it via the
 
 from __future__ import annotations
 
-import json
 import uuid
 from datetime import UTC, datetime
 from pathlib import Path
@@ -45,6 +44,7 @@ from app.services.discovery._models import (
     DiscoveryRunResult,
     QualifiedCandidate,
 )
+from app.services.discovery._seed_map_loader import load_merged_brand_industry_map
 from app.services.discovery.catalog import default_enabled_searches
 from app.services.discovery.policy_filter import apply_filters
 from app.services.discovery.qualification import (
@@ -78,11 +78,13 @@ def _new_search_run_id() -> str:
 
 
 def _load_brand_industry_map(data_dir: Path | None = None) -> dict[str, Any]:
-    repo_root = Path(__file__).resolve().parents[3]
-    path = (data_dir or repo_root / "data") / "brand_industry_map.json"
-    if not path.exists():
-        return {"brands": []}
-    return json.loads(path.read_text(encoding="utf-8"))
+    """Backwards-compat shim — delegates to ``load_merged_brand_industry_map``.
+
+    M7.4 split this into ``_seed_map_loader.load_merged_brand_industry_map``
+    so the curated file + auto-grown discovered file get unioned at load
+    time. Callers that import this symbol get the merged result.
+    """
+    return load_merged_brand_industry_map(data_dir)
 
 
 def _assign_tier(

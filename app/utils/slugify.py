@@ -49,3 +49,16 @@ def slugify(text: str, existing: Iterable[str] | None = None) -> str:
     while f"{base}-{n}" in existing_set:
         n += 1
     return f"{base}-{n}"
+
+
+def slugify_brand_name(name: str) -> str:
+    """Lenient variant for best-effort brand-name canonicalization.
+
+    Returns ``"unknown"`` on empty/whitespace/no-alnum input instead of
+    raising — Exa/LLM-extracted brand names occasionally come back as
+    junk and the caller wants to skip+continue, not crash.
+    """
+    try:
+        return slugify(name)
+    except ValueError:
+        return "unknown"

@@ -1,0 +1,6 @@
+{
+  "version": 1,
+  "updated": "2026-05-29T00:00:00Z",
+  "note": "Auto-grown by app/services/talent_background_research.py. Net-new brands surfaced by discovery runs are appended here so future runs surface them via Search 5/6/7. Curated brand_industry_map.json takes precedence on conflict.",
+  "brands": []
+}
