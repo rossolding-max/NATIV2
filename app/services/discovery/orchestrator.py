@@ -389,15 +389,24 @@ async def run_discovery(
     # M7.4 — derive the fan-out industry list for Exa-driven searches.
     # Combines S5/6 affinity hits (post-search) with the pre-computed
     # bidirectional-walk + LLM-softener extras.
-    _exa_industry_seed = _build_exa_industry_seed(
+    _exa_industry_seed_full = _build_exa_industry_seed(
         all_sources=all_sources,
         industry_extras=_industry_extras,
     )
-    if len(_exa_industry_seed) > 50:
-        log.warning(
-            "discovery_industry_count_high",
-            count=len(_exa_industry_seed),
-            note="no hard cap; flagged for cost visibility",
+    # M7.6 — cap the Exa fan-out to bound cost. S5/6/7/8 (cheap seed-map
+    # walks) still see the full industry list; only the Exa-driven
+    # S15/S18 are bounded. Ordering preserves affinity hits first, then
+    # bidirectional walk, then LLM softener — so the cap keeps the
+    # highest-signal industries.
+    from app.config import settings as _settings
+
+    _exa_industry_seed = _exa_industry_seed_full[: _settings.discovery_exa_max_industries]
+    if len(_exa_industry_seed_full) > len(_exa_industry_seed):
+        log.info(
+            "discovery_exa_seed_capped",
+            full=len(_exa_industry_seed_full),
+            used=len(_exa_industry_seed),
+            cap=_settings.discovery_exa_max_industries,
         )
 
     if "search_15_exa_newly_funded" in enabled and _exa_industry_seed:

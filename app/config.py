@@ -114,10 +114,17 @@ class Settings(BaseSettings):
     enable_last30days_discovery: bool = False
 
     # ── Discovery: comprehensiveness softener (M7.4) ────────────────
-    # M7.4 removed `discovery_max_industries_per_run` entirely. Per-run
-    # industry breadth is now bounded by (a) the affinity table, (b) the
-    # bidirectional walk from past-deal sub-industries, and (c) the LLM
-    # softener. Soft warning at 50 industries; no hard ceiling.
+    # M7.4 dropped the orchestrator-level industry cap that pre-filtered
+    # before any search ran. M7.6 re-introduces a SEPARATE cap that only
+    # bounds the Exa-driven fan-out (S15/S18) — S5/6/7/8 still walk the
+    # full industry list cheaply against the seed map. The cap keeps
+    # Exa cost predictable when a talent's past-brand bidirectional walk
+    # explodes the industry seed (Kevin: 12 past brands → 62 industries).
+    #
+    # Per-run cost at the default: 25 industries x 13 queries x 5 results
+    # = ~1600 Exa calls (~$8) + ~325 Haiku calls (~$0.30). Bump higher
+    # only if budget allows.
+    discovery_exa_max_industries: int = Field(default=25, ge=1, le=200)
     #
     # The LLM softener (Haiku) augments the deterministic affinity walk
     # with industries the hand-curated affinity rows don't enumerate.
