@@ -51,21 +51,70 @@ def _signal(*, name: str, value: float, detail: str) -> dict[str, Any]:
     return {"signal": name, "weight": value, "details": detail}
 
 
+_EXA_DISCOVERY_TAGS: set[str] = {"recently_funded", "established_exa_discovery"}
+"""Search tags that indicate a candidate came from Exa-driven discovery
+rather than the seed map. M7.3 — when these are present alongside a
+sufficient LLM confidence, the qualifier promotes net-new brands to
+``speculative`` (0.30) instead of the v0.1 default ``unqualified`` (0.10)."""
+
+
+def _max_llm_confidence_from_notes(notes: list[str]) -> float:
+    """Pull the highest ``llm_confidence`` value from CandidateSource notes.
+
+    The discovery searches embed the value into the ``note`` field as
+    ``"llm_confidence=0.87"`` so the qualifier doesn't need to depend on
+    a richer source data model. Returns 0.0 when no note carries one.
+    """
+    import re
+
+    best = 0.0
+    pattern = re.compile(r"llm_confidence\s*[=:]\s*([01](?:\.\d+)?)")
+    for note in notes:
+        for match in pattern.finditer(note):
+            try:
+                value = float(match.group(1))
+            except ValueError:
+                continue
+            if value > best:
+                best = value
+    return best
+
+
 def qualify_candidate(
     brand_entry: dict[str, Any] | None,
+    *,
+    source_tags: set[str] | None = None,
+    source_notes: list[str] | None = None,
 ) -> tuple[float, QualificationTier, list[dict[str, Any]]]:
     """Compute the qualification score for one brand.
 
     ``brand_entry`` is the row from ``data/brand_industry_map.json`` (or
-    None when the brand is net-new from Search 15 and not yet enriched).
-    Returns ``(score, tier, signals[])``.
+    None when the brand is net-new from Search 15 / 18 and not yet
+    enriched). ``source_tags`` + ``source_notes`` are passed from the
+    orchestrator (aggregated across all CandidateSource records joined
+    to this brand) so the M7.3 emerging-tier branch can detect Exa-driven
+    discovery + LLM confidence. Returns ``(score, tier, signals[])``.
     """
     signals: list[dict[str, Any]] = []
     score = 0.0
 
     if brand_entry is None:
-        # Net-new brand from Exa discovery — light prior; recent_funding
-        # is the only signal we have at this point.
+        # Net-new brand. M7.3: if any source carries an Exa-discovery tag
+        # AND LLM confidence >= 0.70, promote to speculative so the
+        # brand surfaces by default. Lower confidence / non-Exa origins
+        # keep the v0.1 unqualified floor.
+        tags = source_tags or set()
+        notes = source_notes or []
+        confidence = _max_llm_confidence_from_notes(notes)
+        if tags & _EXA_DISCOVERY_TAGS and confidence >= 0.70:
+            signals.append(
+                _signal(
+                    name="emerging_exa_discovery",
+                    value=0.30,
+                    detail=(f"Exa-discovered emerging brand (llm_confidence={confidence:.2f})."),
+                )
+            )
+            return 0.30, _classify_tier(0.30), signals
         signals.append(
             _signal(name="recent_funding", value=0.10, detail="Newly surfaced via Exa discovery.")
         )

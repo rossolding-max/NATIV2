@@ -113,6 +113,13 @@ class Settings(BaseSettings):
     # the skill's auth + cost guards are configured for your installation.
     enable_last30days_discovery: bool = False
 
+    # ── Discovery: comprehensiveness caps (M7.3) ─────────────────────
+    # How many of the talent's top affinity industries get fanned out
+    # across the Exa-driven searches (15 + 18). Each industry triggers
+    # ~13 Exa queries + Haiku extractions; capping keeps per-run cost
+    # bounded. v0.1 default 5 (was implicit 3). Lower for cheap tests.
+    discovery_max_industries_per_run: int = Field(default=5, ge=1, le=20)
+
     # ── Discovery: paid social ad signal (M7.2 Search 17) ────────────
     # Off by default — Search 17 requires a Meta Ad Library token and hits
     # TikTok's unofficial public endpoint. Enable per-agency once the

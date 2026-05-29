@@ -37,6 +37,11 @@ class Taxonomies:
     brand_competitors: dict[str, list[str]] = field(default_factory=dict[str, list[str]])
     iab_segments: dict[int, dict[str, Any]] = field(default_factory=dict[int, dict[str, Any]])
 
+    # M7.3 — pre-built reverse index of `parent -> [children]` for fast
+    # sub-industry expansion in the discovery searches. Built once in
+    # ``from_directory``.
+    _industry_children: dict[str, list[str]] = field(default_factory=dict[str, list[str]])
+
     # ── Construction ──────────────────────────────────────────────────
 
     @classmethod
@@ -62,6 +67,16 @@ class Taxonomies:
         competitors_map: dict[str, list[str]] = competitors_doc.get("competitors") or {}
         iab_segments = {s["id"]: s for s in iab_doc.get("segments", [])}
 
+        # Pre-compute parent -> children index for fast sub-industry walks.
+        industry_children: dict[str, list[str]] = {}
+        for industry_id, node in industries.items():
+            parent = node.get("parent")
+            if isinstance(parent, str) and parent:
+                industry_children.setdefault(parent, []).append(industry_id)
+        # Sort each child list for deterministic discovery output.
+        for parent in industry_children:
+            industry_children[parent].sort()
+
         return cls(
             niches=niches,
             industries=industries,
@@ -70,6 +85,7 @@ class Taxonomies:
             niche_industry_affinity=niche_industry_doc,
             brand_competitors=competitors_map,
             iab_segments=iab_segments,
+            _industry_children=industry_children,
         )
 
     # ── Niche helpers ─────────────────────────────────────────────────
@@ -99,6 +115,16 @@ class Taxonomies:
     def is_sensitive_industry(self, industry_id: str) -> bool:
         node = self.industries.get(industry_id)
         return bool(node and node.get("sensitive"))
+
+    def get_sub_industries(self, industry_id: str) -> list[str]:
+        """Return immediate child industry ids for ``industry_id``.
+
+        M7.3 — the discovery industry-tier searches use this to expand a
+        target parent industry into all of its sub-industries (e.g.
+        ``sports-outdoor`` -> ``sportswear``, ``outdoor-gear``,
+        ``gym-equipment``, ...). Empty list for leaf industries.
+        """
+        return list(self._industry_children.get(industry_id, []))
 
     # ── Competitor lookup ─────────────────────────────────────────────
 

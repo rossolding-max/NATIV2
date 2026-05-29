@@ -34,7 +34,7 @@ class QualifiedCandidate:
     brand_name: str
     industry_id: str
     score: float
-    tier: Literal["re-engage", "primary", "secondary", "tertiary"]
+    tier: Literal["re-engage", "primary", "secondary", "tertiary", "emerging"]
     sources: list[CandidateSource]
     qualification_score: float
     qualification_tier: Literal["qualified", "speculative", "unqualified"]

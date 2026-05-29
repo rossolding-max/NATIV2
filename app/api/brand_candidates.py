@@ -44,8 +44,13 @@ top_level_router = APIRouter(prefix="/brand-candidates", tags=["brand-candidates
 discovery_router = APIRouter(prefix="/brand-discovery", tags=["brand-candidates"])
 
 
-_TIER_PATTERN = r"^(re-engage|primary|secondary|tertiary)$"
+_TIER_PATTERN = r"^(re-engage|primary|secondary|tertiary|emerging)$"
 _STATUS_PATTERN = r"^(new|shortlisted|pitched|responded|negotiating|closed_won|closed_lost|parked)$"
+_QUALIFICATION_PATTERN = (
+    r"^((qualified|speculative|unqualified)"
+    r"(,(qualified|speculative|unqualified))*|all)$"
+)
+_DEFAULT_QUALIFICATION_FILTER = "qualified,speculative"
 
 
 # ── Request models ───────────────────────────────────────────────────
@@ -107,6 +112,35 @@ def _warn_missing_idempotency(request: Request) -> None:
         )
 
 
+def _parse_qualification_filter(value: str) -> set[str] | None:
+    """Parse the ``?qualification=`` query value into a set or None for ``all``.
+
+    ``all`` returns None signalling no filter. The regex pattern on the
+    Query already rejects unknown tokens, so by here we only need to
+    split + return.
+    """
+    if value == "all":
+        return None
+    return {token.strip() for token in value.split(",") if token.strip()}
+
+
+def _row_qualification_tier(row: Any) -> str:
+    """Pull the qualification tier from a brand_candidate row's JSONB data.
+
+    Returns ``"unqualified"`` when the data block is missing the
+    expected ``qualification.tier`` shape — conservative default so the
+    row gets filtered out of the default ``qualified,speculative`` view
+    (matching v0.1 behaviour for malformed rows).
+    """
+    data = row.data or {}
+    qual = data.get("qualification") if isinstance(data, dict) else None
+    if isinstance(qual, dict):
+        tier = qual.get("tier")
+        if isinstance(tier, str):
+            return tier
+    return "unqualified"
+
+
 # ── Talent-scoped endpoints ──────────────────────────────────────────
 
 
@@ -115,14 +149,31 @@ async def list_brand_candidates(
     request: Request,
     talent_id: str,
     tier: str | None = Query(default=None, pattern=_TIER_PATTERN),
+    qualification: str = Query(
+        default=_DEFAULT_QUALIFICATION_FILTER, pattern=_QUALIFICATION_PATTERN
+    ),
     session: AsyncSession = Depends(get_db),  # noqa: B008
 ) -> APIResponse[Any]:
-    """List candidates for a talent. Optional ``?tier=primary``."""
+    """List candidates for a talent.
+
+    Optional filters:
+    - ``?tier=primary|secondary|tertiary|re-engage|emerging``
+    - ``?qualification=qualified,speculative,unqualified,all`` —
+      defaults to ``qualified,speculative`` so today's behaviour is
+      preserved. Pass ``all`` to surface the long tail including the
+      lowest-confidence emerging brands; pass a comma-separated subset
+      for finer control.
+    """
     agency_id = _agency_id_from_request(request)
     repo = BrandCandidateRepository(session, agency_id=agency_id)
     rows = (
         await repo.find_by_tier(talent_id, tier) if tier else await repo.find_by_talent(talent_id)
     )
+
+    allowed_qualifications = _parse_qualification_filter(qualification)
+    if allowed_qualifications is not None:
+        rows = [r for r in rows if _row_qualification_tier(r) in allowed_qualifications]
+
     return _envelope([_row_to_dict(row) for row in rows])
 
 
