@@ -11,7 +11,7 @@ from uuid import UUID
 import pytest
 from alembic.config import Config
 from sqlalchemy import text
-from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from alembic import command
 from app.errors import BusinessRuleError
@@ -108,7 +108,7 @@ async def m10_repo_db(_m10_repo_setup: Any) -> Any:  # pyright: ignore[reportUnu
 
 
 async def _make_deal(
-    factory: async_sessionmaker,
+    factory: async_sessionmaker[AsyncSession],
     *,
     by_agent_id: str = "agent_alice",
 ) -> str:
@@ -128,7 +128,7 @@ async def _make_deal(
 
 
 async def test_integration__find_by_talent_returns_only_non_terminal_by_default(
-    m10_repo_db: async_sessionmaker,
+    m10_repo_db: async_sessionmaker[AsyncSession],
 ) -> None:
     deal_a = await _make_deal(m10_repo_db)
     deal_b = await _make_deal(m10_repo_db)
@@ -155,7 +155,7 @@ async def test_integration__find_by_talent_returns_only_non_terminal_by_default(
 
 
 async def test_integration__find_by_brand_basic(
-    m10_repo_db: async_sessionmaker,
+    m10_repo_db: async_sessionmaker[AsyncSession],
 ) -> None:
     await _make_deal(m10_repo_db)
     await _make_deal(m10_repo_db)
@@ -166,7 +166,7 @@ async def test_integration__find_by_brand_basic(
 
 
 async def test_integration__find_by_stage_lead(
-    m10_repo_db: async_sessionmaker,
+    m10_repo_db: async_sessionmaker[AsyncSession],
 ) -> None:
     await _make_deal(m10_repo_db)
     async with m10_repo_db() as s:
@@ -176,7 +176,7 @@ async def test_integration__find_by_stage_lead(
 
 
 async def test_integration__find_due_for_action(
-    m10_repo_db: async_sessionmaker,
+    m10_repo_db: async_sessionmaker[AsyncSession],
 ) -> None:
     deal_id = await _make_deal(m10_repo_db)
     past = datetime(2020, 1, 1, tzinfo=UTC)
@@ -203,7 +203,7 @@ async def test_integration__find_due_for_action(
 
 
 async def test_integration__find_ready_for_prep_pack_filters_substage_and_pack_id(
-    m10_repo_db: async_sessionmaker,
+    m10_repo_db: async_sessionmaker[AsyncSession],
 ) -> None:
     deal_id = await _make_deal(m10_repo_db)
     # Not yet at initial_call_scheduled — should not be returned.
@@ -226,7 +226,7 @@ async def test_integration__find_ready_for_prep_pack_filters_substage_and_pack_i
 
 
 async def test_integration__find_ready_for_prep_pack_respects_debounce_stamp(
-    m10_repo_db: async_sessionmaker,
+    m10_repo_db: async_sessionmaker[AsyncSession],
 ) -> None:
     """A deal stamped <1 hour ago is skipped; >1 hour is retried."""
     deal_id = await _make_deal(m10_repo_db)
@@ -265,7 +265,7 @@ async def test_integration__find_ready_for_prep_pack_respects_debounce_stamp(
 
 
 async def test_integration__find_ready_for_prep_pack_skips_when_pack_id_already_set(
-    m10_repo_db: async_sessionmaker,
+    m10_repo_db: async_sessionmaker[AsyncSession],
 ) -> None:
     deal_id = await _make_deal(m10_repo_db)
     async with m10_repo_db() as s:
@@ -288,7 +288,7 @@ async def test_integration__find_ready_for_prep_pack_skips_when_pack_id_already_
 
 
 async def test_integration__find_ready_for_archive_requires_all_three_gates(
-    m10_repo_db: async_sessionmaker,
+    m10_repo_db: async_sessionmaker[AsyncSession],
 ) -> None:
     deal_id = await _make_deal(m10_repo_db)
     # Move to post_campaign_reporting; gates start empty.
@@ -362,7 +362,7 @@ async def test_integration__find_ready_for_archive_requires_all_three_gates(
 
 
 async def test_integration__patch_refuses_direct_stage_write(
-    m10_repo_db: async_sessionmaker,
+    m10_repo_db: async_sessionmaker[AsyncSession],
 ) -> None:
     deal_id = await _make_deal(m10_repo_db)
     async with m10_repo_db() as s:
@@ -372,7 +372,7 @@ async def test_integration__patch_refuses_direct_stage_write(
 
 
 async def test_integration__patch_refuses_direct_substage_write(
-    m10_repo_db: async_sessionmaker,
+    m10_repo_db: async_sessionmaker[AsyncSession],
 ) -> None:
     deal_id = await _make_deal(m10_repo_db)
     async with m10_repo_db() as s:
@@ -382,7 +382,7 @@ async def test_integration__patch_refuses_direct_substage_write(
 
 
 async def test_integration__patch_refuses_loss_block_in_data_diff(
-    m10_repo_db: async_sessionmaker,
+    m10_repo_db: async_sessionmaker[AsyncSession],
 ) -> None:
     deal_id = await _make_deal(m10_repo_db)
     async with m10_repo_db() as s:
@@ -392,7 +392,7 @@ async def test_integration__patch_refuses_loss_block_in_data_diff(
 
 
 async def test_integration__patch_preserves_stage_history(
-    m10_repo_db: async_sessionmaker,
+    m10_repo_db: async_sessionmaker[AsyncSession],
 ) -> None:
     """A workflow patch must NOT clobber the opening stage_history entry."""
     deal_id = await _make_deal(m10_repo_db)
