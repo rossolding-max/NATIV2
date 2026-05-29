@@ -136,8 +136,7 @@ async def test_integration__find_by_talent_returns_only_non_terminal_by_default(
     async with m10_repo_db() as s:
         await s.execute(
             text(
-                "UPDATE deal SET is_terminal = TRUE, substage = 'disqualified' "
-                "WHERE deal_id = :did"
+                "UPDATE deal SET is_terminal = TRUE, substage = 'disqualified' WHERE deal_id = :did"
             ),
             {"did": deal_a},
         )
@@ -389,9 +388,7 @@ async def test_integration__patch_refuses_loss_block_in_data_diff(
     async with m10_repo_db() as s:
         repo = DealRepository(s, agency_id=_SENTINEL_AGENCY_ID)
         with pytest.raises(BusinessRuleError, match="/loss"):
-            await repo.patch_workflow_state(
-                deal_id, {"data": {"loss": {"reason": "budget"}}}
-            )
+            await repo.patch_workflow_state(deal_id, {"data": {"loss": {"reason": "budget"}}})
 
 
 async def test_integration__patch_preserves_stage_history(
@@ -401,9 +398,7 @@ async def test_integration__patch_preserves_stage_history(
     deal_id = await _make_deal(m10_repo_db)
     async with m10_repo_db() as s:
         repo = DealRepository(s, agency_id=_SENTINEL_AGENCY_ID)
-        await repo.patch_workflow_state(
-            deal_id, {"data": {"user_notes": "hi"}}
-        )
+        await repo.patch_workflow_state(deal_id, {"data": {"user_notes": "hi"}})
         await s.commit()
 
     async with m10_repo_db() as s:

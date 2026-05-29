@@ -213,11 +213,7 @@ async def test_integration__patch_deal_campaign_hashtags_tier1_g2(
     body = await _create_deal(m10_app)
     r = await m10_app.patch(
         f"/api/v1/deals/{body['deal_id']}",
-        json={
-            "data": {
-                "delivery": {"campaign_hashtags": ["#FitStar", "#PartnerAd"]}
-            }
-        },
+        json={"data": {"delivery": {"campaign_hashtags": ["#FitStar", "#PartnerAd"]}}},
     )
     assert r.status_code == 200, r.text
     tags = r.json()["data"]["data"]["delivery"]["campaign_hashtags"]

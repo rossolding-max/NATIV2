@@ -61,9 +61,7 @@ async def test_unit__auto_fire__preserves_existing_data_keys() -> None:
     repo.find_ready_for_prep_pack = AsyncMock(return_value=[deal])
     send_task = MagicMock()
 
-    await process_ready_deals(
-        repo, send_task=send_task, now=datetime.now(UTC)
-    )
+    await process_ready_deals(repo, send_task=send_task, now=datetime.now(UTC))
 
     assert deal.data["user_notes"] == "existing"
     assert deal.data["next_action"]["summary"] == "ping"
@@ -77,13 +75,9 @@ async def test_unit__auto_fire__send_task_failure_is_isolated() -> None:
     repo = MagicMock()
     repo.find_ready_for_prep_pack = AsyncMock(return_value=[a, b, c])
 
-    send_task = MagicMock(
-        side_effect=[None, RuntimeError("broker down"), None]
-    )
+    send_task = MagicMock(side_effect=[None, RuntimeError("broker down"), None])
 
-    result = await process_ready_deals(
-        repo, send_task=send_task, now=datetime.now(UTC)
-    )
+    result = await process_ready_deals(repo, send_task=send_task, now=datetime.now(UTC))
 
     assert result["enqueued"] == 2
     assert len(result["errors"]) == 1
@@ -100,9 +94,7 @@ async def test_unit__auto_fire__no_ready_deals_returns_zero_enqueued() -> None:
     repo.find_ready_for_prep_pack = AsyncMock(return_value=[])
     send_task = MagicMock()
 
-    result = await process_ready_deals(
-        repo, send_task=send_task, now=datetime.now(UTC)
-    )
+    result = await process_ready_deals(repo, send_task=send_task, now=datetime.now(UTC))
 
     assert result == {"status": "ok", "enqueued": 0, "errors": []}
     send_task.assert_not_called()
@@ -115,8 +107,6 @@ async def test_unit__auto_fire__honours_per_tick_limit() -> None:
     repo.find_ready_for_prep_pack = AsyncMock(return_value=[])
     send_task = MagicMock()
 
-    await process_ready_deals(
-        repo, send_task=send_task, now=datetime.now(UTC), limit=7
-    )
+    await process_ready_deals(repo, send_task=send_task, now=datetime.now(UTC), limit=7)
 
     repo.find_ready_for_prep_pack.assert_awaited_once_with(limit=7)
