@@ -719,6 +719,7 @@ async def run_discovery_v2_phase_2(
     Celery task picks up the approved industry list and calls this.
     """
     from app.services.discovery import (
+        _seed_map_walk,
         phase_2_brand_universe_build,
         phase_3_talent_specific,
         phase_4_signal_overlay,
@@ -731,6 +732,22 @@ async def run_discovery_v2_phase_2(
 
     sources: list[CandidateSource] = []
     errors: list[str] = []
+
+    # Phase 2 (free leg): emit candidates from the accumulated agency
+    # inventory before paying for any Exa fan-out. Brands the seed map
+    # already knows under the approved industries surface as
+    # `seed_map_walk` sources at no API cost.
+    try:
+        sources.extend(
+            _seed_map_walk.run(
+                approved_industries=approved_industries,
+                brand_industry_map=bim,
+                taxonomies=tax,
+            )
+        )
+    except Exception as exc:
+        log.warning("v2_phase_2_seed_walk_failed", error=str(exc))
+        errors.append(f"phase_2_seed_walk: {exc!s}")
 
     try:
         sources.extend(
@@ -788,7 +805,7 @@ async def run_discovery_v2_phase_2(
         talent_id=talent_id,
         search_run_id=_new_search_run_id(),
         generated_at=datetime.now(UTC),
-        searches_run=["phase_2", "phase_3", "phase_4"],
+        searches_run=["phase_2_seed_walk", "phase_2", "phase_3", "phase_4"],
         candidates=kept,
         blocked=blocked,
         errors=errors,

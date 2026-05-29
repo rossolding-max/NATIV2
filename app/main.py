@@ -30,6 +30,7 @@ from app.api import agencies as agencies_router
 from app.api import brand_candidates as brand_candidates_router
 from app.api import brand_contacts as brand_contacts_router
 from app.api import brand_deals as brand_deals_router
+from app.api import brand_inventory as brand_inventory_router
 from app.api import deals as deals_router
 from app.api import enrollments as enrollments_router
 from app.api import industry_review as industry_review_router
@@ -202,6 +203,7 @@ app.include_router(brand_candidates_router.talent_scoped_router, prefix="/api/v1
 app.include_router(brand_candidates_router.top_level_router, prefix="/api/v1")
 app.include_router(brand_candidates_router.discovery_router, prefix="/api/v1")
 app.include_router(industry_review_router.talent_scoped_router, prefix="/api/v1")
+app.include_router(brand_inventory_router.router, prefix="/api/v1")
 app.include_router(brand_contacts_router.brand_scoped_router, prefix="/api/v1")
 app.include_router(brand_contacts_router.talent_scoped_router, prefix="/api/v1")
 app.include_router(brand_contacts_router.top_level_router, prefix="/api/v1")
