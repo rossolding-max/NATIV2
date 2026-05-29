@@ -147,6 +147,80 @@ async def test_unit__compile__multi_source_dedup_keeps_highest_priority() -> Non
     assert any(a.source == "competitor_of_previous" for a in alternates)
 
 
+# ── M7.7+ similar-talent walk + adjacency ─────────────────────
+
+
+@pytest.mark.asyncio
+async def test_unit__compile__similar_talent_industries_seed_walk() -> None:
+    """Similar talent's past brands surface as similar_talent + walked siblings."""
+    tax = _mock_tax(
+        niche_groups=[],
+        industries={
+            "fashion-streetwear": {"id": "fashion-streetwear", "parent": "fashion"},
+            "fashion": {"id": "fashion", "parent": None},
+            "footwear": {"id": "footwear", "parent": "fashion"},
+        },
+        niches={},
+    )
+    talent_data = {
+        "content_niches": [],
+        "previous_brands": [],
+        "similar_talent": [
+            {
+                "talent_id": "lookalike-kevin",
+                "previous_brands": [{"brand": "Supreme", "industry_id": "fashion-streetwear"}],
+            }
+        ],
+    }
+    with patch(
+        "app.services.discovery.phase_1_industry_compilation._industry_softener.run",
+        new=AsyncMock(return_value=[]),
+    ):
+        pairs = await compile_industry_universe(
+            talent_data=talent_data, brand_deals=[], taxonomies=tax
+        )
+    by_id = {winner.industry_id: winner for winner, _ in pairs}
+    # Direct similar-talent seed.
+    assert by_id["fashion-streetwear"].source == "similar_talent"
+    assert "lookalike-kevin" in by_id["fashion-streetwear"].rationale
+    # Walked parents/siblings tagged bidirectional_walk with similar-talent rationale.
+    if "fashion" in by_id:
+        assert by_id["fashion"].source == "bidirectional_walk"
+        assert "similar talent" in by_id["fashion"].rationale.lower()
+
+
+@pytest.mark.asyncio
+async def test_unit__compile__adjacency_surfaces_cross_sector_pair() -> None:
+    """A past-brand industry surfaces an adjacency from data/industry_adjacency.json."""
+    tax = _mock_tax(
+        niche_groups=[],
+        industries={
+            "hotels": {"id": "hotels", "parent": "travel-hospitality"},
+            "travel-hospitality": {"id": "travel-hospitality", "parent": None},
+        },
+        niches={},
+    )
+    talent_data = {
+        "content_niches": [],
+        "previous_brands": [{"brand": "Marriott", "industry_id": "hotels"}],
+        "similar_talent": [],
+    }
+    with patch(
+        "app.services.discovery.phase_1_industry_compilation._industry_softener.run",
+        new=AsyncMock(return_value=[]),
+    ):
+        pairs = await compile_industry_universe(
+            talent_data=talent_data, brand_deals=[], taxonomies=tax
+        )
+    by_id = {winner.industry_id: winner for winner, _ in pairs}
+    # luggage-travel-gear is in the shipped adjacency file as paired with hotels.
+    assert "luggage-travel-gear" in by_id
+    luggage = by_id["luggage-travel-gear"]
+    assert luggage.source == "adjacency"
+    assert "hotels" in luggage.rationale
+    assert "travelers buy luggage" in luggage.rationale
+
+
 @pytest.mark.asyncio
 async def test_unit__compile__no_softener_when_disabled() -> None:
     """When softener returns [], the rest of Phase 1 still works."""

@@ -30,6 +30,7 @@ from __future__ import annotations
 from typing import Any
 
 from app.services.discovery import _industry_softener
+from app.services.discovery._industry_adjacency import adjacent_industries
 from app.services.discovery._industry_expansion import (
     expand_past_deal_industries_bidirectionally,
     extract_industries_from_deals,
@@ -186,6 +187,148 @@ def _bidirectional_walk_proposals(
     return out
 
 
+def _similar_talent_walk_proposals(
+    *,
+    similar_talent: list[Any],
+    taxonomies: Taxonomies,
+) -> list[IndustryProposal]:
+    """For each industry a similar talent worked with, propose the industry
+    itself + its parents/siblings via the bidirectional walk.
+
+    Direct similar-talent industries get ``source="similar_talent"`` so the
+    operator sees the "this is here because similar talent X worked with
+    brand(s) here" rationale. Walked extensions stay under
+    ``source="bidirectional_walk"`` but the rationale names the similar
+    talent.
+    """
+    # Flatten similar-talent past brands → (similar_talent_id, industry_id)
+    pairs: list[tuple[str, str]] = []
+    seen_industries: set[str] = set()
+    industry_to_talent: dict[str, str] = {}
+    for entry in similar_talent or []:
+        if not entry:
+            continue
+        sim_id = entry.get("talent_id") or entry.get("id") or entry.get("name") or "unknown"
+        for pb in entry.get("previous_brands") or []:
+            if not pb:
+                continue
+            industry_id = pb.get("industry_id")
+            if not isinstance(industry_id, str) or not industry_id:
+                continue
+            if industry_id in seen_industries:
+                continue
+            seen_industries.add(industry_id)
+            industry_to_talent[industry_id] = str(sim_id)
+            pairs.append((str(sim_id), industry_id))
+
+    if not pairs:
+        return []
+
+    out: list[IndustryProposal] = []
+    # Direct seeds.
+    for sim_id, industry_id in pairs:
+        out.append(
+            IndustryProposal(
+                industry_id=industry_id,
+                rationale=(f"Similar talent {sim_id!r} worked with brand(s) in {industry_id!r}"),
+                source="similar_talent",
+            )
+        )
+
+    # Bidirectional walk on similar-talent industries.
+    walked = expand_past_deal_industries_bidirectionally(list(seen_industries), taxonomies)
+    for industry_id in walked:
+        if industry_id in seen_industries:
+            continue
+        # Identify the similar-talent industry this was walked from.
+        parent_of_this = taxonomies.get_industry_parent(industry_id)
+        if parent_of_this in seen_industries:
+            sim = industry_to_talent.get(str(parent_of_this), "a similar talent")
+            rationale = (
+                f"Bidirectional walk: sibling of similar talent {sim!r}'s "
+                f"industry (under parent {parent_of_this!r})"
+            )
+        else:
+            children_in_source = [
+                src for src in seen_industries if taxonomies.get_industry_parent(src) == industry_id
+            ]
+            if children_in_source:
+                sim = industry_to_talent.get(children_in_source[0], "a similar talent")
+                rationale = (
+                    f"Bidirectional walk: parent of similar talent {sim!r}'s "
+                    f"industry {children_in_source[0]!r}"
+                )
+            else:
+                rationale = "Bidirectional walk from similar talent's brand history"
+        out.append(
+            IndustryProposal(
+                industry_id=industry_id,
+                rationale=rationale,
+                source="bidirectional_walk",
+            )
+        )
+    return out
+
+
+def _adjacency_proposals(
+    *,
+    brand_deals: list[Any],
+    previous_brands: list[Any],
+    similar_talent: list[Any],
+) -> list[IndustryProposal]:
+    """For each past-brand or similar-talent industry, look up cross-sector
+    adjacencies from ``data/industry_adjacency.json`` and emit proposals.
+
+    Adjacencies capture commercial / purchase-intent overlaps that cross
+    sectors (hotels ↔ luggage, eyewear ↔ luxury-goods) and aren't covered
+    by the taxonomy-driven bidirectional walk.
+
+    Tagged ``source="adjacency"`` with a rationale that names both the
+    seed industry and the reason from the adjacency table.
+    """
+    seed_industries: set[str] = set()
+    for industry_id in extract_industries_from_deals(brand_deals):
+        seed_industries.add(industry_id)
+    for industry_id in extract_industries_from_previous_brands(previous_brands):
+        seed_industries.add(industry_id)
+    for entry in similar_talent or []:
+        if not entry:
+            continue
+        for pb in entry.get("previous_brands") or []:
+            if not pb:
+                continue
+            industry_id = pb.get("industry_id")
+            if isinstance(industry_id, str) and industry_id:
+                seed_industries.add(industry_id)
+
+    if not seed_industries:
+        return []
+
+    out: list[IndustryProposal] = []
+    # Dedup at the (adjacent_industry, seed) level so a single seed maps
+    # to one proposal per adjacency.
+    emitted: set[tuple[str, str]] = set()
+    for seed_industry in seed_industries:
+        for adj_industry, reason in adjacent_industries(seed_industry):
+            if adj_industry in seed_industries:
+                continue  # seed itself is already proposed elsewhere
+            key = (adj_industry, seed_industry)
+            if key in emitted:
+                continue
+            emitted.add(key)
+            rationale = (
+                f"Cross-sector adjacency to past-brand industry {seed_industry!r} ({reason})"
+            )
+            out.append(
+                IndustryProposal(
+                    industry_id=adj_industry,
+                    rationale=rationale,
+                    source="adjacency",
+                )
+            )
+    return out
+
+
 async def _softener_proposals(
     *,
     talent_data: dict[str, Any],
@@ -243,6 +386,7 @@ async def compile_industry_universe(
     """
     content_niches = [n for n in (talent_data.get("content_niches") or []) if isinstance(n, str)]
     previous_brands = list(talent_data.get("previous_brands") or [])
+    similar_talent = list(talent_data.get("similar_talent") or [])
     audience_demographics = dict(talent_data.get("audience_demographics") or {})
     brand_preferences = dict(talent_data.get("brand_preferences") or {})
 
@@ -256,6 +400,18 @@ async def compile_industry_universe(
     proposals.extend(
         _bidirectional_walk_proposals(
             brand_deals=brand_deals, previous_brands=previous_brands, taxonomies=taxonomies
+        )
+    )
+    # M7.7+ — similar-talent past brands as additional walk seeds.
+    proposals.extend(
+        _similar_talent_walk_proposals(similar_talent=similar_talent, taxonomies=taxonomies)
+    )
+    # M7.7+ — cross-sector adjacency lookup (data/industry_adjacency.json).
+    proposals.extend(
+        _adjacency_proposals(
+            brand_deals=brand_deals,
+            previous_brands=previous_brands,
+            similar_talent=similar_talent,
         )
     )
     proposals.extend(

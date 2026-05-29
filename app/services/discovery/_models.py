@@ -89,6 +89,7 @@ IndustryProposalSource = Literal[
     "competitor_of_previous",
     "similar_talent",
     "bidirectional_walk",
+    "adjacency",
     "audience_demographic",
     "life_stage",
     "exclusivity_adjacent",
@@ -103,11 +104,12 @@ _PROPOSAL_PRIORITY: dict[str, int] = {
     "competitor_of_previous": 3,
     "similar_talent": 4,
     "bidirectional_walk": 5,
-    "audience_demographic": 6,
-    "life_stage": 7,
-    "exclusivity_adjacent": 8,
-    "softener": 9,
-    "manual": 10,
+    "adjacency": 6,
+    "audience_demographic": 7,
+    "life_stage": 8,
+    "exclusivity_adjacent": 9,
+    "softener": 10,
+    "manual": 11,
 }
 
 
