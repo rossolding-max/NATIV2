@@ -65,18 +65,60 @@ def _atomic_write(path: Path, payload: dict[str, Any]) -> None:
     os.replace(tmp_path, path)
 
 
+_MAX_PROVENANCE = 5  # cap discovery_provenance per brand to bound file size
+
+
+def _build_provenance_entries(payload: dict[str, Any], search_run_id: str) -> list[dict[str, Any]]:
+    """Pluck (search, exa_query, exa_result_url) triples from S15/S18 sources
+    in the candidate payload. Used for both fresh appends and merge updates.
+    """
+    out: list[dict[str, Any]] = []
+    for s in payload.get("sources") or []:
+        if not isinstance(s, dict):
+            continue
+        if not s.get("exa_query"):
+            continue
+        out.append(
+            {
+                "search": s.get("search"),
+                "exa_query": s.get("exa_query"),
+                "exa_result_url": s.get("exa_result_url"),
+                "exa_result_title": s.get("exa_result_title"),
+                "first_surfaced_in_run": search_run_id,
+            }
+        )
+    return out
+
+
+def _merge_social_handles(
+    existing: dict[str, Any] | None, incoming: dict[str, Any] | None
+) -> dict[str, Any] | None:
+    """Merge two social-handle dicts; first non-null wins per platform."""
+    if not existing and not incoming:
+        return None
+    merged: dict[str, Any] = dict(existing or {})
+    for platform, value in (incoming or {}).items():
+        if value and not merged.get(platform):
+            merged[platform] = value
+    return merged or None
+
+
 def append_discovered_brands(
     candidate_payloads: list[dict[str, Any]],
     *,
     data_dir: Path | None = None,
     search_run_id: str = "",
 ) -> int:
-    """Append net-new brands to the discovered seed-map JSON.
+    """Append net-new brands to the discovered seed-map JSON; merge new info
+    onto existing entries when the same brand reappears in a later run.
 
-    A candidate is "net-new" when its normalised brand name does not
-    already appear in either the curated or the discovered file.
+    For each candidate:
+      - Net-new (name not in curated/discovered): append with full
+        domain + social_handles + discovery_provenance (M7.5).
+      - Already in discovered: merge any new domain, social handles, or
+        provenance entries (capped to ``_MAX_PROVENANCE`` most recent).
 
-    Returns the number of brands appended.
+    Returns the number of brands added OR updated.
     """
     if not candidate_payloads:
         return 0
@@ -100,10 +142,20 @@ def append_discovered_brands(
             log.warning("curated_seed_map_read_failed", error=str(exc))
 
     discovered_brands: list[dict[str, Any]] = list(discovered_payload.get("brands") or [])
-    existing_normalized = _existing_keys(curated_brands) | _existing_keys(discovered_brands)
+    curated_keys = _existing_keys(curated_brands)
+    # Index discovered by normalized name for merge updates.
+    discovered_by_key: dict[str, dict[str, Any]] = {}
+    for entry in discovered_brands:
+        for value in (entry.get("name"), entry.get("brand_id")):
+            if isinstance(value, str):
+                normalized = normalize_brand_name(value)
+                if normalized:
+                    discovered_by_key.setdefault(normalized, entry)
+                    break
 
     now_iso = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
     appended = 0
+    updated = 0
     for payload in candidate_payloads:
         name = payload.get("brand")
         brand_id = payload.get("brand_id")
@@ -113,27 +165,78 @@ def append_discovered_brands(
         if not isinstance(industry_id, str) or not industry_id:
             continue
         normalized = normalize_brand_name(name)
-        if not normalized or normalized in existing_normalized:
+        if not normalized:
             continue
-        existing_normalized.add(normalized)
-        discovered_brands.append(
-            {
-                "brand_id": brand_id,
-                "name": name,
-                "industry_id": industry_id,
-                "source": payload.get("primary_source_search") or "discovery_run",
-                "first_surfaced_in_run": search_run_id,
-                "discovered_at": now_iso,
-            }
-        )
+        # Curated wins — don't write back over hand-curated entries.
+        if normalized in curated_keys:
+            continue
+        provenance = _build_provenance_entries(payload, search_run_id)
+        if normalized in discovered_by_key:
+            # Merge update path.
+            existing = discovered_by_key[normalized]
+            changed = False
+            if payload.get("domain") and not existing.get("domain"):
+                existing["domain"] = payload["domain"]
+                changed = True
+            merged_social = _merge_social_handles(
+                existing.get("social_handles"), payload.get("social_handles")
+            )
+            if merged_social != existing.get("social_handles") and merged_social:
+                existing["social_handles"] = merged_social
+                changed = True
+            if provenance:
+                existing_prov = list(existing.get("discovery_provenance") or [])
+                # Append new provenance entries, dedupe by (search, exa_query, exa_result_url).
+                seen = {
+                    (p.get("search"), p.get("exa_query"), p.get("exa_result_url"))
+                    for p in existing_prov
+                    if isinstance(p, dict)
+                }
+                added_any = False
+                for new in provenance:
+                    key = (new.get("search"), new.get("exa_query"), new.get("exa_result_url"))
+                    if key in seen:
+                        continue
+                    existing_prov.append(new)
+                    seen.add(key)
+                    added_any = True
+                if added_any:
+                    existing["discovery_provenance"] = existing_prov[-_MAX_PROVENANCE:]
+                    changed = True
+            if changed:
+                existing["updated_at"] = now_iso
+                updated += 1
+            continue
+        # Net-new path.
+        new_entry: dict[str, Any] = {
+            "brand_id": brand_id,
+            "name": name,
+            "industry_id": industry_id,
+            "source": payload.get("primary_source_search") or "discovery_run",
+            "first_surfaced_in_run": search_run_id,
+            "discovered_at": now_iso,
+        }
+        if payload.get("domain"):
+            new_entry["domain"] = payload["domain"]
+        if payload.get("social_handles"):
+            new_entry["social_handles"] = payload["social_handles"]
+        if provenance:
+            new_entry["discovery_provenance"] = provenance[-_MAX_PROVENANCE:]
+        discovered_brands.append(new_entry)
+        discovered_by_key[normalized] = new_entry
         appended += 1
 
-    if appended == 0:
+    if appended == 0 and updated == 0:
         return 0
 
     discovered_payload["brands"] = discovered_brands
     discovered_payload["updated"] = now_iso
     discovered_payload["version"] = discovered_payload.get("version", 1)
     _atomic_write(discovered_path, discovered_payload)
-    log.info("discovered_seed_map_appended", added=appended, total=len(discovered_brands))
-    return appended
+    log.info(
+        "discovered_seed_map_appended",
+        added=appended,
+        updated=updated,
+        total=len(discovered_brands),
+    )
+    return appended + updated

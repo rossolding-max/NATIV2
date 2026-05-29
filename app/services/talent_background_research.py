@@ -80,11 +80,22 @@ async def _kick_off_async(
         # line each search already emits.
         brands_repo = BrandRepository(session, agency_id=agency_uuid)
         for cand in result.candidates:
+            # M7.5 — propagate domain + social handles onto the Brand stub
+            # so downstream pipelines (contact enrichment, brand_deals)
+            # have them without re-extracting.
+            stub_data: dict[str, Any] = {
+                "source": "exa_discovery",
+                "first_surfaced_in_run": result.search_run_id,
+            }
+            if cand.domain:
+                stub_data["domain"] = cand.domain
+            if cand.social_handles:
+                stub_data["social_handles"] = cand.social_handles
             stub = Brand(
                 brand_id=cand.brand_id,
                 name=cand.brand_name,
                 industry_id=cand.industry_id,
-                data={"source": "exa_discovery", "first_surfaced_in_run": result.search_run_id},
+                data=stub_data,
             )
             await brands_repo.create_or_skip(stub)
 

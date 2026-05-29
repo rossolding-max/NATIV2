@@ -517,6 +517,25 @@ async def run_discovery(
         # qualification tier (qualified/speculative/unqualified) is
         # already attached to the candidate; the agent can filter at the
         # REST layer when they want to.
+        # M7.5 — aggregate brand-level metadata (domain + social handles)
+        # across all S15/S18 sources for this brand. First non-null wins
+        # per field; same for each social platform.
+        brand_domain: str | None = None
+        brand_social: dict[str, str | None] = {
+            "instagram": None,
+            "tiktok": None,
+            "youtube": None,
+            "x": None,
+            "linkedin": None,
+        }
+        for s in sources:
+            if brand_domain is None and s.brand_domain:
+                brand_domain = s.brand_domain
+            if s.brand_social_handles:
+                for platform, value in s.brand_social_handles.items():
+                    if value and brand_social.get(platform) is None:
+                        brand_social[platform] = value
+        any_social = any(v for v in brand_social.values())
         qualified.append(
             QualifiedCandidate(
                 brand_id=brand_id,
@@ -528,6 +547,8 @@ async def run_discovery(
                 qualification_score=q_score,
                 qualification_tier=q_tier,
                 qualification_signals=signals,
+                domain=brand_domain,
+                social_handles=brand_social if any_social else None,
             )
         )
 

@@ -56,6 +56,10 @@ def _candidate_to_dict(candidate: QualifiedCandidate) -> dict[str, Any]:
         # agent UI can render a single "discovered via X" tag without
         # iterating the sources list.
         "primary_source_search": _primary_source_search(candidate),
+        # M7.5 — brand-level metadata aggregated across sources (first
+        # non-null wins per field). null when no source surfaced it.
+        "domain": candidate.domain,
+        "social_handles": candidate.social_handles,
         "sources": [
             {
                 "search": s.search_tag,

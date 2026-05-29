@@ -30,6 +30,11 @@ class CandidateSource:
     exa_query: str | None = None
     exa_result_url: str | None = None
     exa_result_title: str | None = None
+    # M7.5 — brand-level metadata extracted by the LLM from this source's
+    # Exa result text. The orchestrator aggregates across all sources per
+    # brand (first non-null wins) onto the QualifiedCandidate.
+    brand_domain: str | None = None
+    brand_social_handles: dict[str, str | None] | None = None
 
 
 @dataclass
@@ -48,6 +53,10 @@ class QualifiedCandidate:
     warnings: list[str] = field(default_factory=list)
     blocked: bool = False
     block_reason: str | None = None
+    # M7.5 — brand-level metadata aggregated across sources. Surfaces on
+    # brand_candidate.data and gets written to brand_industry_map_discovered.
+    domain: str | None = None
+    social_handles: dict[str, str | None] | None = None
 
 
 @dataclass

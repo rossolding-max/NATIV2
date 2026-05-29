@@ -86,7 +86,10 @@ def _build_extraction_prompt(*, industry_id: str, raw_contents: list[dict[str, A
         '- Output JSON: {"brands": [{"brand_name": str, '
         '"suggested_industry_id": str, "confidence": float 0-1, '
         '"evidence": str (short quote), '
-        '"source_url": str (the URL of the page above that mentions this brand)}]}.\n'
+        '"source_url": str (the URL of the page above that mentions this brand), '
+        '"domain": str | null (the brand\'s own website domain if visible, e.g. "lululemon.com"), '
+        '"social_handles": {"instagram": str | null, "tiktok": str | null, '
+        '"youtube": str | null, "x": str | null, "linkedin": str | null}}]}.\n'
         f"- Suggested industry MUST be the exact id {industry_id!r} unless the page "
         "makes clear the brand is in a different one.\n"
         "- ONLY include brands explicitly named in the page text — no generic mentions.\n"
@@ -95,6 +98,9 @@ def _build_extraction_prompt(*, industry_id: str, raw_contents: list[dict[str, A
         "- Confidence 0.90+ = brand explicitly described as established / leading / "
         "well-known with examples; 0.70-0.89 = strong inference; below 0.70 = drop.\n"
         "- source_url MUST be one of the page URLs shown above; copy it exactly.\n"
+        "- domain: just the host (e.g. 'brandname.com'); null if not mentioned.\n"
+        "- social_handles: extract handles in the form '@brandname' or full URLs "
+        "if visible in the page text. null per platform when absent. Do not guess.\n"
         "- Return ONLY the JSON. No prose, no markdown fences.\n\n"
         f"PAGES:\n\n{pages}\n"
     )
@@ -119,6 +125,15 @@ def _parse_llm_response(raw: str, *, fallback_industry_id: str) -> list[dict[str
             continue
         if not isinstance(confidence, int | float) or confidence < 0.70:
             continue
+        social_raw = entry.get("social_handles") or {}
+        social_handles: dict[str, str | None] = {}
+        if isinstance(social_raw, dict):
+            for platform in ("instagram", "tiktok", "youtube", "x", "linkedin"):
+                value = social_raw.get(platform)
+                if isinstance(value, str) and value.strip():
+                    social_handles[platform] = value.strip()
+                else:
+                    social_handles[platform] = None
         out.append(
             {
                 "brand_name": name.strip(),
@@ -126,6 +141,8 @@ def _parse_llm_response(raw: str, *, fallback_industry_id: str) -> list[dict[str
                 "confidence": float(confidence),
                 "evidence": str(entry.get("evidence") or "")[:280],
                 "source_url": str(entry.get("source_url") or "").strip() or None,
+                "domain": str(entry.get("domain") or "").strip() or None,
+                "social_handles": social_handles or None,
             }
         )
     return out
@@ -274,6 +291,8 @@ async def run(
                     exa_query=cand.get("exa_query"),
                     exa_result_url=cand.get("source_url"),
                     exa_result_title=cand.get("source_title"),
+                    brand_domain=cand.get("domain"),
+                    brand_social_handles=cand.get("social_handles"),
                 )
             )
             log.info(
