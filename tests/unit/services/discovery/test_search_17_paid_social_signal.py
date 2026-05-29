@@ -200,7 +200,9 @@ async def test_unit__s17__caps_industries_per_run() -> None:
     """max_industries cap means only N industries get queried."""
     calls: list[str] = []
 
-    async def _meta_count(*, search_terms: str, countries: list[str], days_back: int = 30):
+    async def _meta_count(
+        *, search_terms: str, countries: list[str], days_back: int = 30
+    ) -> dict[str, Any]:
         _ = countries, days_back
         calls.append(search_terms)
         return {}
@@ -227,7 +229,7 @@ async def test_unit__s17__meta_failure_softfallbacks_to_tiktok_only() -> None:
     """If MetaAdsClient init raises, we still process the TikTok side."""
     tiktok = _make_tiktok_mock({"Tiktok Brand": {"ad_count": 7, "industries": ["x"]}})
 
-    def _meta_raises(*_args, **_kwargs):
+    def _meta_raises(*_args: Any, **_kwargs: Any) -> Any:
         from app.errors import IntegrationError
 
         raise IntegrationError("no meta token")

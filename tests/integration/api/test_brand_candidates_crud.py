@@ -249,14 +249,15 @@ async def test_integration__trigger_run__dedupes_repeated_searches(m7_app: Async
 
 
 async def test_integration__discovery_searches_catalog(m7_app: AsyncClient) -> None:
-    """The catalog endpoint lists all 16 searches with name/label/description/weight."""
+    """The catalog endpoint lists all 17 searches with name/label/description/weight."""
     r = await m7_app.get("/api/v1/brand-discovery/searches")
     assert r.status_code == 200, r.text
     items = r.json()["data"]
-    assert len(items) == 16
+    assert len(items) == 17
     names = [i["name"] for i in items]
     assert "search_1_reengagement" in names
     assert "search_16_last30days_trending" in names
+    assert "search_17_paid_social_signal" in names
     by_name = {i["name"]: i for i in items}
     assert by_name["search_13_values_aligned"]["requires_llm"] is True
     assert by_name["search_16_last30days_trending"]["requires_external_skill"] is True
