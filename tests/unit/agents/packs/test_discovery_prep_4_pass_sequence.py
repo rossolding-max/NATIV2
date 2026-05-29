@@ -49,9 +49,7 @@ def _bundle() -> ContextBundle:
             pack_type="discovery_prep",
             deal_id="deal_pipeline_x",
             agency_id=_AGENCY_ID,
-            assembled_at=__import__("datetime").datetime.now(
-                __import__("datetime").UTC
-            ),
+            assembled_at=__import__("datetime").datetime.now(__import__("datetime").UTC),
         ),
         talent_profile={"talent_id": "t_riley", "name": "Riley"},
         agency_profile={"agency_id": "a_x", "name": "Acme"},

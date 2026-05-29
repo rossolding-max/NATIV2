@@ -136,9 +136,7 @@ async def list_prep_pack_versions(
 # ── POST endpoints ──────────────────────────────────────────────────
 
 
-@top_level_router.post(
-    "/{deal_id}/prep-pack/generate", status_code=http_status.HTTP_202_ACCEPTED
-)
+@top_level_router.post("/{deal_id}/prep-pack/generate", status_code=http_status.HTTP_202_ACCEPTED)
 async def generate_prep_pack(
     payload: GenerateBody,
     request: Request,
@@ -157,9 +155,7 @@ async def generate_prep_pack(
     deal_repo = DealRepository(session, agency_id=agency_id)
     deal = await deal_repo.get_by_id(deal_id)
     if deal is None:
-        raise NotFoundError(
-            f"deal {deal_id!r} not found", detail={"deal_id": deal_id}
-        )
+        raise NotFoundError(f"deal {deal_id!r} not found", detail={"deal_id": deal_id})
     if deal.substage != "initial_call_scheduled":
         raise BusinessRuleError(
             (
@@ -170,10 +166,7 @@ async def generate_prep_pack(
         )
     if deal.latest_prep_pack_id is not None:
         raise BusinessRuleError(
-            (
-                "this deal already has a prep pack; use the regenerate endpoint for "
-                "a new version"
-            ),
+            ("this deal already has a prep pack; use the regenerate endpoint for a new version"),
             detail={"latest_prep_pack_id": deal.latest_prep_pack_id},
         )
 
@@ -218,9 +211,7 @@ async def generate_prep_pack(
     )
 
 
-@top_level_router.post(
-    "/{deal_id}/prep-pack/regenerate", status_code=http_status.HTTP_202_ACCEPTED
-)
+@top_level_router.post("/{deal_id}/prep-pack/regenerate", status_code=http_status.HTTP_202_ACCEPTED)
 async def regenerate_prep_pack(
     payload: RegenerateBody,
     request: Request,

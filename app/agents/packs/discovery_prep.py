@@ -96,9 +96,7 @@ class DiscoveryPrepPackAgent(DealOrchestratorAgent):
             researcher,
             "tools",
             {
-                **bind_memo_tools(
-                    self._session, self._agency_id, created_by_agent="researcher"
-                ),
+                **bind_memo_tools(self._session, self._agency_id, created_by_agent="researcher"),
                 **bind_exa_tools(agent_name="researcher"),
             },
         )
@@ -153,9 +151,7 @@ class DiscoveryPrepPackAgent(DealOrchestratorAgent):
         object.__setattr__(
             slides_writer,
             "tools",
-            bind_memo_tools(
-                self._session, self._agency_id, created_by_agent="writer"
-            ),
+            bind_memo_tools(self._session, self._agency_id, created_by_agent="writer"),
         )
         slides_result = await slides_writer.invoke(
             prompt=_slides_prompt(dynamic_body, briefing_json, agenda_json),
@@ -250,9 +246,7 @@ def _researcher_prompt(dynamic_body: str, bundle: ContextBundle) -> str:
     )
 
 
-def _briefing_prompt(
-    dynamic_body: str, research_text: str, bundle: ContextBundle
-) -> str:
+def _briefing_prompt(dynamic_body: str, research_text: str, bundle: ContextBundle) -> str:
     regen_block = (
         f"\nREGEN FEEDBACK (apply to v{(bundle.parent_version or 0) + 1}): "
         f"{bundle.regeneration_feedback}\n"
@@ -306,9 +300,7 @@ def _agenda_prompt(dynamic_body: str, briefing: dict[str, Any]) -> str:
     )
 
 
-def _slides_prompt(
-    dynamic_body: str, briefing: dict[str, Any], agenda: dict[str, Any]
-) -> str:
+def _slides_prompt(dynamic_body: str, briefing: dict[str, Any], agenda: dict[str, Any]) -> str:
     import json as _json
 
     return (
@@ -483,9 +475,7 @@ def _render_agenda_md(agenda: dict[str, Any]) -> str:
     for section in sections:
         if not isinstance(section, dict):
             continue
-        out.append(
-            f"## {section.get('title')} ({section.get('duration_min')} min)"
-        )
+        out.append(f"## {section.get('title')} ({section.get('duration_min')} min)")
         out.append(str(section.get("purpose") or ""))
         out.append("")
         for tp in section.get("talking_points") or []:
@@ -523,9 +513,7 @@ def _render_speaker_notes_md(slides: dict[str, Any]) -> str:
     for slide in slides.get("slides") or []:
         if not isinstance(slide, dict):
             continue
-        out.append(
-            f"## Slide {slide.get('position')} — {slide.get('title')}"
-        )
+        out.append(f"## Slide {slide.get('position')} — {slide.get('title')}")
         out.append(str(slide.get("speaker_notes") or ""))
         out.append("")
     return "\n".join(out)

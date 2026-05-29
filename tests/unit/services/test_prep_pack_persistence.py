@@ -51,9 +51,7 @@ async def test_unit__persist__flip_prior_then_insert_order() -> None:
     prep_repo.mark_prior_versions_not_latest = AsyncMock(
         side_effect=lambda *_a, **_k: call_order.append("flip") or 0
     )
-    prep_repo.create = AsyncMock(
-        side_effect=lambda inst: call_order.append("insert") or inst
-    )
+    prep_repo.create = AsyncMock(side_effect=lambda inst: call_order.append("insert") or inst)
 
     deal_repo = MagicMock()
     deal_repo.set_latest_prep_pack_id = AsyncMock()
@@ -61,9 +59,7 @@ async def test_unit__persist__flip_prior_then_insert_order() -> None:
     with (
         tempfile.TemporaryDirectory() as td,
         _patch_pack_storage_to_tmpdir(Path(td)),
-        patch.object(
-            prep_pack_persistence, "DiscoveryPrepPackRepository", return_value=prep_repo
-        ),
+        patch.object(prep_pack_persistence, "DiscoveryPrepPackRepository", return_value=prep_repo),
         patch.object(prep_pack_persistence, "DealRepository", return_value=deal_repo),
     ):
         await persist_prep_pack(
@@ -78,9 +74,7 @@ async def test_unit__persist__flip_prior_then_insert_order() -> None:
         )
 
     assert call_order == ["flip", "insert"]
-    deal_repo.set_latest_prep_pack_id.assert_awaited_once_with(
-        "deal_pipeline_x", "prep_x_v1"
-    )
+    deal_repo.set_latest_prep_pack_id.assert_awaited_once_with("deal_pipeline_x", "prep_x_v1")
 
 
 @pytest.mark.asyncio
@@ -96,9 +90,7 @@ async def test_unit__persist__writes_5_artefacts_with_expected_names() -> None:
     with (
         tempfile.TemporaryDirectory() as td,
         _patch_pack_storage_to_tmpdir(Path(td)),
-        patch.object(
-            prep_pack_persistence, "DiscoveryPrepPackRepository", return_value=prep_repo
-        ),
+        patch.object(prep_pack_persistence, "DiscoveryPrepPackRepository", return_value=prep_repo),
         patch.object(prep_pack_persistence, "DealRepository", return_value=deal_repo),
     ):
         out = await persist_prep_pack(
@@ -147,9 +139,7 @@ async def test_unit__persist__creates_row_with_is_latest_true_and_status() -> No
     with (
         tempfile.TemporaryDirectory() as td,
         _patch_pack_storage_to_tmpdir(Path(td)),
-        patch.object(
-            prep_pack_persistence, "DiscoveryPrepPackRepository", return_value=prep_repo
-        ),
+        patch.object(prep_pack_persistence, "DiscoveryPrepPackRepository", return_value=prep_repo),
         patch.object(prep_pack_persistence, "DealRepository", return_value=deal_repo),
     ):
         await persist_prep_pack(
@@ -188,9 +178,7 @@ async def test_unit__persist__regen_carries_parent_version_through() -> None:
     with (
         tempfile.TemporaryDirectory() as td,
         _patch_pack_storage_to_tmpdir(Path(td)),
-        patch.object(
-            prep_pack_persistence, "DiscoveryPrepPackRepository", return_value=prep_repo
-        ),
+        patch.object(prep_pack_persistence, "DiscoveryPrepPackRepository", return_value=prep_repo),
         patch.object(prep_pack_persistence, "DealRepository", return_value=deal_repo),
     ):
         out = await persist_prep_pack(
