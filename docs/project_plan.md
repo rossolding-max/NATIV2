@@ -284,6 +284,38 @@ Each milestone documented below with: inputs (what must exist) + outputs (delive
 
 ---
 
+## M7.3 — Phase 2 (Brand discovery comprehensiveness overhaul)
+
+**Inputs:** M7 + M7.1 (M7.2 orthogonal). Triggered by Kevin Cooney live test: 47 candidates, UK-only retailers leaking through, net-new Exa brands gated behind `pending_writeback`.
+
+**Outputs (shipped):**
+- `app/services/discovery/_geographic_filter.py` (NEW) — shared `extract_talent_countries()` + `brand_passes_geo()` + `filter_sources_by_geo()`. Soft-floor filter applied post-merge so a brand caught by multiple searches gets a single coherent geo decision. Talent geography chain: audience top countries → location.country → bypass when both missing.
+- `app/utils/taxonomies.py` — `get_sub_industries(industry_id) -> list[str]` helper backed by a pre-computed parent→children index built at load time.
+- `app/services/discovery/_models.py` — `QualifiedCandidate.tier` Literal extended with `"emerging"`.
+- `app/services/discovery/qualification.py` — net-new brands with an Exa-search source tag (`recently_funded` or `established_exa_discovery`) + LLM confidence ≥ 0.70 → `tier="speculative"`, `score=0.30`, signal `emerging_exa_discovery`. Backward-compat preserved for brands without seed entry AND without Exa tag (still `unqualified`).
+- `app/services/discovery/search_5_7_industry_tiers.py` + `search_8_parent_sibling_niche.py` — sub-industry walk: each target industry expands to its children via `get_sub_industries`. Weight decay `0.8x` for sub-industry hits.
+- `app/services/discovery/search_15_exa_newly_funded.py` — query variations bumped 2 → 7 per industry, talent country embedded, weight bumped `0.10-0.15` → `0.20-0.30` scaled by LLM confidence so net-new brands clear the qualification noise floor.
+- `app/services/discovery/search_18_established_brands.py` (NEW) — mirror of Search 15 for established brands. 6 query variations per industry covering `top/best/D2C/creator program/established/to watch` angles. `search_tag="established_exa_discovery"`.
+- `app/services/discovery/orchestrator.py` — dispatches Search 18 alongside Search 15, threads talent country through both, caps via `settings.discovery_max_industries_per_run=5`, applies geo filter post-merge, assigns `tier="emerging"` for Exa-only candidates that pass qualification.
+- `app/services/discovery/catalog.py` — registered 18th search entry.
+- `app/api/brand_candidates.py` — `?qualification=qualified,speculative,unqualified,all` query param on the list endpoint (default `qualified,speculative` preserves v0.1 behaviour). Tier pattern extended to include `emerging`.
+- `app/config.py` — `discovery_max_industries_per_run: int = 5`.
+- 29 new unit tests (geo filter permutations, sub-industry walk + decay, Search 15 query expansion, Search 18 full pipeline, qualification emerging tier, taxonomies sub-industry lookup, Kevin E2E) + 4 new integration tests for the `?qualification=` filter + updated catalog count test (17 → 18).
+- `docs/brand_discovery.md` — Search 18 spec, geo filter section, sub-industry expansion section, emerging tier section.
+
+**Acceptance:** Kevin-shaped synthetic E2E (real taxonomies + real brand_industry_map + mocked Exa/Claude) surfaces ≥ 50 candidates (v0.1 baseline 47), zero UK-only retailers, ≥ 1 `tier="emerging"` candidate. Live re-run for Kevin produces 150+ candidates (mocked-Exa quota permitting).
+
+**Skip notes:** N/A — overhaul of an already-shipped milestone. If reverted, the v0.1 Kevin run regresses to the 47-candidate UK-leaking baseline.
+
+**Interdependency checks:**
+- Geo filter does NOT regress talent runs where audience + location are both empty (filter is bypassed).
+- Sub-industry expansion does NOT regress single-leaf-industry talent runs (no children → no extra hits).
+- `?qualification=` default preserves v0.1 REST behaviour for any UI not yet aware of the toggle.
+
+**Deferred to v0.2:** large-scale seed-map writeback automation (the script that promotes high-confidence Search 15/18 discoveries into `brand_industry_map.json` quarterly), brand-size tiering, sub-niche → sub-industry affinity overrides.
+
+---
+
 ## M8 — Phase 3a (Contact CRM)
 
 **Inputs:** M7.

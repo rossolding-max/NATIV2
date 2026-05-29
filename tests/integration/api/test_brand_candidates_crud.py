@@ -105,10 +105,21 @@ async def _seed_candidate(
     tier: str = "primary",
     status: str = "new",
     score: float = 0.55,
+    qualification_tier: str | None = None,
 ) -> str:
     from uuid import uuid4
 
     candidate_id = f"bc_{uuid4().hex[:24]}"
+    data: dict[str, Any] = {
+        "brand": brand_id.capitalize(),
+        "brand_id": brand_id,
+        "industry_id": "activewear",
+        "score": score,
+        "tier": tier,
+        "status": status,
+    }
+    if qualification_tier is not None:
+        data["qualification"] = {"tier": qualification_tier, "score": score}
     async with db_session_factory() as s:
         await s.execute(
             text(
@@ -124,16 +135,7 @@ async def _seed_candidate(
                 "tier": tier,
                 "st": status,
                 "sc": score,
-                "data": json.dumps(
-                    {
-                        "brand": brand_id.capitalize(),
-                        "brand_id": brand_id,
-                        "industry_id": "activewear",
-                        "score": score,
-                        "tier": tier,
-                        "status": status,
-                    }
-                ),
+                "data": json.dumps(data),
                 "agency": str(_SENTINEL_AGENCY_ID),
             },
         )
@@ -249,18 +251,20 @@ async def test_integration__trigger_run__dedupes_repeated_searches(m7_app: Async
 
 
 async def test_integration__discovery_searches_catalog(m7_app: AsyncClient) -> None:
-    """The catalog endpoint lists all 17 searches with name/label/description/weight."""
+    """The catalog endpoint lists all 18 searches with name/label/description/weight."""
     r = await m7_app.get("/api/v1/brand-discovery/searches")
     assert r.status_code == 200, r.text
     items = r.json()["data"]
-    assert len(items) == 17
+    assert len(items) == 18
     names = [i["name"] for i in items]
     assert "search_1_reengagement" in names
     assert "search_16_last30days_trending" in names
     assert "search_17_paid_social_signal" in names
+    assert "search_18_established_brands" in names
     by_name = {i["name"]: i for i in items}
     assert by_name["search_13_values_aligned"]["requires_llm"] is True
     assert by_name["search_16_last30days_trending"]["requires_external_skill"] is True
+    assert by_name["search_18_established_brands"]["requires_llm"] is True
 
 
 async def test_integration__trigger_run__missing_talent_404(m7_app: AsyncClient) -> None:
@@ -271,3 +275,77 @@ async def test_integration__trigger_run__missing_talent_404(m7_app: AsyncClient)
 async def test_integration__get_candidate__missing_404(m7_app: AsyncClient) -> None:
     r = await m7_app.get("/api/v1/brand-candidates/bc_does_not_exist")
     assert r.status_code == 404
+
+
+# ── M7.3 qualification filter ───────────────────────────────────────
+
+
+async def test_integration__list__qualification_default_filters_unqualified(
+    m7_app: AsyncClient,
+) -> None:
+    """Default ?qualification= behaviour drops unqualified rows from the list."""
+    from app.db.session import async_session_factory
+
+    await _seed_candidate(
+        async_session_factory, brand_id="gymshark", qualification_tier="qualified"
+    )
+    await _seed_candidate(async_session_factory, brand_id="nike", qualification_tier="speculative")
+    # Unqualified row — should be excluded from default view.
+    await _seed_candidate(
+        async_session_factory,
+        brand_id="lululemon",
+        qualification_tier="unqualified",
+    )
+
+    r = await m7_app.get(f"/api/v1/talents/{_TEST_TALENT_ID}/brand-candidates")
+    assert r.status_code == 200, r.text
+    brands = {row["brand_id"] for row in r.json()["data"]}
+    assert brands == {"gymshark", "nike"}
+
+
+async def test_integration__list__qualification_all_surfaces_long_tail(
+    m7_app: AsyncClient,
+) -> None:
+    """?qualification=all surfaces every candidate regardless of tier."""
+    from app.db.session import async_session_factory
+
+    await _seed_candidate(
+        async_session_factory, brand_id="gymshark", qualification_tier="qualified"
+    )
+    await _seed_candidate(
+        async_session_factory,
+        brand_id="lululemon",
+        qualification_tier="unqualified",
+    )
+
+    r = await m7_app.get(f"/api/v1/talents/{_TEST_TALENT_ID}/brand-candidates?qualification=all")
+    assert r.status_code == 200, r.text
+    brands = {row["brand_id"] for row in r.json()["data"]}
+    assert brands == {"gymshark", "lululemon"}
+
+
+async def test_integration__list__qualification_unqualified_only(m7_app: AsyncClient) -> None:
+    """?qualification=unqualified returns just the long tail."""
+    from app.db.session import async_session_factory
+
+    await _seed_candidate(
+        async_session_factory, brand_id="gymshark", qualification_tier="qualified"
+    )
+    await _seed_candidate(
+        async_session_factory,
+        brand_id="lululemon",
+        qualification_tier="unqualified",
+    )
+
+    r = await m7_app.get(
+        f"/api/v1/talents/{_TEST_TALENT_ID}/brand-candidates?qualification=unqualified"
+    )
+    assert r.status_code == 200, r.text
+    rows = r.json()["data"]
+    assert {row["brand_id"] for row in rows} == {"lululemon"}
+
+
+async def test_integration__list__qualification_invalid_value_422(m7_app: AsyncClient) -> None:
+    """Unknown qualification token returns 422 from the Query validator."""
+    r = await m7_app.get(f"/api/v1/talents/{_TEST_TALENT_ID}/brand-candidates?qualification=bogus")
+    assert r.status_code == 422, r.text

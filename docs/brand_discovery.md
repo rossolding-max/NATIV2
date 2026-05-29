@@ -132,7 +132,7 @@ The full canonical example below conforms to `schemas/brand_candidates.schema.js
 
 ---
 
-## The brand discovery search catalog (16 shipped in M7/M7.1; Search 17 queued for M7.2)
+## The brand discovery search catalog (18 shipped — M7/M7.1/M7.2/M7.3)
 
 Each search is independent; all run in parallel; results merge by brand name + industry.
 
@@ -372,6 +372,79 @@ With v2 vendor data, the search transitions from "active ads count" to "estimate
 - Meta Ad Library API: free (public).
 - TikTok Creative Center scraping: free (rate-limited; ~50 queries / run; we self-limit to bound load).
 - LLM (Haiku) for brand-name normalisation: ~$0.05-$0.20 per discovery run.
+
+### Group I — Exa-driven mass discovery (M7.3)
+
+#### Search 18 — Established brands via Exa
+
+**Reads:** the same `top_industries[]` list Searches 15 / 16 / 17 seed from (primary + secondary tier hits from Searches 5/6) + the talent's geo anchor (audience top country → location.country fallback).
+
+**Logic:**
+1. For each industry (capped at `settings.discovery_max_industries_per_run = 5`), construct 6 query variations with the talent's country embedded:
+   - `"top {industry} brands {country} 2026"`
+   - `"best {industry} brands for influencer marketing {country}"`
+   - `"{country} {industry} D2C brand directory"`
+   - `"{industry} brands creator program {country}"`
+   - `"established {industry} brands instagram tiktok"`
+   - `"top {industry} brands to watch {country}"`
+2. Fan out across Exa neural search; collect results per query.
+3. Haiku-extract canonical brand names + confidence + evidence from each result snippet (same prompt pattern as Search 15).
+4. Drop extractions below confidence 0.70 (noise floor).
+5. Drop brands already in `brand_industry_map.json` (handled by the seed map — these would surface via Searches 5/6/7 anyway).
+6. Emit `CandidateSource` with `search_tag = "established_exa_discovery"`, weight 0.20–0.30 scaled by LLM confidence, and the LLM confidence embedded in `note` for the qualifier to read.
+
+**Why it matters:** Searches 5/6/7 are seed-map-bounded — they only surface brands curated into `brand_industry_map.json` (290 brands today). The real long tail (5,000+ brands per industry) is hidden. Search 18 mass-discovers established brands via Exa's neural search, letting a US-based dad-life creator see brands like Lego, Hasbro, Mattel — not just the seed-map's hand-curated set.
+
+**Source tag:** `established_exa_discovery` (weight `0.20-0.30` per LLM confidence).
+
+**Cost:** ~5 industries × 6 queries = 30 Exa calls per run ($0.005 / call ≈ $0.15) + ~30k Haiku tokens ≈ $0.04. Combined with Search 15 (~7 queries × 5 industries × ~$0.005 = $0.18), the M7.3 Exa-driven floor is ~$0.40/run.
+
+---
+
+## Geographic filter (M7.3)
+
+A shared utility — `app/services/discovery/_geographic_filter.py` — applies after all searches run + their sources are merged. The filter is a **soft floor** (per the v0.1 decision): drop a brand only when there is explicit evidence it cannot reach the talent's audience.
+
+**Talent geography resolution chain:**
+1. `talent.audience_demographics.top_countries[]` (top 3 by share, normalised to ISO-3166 alpha-2). Available post-OAuth.
+2. Falls back to `talent.location.country` (the talent's home country).
+3. If both are missing — the filter is bypassed (no filter applied; pass-through). This is the same conservative default as pre-M7.3.
+
+**Per-brand pass logic:**
+- `brand.sells_in_countries == "global"` → keep.
+- `brand.sells_in_countries` absent → keep (assume global until proven otherwise).
+- `brand.sells_in_countries` is an explicit list **intersecting** the talent's countries → keep.
+- `brand.sells_in_countries` is an explicit list **not intersecting** → drop.
+
+**Why a soft floor:** the seed map's `sells_in_countries` is hand-curated and far from comprehensive. A hard floor (drop everything without explicit talent-country overlap) would lose ~70% of the seed-map for any non-US/UK talent. The soft floor only drops brands we have positive evidence cannot serve the talent.
+
+**Post-merge, not per-search:** the geo filter runs once on the aggregated `all_sources` list, not inside each search. A brand that's borderline (caught by both Search 5 and Search 8) gets a single coherent geo decision rather than being dropped on one pass and re-added on the next.
+
+## Sub-industry expansion (M7.3)
+
+Searches 5/6/7 (industry tiers) + Search 8 (parent/sibling niche) now expand each target industry into its children via `Taxonomies.get_sub_industries(industry_id)`. The 2-level hierarchy already exists in `data/industries.json` via the `parent` field (22 sectors + 156 sub-industries) — M7.3 simply walks it.
+
+**Example:** a talent with affinity to `sports-outdoor` (a parent industry) now walks to `sportswear` and `outdoor-gear` (children). Brands listed under either child surface in the same search, where pre-M7.3 they'd be missed entirely if the talent's affinity row only named the parent.
+
+**Weight decay:** hits on the parent target keep their full tier weight (`0.30` primary, `0.20` secondary, `0.06` tertiary). Hits via sub-industry expansion are weighted by `0.8x` — `0.24` / `0.16` / `0.048` respectively. The `note` carries `"via sub-industry <child> of <parent>"` so the audit trail is clear.
+
+**Dedup:** within a single tier, a brand that surfaces from both the parent walk AND the child walk emits once (the highest-weight hit wins).
+
+**Depth = 1:** `industries.json` has 2 levels (parent + children). No grandchildren — no recursive walk needed.
+
+## Emerging tier (M7.3)
+
+A new `QualifiedCandidate.tier` value — `"emerging"` — surfaces Exa-discovered brands by default. Without this, every net-new Exa brand died in `qualify_candidate(brand_entry=None)` which returned `score=0.10`, below the 0.30 floor; the agent never saw them.
+
+**Promotion logic (in `app/services/discovery/qualification.py`):**
+- Brand is net-new (no entry in `brand_industry_map.json`).
+- Its source list includes a `search_tag` in `{"recently_funded", "established_exa_discovery"}` (the two Exa-driven searches).
+- The source `note` embeds `llm_confidence>=0.70`.
+- → `tier = "speculative"`, `score = 0.30`, signal `emerging_exa_discovery`.
+
+The orchestrator then assigns `tier="emerging"` (overriding `primary/secondary/tertiary`) when the candidate has ONLY Exa-discovery source tags and the qualification cleared `qualified` or `speculative`.
+
+**REST toggle:** `GET /api/v1/talents/{id}/brand-candidates?qualification=qualified,speculative` is the default (preserves v0.1 behaviour). `?qualification=all` surfaces the long tail including the lowest-confidence emerging brands; `?qualification=unqualified` returns only the tail.
 
 ---
 
