@@ -263,6 +263,33 @@ class DealRepository(BaseRepository[Deal]):
         await self.create(instance)
         return instance
 
+    async def set_latest_prep_pack_id(self, deal_id: str, prep_pack_id: str) -> Deal:
+        """Mirror the latest prep_pack_id to scalar + JSONB.
+
+        System-driven setter used by ``prep_pack_persistence`` when a new
+        discovery prep pack lands. Writes both ``deal.latest_prep_pack_id``
+        (scalar column) and ``deal.data.lead.latest_prep_pack_id`` (JSONB
+        nested) + appends the new id to ``data.lead.discovery_prep_pack_ids[]``.
+        Bypasses ``patch_workflow_state`` guards because this is a scalar
+        mirror update, not an agent-driven workflow change.
+        """
+        instance = await self.get_by_id(deal_id)
+        if instance is None:
+            raise NotFoundError(f"deal {deal_id!r} not found", detail={"deal_id": deal_id})
+        instance.latest_prep_pack_id = prep_pack_id
+        data = dict(instance.data or {})
+        lead = dict(data.get("lead") or {})
+        lead["latest_prep_pack_id"] = prep_pack_id
+        ids = list(lead.get("discovery_prep_pack_ids") or [])
+        if prep_pack_id not in ids:
+            ids.append(prep_pack_id)
+        lead["discovery_prep_pack_ids"] = ids
+        data["lead"] = lead
+        instance.data = data
+        await self._session.flush()
+        await self._session.refresh(instance)
+        return instance
+
     async def insert_manual_deal(
         self,
         *,
