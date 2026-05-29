@@ -275,8 +275,8 @@ Rate-limit enforcement happens at the vendor-wrapper layer (Redis-backed counter
 | `kick_off_outreach_generation` | trigger-only (M9 v0.1) | Phase 3b outreach generation — fires on manual `POST /talents/{id}/outreach-generation/run`. Auto-fire on M8 qualified contacts deferred to M9.1 (gated by `settings.outreach_auto_enroll`). Per-step LLM cost: Opus step 1 + Haiku steps 2+ |
 | `enrollment_state_sync` | every 5 min (M9 v0.1) | Phase 3b — reconciles active `pitch_enrollment` rows against Smartlead campaign status to catch missed webhooks |
 | `enrollment_state_sync` | every 5min | Sync Smartlead enrollment states; classify replies; trigger deal creation on `interested` |
-| `auto_archive_trigger_check` | every 15min | Find deals where all_invoices_paid_at + final_kpis + final_report all set; fire archive |
-| `phase_4_5_auto_fire` | every 5min | Find deals transitioning to `initial_call_scheduled`; fire prep pack generation |
+| `auto_archive_trigger_check` | every 15min (M10 v0.1) | Walks `find_ready_for_archive` (substage = `post_campaign_reporting` + all 3 close-gate fields set) and transitions to `archived` via the orchestrator. `brand_deal` closing-row write defers to M16 |
+| `phase_4_5_auto_fire` | every 5min (M10 v0.1) | Walks `find_ready_for_prep_pack` (substage = `initial_call_scheduled` + `latest_prep_pack_id IS NULL` + 1h debounce on `data.prep_pack_enqueued_at`) and enqueues `app.tasks.pack_generation.generate_pack` for the M11 discovery-prep pack |
 
 ## 9. Phase skip handling
 
@@ -385,6 +385,20 @@ retrieval has data to read against.
 |---|---|
 | `POST /api/v1/webhooks/smartlead/email_event` | Engagement events (sent / opened / clicked / bounced / unsubscribed). HMAC-SHA256 verify via `X-Smartlead-Signature`; Redis dedupe on `(campaign_id, lead_id, event_type, occurred_at)` with 24h TTL. Bounce → kill enrollment + mark contact email bounced. Unsubscribe → contact DNC + cross-roster kill of every active enrollment for that contact |
 | `POST /api/v1/webhooks/smartlead/reply` | Reply event. Same HMAC + dedupe; classifies via Haiku (7 outcomes); on `interested` creates Phase-4 Deal with bidirectional FK (GAP-06 audit gate); routes other outcomes to kill/pause |
+
+**Phase 4 deal-lifecycle REST surface** (M10 — `app/api/deals.py`):
+
+| Endpoint | Action |
+|---|---|
+| `GET /api/v1/talents/{talent_id}/deals?stage=...&substage=...&include_terminal=` | List deals for a talent (optional stage/substage filter; terminal excluded by default) |
+| `GET /api/v1/brands/{brand_id}/deals?include_terminal=` | List deals for a brand |
+| `GET /api/v1/deals/due-for-action?talent_id=` | List non-terminal deals where `next_action_due_at <= now()` (optional talent filter) |
+| `GET /api/v1/deals/{deal_id}` | Fetch one (full nested record + scalar columns + audit log) |
+| `GET /api/v1/deals/{deal_id}/stage-history` | Append-only audit log only |
+| `POST /api/v1/deals` | Manual create. Body `{talent_id, brand_id, primary_contact_id?, by_agent_id?, opening_note?}`. Lands in `lead / new_lead` with opening audit entry |
+| `PATCH /api/v1/deals/{deal_id}` | Workflow patch — refuses `stage` / `substage` / `data.loss` / `data.stage_history` (use dedicated endpoints). Allows the agent-editable scalars + JSONB nested paths (Tier-1 G2: `data.delivery.campaign_hashtags[]`) |
+| `POST /api/v1/deals/{deal_id}/transition` | State-machine entry. Body `{target_substage, by_agent_id?, note?}`. Returns the full chain (1 step normally; 2 when an auto-cross-stage transition fires: `qualified → proposal_drafting`, `terms_agreed → contract_drafting`, `contract_executed → pre_production`). 422 on invalid transition with allowed-targets in error detail |
+| `POST /api/v1/deals/{deal_id}/loss` | Structured loss capture. Body `{reason, lost_at_stage?, competitor_brand?, notes?, by_agent_id?}`. Writes `data.loss` block + transitions to `lost`. 422 on invalid reason |
 
 The discovery orchestrator (`app/services/discovery/orchestrator.py`)
 runs the Core 8 searches concurrently, merges sources by `brand_id`,

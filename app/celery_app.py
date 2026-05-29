@@ -32,6 +32,8 @@ def _build_app() -> Celery:
             "app.services.contact_enrichment_task",
             "app.services.outreach_generation_task",
             "app.services.enrollment_state_sync",
+            "app.services.deal_phase_4_5_auto_fire_task",
+            "app.services.deal_auto_archive_task",
         ],
     )
 
@@ -64,6 +66,21 @@ def _build_app() -> Celery:
                 # to catch any webhook misses (network failures, dedupe bugs).
                 "task": "app.services.enrollment_state_sync.enrollment_state_sync",
                 "schedule": 300.0,
+                "options": {"queue": "default"},
+            },
+            "phase-4-5-auto-fire": {
+                # M10: enqueue discovery-prep packs for deals that hit
+                # ``initial_call_scheduled``. Pack generator (M11) is enqueued
+                # via ``app.tasks.pack_generation.generate_pack``.
+                "task": ("app.services.deal_phase_4_5_auto_fire_task.phase_4_5_auto_fire"),
+                "schedule": float(settings.cron_phase_4_5_auto_fire_seconds),
+                "options": {"queue": "default"},
+            },
+            "auto-archive-trigger-check": {
+                # M10: archive deals where all 3 close-gate fields are set.
+                # The ``brand_deal`` closing-row write ships in M16.
+                "task": ("app.services.deal_auto_archive_task.auto_archive_trigger_check"),
+                "schedule": float(settings.cron_auto_archive_trigger_check_seconds),
                 "options": {"queue": "default"},
             },
         },
