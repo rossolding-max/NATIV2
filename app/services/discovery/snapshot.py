@@ -31,6 +31,19 @@ _CURRENT_DIR = _REPO_ROOT / "data" / "brand_candidates" / "current"
 _RUNS_DIR = _REPO_ROOT / "data" / "brand_candidates" / "runs"
 
 
+def _primary_source_search(candidate: QualifiedCandidate) -> str | None:
+    """Return the search_tag of the heaviest-weight source for UI convenience.
+
+    Sorted by weight desc then search_tag asc (alphabetical) for
+    determinism — ties between equal-weight sources break the same way
+    every run.
+    """
+    if not candidate.sources:
+        return None
+    ordered = sorted(candidate.sources, key=lambda s: (-s.weight, s.search_tag))
+    return ordered[0].search_tag
+
+
 def _candidate_to_dict(candidate: QualifiedCandidate) -> dict[str, Any]:
     data: dict[str, Any] = {
         "brand": candidate.brand_name,
@@ -39,6 +52,10 @@ def _candidate_to_dict(candidate: QualifiedCandidate) -> dict[str, Any]:
         "score": round(candidate.score, 3),
         "tier": candidate.tier,
         "found_in_searches": len({s.search_tag for s in candidate.sources}),
+        # M7.4 — top-level pointer at the highest-weight source so the
+        # agent UI can render a single "discovered via X" tag without
+        # iterating the sources list.
+        "primary_source_search": _primary_source_search(candidate),
         "sources": [
             {"search": s.search_tag, "weight": s.weight, "note": s.note} for s in candidate.sources
         ],

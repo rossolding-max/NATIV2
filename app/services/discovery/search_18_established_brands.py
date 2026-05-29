@@ -23,8 +23,10 @@ import json
 import re
 from typing import Any
 
+from app.services.discovery._brand_normalizer import find_canonical_seed_entry
 from app.services.discovery._models import CandidateSource
 from app.utils.logging import get_logger
+from app.utils.slugify import slugify_brand_name
 
 log = get_logger(__name__)
 
@@ -47,8 +49,8 @@ def _strip_json_fence(text: str) -> str:
 
 
 def _slugify(name: str) -> str:
-    cleaned = re.sub(r"[^a-z0-9]+", "-", name.strip().lower()).strip("-")
-    return cleaned or "unknown"
+    """Legacy alias — kept for callers; delegates to ``slugify_brand_name``."""
+    return slugify_brand_name(name)
 
 
 def _build_queries_for_industry(
@@ -193,17 +195,8 @@ async def run(
 
     industries = list(dict.fromkeys(top_industry_ids))[:max_industries]
 
-    # Build the seed-map lookup so we skip brands already known.
-    existing_brand_names: set[str] = set()
     raw_brands: list[Any] = brand_industry_map.get("brands") or []
-    for entry in raw_brands:
-        if isinstance(entry, dict):
-            name = entry.get("name")
-            if isinstance(name, str):
-                existing_brand_names.add(name.strip().lower())
-            for alias in entry.get("aliases") or []:
-                if isinstance(alias, str):
-                    existing_brand_names.add(alias.strip().lower())
+    seed_brands: list[dict[str, Any]] = [e for e in raw_brands if isinstance(e, dict)]
 
     seen: set[str] = set()
     sources: list[CandidateSource] = []
@@ -219,10 +212,21 @@ async def run(
         )
         for cand in extracted:
             name = cand["brand_name"].strip()
-            name_lower = name.lower()
-            if name_lower in existing_brand_names:
-                continue
-            brand_id = _slugify(name)
+            # M7.4 — canonicalise against the seed map so e.g.
+            # "Ford Motor Company" lands on the canonical "Ford" brand_id
+            # rather than emitting as a duplicate emerging-tier entry.
+            canonical = find_canonical_seed_entry(name, seed_brands)
+            if canonical is not None:
+                canonical_name = canonical.get("name") or name
+                brand_id = _slugify(canonical_name)
+                emit_name = canonical_name
+                emit_industry = canonical.get("industry_id") or cand["industry_id"]
+                note_prefix = f"canonicalised from {name!r} | "
+            else:
+                brand_id = _slugify(name)
+                emit_name = name
+                emit_industry = cand["industry_id"]
+                note_prefix = ""
             if brand_id in seen:
                 continue
             seen.add(brand_id)
@@ -230,12 +234,12 @@ async def run(
             weight = _BASE_WEIGHT + (_MAX_WEIGHT - _BASE_WEIGHT) * (confidence - 0.70) / 0.30
             weight = max(_BASE_WEIGHT, min(_MAX_WEIGHT, weight))
             evidence = (cand.get("evidence") or "")[:200]
-            note = f"llm_confidence={confidence:.2f} | {evidence}".rstrip(" |")
+            note = f"{note_prefix}llm_confidence={confidence:.2f} | {evidence}".rstrip(" |")
             sources.append(
                 CandidateSource(
                     brand_id=brand_id,
-                    brand_name=name,
-                    industry_id=cand["industry_id"],
+                    brand_name=emit_name,
+                    industry_id=emit_industry,
                     search_tag=_SEARCH_TAG,
                     weight=weight,
                     note=note[:240],

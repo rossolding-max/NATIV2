@@ -127,7 +127,9 @@ async def test_unit__search_18__happy_path_emits_established_tag() -> None:
 
 
 @pytest.mark.asyncio
-async def test_unit__search_18__skips_brands_already_in_seed_map() -> None:
+async def test_unit__search_18__canonicalises_brands_already_in_seed_map() -> None:
+    """M7.4 — Brands matching the seed map land on the canonical brand_id
+    with a 'canonicalised from' note rather than being dropped."""
     exa = MagicMock()
     exa.search = AsyncMock(return_value=_mock_exa_search_response(["Nike"]))
 
@@ -145,7 +147,7 @@ async def test_unit__search_18__skips_brands_already_in_seed_map() -> None:
         )
     )
 
-    bim = {"brands": [{"name": "Nike", "industry_id": "sportswear"}]}
+    bim = {"brands": [{"brand_id": "nike", "name": "Nike", "industry_id": "sportswear"}]}
 
     with (
         patch("app.vendors.exa.ExaClient", return_value=exa),
@@ -155,8 +157,9 @@ async def test_unit__search_18__skips_brands_already_in_seed_map() -> None:
             top_industry_ids=["sportswear"],
             brand_industry_map=bim,
         )
-    # Nike is in seed map; Search 18 doesn't double-emit.
-    assert sources == []
+    assert len(sources) == 1
+    assert sources[0].brand_id == "nike"
+    assert sources[0].brand_name == "Nike"
 
 
 @pytest.mark.asyncio

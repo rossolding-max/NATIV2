@@ -27,8 +27,11 @@ from app.utils.logging import get_logger
 log = get_logger(__name__)
 
 
-_CURATED_FILENAME = "brand_industry_map.json"
-_DISCOVERED_FILENAME = "brand_industry_map_discovered.json"
+CURATED_FILENAME = "brand_industry_map.json"
+DISCOVERED_FILENAME = "brand_industry_map_discovered.json"
+# Legacy aliases — keep until callers are migrated.
+_CURATED_FILENAME = CURATED_FILENAME
+_DISCOVERED_FILENAME = DISCOVERED_FILENAME
 
 
 def _load_one(path: Path) -> dict[str, Any]:

@@ -448,6 +448,54 @@ The orchestrator then assigns `tier="emerging"` (overriding `primary/secondary/t
 
 ---
 
+## LLM industry softener (M7.4)
+
+The deterministic `niche_industry_affinity.json` hand-curates which industries match a niche, but it's necessarily incomplete. A dad-life creator might have plausible affinity to `pet-care`, `family-travel`, `home-improvement` even when the affinity row doesn't list them.
+
+M7.4 adds one Claude Haiku call at the start of every discovery run. Inputs: talent niches, audience signals, location, the deterministic affinity-hit shortlist, and the full `industries.json` catalogue. Output: up to 20 additional industry_ids, filtered against the known taxonomy (hallucinations are dropped silently).
+
+Augmented industries feed into:
+- Search 5 (as primary-tier extras for the seed-map walk).
+- Search 15 + Search 18 (as additional Exa-driven mass-discovery industries).
+
+**Settings gate:** `discovery_industry_softener_enabled: bool = True`. Off for cheap test runs.
+
+## Bidirectional sub-industry walk (M7.4)
+
+M7.3 walks parent → children (target industry expands into its sub-industries). M7.4 adds the inverse for past-deal industries.
+
+For each `deal.industry_id` that's a sub-industry:
+- include the parent (`get_industry_parent`), AND
+- include every other child of that parent (siblings via `get_sub_industries(parent)`).
+
+Example: past deal with a brand in `sportswear` → expansion to `sports-outdoor` (parent) + `outdoor-gear`, `gym-equipment` (siblings). All four feed Search 5 + Search 15/18.
+
+Top-level sectors (no parent) skip the expansion. The original past-deal industry always remains in the set.
+
+## Brand canonicalization (M7.4)
+
+Searches 15 + 18 now normalize LLM-extracted brand names against the seed map before emitting as net-new. The normalizer (`app/services/discovery/_brand_normalizer.py`) strips leading "the" and trailing corporate suffixes (`Inc`, `LLC`, `Corp`, `Motor Company`, `Holdings`, `Group`, `Company`, `Brands`, `Co`, etc.) with longest-first matching. It guards against eating single-word inputs.
+
+If a normalized name matches a seed entry (by name OR alias), the Exa hit is emitted onto the canonical `brand_id` as an extra Search 15/18 signal — boosting the existing brand instead of creating a duplicate emerging-tier candidate. `note` carries `canonicalised from <original> | …` for the audit trail.
+
+**Result for Kevin:** Exa hits for "Ford Motor Company", "General Motors", "Kroger" now land on `ford`, `gm` (alias), `kroger` (if seeded). Previously each emitted as `tier=emerging` net-new.
+
+## Auto-grown discovered seed map (M7.4)
+
+`data/brand_industry_map_discovered.json` is a sibling file to the curated `brand_industry_map.json`. The Celery task appends every net-new brand from each discovery run, atomically (tempfile → `os.replace`). Brands whose normalized name already appears in either file are skipped.
+
+The orchestrator's `load_merged_brand_industry_map` loads both files and dedupes with the curated entry winning on conflict — so a hand-curated row with `sells_in_countries`, `hq_country`, `social_handles` always beats a leaner discovered stub.
+
+**Outcome:** every Exa-driven discovery for any talent in the agency contributes brands to the shared seed map. Subsequent runs for other talents surface those brands via Search 5/6/7 — without re-paying for the Exa call.
+
+**Concurrency:** v1 accepts last-writer-wins. Concurrent Celery workers writing simultaneously may lose one brand. v2 could add a file lock or move to a DB table.
+
+## Per-candidate source provenance (always present; M7.4 surfaced)
+
+Every brand_candidate row's `data.sources[]` array carries one entry per search that surfaced the brand: `{search, weight, note}`. M7.4 adds a derived top-level `data.primary_source_search` field = the `search_tag` of the highest-weight source (ties broken alphabetically). UIs that need a single "discovered via" tag can read this without iterating `sources[]`.
+
+---
+
 ## Scoring & deduplication
 
 ### Merge

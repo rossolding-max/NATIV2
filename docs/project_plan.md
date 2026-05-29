@@ -316,6 +316,41 @@ Each milestone documented below with: inputs (what must exist) + outputs (delive
 
 ---
 
+## M7.4 — Phase 2 (Industry breadth + auto-grown seed map + brand canonicalization)
+
+**Inputs:** M7.3. Triggered by the live Kevin run: 142 candidates capped at 5 industries; false net-new "Ford Motor Company"/"General Motors" inflating emerging tier; no feedback loop from discovered brands into the seed map.
+
+**Outputs (shipped):**
+- `app/services/discovery/_brand_normalizer.py` (NEW) — `normalize_brand_name()` strips leading "the" + trailing corporate suffixes (longest-first); `find_canonical_seed_entry()` matches against seed name + aliases post-normalize.
+- `app/services/discovery/_seed_map_loader.py` (NEW) — `load_merged_brand_industry_map()` loads curated + auto-grown discovered files; dedupes via the brand normalizer; curated wins on conflict.
+- `app/services/discovery/_industry_expansion.py` (NEW) — `expand_past_deal_industries_bidirectionally()` walks past-deal sub-industries UP to parent + ACROSS to all siblings.
+- `app/services/discovery/_industry_softener.py` (NEW) — one Haiku call per run; given talent context + already-chosen industries + the full industries.json catalogue, returns up to 20 additional industry_ids filtered against the taxonomy whitelist.
+- `app/services/discovery/_discovered_writer.py` (NEW) — atomic `tempfile` → `os.replace` appender for `brand_industry_map_discovered.json`. Dedupes against curated + discovered before append.
+- `app/services/discovery/orchestrator.py` — pre-step `_compute_industry_expansions` runs at the top of `run_discovery`; combined extras feed Search 5 (as primary tier extras) + the Exa seed for S15/S18; `[: discovery_max_industries_per_run]` slicing removed; warn at >50 industries.
+- `app/services/discovery/search_5_7_industry_tiers.py` — `extra_target_industries` parameter; extras only fire on the primary tier (no double-emit at lower tiers).
+- `app/services/discovery/search_15_exa_newly_funded.py` + `search_18_established_brands.py` — replace inline `_slugify` with shared `slugify_brand_name`; pre-canonicalize via `find_canonical_seed_entry` so Exa hits for "Ford Motor Company" / "General Motors" emit onto the canonical "Ford" / "GM" brand_ids instead of as net-new emerging.
+- `app/services/discovery/snapshot.py::_candidate_to_dict` — adds derived top-level `primary_source_search` field (highest-weight source's `search_tag`, ties broken alphabetically).
+- `app/services/talent_background_research.py` — after `run_discovery`, calls `append_discovered_brands()` so net-new brands persist into `brand_industry_map_discovered.json` for future runs.
+- `app/utils/slugify.py` — adds lenient `slugify_brand_name()` (returns `"unknown"` on bad input) for Exa/LLM-extracted name canonicalization.
+- `app/config.py` — drops `discovery_max_industries_per_run`; adds `discovery_industry_softener_enabled: bool = True`.
+- `data/brand_industry_map_discovered.json` (NEW) — empty starter file that grows with every run.
+- 39 new unit tests: 13 normalizer + 4 loader + 8 expansion + 5 softener + 3 canonicalization + 6 writeback. 728 total unit tests pass.
+- `docs/brand_discovery.md` — M7.4 sections: industry softener, bidirectional walk, brand canonicalization, auto-grown discovered seed map, per-candidate source provenance.
+
+**Acceptance (unit):** Kevin synthetic E2E surfaces ≥ 50 candidates, every candidate has `primary_source_search` populated. **Acceptance (live, pending smoke run):** Kevin live re-run produces > 250 candidates (vs M7.3 baseline 142); zero "Ford Motor Company" / "General Motors" / "Kroger" net-new entries (canonicalised); `brand_industry_map_discovered.json` grows by 80+ entries that subsequent runs for other talents will see.
+
+**Skip notes:** N/A — overhaul of an already-shipped milestone. Reverting regresses to the 142-candidate M7.3 baseline.
+
+**Interdependency checks:**
+- LLM softener stays gated on `discovery_industry_softener_enabled` so test runs don't accidentally hit the live API.
+- Bidirectional walk fires only for past-deal industries — talents with no historical deals get the same behavior as M7.3.
+- `?qualification=` REST default still preserves v0.1 behaviour.
+- Discovered seed map appended atomically; concurrent Celery workers race is accepted v1 trade-off.
+
+**Deferred to v0.2:** brand-name canonicalization across runs (a brand named "Kroger" in run 1 and "The Kroger Co" in run 2 still lands as two discovered entries — per-run normalizer handles within-run only); discovered → curated promotion UI (promote a brand surfaced N+ times to curated); cost budget alarm; embedding-based brand similarity.
+
+---
+
 ## M8 — Phase 3a (Contact CRM)
 
 **Inputs:** M7.

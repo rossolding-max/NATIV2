@@ -35,6 +35,7 @@ async def _kick_off_async(
     from app.repositories.brand_candidate import BrandCandidateRepository
     from app.repositories.brand_deal import BrandDealRepository
     from app.repositories.talent import TalentRepository
+    from app.services.discovery._discovered_writer import append_discovered_brands
     from app.services.discovery.orchestrator import run_discovery
     from app.services.discovery.snapshot import _candidate_to_dict, write_snapshot
 
@@ -92,6 +93,11 @@ async def _kick_off_async(
         await candidates_repo.upsert_run_batch(talent_id, payloads, agency_id=talent_row.agency_id)
         await session.commit()
 
+    # M7.4 — append net-new brands to brand_industry_map_discovered.json so
+    # the next run for any talent in this agency surfaces them via Search
+    # 5/6/7. Curated brand_industry_map.json wins on dedup.
+    appended_brands = append_discovered_brands(payloads, search_run_id=result.search_run_id)
+
     snapshot_path = write_snapshot(result)
 
     log.info(
@@ -101,6 +107,7 @@ async def _kick_off_async(
         candidates=len(result.candidates),
         blocked=len(result.blocked),
         snapshot=str(snapshot_path),
+        appended_to_discovered_seed_map=appended_brands,
     )
     return {
         "talent_id": talent_id,

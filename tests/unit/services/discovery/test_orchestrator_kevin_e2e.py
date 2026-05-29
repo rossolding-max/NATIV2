@@ -23,6 +23,7 @@ import pytest
 
 from app.services.discovery._models import DiscoveryRunResult
 from app.services.discovery.orchestrator import run_discovery
+from app.services.discovery.snapshot import _candidate_to_dict
 from app.utils.taxonomies import get_taxonomies, init_taxonomies
 
 
@@ -184,4 +185,10 @@ async def test_unit__kevin_e2e__candidate_count_meaningfully_higher_than_v01(
     # Exa expansion is wired through. A live run surfaces 150+.
     assert len(result.candidates) >= 50, (
         f"Expected >=50 candidates with M7.3 expansions, got {len(result.candidates)}"
+    )
+    # M7.4 — every candidate should carry the primary_source_search top-level
+    # tag (the highest-weight source's search_tag) for UI convenience.
+    payloads = [_candidate_to_dict(c) for c in result.candidates]
+    assert all(p.get("primary_source_search") for p in payloads), (
+        "All candidates should have primary_source_search populated"
     )

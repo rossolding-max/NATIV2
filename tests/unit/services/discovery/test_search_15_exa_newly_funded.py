@@ -81,8 +81,10 @@ async def test_unit__search_15__happy_path_extracts_new_brand() -> None:
 
 
 @pytest.mark.asyncio
-async def test_unit__search_15__existing_brand_in_seed_map_skipped() -> None:
-    """A brand already in brand_industry_map shouldn't be emitted as net-new."""
+async def test_unit__search_15__existing_brand_in_seed_map_canonicalised() -> None:
+    """M7.4 — A brand already in brand_industry_map gets emitted on the
+    canonical brand_id (extra Exa signal on the existing brand) rather
+    than skipped or duplicated as net-new."""
     exa = MagicMock()
     exa.search = AsyncMock(return_value=_mock_exa_search_response(["Gymshark"]))
     anthropic = MagicMock()
@@ -98,7 +100,7 @@ async def test_unit__search_15__existing_brand_in_seed_map_skipped() -> None:
             ]
         )
     )
-    seed = _brand_map({"name": "Gymshark", "industry_id": "activewear"})
+    seed = _brand_map({"brand_id": "gymshark", "name": "Gymshark", "industry_id": "activewear"})
 
     with (
         patch("app.vendors.exa.ExaClient", return_value=exa),
@@ -108,7 +110,10 @@ async def test_unit__search_15__existing_brand_in_seed_map_skipped() -> None:
             top_industry_ids=["activewear"],
             brand_industry_map=seed,
         )
-    assert sources == []
+    # Emits once on the canonical brand_id with the Exa source attached.
+    assert len(sources) == 1
+    assert sources[0].brand_id == "gymshark"
+    assert sources[0].brand_name == "Gymshark"
 
 
 @pytest.mark.asyncio
