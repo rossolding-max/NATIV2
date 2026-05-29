@@ -70,3 +70,75 @@ class DiscoveryRunResult:
     candidates: list[QualifiedCandidate] = field(default_factory=list)
     blocked: list[QualifiedCandidate] = field(default_factory=list)
     errors: list[str] = field(default_factory=list)
+
+
+# ── M7.7 v2 architecture ─────────────────────────────────────────
+
+
+# Source label for an industry proposal — drives the priority order
+# when dedup'ing the same industry surfaced by multiple sources.
+# Order in this Literal == priority (first wins on dedup).
+IndustryProposalSource = Literal[
+    "affinity_primary",
+    "affinity_secondary",
+    "affinity_tertiary",
+    "competitor_of_previous",
+    "similar_talent",
+    "bidirectional_walk",
+    "audience_demographic",
+    "life_stage",
+    "exclusivity_adjacent",
+    "softener",
+    "manual",
+]
+
+_PROPOSAL_PRIORITY: dict[str, int] = {
+    "affinity_primary": 0,
+    "affinity_secondary": 1,
+    "affinity_tertiary": 2,
+    "competitor_of_previous": 3,
+    "similar_talent": 4,
+    "bidirectional_walk": 5,
+    "audience_demographic": 6,
+    "life_stage": 7,
+    "exclusivity_adjacent": 8,
+    "softener": 9,
+    "manual": 10,
+}
+
+
+def proposal_source_priority(source: str) -> int:
+    """Lower = higher priority. Used for dedup when an industry surfaces
+    via multiple sources; the lowest-priority source's rationale wins."""
+    return _PROPOSAL_PRIORITY.get(source, 999)
+
+
+@dataclass(frozen=True)
+class IndustryProposal:
+    """One industry proposed for inclusion in Phase 2 brand discovery.
+
+    Each industry that surfaces from any Phase 1 step is wrapped in an
+    IndustryProposal carrying the rationale + source. The orchestrator
+    dedupes by ``industry_id``, keeping the highest-priority source's
+    rationale (see ``proposal_source_priority``).
+    """
+
+    industry_id: str
+    rationale: str
+    source: IndustryProposalSource
+
+
+@dataclass
+class IndustryReviewItem:
+    """One entry in the Phase 1.5 industry-review queue.
+
+    The agency operator approves/deselects per item before Phase 2 fires.
+    ``alternate_rationales`` lists the other sources that surfaced the
+    same industry (for transparency in the UI).
+    """
+
+    industry_id: str
+    rationale: str
+    source: str
+    approved: bool = True
+    alternate_rationales: list[dict[str, str]] = field(default_factory=list)

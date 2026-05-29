@@ -228,18 +228,14 @@ async def _exa_search_and_extract(
                 messages=[{"role": "user", "content": prompt}],
             )
         except Exception as exc:
-            log.warning(
-                "search_15_llm_failed", industry=industry_id, query=query, error=str(exc)
-            )
+            log.warning("search_15_llm_failed", industry=industry_id, query=query, error=str(exc))
             continue
 
         text_parts: list[str] = []
         for block in getattr(response, "content", []) or []:
             if getattr(block, "type", None) == "text":
                 text_parts.append(getattr(block, "text", "") or "")
-        parsed = _parse_llm_response(
-            "".join(text_parts), fallback_industry_id=industry_id
-        )
+        parsed = _parse_llm_response("".join(text_parts), fallback_industry_id=industry_id)
 
         for brand in parsed:
             url = brand.get("source_url") or ""

@@ -40,9 +40,7 @@ async def test_unit__enrich_handles__finds_ig_from_url() -> None:
 
 @pytest.mark.asyncio
 async def test_unit__enrich_handles__finds_tiktok_from_url() -> None:
-    exa = _mock_exa(
-        [{"url": "https://www.tiktok.com/@kudosdiapers", "title": "Kudos TikTok"}]
-    )
+    exa = _mock_exa([{"url": "https://www.tiktok.com/@kudosdiapers", "title": "Kudos TikTok"}])
     out = await enrich_social_handles(
         brand_name="Kudos", needs_instagram=False, needs_tiktok=True, exa_client=exa
     )
@@ -52,9 +50,7 @@ async def test_unit__enrich_handles__finds_tiktok_from_url() -> None:
 @pytest.mark.asyncio
 async def test_unit__enrich_handles__skips_post_urls() -> None:
     """instagram.com/p/<id> is a post, not a handle. Should not match."""
-    exa = _mock_exa(
-        [{"url": "https://www.instagram.com/p/AbCdEf/", "title": "A post"}]
-    )
+    exa = _mock_exa([{"url": "https://www.instagram.com/p/AbCdEf/", "title": "A post"}])
     out = await enrich_social_handles(
         brand_name="X", needs_instagram=True, needs_tiktok=False, exa_client=exa
     )
