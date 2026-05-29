@@ -128,9 +128,7 @@ async def _query_meta(
         return {}
 
     return {
-        name: data
-        for name, data in per_brand.items()
-        if data.get("ad_count", 0) >= min_active_ads
+        name: data for name, data in per_brand.items() if data.get("ad_count", 0) >= min_active_ads
     }
 
 
@@ -163,9 +161,7 @@ async def _query_tiktok(
         return {}
 
     return {
-        name: data
-        for name, data in per_brand.items()
-        if data.get("ad_count", 0) >= min_active_ads
+        name: data for name, data in per_brand.items() if data.get("ad_count", 0) >= min_active_ads
     }
 
 
@@ -268,9 +264,7 @@ async def run(
         for tt_name, tt_data in tiktok_per_brand.items():
             if meta_name.strip().lower() == tt_name.strip().lower():
                 first_industry = (
-                    meta_data["industries"][0]
-                    if meta_data.get("industries")
-                    else industries[0]
+                    meta_data["industries"][0] if meta_data.get("industries") else industries[0]
                 )
                 _emit(
                     meta_name,
@@ -286,9 +280,7 @@ async def run(
     for name, data in meta_per_brand.items():
         if name.strip().lower() in seen_lower:
             continue
-        first_industry = (
-            data["industries"][0] if data.get("industries") else industries[0]
-        )
+        first_industry = data["industries"][0] if data.get("industries") else industries[0]
         _emit(
             name,
             first_industry,
@@ -301,9 +293,7 @@ async def run(
     for name, data in tiktok_per_brand.items():
         if name.strip().lower() in seen_lower:
             continue
-        first_industry = (
-            data["industries"][0] if data.get("industries") else industries[0]
-        )
+        first_industry = data["industries"][0] if data.get("industries") else industries[0]
         _emit(
             name,
             first_industry,

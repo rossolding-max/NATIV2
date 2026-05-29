@@ -225,9 +225,7 @@ async def test_unit__s17__caps_industries_per_run() -> None:
 @pytest.mark.asyncio
 async def test_unit__s17__meta_failure_softfallbacks_to_tiktok_only() -> None:
     """If MetaAdsClient init raises, we still process the TikTok side."""
-    tiktok = _make_tiktok_mock(
-        {"Tiktok Brand": {"ad_count": 7, "industries": ["x"]}}
-    )
+    tiktok = _make_tiktok_mock({"Tiktok Brand": {"ad_count": 7, "industries": ["x"]}})
 
     def _meta_raises(*_args, **_kwargs):
         from app.errors import IntegrationError

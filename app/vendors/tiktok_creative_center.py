@@ -62,9 +62,7 @@ class TikTokCreativeCenterClient(BaseVendorClient):
         On any non-200 response OR a response that doesn't have ``"data"``
         as a list, returns ``{"data": []}`` so callers degrade gracefully.
         """
-        await check_rate_limit(
-            self.vendor_name, "global", max_per_period=20, period_seconds=60
-        )
+        await check_rate_limit(self.vendor_name, "global", max_per_period=20, period_seconds=60)
         params: dict[str, Any] = {
             "period": period_days,
             "region": region,

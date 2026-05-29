@@ -35,9 +35,7 @@ def _rate_limit_ok() -> Any:  # pyright: ignore[reportUnusedFunction]
 async def test_integration__tiktok_cc__top_ads_happy_path() -> None:
     from app.vendors.tiktok_creative_center import TikTokCreativeCenterClient
 
-    route = respx.get(
-        "https://ads.tiktok.com/creative_radar_api/v1/top_ads/v2/list"
-    ).mock(
+    route = respx.get("https://ads.tiktok.com/creative_radar_api/v1/top_ads/v2/list").mock(
         return_value=httpx.Response(
             200,
             json={
@@ -66,9 +64,9 @@ async def test_integration__tiktok_cc__non_200_softfallback() -> None:
     """A 4xx/5xx response degrades to {data: []} rather than raising."""
     from app.vendors.tiktok_creative_center import TikTokCreativeCenterClient
 
-    respx.get(
-        "https://ads.tiktok.com/creative_radar_api/v1/top_ads/v2/list"
-    ).mock(return_value=httpx.Response(503, text="upstream down"))
+    respx.get("https://ads.tiktok.com/creative_radar_api/v1/top_ads/v2/list").mock(
+        return_value=httpx.Response(503, text="upstream down")
+    )
 
     client = TikTokCreativeCenterClient()
     out = await client.fetch_top_ads(industry="activewear")
@@ -81,9 +79,9 @@ async def test_integration__tiktok_cc__unexpected_shape_softfallback() -> None:
     """A 200 with the wrong JSON shape also degrades to {data: []}."""
     from app.vendors.tiktok_creative_center import TikTokCreativeCenterClient
 
-    respx.get(
-        "https://ads.tiktok.com/creative_radar_api/v1/top_ads/v2/list"
-    ).mock(return_value=httpx.Response(200, json={"unexpected": "shape"}))
+    respx.get("https://ads.tiktok.com/creative_radar_api/v1/top_ads/v2/list").mock(
+        return_value=httpx.Response(200, json={"unexpected": "shape"})
+    )
 
     client = TikTokCreativeCenterClient()
     out = await client.fetch_top_ads(industry="activewear")
@@ -95,9 +93,7 @@ async def test_integration__tiktok_cc__unexpected_shape_softfallback() -> None:
 async def test_integration__tiktok_cc__count_aggregates_across_industries() -> None:
     from app.vendors.tiktok_creative_center import TikTokCreativeCenterClient
 
-    route = respx.get(
-        "https://ads.tiktok.com/creative_radar_api/v1/top_ads/v2/list"
-    ).mock(
+    route = respx.get("https://ads.tiktok.com/creative_radar_api/v1/top_ads/v2/list").mock(
         side_effect=[
             httpx.Response(
                 200,

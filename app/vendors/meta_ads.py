@@ -49,9 +49,7 @@ class MetaAdsClient(BaseVendorClient):
         search_terms: str,
         countries: list[str],
         ad_active_status: Literal["ACTIVE", "INACTIVE", "ALL"] = "ACTIVE",
-        ad_type: Literal[
-            "ALL", "POLITICAL_AND_ISSUE_ADS", "HOUSING_ADS", "EMPLOYMENT_ADS"
-        ] = "ALL",
+        ad_type: Literal["ALL", "POLITICAL_AND_ISSUE_ADS", "HOUSING_ADS", "EMPLOYMENT_ADS"] = "ALL",
         limit: int = 100,
         ad_delivery_date_min: str | None = None,
     ) -> dict[str, Any]:
@@ -74,9 +72,7 @@ class MetaAdsClient(BaseVendorClient):
                 lookback window — Meta returns ads that have been delivered
                 AT ANY POINT since this date.
         """
-        await check_rate_limit(
-            self.vendor_name, "global", max_per_period=200, period_seconds=3600
-        )
+        await check_rate_limit(self.vendor_name, "global", max_per_period=200, period_seconds=3600)
         fields = (
             "id,page_name,page_id,ad_snapshot_url,ad_creation_time,"
             "ad_delivery_start_time,ad_delivery_stop_time,languages"

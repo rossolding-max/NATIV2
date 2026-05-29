@@ -88,9 +88,7 @@ async def test_integration__meta_ads__count_aggregates_per_advertiser() -> None:
     )
 
     client = MetaAdsClient()
-    out = await client.count_active_ads_per_advertiser(
-        search_terms="activewear", countries=["US"]
-    )
+    out = await client.count_active_ads_per_advertiser(search_terms="activewear", countries=["US"])
     assert out["Alo Yoga"]["ad_count"] == 2
     assert out["Alo Yoga"]["page_id"] == "100"
     assert out["Gymshark"]["ad_count"] == 1
