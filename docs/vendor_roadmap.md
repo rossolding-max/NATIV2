@@ -127,6 +127,38 @@ Schema is already shaped to absorb: `deal.contract.e_sign_provider` + `e_sign_en
 
 Each deferred vendor has the same template: what it unlocks, cost, when to add, what we do without it.
 
+### Multi-channel outreach (Phase 3b v2) — LinkedIn + Instagram + TikTok DMs
+
+v0.1 ships email-only via Smartlead. v2 adds LinkedIn / Instagram / TikTok DM channels per `docs/outreach_workflow.md` Open question #1. Each channel has different vendor maturity:
+
+**LinkedIn outreach (medium maturity):**
+- **Options:** LinkedIn's official Sales Navigator Messaging API (requires LinkedIn Marketing Solutions partnership + paid tier — months-long approval) OR third-party automation tools (Closely / Expandi / La Growth Machine / HeyReach / Unipile).
+- **Cost:** third-party tools $50-200/mo per seat; official API needs negotiated contract.
+- **When to add (v2):** once email-only outreach saturates and reply rates plateau — LinkedIn is the highest-conversion second channel for B2B creator deals (especially for brand-side decision makers).
+- **Without it:** Email-only outreach; LinkedIn used for verification + signal reads only (Phase 3a, M3).
+- **Risks:** LinkedIn's anti-automation enforcement is aggressive; account warmup + connection-limit caps + IP rotation needed; third-party tools are ToS-grey.
+
+**Instagram DM outreach (low-medium maturity):**
+- **Options:** Meta Instagram Messaging API (official; requires Facebook Business + Instagram Business account on talent side; 24-hour customer-care window restricts the API to reply scenarios, not cold first-touch) + a third-party send provider for cold first-touch (Unipile / ManyChat / Postscript-like).
+- **Cost:** official API is free per Meta's standard usage tiers; third-party providers $50-300/mo.
+- **When to add (v2):** when the roster includes Instagram-native creators where reach-out via DM is the cultural norm (beauty / fashion / lifestyle / fitness creators expect Instagram contact, not email).
+- **Without it:** Email-only outreach; talent OAuth already wired from M5 for OWN talent stats reads, but no send-path.
+- **Risks:** Meta classifies unsolicited cold DMs as spam — enforcement is account-level + can knock the talent's own account offline. Cold-DM compliance policy needed before launching.
+
+**TikTok DM outreach (low maturity, highest risk):**
+- **Options:** (a) Wait for TikTok to publish a Messaging API (no announced timeline as of v0.1 ship). (b) TikTok Creator Marketplace API for opt-in talent-to-brand intros (requires BOTH sides enrolled on TCM — limits reach). (c) Third-party automation via mobile emulation (very brittle, definitively against ToS — not recommended).
+- **Cost:** TCM is free per TikTok's standard tier; mobile-emulation third-party tools $200-500/mo and high risk of account bans.
+- **When to add (v2):** when TikTok publishes a real DM API. Until then, route TikTok outreach through Creator Marketplace where both parties are enrolled; treat the rest as manual outreach.
+- **Without it:** Email-only outreach; TikTok used for stats reads + posting-detection only (M5 OAuth, M14 detection).
+- **Risks:** No-API today means schema-level support can land in v2 but production routing may stay partly manual longer.
+
+**Cross-channel orchestration concerns (v2 implementation work):**
+- Per-step channel selection inside a single enrollment (e.g. email step 1 → LinkedIn DM step 2 if no reply → Instagram DM step 3 if still no reply).
+- Channel-aware tone shifts: LinkedIn DMs ≈ half-length of email; Instagram DMs ≈ quarter-length; TikTok DMs creator-vernacular.
+- Per-channel rate limits + per-talent warmup.
+- Separate webhook handlers per channel (LinkedIn has no email-style webhooks; Meta + TikTok shapes differ from Smartlead).
+- Cross-channel kill semantics: an unsubscribe on email does NOT auto-kill an in-flight LinkedIn / Instagram / TikTok thread (different consent surfaces); a hard ToS block on one platform DOES kill all enrollments on that platform.
+
 ### ScrapeCreators — TikTok / Instagram / Threads / Pinterest signals for the `last30days` skill (Search 16)
 - **Unlocks:** the visual-first half of `last30days`. With ScrapeCreators on, the skill captures momentum from TikTok virality, Instagram reels, Threads conversation, and Pinterest engagement. Without it, the skill still works on Reddit / X / YouTube / HN / Bluesky / Brave / GitHub.
 - **Cost:** 100 free credits/month, then pay-as-you-go (rate varies by source).
@@ -226,8 +258,8 @@ Phase numbering across this codebase: **Phase 1** = Talent Profile, **Phase 2** 
 ### Hunter.io / RocketReach / Clay — quick comparison
 - Briefly: these are competitive with Apollo on different price/coverage tradeoffs. Decide closer to v2 based on observed Apollo coverage gaps.
 
-### Smartlead / Instantly / Outreach.io — outreach automation (Phase 3.5)
-- Email sequencing, deliverability, reply detection. **Distinct from contact discovery** — these are the *next* phase (sending the email), not finding the address. Will be addressed in Phase 3.5 outreach workflow spec.
+### Instantly / Outreach.io — Smartlead alternatives (v2)
+- Email sequencing alternatives to Smartlead (the v0.1 locked vendor). Re-evaluate at v2 if Smartlead's pricing, deliverability, or API stops meeting needs. Instantly is the closest feature peer; Outreach.io is enterprise-tier with stronger CRM integrations but higher cost.
 
 ---
 

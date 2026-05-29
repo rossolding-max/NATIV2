@@ -21,7 +21,12 @@ For every qualified brand contact, run a personalised multi-step outreach sequen
 
 **Ultimate objective:** signed brand deals. Every metric in this workflow rolls up to that — reply rate is the v0.1 headline metric because it's the most reliable leading indicator of conversion.
 
-**Scope note — v0.1 is email-only.** LinkedIn outreach (DMs, InMails, connection requests) is **deferred to v2**. The schemas, templates, and orchestrator all reject non-email channels at v0.1. LinkedIn API is still used in Phase 3a for contact verification and enrichment (see `docs/contact_enrichment_workflow.md`) — that's a separate use case from sending LinkedIn messages.
+**Scope note — v0.1 is email-only.** All non-email outreach channels are **deferred to v2**:
+- **LinkedIn** (DMs, InMails, connection requests).
+- **Instagram DMs** (business-account-to-creator outreach via Meta's Messaging API).
+- **TikTok DMs** (creator-to-creator and brand-to-creator direct messages).
+
+The schemas, templates, and orchestrator all reject non-email channels at v0.1. The LinkedIn API is still used in Phase 3a for contact verification and enrichment (see `docs/contact_enrichment_workflow.md`); Meta + TikTok APIs are used in Phase 1 for talent OAuth + stats and in Phases 4.8-4.9 for posting + performance detection — those are separate use cases from sending platform DMs.
 
 **Sender model — agency, not talent.** Outreach is sent by the talent's **agency** in the agent's name (e.g. `sarah@nativeagency.com`). Voice: **agent-led on-behalf-of talent** — "I'm Sarah from Native Agency — I represent Jane Doe, who drove 1.24M reach for Gymshark." See `docs/agency_setup_workflow.md` (Phase 0) for the one-time agency identity + sender mailbox + DNS + warmup setup. v0.1: single agent, single agency. v2: multi-agent within one agency.
 
@@ -523,7 +528,7 @@ all reused as-is.
 - **Manual trigger only.** Auto-enroll from M8 is OFF in v0.1; flip ON in M9.1 once we measure reply rate + cost-per-run on real campaigns.
 - **One Smartlead campaign per (talent, template).** Up to 3 campaigns per active talent.
 - **Step-1 manual approval is permanent.** Every Step-1 email goes to the review queue; agent clicks ``POST /enrollments/{id}/approve`` to release.
-- **Email channel only.** Schema ``channel`` enum locked to ``email``; LinkedIn DM/InMail/connection defer to v2.
+- **Email channel only.** Schema ``channel`` enum locked to ``email``; LinkedIn DM/InMail/connection + Instagram DMs + TikTok DMs all defer to v2 (see Open question #1 below for the v2 multi-channel expansion plan).
 - **3 templates ship; gatekeeper is manual.** Gatekeeper-classified contacts surface a UI badge but no auto-template.
 - **LLM tiers per spec.** Step-1 generation = Opus 4.7; Steps 2+ = Haiku 4.5; reply classifier = Haiku 4.5.
 
@@ -549,7 +554,23 @@ all reused as-is.
 
 ## Open questions for v0.2 / v0.3
 
-1. **LinkedIn outreach channels (v2)** — **explicitly deferred from v0.1.** The schema currently restricts `channel` to `email` only. When v2 ships LinkedIn-send integration, the enum will re-add `linkedin_message` / `linkedin_inmail` / `linkedin_connection` and the orchestrator will route those steps through whichever LinkedIn-send vendor is chosen at that time. v0.1 to v2 transition involves: vendor selection (LinkedIn's official Sales Navigator API vs third-party like Closely / Expandi / La Growth Machine), automation-policy review (LinkedIn's anti-automation enforcement is aggressive), and per-talent LinkedIn account warmup. None of these are blockers for v0.1 — email-only ships now.
+1. **Multi-channel outreach (v2)** — **explicitly deferred from v0.1.** The schema currently restricts `channel` to `email`. v2 expands to LinkedIn + Instagram DMs + TikTok DMs. The enum will gain `linkedin_message` / `linkedin_inmail` / `linkedin_connection` / `instagram_dm` / `tiktok_dm`, and the orchestrator will route each step through the right vendor. Per-channel maturity + vendor landscape (as of v0.1 ship):
+
+   **LinkedIn (medium maturity):** options are LinkedIn's official Sales Navigator Messaging API (partnership + paid tier required) OR third-party automation tools (Closely / Expandi / La Growth Machine / HeyReach). Third-party tools are ToS-grey but widely used. Per-talent LinkedIn account warmup needed (similar pattern to the Phase 0 mailbox warmup). LinkedIn's anti-automation enforcement is aggressive — expect connection-limit caps + rotation.
+
+   **Instagram DMs (low-medium maturity):** Meta's Instagram Messaging API supports business-to-creator DMs but requires a Facebook Business + Instagram Business account on the talent's side AND a 24-hour customer-care window — the API is built for support reply scenarios, not cold outreach. v2 implementation likely combines (a) the official API for replies inside the 24h window with (b) a third-party send provider (Unipile / ManyChat / Postscript-like) for the cold first-touch. Per-talent Instagram OAuth already wired from M5 — what's missing is the send-path vendor integration + cold-DM compliance policy (Meta classifies unsolicited cold DMs as spam).
+
+   **TikTok DMs (low maturity, highest risk):** TikTok does NOT have a public messaging/DM API as of v0.1 ship. The Marketing API exposes ad campaigns + analytics but no DM send path. Options: (a) wait for TikTok to publish a Messaging API (no announced timeline), (b) use the Creator Marketplace API for opt-in talent-to-brand intros (requires both sides on TikTok Creator Marketplace), (c) third-party automation via mobile emulation (very brittle, definitively against ToS). The honest v2 plan: route TikTok outreach through Creator Marketplace where both parties are enrolled, and treat the rest as manual outreach until TikTok opens an API. Schema-level support lands in v2; production routing may stay manual longer.
+
+   **Cross-channel orchestration (v2):**
+   - Per-step channel selection inside a single enrollment (e.g. email step 1 → LinkedIn DM step 2 if no reply → Instagram DM step 3).
+   - Channel-aware tone: LinkedIn DMs are shorter + less formal than email; Instagram DMs even shorter; TikTok DMs need creator-vernacular.
+   - Per-channel rate limits (LinkedIn ~25 connection requests/day; Instagram DM caps tighter; TikTok unknown).
+   - Webhook handlers per channel (LinkedIn doesn't have email-style webhooks; Meta + TikTok have their own shapes).
+   - Cross-channel kill semantics: an unsubscribe on email should NOT auto-kill an in-flight LinkedIn / Instagram / TikTok thread (different consent surfaces); a hard ToS block on one platform DOES kill all enrollments on that platform but not others.
+   - Per-channel auto-approve posture: step 1 stays manual across every channel; auto-approve for follow-ups is per-channel configurable in v2.
+
+   None of these are blockers for v0.1 — email-only ships now.
 2. **Auto-approve for follow-ups** — **step 1 is permanently manual-only** (locked guardrail). For follow-ups (steps 2+), v0.2 will add per-talent auto-approve configuration with the three guardrails above (validation score, tone-similarity, fresh sensitive flag).
 3. **Closed-loop angle tuning** — `pitch_angles.json` strength_scores currently human-edited. v2: analyzer auto-updates scores based on observed reply rates (with sample-size + variance guards).
 4. **Smartlead campaign segmentation** — v0.1 = one campaign per (talent, template). v0.2 may need finer segmentation (e.g. one campaign per (talent, template, brand_industry) for sender-warmup-by-vertical).
