@@ -132,7 +132,7 @@ The full canonical example below conforms to `schemas/brand_candidates.schema.js
 
 ---
 
-## The 16 searches (runnable today on current JSON)
+## The brand discovery search catalog (16 shipped in M7/M7.1; Search 17 queued for M7.2)
 
 Each search is independent; all run in parallel; results merge by brand name + industry.
 
@@ -306,6 +306,72 @@ Once integrated, replaces the LLM-search step with structured Crunchbase queries
 **Future enhancement (deferred, no new tools needed — just persistence):**
 - **Rising delta:** compare this month's extracted brand list against last month's; brands *new to the trending list this run* get an additional `newly_trending` boost. Requires keeping the last N months of run output.
 - **Mention velocity:** track each brand's appearance across consecutive monthly runs → distinguish brands sustaining momentum (3+ months on the trending list) from one-hit-wonder spikes. Sustained signal is far more valuable for creator partnerships than a one-week viral moment.
+
+### Group H — Paid amplification signal (M7.2)
+
+#### Search 17 — Brands spending heavily on paid social media advertising
+
+**Reads:** `talent.content_niches[]` → primary/secondary industries → Meta Ad Library API (v1) + TikTok Creative Center (v1) → vendor spend-intelligence APIs (v2).
+
+**Why it matters:** unlike Search 15 (capital signal — recently funded brands), Search 16 (organic momentum — viral social), Search 17 catches the strongest commercial-intent signal: brands *already pouring money into paid creator/social campaigns*. A brand running 50+ active ads on Meta and recurring TikTok creative within the last 30 days is by definition (a) has live performance-marketing budget, (b) is comfortable with creator-fronted media, and (c) is most likely to be open to partnerships beyond their current roster. Neither of the 16 existing searches captures this.
+
+**v1 logic (M7.2 ship target — free / cheap sources):**
+1. For each of the talent's top industries, query **Meta Ad Library API** (`https://www.facebook.com/ads/library/api/`) — free, public, no auth beyond a Meta app token:
+   - Filter by `ad_active_status=ALL`, `country=US,UK,AU` (configurable), `ad_type=ALL`, `search_terms=<industry keywords>`.
+   - Pull active ads for the last 30 days.
+   - Group by advertiser page; count distinct active ads per brand.
+   - Threshold: ≥ 5 active ads in last 30 days = "active paid social spend".
+2. Cross-reference with **TikTok Creative Center** (`https://ads.tiktok.com/business/creativecenter/`) — public-facing, scraped (no formal API in v1):
+   - Top-performing ads filterable by industry tag + region + last-30-days window.
+   - Extract advertiser brand names; same threshold logic.
+3. **Merge by canonical brand name** (LLM-resolved against `brand_industry_map.json`, same growth-loop pattern as Searches 15 + 16):
+   - If a brand surfaces on Meta only → `paid_social_active(meta)` source tag.
+   - If both Meta + TikTok → `paid_social_active(multi_platform)` — stronger signal.
+4. **Writeback:** brands not yet in `brand_industry_map.json` get LLM-classified into an industry + added (same loop as Searches 15 + 16).
+
+**Source tag:** `paid_social_active` (weight `0.20` — single-platform) or `paid_social_active_multi` (weight `0.30` — multi-platform).
+
+**Quality control (v1):**
+- **Minimum recency window:** only count ads active in the last 30 days; older campaigns don't indicate current spend.
+- **Minimum creative count:** ≥ 5 active ads (single test ad doesn't indicate commitment).
+- **Exclude political ads** (`ad_type=POLITICAL_AND_ISSUE_ADS` filtered out — outside our agency scope).
+- **Brand-name normalisation:** same Meta page can run ads under multiple display names; LLM normalises before merging into the candidate.
+- **Page-vs-brand disambiguation:** Meta's "page name" doesn't always match the consumer-facing brand name (subsidiaries, regional pages). LLM cross-references against `brand_industry_map.json` to dedupe.
+
+**v2 — Real spend numbers (deferred):**
+Replace the count-based heuristic with structured estimated-spend $ values via vendor intelligence:
+- **Pathmatics** — strong on display + paid social spend by brand × platform × time-window. ~$1k+/mo.
+- **SensorTower** — mobile-app spend (relevant for app brands), creator-marketing visibility.
+- **AdBeat** — banner + display ad spend, useful for cross-channel context.
+- **MOAT / DoubleVerify** — verification + viewability; less useful for spend signal but adds quality dimension.
+
+With v2 vendor data, the search transitions from "active ads count" to "estimated monthly creator-ad spend $X" — a much sharper "this brand is ripe for partnership" signal. Filter threshold becomes `estimated_monthly_paid_social_spend_usd >= 50_000` (configurable per agency).
+
+**v1 caveats:**
+- **No spend $:** v1 only knows ad COUNT, not $ value. A brand with 5 expensive video ads is treated the same as a brand with 5 static ads.
+- **Meta Ad Library coverage:** strong for US/UK/EU; weaker for AU/Asia (regional restrictions).
+- **TikTok Creative Center scraping:** legally ambiguous; ship with conservative rate limits + retry budget; switch to TikTok Marketing API when access granted (waitlisted in v1).
+- **Brand-name normalisation noise:** ~10-15% noise floor on LLM brand classification when the Meta page name doesn't match the consumer brand.
+
+**Outputs of the search:**
+```json
+{
+  "search": "search_17_paid_social_signal",
+  "brand_id": "alo-yoga",
+  "weight": 0.30,
+  "source_tag": "paid_social_active_multi",
+  "evidence": {
+    "meta_active_ads_last_30d": 47,
+    "tiktok_active_creatives_last_30d": 12,
+    "industries": ["activewear", "wellness"]
+  }
+}
+```
+
+**Cost (v1):**
+- Meta Ad Library API: free (public).
+- TikTok Creative Center scraping: free (rate-limited; ~50 queries / run; we self-limit to bound load).
+- LLM (Haiku) for brand-name normalisation: ~$0.05-$0.20 per discovery run.
 
 ---
 

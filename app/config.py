@@ -113,6 +113,18 @@ class Settings(BaseSettings):
     # the skill's auth + cost guards are configured for your installation.
     enable_last30days_discovery: bool = False
 
+    # ── Discovery: paid social ad signal (M7.2 Search 17) ────────────
+    # Off by default — Search 17 requires a Meta Ad Library token and hits
+    # TikTok's unofficial public endpoint. Enable per-agency once the
+    # token is provisioned + a manual smoke run on one talent looks clean.
+    enable_search_17_paid_social: bool = False
+    meta_ads_api_token: SecretStr | None = None
+    meta_ads_default_countries: list[str] = Field(default_factory=lambda: ["US", "UK", "AU"])
+    paid_social_min_active_ads: int = Field(default=5, ge=1)
+    """Minimum active ads (last 30 days) for a brand to count as 'paid social active'."""
+    paid_social_max_industries_per_run: int = Field(default=3, ge=1, le=10)
+    """Cost cap — Search 17 fans out across this many of the talent's top industries."""
+
     apollo_api_key: SecretStr | None = None
     # RapidAPI gateway key. Used by LinkedInScraperClient (RapidAPI's
     # "Real-Time LinkedIn Scraper API" at linkedin-data-api.p.rapidapi.com).

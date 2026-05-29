@@ -258,6 +258,32 @@ Each milestone documented below with: inputs (what must exist) + outputs (delive
 
 ---
 
+## M7.2 — Phase 2 (Search 17 — paid social ad signal)
+
+**Inputs:** M7.1b + 2 new vendor wrappers (Meta Ad Library + TikTok Creative Center).
+
+**Outputs (planned — not yet shipped):**
+- `app/vendors/meta_ads.py` (NEW) — `MetaAdsClient` wrapping the public Meta Ad Library REST API. Endpoints: `search_ads(search_terms, country, ad_active_status, ad_type)` + `get_advertiser_pages(brand_name)`. Auth via Meta app token (read-only public scope). Rate limits per Meta docs (200/hr free tier).
+- `app/vendors/tiktok_creative_center.py` (NEW) — v1 = HTTP scraper for the public Creative Center page (no formal API in v1; TikTok Marketing API access waitlisted). Conservative rate-limit (1 req/3s); HTML parsing via BeautifulSoup; fallback to a cached static seed when the page structure shifts. Replaceable with the TikTok Marketing API in v2 with no caller change.
+- `app/services/discovery/search_17_paid_social_signal.py` (NEW) — per-industry query fan-out across Meta + TikTok; LLM (Haiku) brand-name normalisation against `brand_industry_map.json`; merge by canonical brand; emit candidates with `paid_social_active` (single-platform, weight 0.20) or `paid_social_active_multi` (multi-platform, weight 0.30) source tag. Same writeback pattern as Searches 15 + 16.
+- `app/services/discovery/catalog.py` — `SEARCH_CATALOG` extended with `search_17_paid_social_signal` entry (`requires_external_skill=False`, `requires_llm=True`).
+- `app/services/discovery/orchestrator.py` — dispatch wiring for Search 17.
+- Settings: `enable_search_17_paid_social: bool = False` (off by default until smoke-tested on one talent in production), `meta_ads_api_token: SecretStr`, `meta_ads_default_countries: list[str] = ["US", "UK", "AU"]`, `paid_social_min_active_ads: int = 5`.
+- Cassette-based unit tests (Meta Ad Library + TikTok Creative Center responses recorded once + replayed) + integration test against the orchestrator showing Search 17 candidates surface with the right weight + source tag.
+
+**v0.1 acceptance:** discovery run for a real talent surfaces brands actively running >= 5 paid ads in the last 30 days on Meta and/or TikTok; multi-platform brands get the higher weight; brand names normalised against `brand_industry_map.json`; new brands writeback-classified with LLM.
+
+**v0.2 (deferred per V2-DISCOVERY-02):** swap the count-based heuristic for real estimated-spend $ values via Pathmatics / SensorTower / AdBeat — `app/vendors/pathmatics.py` etc. Filter threshold becomes `estimated_monthly_paid_social_spend_usd >= 50_000` (configurable per agency). API costs ~$1k+/mo so this is a v0.2 decision once agency volume justifies the spend.
+
+**Skip notes:** if skipped, discovery misses brands with high commercial intent on paid social — still captured noisily via Search 15 (recent funding) + Search 16 (organic momentum) but the paid-spend signal is missing.
+
+**Interdependency checks:**
+- Meta Ad Library token configured + healthy (token rotation reminder cron — separate concern).
+- TikTok Creative Center scraper resilient to UI changes (selectors externalised to config; failure surfaces as warning, not crash).
+- LLM brand-name normalisation against `brand_industry_map.json` adds new brands without polluting existing entries.
+
+---
+
 ## M8 — Phase 3a (Contact CRM)
 
 **Inputs:** M7.
