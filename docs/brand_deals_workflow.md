@@ -309,3 +309,103 @@ classification lands with M7.
 6. **Renewal pipeline view** — UI surface that shows all deals approaching `renewal_eligibility_date` in the next 30 days, sorted by past-campaign success. Phase 3a/3b can pre-stage outreach for these.
 7. **Manual override layer for AI extraction** — when the talent corrects an AI-extracted KPI, we should record the correction so future similar extractions are nudged toward the same pattern. Same posture as the manual-override v0.2 proposal in `docs/brand_enrichment_workflow.md`.
 8. **Deal-level pitch_history** — if a re-engagement pitch came from our outreach system, `originated_from_pitch_enrollment_id` links the deal to the pitch that won it. v0.2: full enrollment-to-deal conversion analytics in `scripts/analyze_outreach.py`.
+
+## v2 spec — onboarding-stage contact capture + cross-deal personal profile + call transcripts
+
+**Status:** spec'd, not yet built. Lands as a discrete v2 milestone — see `docs/project_plan.md` v2-CRM-01.
+
+**The gap in v0.1:**
+v0.1 already supports rich `brand_deal` records linked to `brand_contact` via `main_brand_contact_id`, but two things are missing operationally:
+1. The M6 backfill wizard (this doc, sources A + B) doesn't prompt for the contact at the brand — agents skip it because there's no field-collection UI.
+2. The M16 archive flow doesn't actively maintain a back-reference from the contact to all their deals.
+
+v2 closes both gaps without breaking any existing schema.
+
+### The v2 flow at M6 backfill (extends source B — manual entry)
+
+After the agent enters the deal scalars (brand, dates, fee, KPIs, outcome), an additional "Who did you work with at the brand?" sub-form appears:
+- Name (required if the sub-form is filled in) — first + last.
+- Title / role at the brand.
+- LinkedIn URL.
+- Email (encrypted at rest via the existing pgcrypto column).
+- Phone (encrypted; same treatment).
+- Instagram handle + TikTok handle (public identifiers, stored unencrypted; M9 schema already supports these via `social_handles`).
+- "Other channels" expander — WhatsApp / Telegram / personal email via `social_handles`.
+- Relationship notes (free text → `brand_contact.notes`).
+
+### Resolve-or-create logic
+
+New service `app/services/contact_match_or_create.py`:
+
+```
+1. Match cascade:
+   a. (brand_id, linkedin.url)  exact match wins
+   b. (brand_id, email.address) secondary
+   c. (brand_id, normalized_name) fuzzy fallback — agent confirms when ambiguous
+2. On match  → reuse existing contact_id; UI shows "we already have a record for this person"
+3. On no-match → INSERT new brand_contact with:
+   - is_placeholder = true
+   - verification_sources = [{source: "manual_backfill_m6", fetched_at: now}]
+   - confidence = 0.7 (agent-entered baseline; M8 enrichment recalibrates)
+4. Single transaction:
+   - INSERT brand_deal row with main_brand_contact_id = resolved_or_new
+   - APPEND brand_deal_id to brand_contact.historical_deal_ids[]
+```
+
+### New schema fields (see `schemas/brand_contact.schema.json` + `schemas/brand_deal.schema.json`)
+
+- `brand_contact.historical_deal_ids[]` — back-references to every brand_deal.deal_id where this contact was main OR additional. Populated by (a) M6 backfill, (b) M16 archive (closed_from_pipeline source).
+- `brand_contact.call_transcript_ids[]` — back-references to every call_transcript.transcript_id linking this contact (see Call transcripts section below).
+- `brand_deal.additional_brand_contact_ids[]` — secondary contacts on the deal (e.g. legal + procurement + champion who made the intro). Each contact's `historical_deal_ids[]` gets back-referenced.
+- `brand_deal.source` — discriminator: `backfilled_at_onboarding` / `closed_from_pipeline` / `manual_import` / `data_migration`. Drives CRM person-profile grouping ("historical deals" vs "deals you closed via this system") and analytics (close-rate by source).
+- `brand_deal.call_transcript_ids[]` — call transcripts linked to a specific historical deal (e.g. the discovery call that opened the conversation, the post-mortem 6 months later).
+
+### Cross-phase data lineage (post-v2)
+
+| Event | brand_deal change | brand_contact change |
+|---|---|---|
+| M6 backfill — agent enters historical deal + contact | INSERT with source="backfilled_at_onboarding", main_brand_contact_id=X | Resolve-or-create. If new: INSERT placeholder. APPEND deal_id to historical_deal_ids[]. |
+| M8 enrichment runs on a placeholder | unchanged | UPDATE: is_placeholder=false, Apollo + LinkedIn fields merged. historical_deal_ids[] preserved. |
+| M9 outreach — interested reply creates pipeline deal | no brand_deal write yet | APPEND pitch_history entry; deal.deal_id surfaces in CRM via live join (not in historical_deal_ids[] until archive). |
+| M16 archive — pipeline deal hits archived | INSERT new brand_deal row with source="closed_from_pipeline", archived_from_deal_id=<pipeline_id>, main_brand_contact_id=<deal.primary_contact_id>, KPIs copied from deal.data.close.final_kpis | APPEND new bd_xxx to primary contact's historical_deal_ids[] AND each additional contact. |
+| Agent edits contact title | unchanged | UPDATE; if title's brand_id changes, append to tenure.previous_employers[] (the job-move case — same person, new employer). |
+
+### The CRM person-profile view (new REST endpoint)
+
+`GET /api/v1/brand-contacts/{contact_id}/full-profile` returns a one-round-trip composite:
+- The contact row (identity + channels + tenure + decision-role).
+- `historical_deal_ids[]` expanded inline to full brand_deal rows (newest first).
+- Live join `SELECT * FROM deal WHERE primary_contact_id = contact_id` for ACTIVE pipeline deals (these aren't in historical_deal_ids[] yet).
+- Pitch history (already in the contact schema's `pitch_history[]`).
+- Call transcripts (newest first).
+
+### Call transcripts in the CRM (NEW in v2 — see `schemas/call_transcript.schema.json`)
+
+The CRM can store recorded call transcripts attached to one or more contacts. Use cases: discovery call notes, pitch call transcripts, general catch-ups, negotiation calls, renewal check-ins, post-campaign performance reviews. Each transcript carries:
+- The raw file in S3/MinIO (text / markdown / VTT / PDF / docx; up to 50MB).
+- LLM-generated structured summary (tl;dr, key takeaways, objections raised, next steps), key quotes, action items, overall sentiment, topic tags — all Haiku-produced on upload.
+- Optional links to: pipeline deal (`linked_deal_id`), historical brand_deal (`linked_brand_deal_id`), originating outreach enrollment (`linked_enrollment_id`), the talent(s) the agency was representing.
+- Compliance metadata: recording consent flag, consent basis, sensitivity flag, retention policy (default 7y, legal-hold opt-in).
+- Audit fields: uploaded_by_agent_id, source (manual_upload / Otter / Fireflies / Grain / etc).
+
+Once uploaded, transcripts feed three downstream consumers:
+1. **CRM person-profile view** — agent sees every call this person has been on, sorted by date, with quick-skim summaries.
+2. **M11 Discovery Prep Pack** — when prepping a follow-up call on a repeat brand, the researcher subagent pulls the most recent transcripts for the brand_contact + brand_deal + linked talent into the bundle. ("Last call with Sarah ended with her saying she'd come back in Q3 with a budget number — that was 4 weeks ago.")
+3. **Memo writes** — action items deemed strategically important auto-write into the memo store (M2) tagged with brand_ids + talent_ids + topics, so future packs see them as a learning even when the transcript itself isn't pulled into context.
+
+### REST surface (v2)
+
+- `POST /api/v1/call-transcripts` — multipart upload. Body: file + JSON metadata (`{kind, occurred_at, attendees, linked_contact_ids, linked_deal_id?, linked_enrollment_id?, linked_talent_ids?, source, recording_consent_obtained, consent_basis}`).
+- `POST /api/v1/brand-contacts/{contact_id}/call-transcripts` — shortcut, pre-fills `linked_contact_ids=[contact_id]`.
+- `POST /api/v1/deals/{deal_id}/call-transcripts` — shortcut, pre-fills `linked_deal_id` + auto-resolves `linked_contact_ids` from `deal.primary_contact_id` + `additional_contact_ids`.
+- `GET /api/v1/brand-contacts/{contact_id}/full-profile` — the composite person profile above.
+- `GET /api/v1/call-transcripts/{tx_id}` — full record (signed S3 URL for raw file, 15-min TTL).
+- `POST /api/v1/call-transcripts/{tx_id}/resummarize` — re-run Haiku over the raw file (e.g. after the schema's summary template evolves).
+- `PATCH /api/v1/call-transcripts/{tx_id}` — agent edits summary / action_items / agent_notes (edits preserved across resummarize).
+- `DELETE /api/v1/call-transcripts/{tx_id}` — refuses if `retention_policy.legal_hold=true`; soft-delete otherwise.
+
+### v2 migrations
+
+- Alembic migration adds the new fields to brand_contact / brand_deal (JSONB-stored, so the migration is index changes only — no column adds for the array fields themselves).
+- New `call_transcript` SQLA table with FK to brand_contact + brand_deal + deal + pitch_enrollment.
+- Backfill script: for every existing brand_deal with `main_brand_contact_id` set, append the deal_id to that contact's `historical_deal_ids[]`. Idempotent — re-runnable.

@@ -274,6 +274,17 @@ Local Yoga Studio  | gyms-studios   ▼   | AI 0.78    | ✓
 
 Same row also captures (optional): campaign date, deliverables, fee, usage rights granted, performance notes, brand contact — to bring the entry up to the full `brandDeal` shape.
 
+**v2 — contact capture sub-form (deferred).**
+In v2, expanding the "brand contact" field opens a structured sub-form to capture the person at the brand the talent worked with:
+- Name, title, LinkedIn URL, email, phone.
+- Instagram + TikTok handles (the schema's `social_handles` map).
+- Relationship notes (warm vs cold, preferred contact channel, anything the talent recalls).
+
+On save, a `app/services/contact_match_or_create.py` service resolves-or-creates a `brand_contact` row (matching on LinkedIn URL → email → fuzzy name). New contacts land with `is_placeholder=true` + `verification_sources=[{source: "manual_backfill_m6"}]`; agent input takes precedence over vendor data during later M8 enrichment. The brand_deal row's `main_brand_contact_id` is populated; the contact's `historical_deal_ids[]` gets the new deal_id appended in the same transaction. Full spec in `docs/brand_deals_workflow.md` v2 section.
+
+**v2 — call transcript upload (deferred).**
+Each row also gains an "attach a transcript" affordance — agent can drop a discovery call / pitch / catch-up transcript file (text, markdown, VTT, PDF, docx; up to 50MB) that lands as a `call_transcript` row linked to the contact + deal. Haiku auto-generates a structured summary + action items on upload. See `schemas/call_transcript.schema.json` for the schema and `docs/brand_deals_workflow.md` Call transcripts section for the broader CRM flow.
+
 ---
 
 ## Step 7 — Similar talent seeding + AI suggestions

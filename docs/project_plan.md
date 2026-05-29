@@ -28,6 +28,7 @@
 | M15 | Phase 4.9 (Performance Report) | M16 |
 | M16 | Auto-archive loop closure | v0.1 complete |
 | M17 | Production hardening | v2 prep |
+| v2-CRM-01 | Onboarding-stage contact capture + cross-deal CRM profile + call transcripts | v2 |
 
 Each milestone documented below with: inputs (what must exist) + outputs (deliverables) + acceptance (how we know it works) + skip-handling notes.
 
@@ -518,6 +519,61 @@ Each milestone documented below with: inputs (what must exist) + outputs (delive
 - Bidirectional FKs validate on both ends
 - KPIs carry over without data loss (kpiMetric shape preserved verbatim)
 - Memos tagged with both new `brand_deal.deal_id` AND old `deal_pipeline_*` id for retrieval continuity
+
+---
+
+## v2-CRM-01 — Onboarding-stage contact capture + cross-deal personal profile + call transcripts
+
+**Status:** specced (`docs/brand_deals_workflow.md` v2 section + `schemas/call_transcript.schema.json`). Not yet built. Lands as the first v2 work after M17 production hardening — or earlier if customer feedback prioritises it.
+
+**Inputs:** M16 (auto-archive loop must be closing brand_deal rows back into the CRM before historical_deal_ids[] becomes useful), plus M8 (contact enrichment pipeline must exist to upgrade backfilled placeholders).
+
+**Outputs (planned):**
+
+1. **M6 backfill wizard extension** — "Who did you work with at the brand?" sub-form during the brand-deals capture step of onboarding. Captures name, title, LinkedIn URL, email, phone, Instagram handle, TikTok handle, relationship notes.
+
+2. **`app/services/contact_match_or_create.py`** (NEW) — resolve-or-create cascade (linkedin.url → email → fuzzy name). New contacts land with `is_placeholder=true` + `verification_sources=[{source: "manual_backfill_m6"}]`. Existing contacts are matched + the new deal_id appended to their `historical_deal_ids[]`.
+
+3. **Schema deltas** (additive, no breaking changes):
+   - `brand_contact.historical_deal_ids[]` — back-references to brand_deal rows.
+   - `brand_contact.call_transcript_ids[]` — back-references to call_transcript rows.
+   - `brand_deal.additional_brand_contact_ids[]` — secondary contacts on the deal.
+   - `brand_deal.source` — discriminator (`backfilled_at_onboarding` / `closed_from_pipeline` / `manual_import` / `data_migration`).
+   - `brand_deal.call_transcript_ids[]` — call transcripts linked to a historical deal.
+   - `verification_sources[].source` enum extended with `manual_backfill_m6`.
+
+4. **`call_transcript` SQLA table + Pydantic codegen** (NEW) — driven by `schemas/call_transcript.schema.json`. Stores call transcript metadata + LLM-generated summary + key quotes + action items + sentiment + topic tags. Raw file in S3/MinIO; this row references it via `raw_file.object_key`.
+
+5. **`app/agents/skills/transcript_summarizer.py`** (NEW skill subagent or in-line LLM call) — on upload, Claude Haiku reads the raw transcript + emits structured `summary_markdown` + `key_quotes[]` + `action_items[]` + `sentiment_overall` + `topics_discussed[]`. Action items deemed strategically important auto-write into the memo store (M2) tagged appropriately.
+
+6. **M11 Discovery Prep Pack extension** — researcher subagent's bundle composer (`app/agents/bundles.py:compose_for_discovery_prep`) pulls the most recent call_transcript rows for the linked brand_contact + brand_deal + talent into the dynamic body, so prep packs for repeat-brand pitches reference what was said last time.
+
+7. **M16 archive task extension** (`app/services/deal_auto_archive_task.py`) — when archiving a pipeline deal, ALSO writes the closing brand_deal row with `source="closed_from_pipeline"`, copies `deal.primary_contact_id` → `brand_deal.main_brand_contact_id`, copies `deal.additional_contact_ids` → `brand_deal.additional_brand_contact_ids[]`, and appends the new brand_deal_id to each referenced contact's `historical_deal_ids[]` — single transaction with the brand_deal INSERT. Refuses to archive if `deal.primary_contact_id` is null (forces the agent to fill it in before close).
+
+8. **REST surface** (`app/api/call_transcripts.py` + `app/api/brand_contacts.py` extensions):
+   - `POST /api/v1/call-transcripts` — multipart upload.
+   - `POST /api/v1/brand-contacts/{id}/call-transcripts` — shortcut.
+   - `POST /api/v1/deals/{deal_id}/call-transcripts` — shortcut.
+   - `GET /api/v1/brand-contacts/{id}/full-profile` — composite person profile (contact + historical deals + active deals + transcripts + pitch history).
+   - `GET /api/v1/call-transcripts/{tx_id}` — full record with signed S3 URL for raw file.
+   - `POST /api/v1/call-transcripts/{tx_id}/resummarize` — re-run Haiku.
+   - `PATCH /api/v1/call-transcripts/{tx_id}` — agent edits summary / action_items / agent_notes.
+   - `DELETE /api/v1/call-transcripts/{tx_id}` — refuses if `retention_policy.legal_hold=true`.
+
+9. **Data backfill script** — for every existing brand_deal row with `main_brand_contact_id` set, append the brand_deal_id to that contact's `historical_deal_ids[]`. Idempotent + re-runnable.
+
+**Acceptance:**
+- An agent backfilling a historical brand deal can fill in the contact sub-form; on save, both rows exist and reference each other.
+- An agent uploading a discovery call transcript on a brand_contact sees an LLM summary within ~10s + action items inline; the transcript surfaces on the deal's M11 prep pack the next time it's regenerated.
+- The CRM person-profile view returns a contact's full history (every brand_deal + every active deal + every call_transcript) in one round-trip.
+
+**Compliance considerations:**
+- Phone numbers + email addresses encrypted at rest via the existing pgcrypto column path.
+- `recording_consent_obtained` flag required on every call_transcript; transcripts without consent are flagged + access-restricted to the uploading agent.
+- Default retention = 7 years from `occurred_at`; legal-hold opt-in blocks auto-deletion.
+- Audit log on every read of `is_sensitive=true` transcripts.
+
+**Skip notes:** if skipped, agents continue with brand-only contact lists (today's v0.1 surface). They miss the cross-deal personal-profile view (no centralised "everything we know about Sarah Chen at Lululemon") and the call transcript layer (no LLM-summarised call history feeding prep packs).
 
 ---
 
