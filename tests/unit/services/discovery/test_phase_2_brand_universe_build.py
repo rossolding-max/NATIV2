@@ -115,8 +115,7 @@ async def test_unit__p2_run__three_categories_each_emit_distinct_tag() -> None:
         patch("app.vendors.exa.ExaClient", return_value=exa),
         patch("app.agents.llm_client.get_async_anthropic", return_value=anth),
         patch(
-            "app.services.discovery.phase_2_brand_universe_build."
-            "enrich_extracted_brands_inplace",
+            "app.services.discovery.phase_2_brand_universe_build.enrich_extracted_brands_inplace",
             new=AsyncMock(return_value=None),
         ),
     ):
@@ -162,8 +161,7 @@ async def test_unit__p2_run__canonicalises_to_seed_brand() -> None:
         patch("app.vendors.exa.ExaClient", return_value=exa),
         patch("app.agents.llm_client.get_async_anthropic", return_value=anth),
         patch(
-            "app.services.discovery.phase_2_brand_universe_build."
-            "enrich_extracted_brands_inplace",
+            "app.services.discovery.phase_2_brand_universe_build.enrich_extracted_brands_inplace",
             new=AsyncMock(return_value=None),
         ),
     ):
@@ -215,8 +213,7 @@ async def test_unit__p2_run__provenance_fields_populated_per_source() -> None:
         patch("app.vendors.exa.ExaClient", return_value=exa),
         patch("app.agents.llm_client.get_async_anthropic", return_value=anth),
         patch(
-            "app.services.discovery.phase_2_brand_universe_build."
-            "enrich_extracted_brands_inplace",
+            "app.services.discovery.phase_2_brand_universe_build.enrich_extracted_brands_inplace",
             new=AsyncMock(return_value=None),
         ),
     ):
