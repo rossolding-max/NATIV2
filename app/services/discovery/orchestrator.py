@@ -18,6 +18,7 @@ from pathlib import Path
 from typing import Any, Literal
 
 from app.services.discovery import (
+    _industry_softener,
     search_1_reengagement,
     search_2_similar_talent_brands,
     search_3_competitors,
@@ -38,6 +39,10 @@ from app.services.discovery import (
 from app.services.discovery._geographic_filter import (
     extract_talent_countries,
     filter_sources_by_geo,
+)
+from app.services.discovery._industry_expansion import (
+    expand_past_deal_industries_bidirectionally,
+    extract_industries_from_deals,
 )
 from app.services.discovery._models import (
     CandidateSource,
@@ -109,6 +114,91 @@ def _merge_sources(
     return grouped
 
 
+def _industries_from_niche_affinity(
+    content_niches: list[str],
+    taxonomies: Taxonomies,
+) -> list[str]:
+    """Pull the deterministic primary+secondary affinity industry list.
+
+    Used as the baseline `current_industries` input to the LLM softener
+    so the model knows what's already in scope.
+    """
+    out: list[str] = []
+    seen: set[str] = set()
+    groups = (taxonomies.niche_industry_affinity or {}).get("groups") or []
+    for niche_id in content_niches:
+        for group in groups:
+            if not isinstance(group, dict) or group.get("niche_id") != niche_id:
+                continue
+            for tier_key in ("primary", "secondary"):
+                for industry_id in group.get(tier_key) or []:
+                    if isinstance(industry_id, str) and industry_id not in seen:
+                        seen.add(industry_id)
+                        out.append(industry_id)
+    return out
+
+
+async def _compute_industry_expansions(
+    *,
+    talent_data: dict[str, Any],
+    brand_deals: list[Any],
+    taxonomies: Taxonomies,
+) -> tuple[list[str], list[str]]:
+    """Return (bidirectional_walk_ids, softener_ids) for downstream wiring.
+
+    Both lists exclude industries already in the deterministic affinity
+    walk (no double-emit). The orchestrator merges them and passes the
+    combined extras list into S5/6/7 + S15/S18.
+    """
+    content_niches = [n for n in (talent_data.get("content_niches") or []) if isinstance(n, str)]
+    affinity_industries = _industries_from_niche_affinity(content_niches, taxonomies)
+    affinity_set = set(affinity_industries)
+
+    # Bidirectional walk from past-deal sub-industries.
+    deal_industries = extract_industries_from_deals(brand_deals)
+    walked = expand_past_deal_industries_bidirectionally(deal_industries, taxonomies)
+    walk_extras = [x for x in walked if x not in affinity_set]
+
+    # LLM softener.
+    softener_input = affinity_industries + walk_extras
+    softener_extras = await _industry_softener.run(
+        talent_data=talent_data,
+        current_industries=softener_input,
+        taxonomies=taxonomies,
+    )
+    softener_extras = [
+        x for x in softener_extras if x not in affinity_set and x not in set(walk_extras)
+    ]
+    return walk_extras, softener_extras
+
+
+def _build_exa_industry_seed(
+    *,
+    all_sources: list[CandidateSource],
+    industry_extras: list[str],
+) -> list[str]:
+    """Return the deduped industry seed for S15 + S18 fan-out.
+
+    Composes:
+      1. Industries that surfaced via S5/6 hits (deterministic affinity).
+      2. The precomputed extras (bidirectional walk + LLM softener).
+    """
+    seen: set[str] = set()
+    out: list[str] = []
+    for src in all_sources:
+        if (
+            src.search_tag in {"primary_industry", "secondary_industry"}
+            and src.industry_id not in seen
+        ):
+            seen.add(src.industry_id)
+            out.append(src.industry_id)
+    for industry_id in industry_extras:
+        if industry_id not in seen:
+            seen.add(industry_id)
+            out.append(industry_id)
+    return out
+
+
 async def run_discovery(
     *,
     talent_id: str,
@@ -133,6 +223,16 @@ async def run_discovery(
     previous_brands = list(talent_data.get("previous_brands") or [])
     audience = dict(talent_data.get("audience_demographics") or {})
     brand_preferences = dict(talent_data.get("brand_preferences") or {})
+
+    # M7.4 — compute industry extras BEFORE any search fires so S5 can
+    # consume them. One Haiku call (softener) + a deterministic
+    # bidirectional walk on past-deal industries.
+    _walk_extras, _softener_extras = await _compute_industry_expansions(
+        talent_data=talent_data,
+        brand_deals=brand_deals,
+        taxonomies=tax,
+    )
+    _industry_extras: list[str] = list(_walk_extras) + list(_softener_extras)
 
     all_sources: list[CandidateSource] = []
     errors: list[str] = []
@@ -197,6 +297,7 @@ async def run_discovery(
                 tier="primary",
                 taxonomies=tax,
                 brand_industry_map=bim,
+                extra_target_industries=_industry_extras,
             ),
         )
     if "search_6_secondary_industry" in enabled:
@@ -277,47 +378,40 @@ async def run_discovery(
     # audience_demographics is empty (Kevin's case).
     _talent_countries = extract_talent_countries(talent_data)
     _talent_country = _talent_countries[0] if _talent_countries else None
-    from app.config import settings as _cfg
 
-    if "search_15_exa_newly_funded" in enabled:
-        # Use the industries that already surfaced via Search 5/6/7 as
-        # the seed; if none, fall back to industries inferred from the
-        # talent's content niches via the affinity primary tier.
-        top_industries: list[str] = []
-        for src in all_sources:
-            if (
-                src.search_tag in {"primary_industry", "secondary_industry"}
-                and src.industry_id not in top_industries
-            ):
-                top_industries.append(src.industry_id)
-        if top_industries:
-            await _run_safely_async(
-                "search_15_exa_newly_funded",
-                search_15_exa_newly_funded.run(
-                    top_industry_ids=top_industries[: _cfg.discovery_max_industries_per_run],
-                    brand_industry_map=bim,
-                    talent_country=_talent_country,
-                ),
-            )
+    # M7.4 — derive the fan-out industry list for Exa-driven searches.
+    # Combines S5/6 affinity hits (post-search) with the pre-computed
+    # bidirectional-walk + LLM-softener extras.
+    _exa_industry_seed = _build_exa_industry_seed(
+        all_sources=all_sources,
+        industry_extras=_industry_extras,
+    )
+    if len(_exa_industry_seed) > 50:
+        log.warning(
+            "discovery_industry_count_high",
+            count=len(_exa_industry_seed),
+            note="no hard cap; flagged for cost visibility",
+        )
 
-    if "search_18_established_brands" in enabled:
-        # M7.3 — mirror of Search 15 for established brands; same industry seed.
-        top_industries_18: list[str] = []
-        for src in all_sources:
-            if (
-                src.search_tag in {"primary_industry", "secondary_industry"}
-                and src.industry_id not in top_industries_18
-            ):
-                top_industries_18.append(src.industry_id)
-        if top_industries_18:
-            await _run_safely_async(
-                "search_18_established_brands",
-                search_18_established_brands.run(
-                    top_industry_ids=top_industries_18[: _cfg.discovery_max_industries_per_run],
-                    brand_industry_map=bim,
-                    talent_country=_talent_country,
-                ),
-            )
+    if "search_15_exa_newly_funded" in enabled and _exa_industry_seed:
+        await _run_safely_async(
+            "search_15_exa_newly_funded",
+            search_15_exa_newly_funded.run(
+                top_industry_ids=_exa_industry_seed,
+                brand_industry_map=bim,
+                talent_country=_talent_country,
+            ),
+        )
+
+    if "search_18_established_brands" in enabled and _exa_industry_seed:
+        await _run_safely_async(
+            "search_18_established_brands",
+            search_18_established_brands.run(
+                top_industry_ids=_exa_industry_seed,
+                brand_industry_map=bim,
+                talent_country=_talent_country,
+            ),
+        )
 
     if "search_16_last30days_trending" in enabled:
         # Gated: needs the last30days skill installed + OpenAI/xAI keys.

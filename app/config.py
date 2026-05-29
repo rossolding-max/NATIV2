@@ -113,12 +113,16 @@ class Settings(BaseSettings):
     # the skill's auth + cost guards are configured for your installation.
     enable_last30days_discovery: bool = False
 
-    # ── Discovery: comprehensiveness caps (M7.3) ─────────────────────
-    # How many of the talent's top affinity industries get fanned out
-    # across the Exa-driven searches (15 + 18). Each industry triggers
-    # ~13 Exa queries + Haiku extractions; capping keeps per-run cost
-    # bounded. v0.1 default 5 (was implicit 3). Lower for cheap tests.
-    discovery_max_industries_per_run: int = Field(default=5, ge=1, le=20)
+    # ── Discovery: comprehensiveness softener (M7.4) ────────────────
+    # M7.4 removed `discovery_max_industries_per_run` entirely. Per-run
+    # industry breadth is now bounded by (a) the affinity table, (b) the
+    # bidirectional walk from past-deal sub-industries, and (c) the LLM
+    # softener. Soft warning at 50 industries; no hard ceiling.
+    #
+    # The LLM softener (Haiku) augments the deterministic affinity walk
+    # with industries the hand-curated affinity rows don't enumerate.
+    # Off this to keep the discovery run deterministic in tests / cheap.
+    discovery_industry_softener_enabled: bool = True
 
     # ── Discovery: paid social ad signal (M7.2 Search 17) ────────────
     # Off by default — Search 17 requires a Meta Ad Library token and hits

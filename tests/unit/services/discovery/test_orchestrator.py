@@ -53,6 +53,9 @@ async def test_unit__orchestrator__merges_sources_by_brand_id() -> None:
         brand_deals=[],
         taxonomies=tax,
         brand_industry_map=bim,
+        # Restrict to deterministic searches — M7.4 wires _industry_extras into
+        # the Exa seed for S15/S18 which would hit live APIs otherwise.
+        enabled_searches=("search_3_competitors", "search_5_primary_industry"),
     )
     macs = [c for c in result.candidates if c.brand_id == "mac"]
     assert len(macs) == 1
@@ -91,6 +94,9 @@ async def test_unit__orchestrator__reengage_tag_overrides_tier() -> None:
         taxonomies=tax,
         brand_industry_map=bim,
         today=today,
+        # Restrict to deterministic searches — M7.4 wires brand_deals
+        # industries into the Exa seed via the bidirectional walk.
+        enabled_searches=("search_1_reengagement", "search_5_primary_industry"),
     )
     gym = next((c for c in result.candidates if c.brand_id == "gymshark"), None)
     assert gym is not None
@@ -176,6 +182,9 @@ async def test_unit__orchestrator__error_in_one_search_does_not_kill_run() -> No
         brand_deals=[],
         taxonomies=tax,
         brand_industry_map=bim,
+        # Restrict to deterministic searches — keep S5 firing + S9 erroring,
+        # skip Exa-driven S15/S18 which would hit live APIs.
+        enabled_searches=("search_5_primary_industry", "search_9_demographic_bridge"),
     )
     # Search 5 still produces MAC; Search 9 errored.
     assert any(c.brand_id == "mac" for c in result.candidates)

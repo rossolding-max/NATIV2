@@ -92,6 +92,7 @@ def run(
     tier: Tier,
     taxonomies: Taxonomies,
     brand_industry_map: dict[str, Any],
+    extra_target_industries: list[str] | None = None,
 ) -> list[CandidateSource]:
     """Enumerate brands in the tier-N industries for the talent's niches.
 
@@ -102,6 +103,11 @@ def run(
     get the tier weight multiplied by ``_SUB_INDUSTRY_WEIGHT_DECAY``.
     When the same brand is reachable via parent AND child, the parent
     hit wins (it emits first, deduper drops the child).
+
+    M7.4 — ``extra_target_industries`` lets the orchestrator inject
+    industries from the LLM softener + the bidirectional walk on
+    past-deal industries. They're treated as additional primary targets
+    for the active tier (same weight as affinity hits for that tier).
     """
     if tier not in _TIER_WEIGHTS:
         return []
@@ -110,6 +116,8 @@ def run(
     tag = _TIER_TAGS[tier]
     seen_brand_ids: set[str] = set()
     sources: list[CandidateSource] = []
+    # Build (niche_id, target_industry_id) pairs from affinity + extras.
+    affinity_pairs: list[tuple[str, str]] = []
     for niche_id in content_niches:
         if not isinstance(niche_id, str):
             continue
@@ -118,31 +126,40 @@ def run(
             tier=tier,
             niche_industry_affinity=taxonomies.niche_industry_affinity,
         ):
-            for expanded_id, is_sub in _expand_industry_with_sub_industries(
-                target_industry_id, taxonomies
+            affinity_pairs.append((niche_id, target_industry_id))
+    # Extras only fire on the primary tier; otherwise affinity-hits would
+    # also re-emit as secondary/tertiary and inflate scores.
+    if tier == "primary":
+        for extra_industry_id in extra_target_industries or []:
+            if extra_industry_id:
+                affinity_pairs.append(("__softener_or_walk__", extra_industry_id))
+
+    for niche_id, target_industry_id in affinity_pairs:
+        for expanded_id, is_sub in _expand_industry_with_sub_industries(
+            target_industry_id, taxonomies
+        ):
+            weight = decayed_weight if is_sub else base_weight
+            note_suffix = (
+                f" via sub-industry {expanded_id!r} of {target_industry_id!r}" if is_sub else ""
+            )
+            for brand_entry in _brands_in_industry(
+                industry_id=expanded_id, brand_industry_map=brand_industry_map
             ):
-                weight = decayed_weight if is_sub else base_weight
-                note_suffix = (
-                    f" via sub-industry {expanded_id!r} of {target_industry_id!r}" if is_sub else ""
-                )
-                for brand_entry in _brands_in_industry(
-                    industry_id=expanded_id, brand_industry_map=brand_industry_map
-                ):
-                    brand_id = _slugify(brand_entry["name"])
-                    if brand_id in seen_brand_ids:
-                        continue
-                    seen_brand_ids.add(brand_id)
-                    sources.append(
-                        CandidateSource(
-                            brand_id=brand_id,
-                            brand_name=brand_entry["name"],
-                            industry_id=expanded_id,
-                            search_tag=tag,
-                            weight=weight,
-                            note=(
-                                f"Niche {niche_id!r} -> {tier} industry "
-                                f"{target_industry_id!r}{note_suffix}."
-                            ),
-                        )
+                brand_id = _slugify(brand_entry["name"])
+                if brand_id in seen_brand_ids:
+                    continue
+                seen_brand_ids.add(brand_id)
+                sources.append(
+                    CandidateSource(
+                        brand_id=brand_id,
+                        brand_name=brand_entry["name"],
+                        industry_id=expanded_id,
+                        search_tag=tag,
+                        weight=weight,
+                        note=(
+                            f"Niche {niche_id!r} -> {tier} industry "
+                            f"{target_industry_id!r}{note_suffix}."
+                        ),
                     )
+                )
     return sources
