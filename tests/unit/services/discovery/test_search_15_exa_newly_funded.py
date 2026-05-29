@@ -109,6 +109,7 @@ async def test_unit__search_15__existing_brand_in_seed_map_canonicalised() -> No
         sources = await search_15_exa_newly_funded.run(
             top_industry_ids=["activewear"],
             brand_industry_map=seed,
+            queries_per_industry=1,  # M7.5 — one query → one source
         )
     # Emits once on the canonical brand_id with the Exa source attached.
     assert len(sources) == 1

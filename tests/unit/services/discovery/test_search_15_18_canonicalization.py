@@ -62,6 +62,7 @@ async def test_unit__s15__motor_company_canonicalises_to_ford() -> None:
         sources = await search_15_exa_newly_funded.run(
             top_industry_ids=["auto-oems"],
             brand_industry_map=seed,
+            queries_per_industry=1,  # M7.5 — one query → one source for the assertion
         )
     assert len(sources) == 1
     s = sources[0]
@@ -102,11 +103,53 @@ async def test_unit__s18__motor_company_canonicalises_to_ford() -> None:
         sources = await search_18_established_brands.run(
             top_industry_ids=["auto-oems"],
             brand_industry_map=seed,
+            queries_per_industry=1,  # M7.5 — one query → one source for the assertion
         )
     assert len(sources) == 1
     s = sources[0]
     assert s.brand_id == "gm"
     assert s.brand_name == "GM"
+
+
+@pytest.mark.asyncio
+async def test_unit__s15__per_query_provenance_emits_one_source_per_query() -> None:
+    """M7.5 — every Exa query that surfaces a brand emits its own source
+    carrying that exact query string + the Exa result url/title."""
+    exa = _mock_exa(["Kudos"], "diapers-nappies")
+    # Anthropic mock returns same brand for every call; AsyncMock(return_value=...)
+    # replays the same response per query.
+    anth = _mock_anthropic(
+        [
+            {
+                "brand_name": "Kudos",
+                "suggested_industry_id": "diapers-nappies",
+                "confidence": 0.92,
+                "evidence": "Series A round.",
+                "source_url": "https://example.com/Kudos",
+            }
+        ]
+    )
+    seed = {"brands": []}
+
+    with (
+        patch("app.vendors.exa.ExaClient", return_value=exa),
+        patch("app.agents.llm_client.get_async_anthropic", return_value=anth),
+    ):
+        sources = await search_15_exa_newly_funded.run(
+            top_industry_ids=["diapers-nappies"],
+            brand_industry_map=seed,
+            queries_per_industry=3,  # three queries fire
+        )
+    # Three queries surface the brand → three sources, each tagged with
+    # the exact query string. Brand is still the same canonical id.
+    assert len(sources) == 3
+    assert {s.brand_id for s in sources} == {"kudos"}
+    queries = {s.exa_query for s in sources}
+    assert len(queries) == 3  # three distinct query variants
+    for s in sources:
+        assert s.exa_query is not None
+        assert s.exa_result_url == "https://example.com/Kudos"
+        assert s.exa_result_title == "Kudos story"
 
 
 @pytest.mark.asyncio
@@ -132,6 +175,7 @@ async def test_unit__s15__truly_net_new_brand_still_emits_as_net_new() -> None:
         sources = await search_15_exa_newly_funded.run(
             top_industry_ids=["diapers-nappies"],
             brand_industry_map=seed,
+            queries_per_industry=1,
         )
     assert len(sources) == 1
     assert sources[0].brand_id == "kudos"

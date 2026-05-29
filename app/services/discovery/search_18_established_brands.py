@@ -85,7 +85,8 @@ def _build_extraction_prompt(*, industry_id: str, raw_contents: list[dict[str, A
         "Rules:\n"
         '- Output JSON: {"brands": [{"brand_name": str, '
         '"suggested_industry_id": str, "confidence": float 0-1, '
-        '"evidence": str (short quote)}]}.\n'
+        '"evidence": str (short quote), '
+        '"source_url": str (the URL of the page above that mentions this brand)}]}.\n'
         f"- Suggested industry MUST be the exact id {industry_id!r} unless the page "
         "makes clear the brand is in a different one.\n"
         "- ONLY include brands explicitly named in the page text — no generic mentions.\n"
@@ -93,6 +94,7 @@ def _build_extraction_prompt(*, industry_id: str, raw_contents: list[dict[str, A
         "leading. NEWLY FUNDED startups are out of scope here — Search 15 covers those.\n"
         "- Confidence 0.90+ = brand explicitly described as established / leading / "
         "well-known with examples; 0.70-0.89 = strong inference; below 0.70 = drop.\n"
+        "- source_url MUST be one of the page URLs shown above; copy it exactly.\n"
         "- Return ONLY the JSON. No prose, no markdown fences.\n\n"
         f"PAGES:\n\n{pages}\n"
     )
@@ -123,6 +125,7 @@ def _parse_llm_response(raw: str, *, fallback_industry_id: str) -> list[dict[str
                 "industry_id": entry.get("suggested_industry_id") or fallback_industry_id,
                 "confidence": float(confidence),
                 "evidence": str(entry.get("evidence") or "")[:280],
+                "source_url": str(entry.get("source_url") or "").strip() or None,
             }
         )
     return out
@@ -134,11 +137,20 @@ async def _exa_search_and_extract(
     queries: list[str],
     results_per_query: int,
 ) -> list[dict[str, Any]]:
-    """Run the Exa searches + Claude extraction for one industry."""
+    """Run Exa searches + Claude extraction for one industry, per query.
+
+    M7.5 — processes each query independently so every extracted brand
+    can be tagged with the EXACT query that surfaced it, plus the
+    title/url of the Exa result Claude attributed the mention to.
+    """
+    from app.agents.llm_client import get_async_anthropic
+    from app.config import settings
     from app.vendors.exa import ExaClient
 
     exa = ExaClient()
-    collected_contents: list[dict[str, Any]] = []
+    client = get_async_anthropic()
+    extracted: list[dict[str, Any]] = []
+
     for query in queries:
         try:
             resp = await exa.search(
@@ -152,32 +164,45 @@ async def _exa_search_and_extract(
                 "search_18_exa_search_failed", industry=industry_id, query=query, error=str(exc)
             )
             continue
-        for r in resp.get("results", []) or []:
-            if isinstance(r, dict):
-                collected_contents.append(r)
 
-    if not collected_contents:
-        return []
+        raw_results = [r for r in (resp.get("results") or []) if isinstance(r, dict)]
+        if not raw_results:
+            continue
 
-    from app.agents.llm_client import get_async_anthropic
-    from app.config import settings
+        result_by_url: dict[str, dict[str, Any]] = {
+            (r.get("url") or ""): r for r in raw_results if r.get("url")
+        }
 
-    client = get_async_anthropic()
-    prompt = _build_extraction_prompt(industry_id=industry_id, raw_contents=collected_contents)
-    try:
-        response = await client.messages.create(
-            model=settings.anthropic_default_model,
-            max_tokens=2000,
-            messages=[{"role": "user", "content": prompt}],
+        prompt = _build_extraction_prompt(industry_id=industry_id, raw_contents=raw_results)
+        try:
+            response = await client.messages.create(
+                model=settings.anthropic_default_model,
+                max_tokens=2000,
+                messages=[{"role": "user", "content": prompt}],
+            )
+        except Exception as exc:
+            log.warning(
+                "search_18_llm_failed", industry=industry_id, query=query, error=str(exc)
+            )
+            continue
+
+        text_parts: list[str] = []
+        for block in getattr(response, "content", []) or []:
+            if getattr(block, "type", None) == "text":
+                text_parts.append(getattr(block, "text", "") or "")
+        parsed = _parse_llm_response(
+            "".join(text_parts), fallback_industry_id=industry_id
         )
-    except Exception as exc:
-        log.warning("search_18_llm_failed", industry=industry_id, error=str(exc))
-        return []
-    text_parts: list[str] = []
-    for block in getattr(response, "content", []) or []:
-        if getattr(block, "type", None) == "text":
-            text_parts.append(getattr(block, "text", "") or "")
-    return _parse_llm_response("".join(text_parts), fallback_industry_id=industry_id)
+
+        for brand in parsed:
+            url = brand.get("source_url") or ""
+            matched = result_by_url.get(url)
+            brand["source_url"] = url or None
+            brand["source_title"] = (matched or {}).get("title") if matched else None
+            brand["exa_query"] = query
+            extracted.append(brand)
+
+    return extracted
 
 
 async def run(
@@ -198,7 +223,7 @@ async def run(
     raw_brands: list[Any] = brand_industry_map.get("brands") or []
     seed_brands: list[dict[str, Any]] = [e for e in raw_brands if isinstance(e, dict)]
 
-    seen: set[str] = set()
+    seen: set[tuple[str, str]] = set()  # (brand_id, exa_query)
     sources: list[CandidateSource] = []
 
     for industry_id in industries:
@@ -227,9 +252,12 @@ async def run(
                 emit_name = name
                 emit_industry = cand["industry_id"]
                 note_prefix = ""
-            if brand_id in seen:
+            # M7.5 — dedup on (brand_id, exa_query) so each Exa query
+            # that surfaced the brand emits its own provenance entry.
+            dedup_key = (brand_id, cand.get("exa_query") or "")
+            if dedup_key in seen:
                 continue
-            seen.add(brand_id)
+            seen.add(dedup_key)
             confidence = cand["confidence"]
             weight = _BASE_WEIGHT + (_MAX_WEIGHT - _BASE_WEIGHT) * (confidence - 0.70) / 0.30
             weight = max(_BASE_WEIGHT, min(_MAX_WEIGHT, weight))
@@ -243,6 +271,9 @@ async def run(
                     search_tag=_SEARCH_TAG,
                     weight=weight,
                     note=note[:240],
+                    exa_query=cand.get("exa_query"),
+                    exa_result_url=cand.get("source_url"),
+                    exa_result_title=cand.get("source_title"),
                 )
             )
             log.info(

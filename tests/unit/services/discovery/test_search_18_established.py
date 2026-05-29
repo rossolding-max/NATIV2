@@ -116,6 +116,7 @@ async def test_unit__search_18__happy_path_emits_established_tag() -> None:
             top_industry_ids=["activewear"],
             brand_industry_map={"brands": []},
             talent_country="US",
+            queries_per_industry=1,  # M7.5 — one query → one source
         )
 
     assert len(sources) == 1
@@ -156,6 +157,7 @@ async def test_unit__search_18__canonicalises_brands_already_in_seed_map() -> No
         sources = await search_18_established_brands.run(
             top_industry_ids=["sportswear"],
             brand_industry_map=bim,
+            queries_per_industry=1,  # M7.5 — one query → one source
         )
     assert len(sources) == 1
     assert sources[0].brand_id == "nike"

@@ -24,6 +24,12 @@ class CandidateSource:
     search_tag: str
     weight: float
     note: str = ""
+    # M7.5 — exact-query provenance for Exa-driven searches (S15 + S18).
+    # Populated only when the source came from an Exa search; deterministic
+    # searches (S1-S14) leave these None.
+    exa_query: str | None = None
+    exa_result_url: str | None = None
+    exa_result_title: str | None = None
 
 
 @dataclass

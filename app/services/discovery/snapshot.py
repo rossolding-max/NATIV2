@@ -57,7 +57,16 @@ def _candidate_to_dict(candidate: QualifiedCandidate) -> dict[str, Any]:
         # iterating the sources list.
         "primary_source_search": _primary_source_search(candidate),
         "sources": [
-            {"search": s.search_tag, "weight": s.weight, "note": s.note} for s in candidate.sources
+            {
+                "search": s.search_tag,
+                "weight": s.weight,
+                "note": s.note,
+                # M7.5 — Exa provenance: present only for S15/S18 sources.
+                "exa_query": s.exa_query,
+                "exa_result_url": s.exa_result_url,
+                "exa_result_title": s.exa_result_title,
+            }
+            for s in candidate.sources
         ],
         "qualification": {
             "score": round(candidate.qualification_score, 3),
