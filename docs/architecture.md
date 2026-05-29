@@ -276,7 +276,7 @@ Rate-limit enforcement happens at the vendor-wrapper layer (Redis-backed counter
 | `enrollment_state_sync` | every 5 min (M9 v0.1) | Phase 3b — reconciles active `pitch_enrollment` rows against Smartlead campaign status to catch missed webhooks |
 | `enrollment_state_sync` | every 5min | Sync Smartlead enrollment states; classify replies; trigger deal creation on `interested` |
 | `auto_archive_trigger_check` | every 15min (M10 v0.1) | Walks `find_ready_for_archive` (substage = `post_campaign_reporting` + all 3 close-gate fields set) and transitions to `archived` via the orchestrator. `brand_deal` closing-row write defers to M16 |
-| `phase_4_5_auto_fire` | every 5min (M10 v0.1) | Walks `find_ready_for_prep_pack` (substage = `initial_call_scheduled` + `latest_prep_pack_id IS NULL` + 1h debounce on `data.prep_pack_enqueued_at`) and enqueues `app.tasks.pack_generation.generate_pack` for the M11 discovery-prep pack |
+| `phase_4_5_auto_fire` | every 5min (M10 + M11 v0.1) | Walks `find_ready_for_prep_pack` (substage = `initial_call_scheduled` + `latest_prep_pack_id IS NULL` + 1h debounce on `data.prep_pack_enqueued_at`). M11 v0.1 gates the `send_task` call behind `settings.enable_phase_4_5_auto_fire` (default `False`); the cron still stamps the debounce so flipping the flag on later doesn't trigger a backlog avalanche. Manual `POST /deals/{id}/prep-pack/generate` is the canonical v0.1 trigger |
 
 ## 9. Phase skip handling
 
@@ -399,6 +399,15 @@ retrieval has data to read against.
 | `PATCH /api/v1/deals/{deal_id}` | Workflow patch — refuses `stage` / `substage` / `data.loss` / `data.stage_history` (use dedicated endpoints). Allows the agent-editable scalars + JSONB nested paths (Tier-1 G2: `data.delivery.campaign_hashtags[]`) |
 | `POST /api/v1/deals/{deal_id}/transition` | State-machine entry. Body `{target_substage, by_agent_id?, note?}`. Returns the full chain (1 step normally; 2 when an auto-cross-stage transition fires: `qualified → proposal_drafting`, `terms_agreed → contract_drafting`, `contract_executed → pre_production`). 422 on invalid transition with allowed-targets in error detail |
 | `POST /api/v1/deals/{deal_id}/loss` | Structured loss capture. Body `{reason, lost_at_stage?, competitor_brand?, notes?, by_agent_id?}`. Writes `data.loss` block + transitions to `lost`. 422 on invalid reason |
+
+**Phase 4.5 discovery-prep-pack REST surface** (M11 — `app/api/prep_packs.py`):
+
+| Endpoint | Action |
+|---|---|
+| `GET /api/v1/deals/{deal_id}/prep-pack` | Latest version of the discovery prep pack for this deal (`is_latest=true`). 404 if none yet. |
+| `GET /api/v1/deals/{deal_id}/prep-pack/versions` | All versions for the deal ordered oldest -> newest; summary includes `prep_pack_id`, `version`, `parent_version`, `is_latest`, `status`, `created_at`, and `trigger` (from `data.generation.trigger`) |
+| `POST /api/v1/deals/{deal_id}/prep-pack/generate` | Manual v1 trigger (202). Body `{pre_generation_guidance?, by_agent_id?}`. Validates `substage="initial_call_scheduled"` AND no existing `latest_prep_pack_id`; enqueues `app.tasks.pack_generation.generate_pack(pack_type="discovery_prep", ...)`. Stamps `deal.data.prep_pack_enqueued_at` for the M10 1-hour debounce |
+| `POST /api/v1/deals/{deal_id}/prep-pack/regenerate` | Full-pack regen (202). Body `{feedback, pre_generation_guidance?, by_agent_id?}`. Looks up the latest version, threads its `version` as `parent_version` + the feedback as `regeneration_feedback` into the dispatcher with `trigger="agent_full_regenerate"`. Section-targeted regen defers to M11.1 |
 
 The discovery orchestrator (`app/services/discovery/orchestrator.py`)
 runs the Core 8 searches concurrently, merges sources by `brand_id`,
