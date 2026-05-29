@@ -115,6 +115,54 @@ def _merge_sources(
     return grouped
 
 
+def _aggregate_brand_metadata(
+    sources: list[CandidateSource],
+    brand_entry: dict[str, Any] | None,
+) -> tuple[str | None, dict[str, str | None], bool]:
+    """Walk a candidate's sources to fill (domain, social_handles, any_social).
+
+    First non-null per-platform wins from the sources. When no source
+    supplied a value, falls back to the seed-map ``brand_entry`` — many
+    curated entries carry a ``domain`` and ``social_handles`` block that
+    deterministic Phase 3 sources (S1/S2/S3/S4) wouldn't otherwise
+    propagate onto the candidate.
+
+    Returns ``(domain, social_handles_dict, any_social_was_non_null)``.
+    """
+    brand_domain: str | None = None
+    brand_social: dict[str, str | None] = {
+        "instagram": None,
+        "tiktok": None,
+        "youtube": None,
+        "x": None,
+        "linkedin": None,
+    }
+    for s in sources:
+        if brand_domain is None and s.brand_domain:
+            brand_domain = s.brand_domain
+        if s.brand_social_handles:
+            for platform, value in s.brand_social_handles.items():
+                if value and brand_social.get(platform) is None:
+                    brand_social[platform] = value
+
+    # Fall back to seed-map entry for fields not supplied by any source.
+    if isinstance(brand_entry, dict):
+        if brand_domain is None:
+            entry_domain = brand_entry.get("domain")
+            if isinstance(entry_domain, str) and entry_domain:
+                brand_domain = entry_domain
+        entry_social = brand_entry.get("social_handles")
+        if isinstance(entry_social, dict):
+            for platform in brand_social:
+                if brand_social[platform] is None:
+                    value = entry_social.get(platform)
+                    if isinstance(value, str) and value:
+                        brand_social[platform] = value
+
+    any_social = any(v for v in brand_social.values())
+    return brand_domain, brand_social, any_social
+
+
 def _industries_from_niche_affinity(
     content_niches: list[str],
     taxonomies: Taxonomies,
@@ -536,27 +584,14 @@ async def run_discovery(
         # M7.5 — aggregate brand-level metadata (domain + social handles)
         # across all S15/S18 sources for this brand. First non-null wins
         # per field; same for each social platform.
-        brand_domain: str | None = None
-        brand_social: dict[str, str | None] = {
-            "instagram": None,
-            "tiktok": None,
-            "youtube": None,
-            "x": None,
-            "linkedin": None,
-        }
-        for s in sources:
-            if brand_domain is None and s.brand_domain:
-                brand_domain = s.brand_domain
-            if s.brand_social_handles:
-                for platform, value in s.brand_social_handles.items():
-                    if value and brand_social.get(platform) is None:
-                        brand_social[platform] = value
-        any_social = any(v for v in brand_social.values())
+        brand_domain, brand_social, any_social = _aggregate_brand_metadata(sources, brand_entry)
 
         # M7.7 — derive top-level industry + sub-industry from the
-        # first-source industry_id. brand_category comes from the first
-        # source whose tag is in the Phase 2 category set; None when the
-        # brand surfaced only via deterministic Phase 3 searches.
+        # first-source industry_id. brand_category resolution centralised
+        # in _brand_category.infer_brand_category — covers every source
+        # the pipeline uses (Phase 2 categories, Phase 3 talent-specific,
+        # Phase 4 signal overlay, S15/S16 legacy) with seed-map fallback.
+        from app.services.discovery._brand_category import infer_brand_category
         from app.services.discovery._industry_taxonomy import (
             derive_top_level_and_sub_industry,
         )
@@ -564,20 +599,7 @@ async def run_discovery(
         top_level_industry, sub_industry = derive_top_level_and_sub_industry(
             first_source.industry_id, tax
         )
-        category_by_tag: dict[str, str] = {
-            "exa_emerging": "emerging",
-            "exa_growth": "growth",
-            "exa_established": "established",
-            # Legacy M7.3-M7.6 tags map to the closest category.
-            "recently_funded": "emerging",
-            "established_exa_discovery": "established",
-        }
-        brand_category: str | None = None
-        for s in sources:
-            mapped = category_by_tag.get(s.search_tag)
-            if mapped is not None:
-                brand_category = mapped
-                break
+        brand_category = infer_brand_category([s.search_tag for s in sources], brand_entry)
 
         qualified.append(
             QualifiedCandidate(
@@ -844,6 +866,7 @@ def _build_qualified_candidates(
 ) -> list[QualifiedCandidate]:
     """v2 candidate-construction: merge sources by brand_id, score, qualify,
     tier, derive first-class metadata (sub_industry + brand_category)."""
+    from app.services.discovery._brand_category import infer_brand_category
     from app.services.discovery._industry_taxonomy import (
         derive_top_level_and_sub_industry,
     )
@@ -851,14 +874,6 @@ def _build_qualified_candidates(
         EXA_DISCOVERY_TAGS,
         qualify_candidate,
     )
-
-    category_by_tag = {
-        "exa_emerging": "emerging",
-        "exa_growth": "growth",
-        "exa_established": "established",
-        "recently_funded": "emerging",
-        "established_exa_discovery": "established",
-    }
 
     brand_lookup = _brand_lookup(brand_industry_map)
     grouped = _merge_sources(sources)
@@ -881,33 +896,12 @@ def _build_qualified_candidates(
         ):
             tier = "emerging"  # type: ignore[assignment]
 
-        # Aggregate brand-level metadata.
-        brand_domain: str | None = None
-        brand_social: dict[str, str | None] = {
-            "instagram": None,
-            "tiktok": None,
-            "youtube": None,
-            "x": None,
-            "linkedin": None,
-        }
-        for s in srcs:
-            if brand_domain is None and s.brand_domain:
-                brand_domain = s.brand_domain
-            if s.brand_social_handles:
-                for platform, value in s.brand_social_handles.items():
-                    if value and brand_social.get(platform) is None:
-                        brand_social[platform] = value
-        any_social = any(v for v in brand_social.values())
+        brand_domain, brand_social, any_social = _aggregate_brand_metadata(srcs, brand_entry)
 
         top_level_industry, sub_industry = derive_top_level_and_sub_industry(
             first_source.industry_id, taxonomies
         )
-        brand_category: str | None = None
-        for s in srcs:
-            mapped = category_by_tag.get(s.search_tag)
-            if mapped is not None:
-                brand_category = mapped
-                break
+        brand_category = infer_brand_category([s.search_tag for s in srcs], brand_entry)
 
         qualified.append(
             QualifiedCandidate(

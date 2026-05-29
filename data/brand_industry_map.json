@@ -30,7 +30,8 @@
         "youtube": 2100000,
         "twitter_x": 10000000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Adidas",
@@ -59,7 +60,8 @@
         "youtube": 1500000,
         "twitter_x": 4500000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Puma",
@@ -87,7 +89,8 @@
         "tiktok": 2500000,
         "youtube": 600000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Under Armour",
@@ -114,7 +117,8 @@
         "tiktok": 800000,
         "youtube": 400000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Reebok",
@@ -131,7 +135,8 @@
         "instagram": 4500000,
         "tiktok": 600000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "ASICS",
@@ -156,7 +161,8 @@
       "social_followers": {
         "instagram": 2500000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "New Balance",
@@ -182,7 +188,8 @@
         "instagram": 3500000,
         "tiktok": 700000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Hoka",
@@ -211,7 +218,8 @@
         "instagram": 1500000,
         "tiktok": 400000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "On Running",
@@ -240,7 +248,8 @@
         "instagram": 1400000,
         "tiktok": 300000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Gymshark",
@@ -274,7 +283,8 @@
         "tiktok": 5500000,
         "youtube": 1000000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Lululemon",
@@ -301,7 +311,8 @@
         "tiktok": 1500000,
         "youtube": 200000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Alo Yoga",
@@ -327,7 +338,8 @@
         "instagram": 3500000,
         "tiktok": 1500000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Vuori",
@@ -347,7 +359,8 @@
       "social_followers": {
         "instagram": 600000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Outdoor Voices",
@@ -365,7 +378,8 @@
       "headcount": {
         "band": "51_200",
         "source": "linkedin"
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Patagonia",
@@ -391,7 +405,8 @@
         "instagram": 5500000,
         "youtube": 350000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "The North Face",
@@ -417,7 +432,8 @@
         "instagram": 6000000,
         "tiktok": 800000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Columbia",
@@ -438,7 +454,8 @@
       "headcount": {
         "band": "5001_10000",
         "source": "linkedin"
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Arc'teryx",
@@ -459,7 +476,8 @@
       "headcount": {
         "band": "501_1000",
         "source": "linkedin"
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "REI",
@@ -486,7 +504,8 @@
       "social_followers": {
         "instagram": 2500000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Peloton",
@@ -518,7 +537,8 @@
         "instagram": 1300000,
         "tiktok": 350000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Tonal",
@@ -532,7 +552,8 @@
       "typical_campaign_tier": "mid",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "brand_category": "established"
     },
     {
       "name": "Hydrow",
@@ -547,7 +568,8 @@
       "typical_campaign_tier": "mid",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "brand_category": "established"
     },
     {
       "name": "Whoop",
@@ -567,7 +589,8 @@
       "social_followers": {
         "instagram": 500000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Oura",
@@ -590,7 +613,8 @@
       "social_followers": {
         "instagram": 350000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Garmin",
@@ -615,7 +639,8 @@
       "social_followers": {
         "instagram": 1500000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Fitbit",
@@ -635,7 +660,8 @@
       "social_followers": {
         "instagram": 700000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Myprotein",
@@ -660,7 +686,8 @@
       "social_followers": {
         "instagram": 1500000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Optimum Nutrition",
@@ -675,7 +702,8 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "brand_category": "established"
     },
     {
       "name": "Huel",
@@ -706,7 +734,8 @@
       "social_followers": {
         "instagram": 400000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "AG1",
@@ -729,7 +758,8 @@
       "social_followers": {
         "instagram": 500000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Ritual",
@@ -749,7 +779,8 @@
       "headcount": {
         "band": "51_200",
         "source": "linkedin"
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Sephora",
@@ -776,7 +807,8 @@
         "tiktok": 6000000,
         "youtube": 1500000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Ulta",
@@ -807,7 +839,8 @@
         "instagram": 8000000,
         "tiktok": 2500000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Boots",
@@ -835,7 +868,8 @@
       "social_followers": {
         "instagram": 1300000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Glossier",
@@ -866,7 +900,8 @@
         "instagram": 3000000,
         "tiktok": 400000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Charlotte Tilbury",
@@ -892,7 +927,8 @@
         "instagram": 5500000,
         "tiktok": 1500000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Rare Beauty",
@@ -909,7 +945,8 @@
         "instagram": 4500000,
         "tiktok": 2500000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Fenty Beauty",
@@ -929,7 +966,8 @@
         "instagram": 12500000,
         "tiktok": 3500000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "MAC Cosmetics",
@@ -949,7 +987,8 @@
         "instagram": 27000000,
         "tiktok": 4000000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "NARS",
@@ -965,7 +1004,8 @@
       "social_followers": {
         "instagram": 3500000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Estée Lauder",
@@ -993,7 +1033,8 @@
       "social_followers": {
         "instagram": 6500000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "L'Oréal",
@@ -1022,7 +1063,8 @@
       "social_followers": {
         "instagram": 11000000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Maybelline",
@@ -1038,7 +1080,8 @@
       "social_followers": {
         "instagram": 12500000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "CeraVe",
@@ -1055,7 +1098,8 @@
         "instagram": 1500000,
         "tiktok": 2500000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "The Ordinary",
@@ -1071,7 +1115,8 @@
       "social_followers": {
         "instagram": 2500000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Drunk Elephant",
@@ -1087,7 +1132,8 @@
       "social_followers": {
         "instagram": 1500000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Olaplex",
@@ -1113,7 +1159,8 @@
         "instagram": 2500000,
         "tiktok": 600000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Dyson",
@@ -1138,7 +1185,8 @@
       "social_followers": {
         "instagram": 1800000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Manscaped",
@@ -1154,7 +1202,8 @@
       "social_followers": {
         "instagram": 600000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Dollar Shave Club",
@@ -1171,7 +1220,8 @@
       "typical_campaign_tier": "mid",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "brand_category": "established"
     },
     {
       "name": "Harry's",
@@ -1204,7 +1254,8 @@
       "social_followers": {
         "instagram": 200000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Gillette",
@@ -1220,7 +1271,8 @@
       "social_followers": {
         "instagram": 1700000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Zara",
@@ -1246,7 +1298,8 @@
         "instagram": 60000000,
         "tiktok": 4500000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "H&M",
@@ -1276,7 +1329,8 @@
         "instagram": 41000000,
         "tiktok": 6500000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Shein",
@@ -1302,7 +1356,8 @@
         "instagram": 32000000,
         "tiktok": 14000000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Uniqlo",
@@ -1327,7 +1382,8 @@
       "social_followers": {
         "instagram": 5000000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "ASOS",
@@ -1353,7 +1409,8 @@
         "instagram": 13000000,
         "tiktok": 1500000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Boohoo",
@@ -1378,7 +1435,8 @@
       "social_followers": {
         "instagram": 8500000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "PrettyLittleThing",
@@ -1397,7 +1455,8 @@
       "social_followers": {
         "instagram": 17000000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Gucci",
@@ -1415,7 +1474,8 @@
         "tiktok": 4000000,
         "youtube": 1500000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Louis Vuitton",
@@ -1445,7 +1505,8 @@
         "tiktok": 6000000,
         "youtube": 2000000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Chanel",
@@ -1472,7 +1533,8 @@
         "tiktok": 3000000,
         "youtube": 2500000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Hermès",
@@ -1500,7 +1562,8 @@
       "social_followers": {
         "instagram": 16000000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Prada",
@@ -1525,7 +1588,8 @@
       "social_followers": {
         "instagram": 32000000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Dior",
@@ -1542,7 +1606,8 @@
         "instagram": 51000000,
         "tiktok": 8500000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Burberry",
@@ -1567,7 +1632,8 @@
       "social_followers": {
         "instagram": 22000000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Rolex",
@@ -1592,7 +1658,8 @@
       "social_followers": {
         "instagram": 17000000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Tag Heuer",
@@ -1608,7 +1675,8 @@
       "social_followers": {
         "instagram": 1700000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Cartier",
@@ -1624,7 +1692,8 @@
       "social_followers": {
         "instagram": 17000000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Tiffany & Co",
@@ -1643,7 +1712,8 @@
       "social_followers": {
         "instagram": 14500000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Pandora",
@@ -1668,7 +1738,8 @@
       "social_followers": {
         "instagram": 11000000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Ray-Ban",
@@ -1687,7 +1758,8 @@
       "social_followers": {
         "instagram": 5500000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Warby Parker",
@@ -1706,7 +1778,8 @@
       "social_followers": {
         "instagram": 600000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Oakley",
@@ -1722,7 +1795,8 @@
       "social_followers": {
         "instagram": 3500000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Allbirds",
@@ -1754,7 +1828,8 @@
       "social_followers": {
         "instagram": 400000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Crocs",
@@ -1780,7 +1855,8 @@
         "instagram": 2500000,
         "tiktok": 1200000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Dr. Martens",
@@ -1808,7 +1884,8 @@
       "social_followers": {
         "instagram": 2500000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Coca-Cola",
@@ -1841,7 +1918,8 @@
         "youtube": 4000000,
         "facebook": 110000000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Pepsi",
@@ -1868,7 +1946,8 @@
         "instagram": 3500000,
         "youtube": 2500000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Red Bull",
@@ -1895,7 +1974,8 @@
         "tiktok": 8000000,
         "youtube": 13000000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Monster Energy",
@@ -1923,7 +2003,8 @@
       "social_followers": {
         "instagram": 9500000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Celsius",
@@ -1953,7 +2034,8 @@
         "instagram": 1300000,
         "tiktok": 1000000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Liquid Death",
@@ -1983,7 +2065,8 @@
         "instagram": 3000000,
         "tiktok": 5500000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Heineken",
@@ -2008,7 +2091,8 @@
       "social_followers": {
         "instagram": 1500000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Guinness",
@@ -2024,7 +2108,8 @@
       "social_followers": {
         "instagram": 600000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Stella Artois",
@@ -2036,7 +2121,8 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "brand_category": "established"
     },
     {
       "name": "BrewDog",
@@ -2061,7 +2147,8 @@
       "social_followers": {
         "instagram": 500000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Don Julio",
@@ -2073,7 +2160,8 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "brand_category": "established"
     },
     {
       "name": "Patrón",
@@ -2088,7 +2176,8 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "brand_category": "established"
     },
     {
       "name": "Grey Goose",
@@ -2100,7 +2189,8 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "brand_category": "established"
     },
     {
       "name": "Hendrick's",
@@ -2115,7 +2205,8 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "brand_category": "established"
     },
     {
       "name": "Veuve Clicquot",
@@ -2127,7 +2218,8 @@
       "typical_campaign_tier": "premium",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "brand_category": "established"
     },
     {
       "name": "Moët & Chandon",
@@ -2142,7 +2234,8 @@
       "typical_campaign_tier": "premium",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "brand_category": "established"
     },
     {
       "name": "McDonald's",
@@ -2173,7 +2266,8 @@
         "tiktok": 4500000,
         "youtube": 6000000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Burger King",
@@ -2198,7 +2292,8 @@
       "social_followers": {
         "instagram": 3000000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "KFC",
@@ -2214,7 +2309,8 @@
       "social_followers": {
         "instagram": 2500000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Subway",
@@ -2226,7 +2322,8 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "brand_category": "established"
     },
     {
       "name": "Chipotle",
@@ -2258,7 +2355,8 @@
         "instagram": 2500000,
         "tiktok": 2500000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Domino's",
@@ -2286,7 +2384,8 @@
       "social_followers": {
         "instagram": 1500000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Starbucks",
@@ -2313,7 +2412,8 @@
         "tiktok": 2500000,
         "youtube": 350000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Dunkin'",
@@ -2331,7 +2431,8 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "brand_category": "established"
     },
     {
       "name": "DoorDash",
@@ -2364,7 +2465,8 @@
         "instagram": 700000,
         "tiktok": 800000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Uber Eats",
@@ -2384,7 +2486,8 @@
       "social_followers": {
         "instagram": 700000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Deliveroo",
@@ -2418,7 +2521,8 @@
       "social_followers": {
         "instagram": 600000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Just Eat",
@@ -2449,7 +2553,8 @@
       "headcount": {
         "band": "1001_5000",
         "source": "linkedin"
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "HelloFresh",
@@ -2484,7 +2589,8 @@
       "social_followers": {
         "instagram": 1500000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Gousto",
@@ -2507,7 +2613,8 @@
       "headcount": {
         "band": "501_1000",
         "source": "linkedin"
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Blue Apron",
@@ -2521,7 +2628,8 @@
       "typical_campaign_tier": "mid",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "brand_category": "established"
     },
     {
       "name": "Beyond Meat",
@@ -2546,7 +2654,8 @@
       "social_followers": {
         "instagram": 700000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Impossible Foods",
@@ -2558,7 +2667,8 @@
       "typical_campaign_tier": "mid",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "brand_category": "established"
     },
     {
       "name": "Oatly",
@@ -2583,7 +2693,8 @@
       "social_followers": {
         "instagram": 500000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Tesco",
@@ -2611,7 +2722,8 @@
       "social_followers": {
         "instagram": 800000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Sainsbury's",
@@ -2637,7 +2749,8 @@
       "headcount": {
         "band": "10000_plus",
         "source": "linkedin"
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Whole Foods",
@@ -2666,7 +2779,8 @@
       "social_followers": {
         "instagram": 4000000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Trader Joe's",
@@ -2687,7 +2801,8 @@
       "social_followers": {
         "instagram": 4000000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Aldi",
@@ -2699,7 +2814,8 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "brand_category": "established"
     },
     {
       "name": "Apple",
@@ -2727,7 +2843,8 @@
         "tiktok": 5500000,
         "youtube": 21000000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Samsung",
@@ -2754,7 +2871,8 @@
         "instagram": 8000000,
         "youtube": 6000000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Sony",
@@ -2779,7 +2897,8 @@
       "social_followers": {
         "instagram": 5500000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Google",
@@ -2806,7 +2925,8 @@
         "instagram": 16500000,
         "youtube": 12500000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Microsoft",
@@ -2832,7 +2952,8 @@
       "social_followers": {
         "instagram": 5000000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Bose",
@@ -2857,7 +2978,8 @@
       "social_followers": {
         "instagram": 600000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Sonos",
@@ -2882,7 +3004,8 @@
       "social_followers": {
         "instagram": 250000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Beats",
@@ -2901,7 +3024,8 @@
       "social_followers": {
         "instagram": 3500000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "JBL",
@@ -2913,7 +3037,8 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "brand_category": "established"
     },
     {
       "name": "GoPro",
@@ -2940,7 +3065,8 @@
         "tiktok": 3500000,
         "youtube": 11000000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "DJI",
@@ -2965,7 +3091,8 @@
       "social_followers": {
         "instagram": 4500000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Razer",
@@ -2981,7 +3108,8 @@
       "social_followers": {
         "instagram": 3500000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Logitech",
@@ -3006,7 +3134,8 @@
       "social_followers": {
         "instagram": 600000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "HyperX",
@@ -3018,7 +3147,8 @@
       "typical_campaign_tier": "mid",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "brand_category": "established"
     },
     {
       "name": "Nvidia",
@@ -3043,7 +3173,8 @@
       "social_followers": {
         "instagram": 2500000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Intel",
@@ -3068,7 +3199,8 @@
       "social_followers": {
         "instagram": 1500000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "AMD",
@@ -3089,7 +3221,8 @@
       "headcount": {
         "band": "10000_plus",
         "source": "linkedin"
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "OpenAI",
@@ -3117,7 +3250,8 @@
       "social_followers": {
         "twitter_x": 5000000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Anthropic",
@@ -3145,7 +3279,8 @@
       "social_followers": {
         "twitter_x": 350000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Midjourney",
@@ -3161,7 +3296,8 @@
       "social_followers": {
         "twitter_x": 1500000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Adobe",
@@ -3186,7 +3322,8 @@
       "social_followers": {
         "instagram": 4000000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Canva",
@@ -3211,7 +3348,8 @@
       "social_followers": {
         "instagram": 1500000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Figma",
@@ -3236,7 +3374,8 @@
       "social_followers": {
         "twitter_x": 400000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Notion",
@@ -3256,7 +3395,8 @@
       "social_followers": {
         "twitter_x": 350000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Grammarly",
@@ -3272,7 +3412,8 @@
       "social_followers": {
         "instagram": 250000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Slack",
@@ -3288,7 +3429,8 @@
       "headcount": {
         "band": "1001_5000",
         "source": "linkedin"
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Zoom",
@@ -3309,7 +3451,8 @@
       "headcount": {
         "band": "5001_10000",
         "source": "linkedin"
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "NordVPN",
@@ -3321,7 +3464,8 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "brand_category": "established"
     },
     {
       "name": "ExpressVPN",
@@ -3333,7 +3477,8 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "brand_category": "established"
     },
     {
       "name": "Surfshark",
@@ -3345,7 +3490,8 @@
       "typical_campaign_tier": "mid",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "brand_category": "established"
     },
     {
       "name": "Nintendo",
@@ -3372,7 +3518,8 @@
         "youtube": 11500000,
         "twitter_x": 10500000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "PlayStation",
@@ -3392,7 +3539,8 @@
         "instagram": 35000000,
         "youtube": 16500000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Xbox",
@@ -3412,7 +3560,8 @@
         "instagram": 19000000,
         "youtube": 8500000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Activision Blizzard",
@@ -3437,7 +3586,8 @@
       "headcount": {
         "band": "10000_plus",
         "source": "linkedin"
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Electronic Arts",
@@ -3465,7 +3615,8 @@
       "social_followers": {
         "instagram": 5500000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Ubisoft",
@@ -3486,7 +3637,8 @@
       "headcount": {
         "band": "10000_plus",
         "source": "linkedin"
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Epic Games",
@@ -3512,7 +3664,8 @@
         "instagram": 800000,
         "youtube": 3500000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Riot Games",
@@ -3528,7 +3681,8 @@
       "social_followers": {
         "instagram": 5500000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Netflix",
@@ -3556,7 +3710,8 @@
         "tiktok": 41000000,
         "youtube": 32000000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Disney+",
@@ -3575,7 +3730,8 @@
       "social_followers": {
         "instagram": 11000000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "HBO Max",
@@ -3590,7 +3746,8 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "brand_category": "established"
     },
     {
       "name": "Amazon Prime Video",
@@ -3605,7 +3762,8 @@
       "typical_campaign_tier": "premium",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "brand_category": "established"
     },
     {
       "name": "Hulu",
@@ -3620,7 +3778,8 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "brand_category": "established"
     },
     {
       "name": "Apple TV+",
@@ -3635,7 +3794,8 @@
       "typical_campaign_tier": "premium",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "brand_category": "established"
     },
     {
       "name": "Spotify",
@@ -3661,7 +3821,8 @@
         "instagram": 5500000,
         "tiktok": 2500000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Apple Music",
@@ -3677,7 +3838,8 @@
       "social_followers": {
         "instagram": 2500000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "YouTube Music",
@@ -3689,7 +3851,8 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "brand_category": "established"
     },
     {
       "name": "Audible",
@@ -3701,7 +3864,8 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "brand_category": "established"
     },
     {
       "name": "Kindle",
@@ -3716,7 +3880,8 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "brand_category": "established"
     },
     {
       "name": "Airbnb",
@@ -3741,7 +3906,8 @@
       "social_followers": {
         "instagram": 5500000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Vrbo",
@@ -3753,7 +3919,8 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "brand_category": "established"
     },
     {
       "name": "Booking.com",
@@ -3781,7 +3948,8 @@
       "social_followers": {
         "instagram": 400000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Expedia",
@@ -3802,7 +3970,8 @@
       "headcount": {
         "band": "10000_plus",
         "source": "linkedin"
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Kayak",
@@ -3814,7 +3983,8 @@
       "typical_campaign_tier": "mid",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "brand_category": "established"
     },
     {
       "name": "Marriott",
@@ -3839,7 +4009,8 @@
       "social_followers": {
         "instagram": 2500000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Hilton",
@@ -3864,7 +4035,8 @@
       "social_followers": {
         "instagram": 1500000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Hyatt",
@@ -3885,7 +4057,8 @@
       "headcount": {
         "band": "10000_plus",
         "source": "linkedin"
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Delta Air Lines",
@@ -3909,7 +4082,8 @@
       "headcount": {
         "band": "10000_plus",
         "source": "linkedin"
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "United Airlines",
@@ -3933,7 +4107,8 @@
       "headcount": {
         "band": "10000_plus",
         "source": "linkedin"
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "American Airlines",
@@ -3954,7 +4129,8 @@
       "headcount": {
         "band": "10000_plus",
         "source": "linkedin"
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "British Airways",
@@ -3978,7 +4154,8 @@
       "headcount": {
         "band": "10000_plus",
         "source": "linkedin"
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Emirates",
@@ -3994,7 +4171,8 @@
       "social_followers": {
         "instagram": 11000000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Ryanair",
@@ -4027,7 +4205,8 @@
         "instagram": 2500000,
         "tiktok": 2500000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "easyJet",
@@ -4051,7 +4230,8 @@
       "headcount": {
         "band": "10000_plus",
         "source": "linkedin"
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Uber",
@@ -4076,7 +4256,8 @@
       "social_followers": {
         "instagram": 1500000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Lyft",
@@ -4104,7 +4285,8 @@
       "social_followers": {
         "instagram": 250000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Tesla",
@@ -4130,7 +4312,8 @@
         "instagram": 10500000,
         "youtube": 3500000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Rivian",
@@ -4158,7 +4341,8 @@
       "social_followers": {
         "instagram": 1500000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Polestar",
@@ -4183,7 +4367,8 @@
       "social_followers": {
         "instagram": 600000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Lucid Motors",
@@ -4211,7 +4396,8 @@
       "headcount": {
         "band": "5001_10000",
         "source": "linkedin"
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "BYD",
@@ -4232,7 +4418,8 @@
       "headcount": {
         "band": "10000_plus",
         "source": "linkedin"
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Toyota",
@@ -4258,7 +4445,8 @@
       "social_followers": {
         "instagram": 1500000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Honda",
@@ -4283,7 +4471,8 @@
       "social_followers": {
         "instagram": 1500000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Ford",
@@ -4309,7 +4498,8 @@
       "social_followers": {
         "instagram": 1700000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "BMW",
@@ -4335,7 +4525,8 @@
         "instagram": 39000000,
         "youtube": 3000000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Mercedes-Benz",
@@ -4364,7 +4555,8 @@
         "instagram": 32000000,
         "youtube": 2500000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Audi",
@@ -4389,7 +4581,8 @@
       "social_followers": {
         "instagram": 16000000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Porsche",
@@ -4415,7 +4608,8 @@
         "instagram": 39000000,
         "youtube": 1500000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Volkswagen",
@@ -4439,7 +4633,8 @@
       "headcount": {
         "band": "10000_plus",
         "source": "linkedin"
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Hyundai",
@@ -4464,7 +4659,8 @@
       "social_followers": {
         "instagram": 1500000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Kia",
@@ -4485,7 +4681,8 @@
       "headcount": {
         "band": "10000_plus",
         "source": "linkedin"
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Harley-Davidson",
@@ -4513,7 +4710,8 @@
       "social_followers": {
         "instagram": 7500000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Ducati",
@@ -4538,7 +4736,8 @@
       "social_followers": {
         "instagram": 3500000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Triumph Motorcycles",
@@ -4553,7 +4752,8 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "brand_category": "established"
     },
     {
       "name": "Chase",
@@ -4574,7 +4774,8 @@
       "headcount": {
         "band": "10000_plus",
         "source": "linkedin"
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Bank of America",
@@ -4600,7 +4801,8 @@
       "headcount": {
         "band": "10000_plus",
         "source": "linkedin"
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "HSBC",
@@ -4621,7 +4823,8 @@
       "headcount": {
         "band": "10000_plus",
         "source": "linkedin"
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Barclays",
@@ -4642,7 +4845,8 @@
       "headcount": {
         "band": "10000_plus",
         "source": "linkedin"
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Lloyds",
@@ -4668,7 +4872,8 @@
       "headcount": {
         "band": "10000_plus",
         "source": "linkedin"
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Revolut",
@@ -4693,7 +4898,8 @@
       "social_followers": {
         "instagram": 800000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Monzo",
@@ -4721,7 +4927,8 @@
       "social_followers": {
         "instagram": 250000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Starling Bank",
@@ -4747,7 +4954,8 @@
       "headcount": {
         "band": "1001_5000",
         "source": "linkedin"
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Chime",
@@ -4765,7 +4973,8 @@
       "headcount": {
         "band": "1001_5000",
         "source": "linkedin"
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Wise",
@@ -4789,7 +4998,8 @@
       "headcount": {
         "band": "1001_5000",
         "source": "linkedin"
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "PayPal",
@@ -4814,7 +5024,8 @@
       "social_followers": {
         "instagram": 1500000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Cash App",
@@ -4833,7 +5044,8 @@
       "social_followers": {
         "instagram": 1500000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Visa",
@@ -4854,7 +5066,8 @@
       "headcount": {
         "band": "10000_plus",
         "source": "linkedin"
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Mastercard",
@@ -4875,7 +5088,8 @@
       "headcount": {
         "band": "10000_plus",
         "source": "linkedin"
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "American Express",
@@ -4903,7 +5117,8 @@
       "social_followers": {
         "instagram": 2000000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Klarna",
@@ -4928,7 +5143,8 @@
       "social_followers": {
         "instagram": 600000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Afterpay",
@@ -4944,7 +5160,8 @@
       "headcount": {
         "band": "1001_5000",
         "source": "linkedin"
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Affirm",
@@ -4968,7 +5185,8 @@
       "headcount": {
         "band": "1001_5000",
         "source": "linkedin"
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Robinhood",
@@ -4995,7 +5213,8 @@
       "social_followers": {
         "instagram": 1000000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "eToro",
@@ -5016,7 +5235,8 @@
       "headcount": {
         "band": "1001_5000",
         "source": "linkedin"
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Trading 212",
@@ -5031,7 +5251,8 @@
       "typical_campaign_tier": "mid",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "brand_category": "established"
     },
     {
       "name": "Coinbase",
@@ -5056,7 +5277,8 @@
       "social_followers": {
         "instagram": 1300000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Binance",
@@ -5082,7 +5304,8 @@
         "instagram": 3000000,
         "twitter_x": 11000000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Kraken",
@@ -5098,7 +5321,8 @@
       "headcount": {
         "band": "1001_5000",
         "source": "linkedin"
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Bumble",
@@ -5123,7 +5347,8 @@
       "social_followers": {
         "instagram": 600000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Hinge",
@@ -5144,7 +5369,8 @@
         "instagram": 700000,
         "tiktok": 1300000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Tinder",
@@ -5165,7 +5391,8 @@
         "instagram": 4000000,
         "tiktok": 1500000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Match.com",
@@ -5180,7 +5407,8 @@
       "typical_campaign_tier": "mid",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "brand_category": "established"
     },
     {
       "name": "Duolingo",
@@ -5206,7 +5434,8 @@
         "instagram": 7500000,
         "tiktok": 14000000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Babbel",
@@ -5231,7 +5460,8 @@
       "social_followers": {
         "instagram": 400000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "MasterClass",
@@ -5251,7 +5481,8 @@
       "social_followers": {
         "instagram": 700000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Coursera",
@@ -5272,7 +5503,8 @@
       "headcount": {
         "band": "1001_5000",
         "source": "linkedin"
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Udemy",
@@ -5293,7 +5525,8 @@
       "headcount": {
         "band": "1001_5000",
         "source": "linkedin"
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Skillshare",
@@ -5309,7 +5542,8 @@
       "headcount": {
         "band": "201_500",
         "source": "linkedin"
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Headspace",
@@ -5329,7 +5563,8 @@
       "social_followers": {
         "instagram": 600000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Calm",
@@ -5349,7 +5584,8 @@
       "social_followers": {
         "instagram": 1100000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "BetterHelp",
@@ -5365,7 +5601,8 @@
       "headcount": {
         "band": "501_1000",
         "source": "linkedin"
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Amazon",
@@ -5391,7 +5628,8 @@
       "social_followers": {
         "instagram": 6500000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "eBay",
@@ -5416,7 +5654,8 @@
       "social_followers": {
         "instagram": 1500000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Etsy",
@@ -5441,7 +5680,8 @@
       "social_followers": {
         "instagram": 3500000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Shopify",
@@ -5466,7 +5706,8 @@
       "social_followers": {
         "instagram": 1500000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Walmart",
@@ -5496,7 +5737,8 @@
         "instagram": 3500000,
         "tiktok": 7500000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Target",
@@ -5524,7 +5766,8 @@
         "instagram": 5000000,
         "tiktok": 2000000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Costco",
@@ -5557,7 +5800,8 @@
       "social_followers": {
         "instagram": 1500000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "John Lewis",
@@ -5580,7 +5824,8 @@
       "headcount": {
         "band": "10000_plus",
         "source": "linkedin"
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Marks & Spencer",
@@ -5607,7 +5852,8 @@
       "headcount": {
         "band": "10000_plus",
         "source": "linkedin"
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "IKEA",
@@ -5632,7 +5878,8 @@
       "social_followers": {
         "instagram": 7000000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "West Elm",
@@ -5653,7 +5900,8 @@
       "social_followers": {
         "instagram": 2500000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Wayfair",
@@ -5683,7 +5931,8 @@
       "social_followers": {
         "instagram": 4500000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Casper",
@@ -5711,7 +5960,8 @@
       "social_followers": {
         "instagram": 350000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Simba",
@@ -5726,7 +5976,8 @@
       "typical_campaign_tier": "mid",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "brand_category": "established"
     },
     {
       "name": "Eight Sleep",
@@ -5747,7 +5998,8 @@
       "headcount": {
         "band": "201_500",
         "source": "linkedin"
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Le Creuset",
@@ -5763,7 +6015,8 @@
       "headcount": {
         "band": "1001_5000",
         "source": "linkedin"
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Ninja",
@@ -5775,7 +6028,8 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "brand_category": "established"
     },
     {
       "name": "Vitamix",
@@ -5787,7 +6041,8 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "brand_category": "established"
     },
     {
       "name": "B&Q",
@@ -5814,7 +6069,8 @@
       "headcount": {
         "band": "10000_plus",
         "source": "linkedin"
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Home Depot",
@@ -5839,7 +6095,8 @@
       "headcount": {
         "band": "10000_plus",
         "source": "linkedin"
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Lowe's",
@@ -5866,7 +6123,8 @@
       "headcount": {
         "band": "10000_plus",
         "source": "linkedin"
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Lego",
@@ -5892,7 +6150,8 @@
         "instagram": 8500000,
         "youtube": 16500000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Mattel",
@@ -5917,7 +6176,8 @@
       "social_followers": {
         "instagram": 1500000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Hasbro",
@@ -5938,7 +6198,8 @@
       "headcount": {
         "band": "5001_10000",
         "source": "linkedin"
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Pampers",
@@ -5950,7 +6211,8 @@
       "typical_campaign_tier": "premium",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "brand_category": "established"
     },
     {
       "name": "Huggies",
@@ -5962,7 +6224,8 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "brand_category": "established"
     },
     {
       "name": "Purina",
@@ -5974,7 +6237,8 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "brand_category": "established"
     },
     {
       "name": "Pedigree",
@@ -5986,7 +6250,8 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "brand_category": "established"
     },
     {
       "name": "Royal Canin",
@@ -5998,7 +6263,8 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "brand_category": "established"
     },
     {
       "name": "Chewy",
@@ -6027,7 +6293,8 @@
         "instagram": 1500000,
         "tiktok": 800000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "BarkBox",
@@ -6058,7 +6325,8 @@
       "social_followers": {
         "instagram": 1500000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "DraftKings",
@@ -6085,7 +6353,8 @@
       "social_followers": {
         "instagram": 1500000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "FanDuel",
@@ -6112,7 +6381,8 @@
       "social_followers": {
         "instagram": 600000,
         "as_of_year": 2025
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Bet365",
@@ -6133,7 +6403,8 @@
       "headcount": {
         "band": "1001_5000",
         "source": "linkedin"
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Paddy Power",
@@ -6148,7 +6419,8 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "brand_category": "established"
     },
     {
       "name": "William Hill",
@@ -6162,7 +6434,8 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "brand_category": "established"
     },
     {
       "name": "Verizon",
@@ -6185,7 +6458,8 @@
       "headcount": {
         "band": "10000_plus",
         "source": "linkedin"
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "AT&T",
@@ -6208,7 +6482,8 @@
       "headcount": {
         "band": "10000_plus",
         "source": "linkedin"
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "T-Mobile",
@@ -6231,7 +6506,8 @@
       "headcount": {
         "band": "10000_plus",
         "source": "linkedin"
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Vodafone",
@@ -6252,7 +6528,8 @@
       "headcount": {
         "band": "10000_plus",
         "source": "linkedin"
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "EE",
@@ -6266,7 +6543,8 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "brand_category": "established"
     },
     {
       "name": "O2",
@@ -6280,7 +6558,8 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "brand_category": "established"
     },
     {
       "name": "Three",
@@ -6294,7 +6573,8 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "brand_category": "established"
     },
     {
       "name": "Octopus Energy",
@@ -6321,7 +6601,8 @@
       "headcount": {
         "band": "5001_10000",
         "source": "linkedin"
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "British Gas",
@@ -6335,7 +6616,8 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "brand_category": "established"
     },
     {
       "name": "EDF Energy",
@@ -6349,7 +6631,8 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "brand_category": "established"
     },
     {
       "name": "Geico",
@@ -6363,7 +6646,8 @@
       "typical_campaign_tier": "macro",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "brand_category": "established"
     },
     {
       "name": "Progressive",
@@ -6386,7 +6670,8 @@
       "headcount": {
         "band": "10000_plus",
         "source": "linkedin"
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Lemonade",
@@ -6413,7 +6698,8 @@
       "headcount": {
         "band": "1001_5000",
         "source": "linkedin"
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Aviva",
@@ -6438,7 +6724,8 @@
       "headcount": {
         "band": "10000_plus",
         "source": "linkedin"
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Squarespace",
@@ -6459,7 +6746,8 @@
       "headcount": {
         "band": "1001_5000",
         "source": "linkedin"
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Wix",
@@ -6480,7 +6768,8 @@
       "headcount": {
         "band": "1001_5000",
         "source": "linkedin"
-      }
+      },
+      "brand_category": "established"
     },
     {
       "name": "Webflow",
@@ -6492,7 +6781,8 @@
       "typical_campaign_tier": "mid",
       "creator_program_presence": [
         "direct"
-      ]
+      ],
+      "brand_category": "established"
     }
   ],
   "enrichment_field_definitions": {
