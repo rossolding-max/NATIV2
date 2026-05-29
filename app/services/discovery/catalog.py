@@ -153,6 +153,15 @@ SEARCH_CATALOG: tuple[SearchInfo, ...] = (
         weight="0.06",
         requires_external_skill=True,
     ),
+    SearchInfo(
+        name="search_17_paid_social_signal",
+        label="Brands spending heavily on paid social",
+        description=(
+            "Active ads in last 30 days on Meta Ad Library + TikTok "
+            "Creative Center. Multi-platform brands score higher."
+        ),
+        weight="0.20-0.30",
+    ),
 )
 
 

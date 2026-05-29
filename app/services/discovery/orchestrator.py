@@ -33,6 +33,7 @@ from app.services.discovery import (
     search_14_2nd_degree_graph,
     search_15_exa_newly_funded,
     search_16_last30days_trending,
+    search_17_paid_social_signal,
 )
 from app.services.discovery._models import (
     CandidateSource,
@@ -304,6 +305,26 @@ async def run_discovery(
                         brand_industry_map=bim,
                     ),
                 )
+
+    if "search_17_paid_social_signal" in enabled:
+        # M7.2 — gated behind settings.enable_search_17_paid_social inside the
+        # search module itself (which also requires a Meta Ad Library token).
+        # Reuses the same primary/secondary industry inference as 15+16.
+        top_industries_17: list[str] = []
+        for src in all_sources:
+            if (
+                src.search_tag in {"primary_industry", "secondary_industry"}
+                and src.industry_id not in top_industries_17
+            ):
+                top_industries_17.append(src.industry_id)
+        if top_industries_17:
+            await _run_safely_async(
+                "search_17_paid_social_signal",
+                search_17_paid_social_signal.run(
+                    top_industry_ids=top_industries_17,
+                    brand_industry_map=bim,
+                ),
+            )
 
     # Runs LAST among LLM searches so it can re-rank the candidate
     # pool that all other searches have surfaced.
