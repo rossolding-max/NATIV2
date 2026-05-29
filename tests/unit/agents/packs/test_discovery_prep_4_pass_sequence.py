@@ -124,7 +124,9 @@ async def test_unit__4pass__sequence_and_tool_binding() -> None:
     agent = DiscoveryPrepPackAgent(session, agency_id=_AGENCY_ID)
     invocations: list[dict[str, Any]] = []
 
-    async def _fake_invoke(self, prompt: str, *, cache_control_prefix: str | None = None):
+    async def _fake_invoke(
+        self: Any, prompt: str, *, cache_control_prefix: str | None = None
+    ) -> AgentResult:
         invocations.append(
             {
                 "agent_name": self.agent_name,
@@ -175,7 +177,9 @@ async def test_unit__4pass__failed_pass_raises_business_rule_error() -> None:
     session = MagicMock()
     agent = DiscoveryPrepPackAgent(session, agency_id=_AGENCY_ID)
 
-    async def _fake_invoke(self, prompt: str, *, cache_control_prefix: str | None = None):
+    async def _fake_invoke(
+        self: Any, prompt: str, *, cache_control_prefix: str | None = None
+    ) -> AgentResult:
         if self.agent_name == "researcher":
             return AgentResult(
                 output_text=None,
@@ -210,7 +214,9 @@ async def test_unit__4pass__persists_with_assembled_payload() -> None:
 
     captured_kwargs: dict[str, Any] = {}
 
-    async def _fake_invoke(self, prompt: str, *, cache_control_prefix: str | None = None):
+    async def _fake_invoke(
+        self: Any, prompt: str, *, cache_control_prefix: str | None = None
+    ) -> AgentResult:
         if self.agent_name == "researcher":
             return _ar(text="research summary")
         if self.agent_name == "writer-briefing":
@@ -221,7 +227,7 @@ async def test_unit__4pass__persists_with_assembled_payload() -> None:
             return _ar(structured=_SLIDES, cache_read=80)
         raise AssertionError
 
-    async def _fake_persist(*_args, **kwargs):
+    async def _fake_persist(*_args: Any, **kwargs: Any) -> MagicMock:
         captured_kwargs.update(kwargs)
         return _mock_persistence_result()
 
@@ -263,7 +269,9 @@ async def test_unit__4pass__regen_threads_parent_version_and_feedback() -> None:
 
     captured_kwargs: dict[str, Any] = {}
 
-    async def _fake_invoke(self, prompt: str, *, cache_control_prefix: str | None = None):
+    async def _fake_invoke(
+        self: Any, prompt: str, *, cache_control_prefix: str | None = None
+    ) -> AgentResult:
         if self.agent_name == "researcher":
             return _ar(text="research summary v2")
         if self.agent_name == "writer-briefing":
@@ -274,7 +282,7 @@ async def test_unit__4pass__regen_threads_parent_version_and_feedback() -> None:
             return _ar(structured=_SLIDES)
         raise AssertionError
 
-    async def _fake_persist(*_args, **kwargs):
+    async def _fake_persist(*_args: Any, **kwargs: Any) -> MagicMock:
         captured_kwargs.update(kwargs)
         return _mock_persistence_result(prep_pack_id="prep_x_v2")
 

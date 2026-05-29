@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import tempfile
 from pathlib import Path
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import UUID
 
@@ -47,11 +48,17 @@ async def test_unit__persist__flip_prior_then_insert_order() -> None:
     session = MagicMock()
     call_order: list[str] = []
 
+    async def _flip(*_a: Any, **_k: Any) -> int:
+        call_order.append("flip")
+        return 0
+
+    async def _insert(inst: Any) -> Any:
+        call_order.append("insert")
+        return inst
+
     prep_repo = MagicMock()
-    prep_repo.mark_prior_versions_not_latest = AsyncMock(
-        side_effect=lambda *_a, **_k: call_order.append("flip") or 0
-    )
-    prep_repo.create = AsyncMock(side_effect=lambda inst: call_order.append("insert") or inst)
+    prep_repo.mark_prior_versions_not_latest = AsyncMock(side_effect=_flip)
+    prep_repo.create = AsyncMock(side_effect=_insert)
 
     deal_repo = MagicMock()
     deal_repo.set_latest_prep_pack_id = AsyncMock()
@@ -81,8 +88,12 @@ async def test_unit__persist__flip_prior_then_insert_order() -> None:
 async def test_unit__persist__writes_5_artefacts_with_expected_names() -> None:
     session = MagicMock()
     prep_repo = MagicMock()
+
+    async def _passthrough(inst: Any) -> Any:
+        return inst
+
     prep_repo.mark_prior_versions_not_latest = AsyncMock(return_value=0)
-    prep_repo.create = AsyncMock(side_effect=lambda inst: inst)
+    prep_repo.create = AsyncMock(side_effect=_passthrough)
 
     deal_repo = MagicMock()
     deal_repo.set_latest_prep_pack_id = AsyncMock()
@@ -125,9 +136,9 @@ async def test_unit__persist__creates_row_with_is_latest_true_and_status() -> No
     session = MagicMock()
     prep_repo = MagicMock()
     prep_repo.mark_prior_versions_not_latest = AsyncMock(return_value=0)
-    captured: list = []
+    captured: list[Any] = []
 
-    async def _capture(instance):
+    async def _capture(instance: Any) -> Any:
         captured.append(instance)
         return instance
 
@@ -169,8 +180,13 @@ async def test_unit__persist__regen_carries_parent_version_through() -> None:
     session = MagicMock()
     prep_repo = MagicMock()
     prep_repo.mark_prior_versions_not_latest = AsyncMock(return_value=1)
-    captured: list = []
-    prep_repo.create = AsyncMock(side_effect=lambda inst: captured.append(inst) or inst)
+    captured: list[Any] = []
+
+    async def _capture2(inst: Any) -> Any:
+        captured.append(inst)
+        return inst
+
+    prep_repo.create = AsyncMock(side_effect=_capture2)
 
     deal_repo = MagicMock()
     deal_repo.set_latest_prep_pack_id = AsyncMock()

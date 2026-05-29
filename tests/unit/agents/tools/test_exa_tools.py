@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from typing import Any
 from unittest.mock import AsyncMock
 
 import pytest
@@ -9,7 +10,10 @@ import pytest
 from app.agents.tools.exa_tools import MAX_QUERIES_PER_BIND, bind_exa_tools
 
 
-def _fake_client(search_return: dict | None = None, contents_return: dict | None = None):
+def _fake_client(
+    search_return: dict[str, Any] | None = None,
+    contents_return: dict[str, Any] | None = None,
+) -> AsyncMock:
     client = AsyncMock()
     client.search = AsyncMock(return_value=search_return or {"results": []})
     client.get_contents = AsyncMock(return_value=contents_return or {"results": []})
