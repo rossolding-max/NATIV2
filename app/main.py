@@ -32,6 +32,7 @@ from app.api import brand_contacts as brand_contacts_router
 from app.api import brand_deals as brand_deals_router
 from app.api import deals as deals_router
 from app.api import enrollments as enrollments_router
+from app.api import prep_packs as prep_packs_router
 from app.api import talents as talents_router
 from app.api.middleware import RequestContextMiddleware
 from app.api.responses import APIError, APIResponse, make_meta
@@ -208,6 +209,7 @@ app.include_router(enrollments_router.top_level_router, prefix="/api/v1")
 app.include_router(deals_router.brand_scoped_router, prefix="/api/v1")
 app.include_router(deals_router.talent_scoped_router, prefix="/api/v1")
 app.include_router(deals_router.top_level_router, prefix="/api/v1")
+app.include_router(prep_packs_router.top_level_router, prefix="/api/v1")
 app.include_router(smartlead_webhook_router.router, prefix="/api/v1")
 
 
