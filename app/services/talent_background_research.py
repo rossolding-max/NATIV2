@@ -30,6 +30,8 @@ async def _kick_off_async(
     from sqlalchemy.ext.asyncio import async_sessionmaker
 
     from app.db.session import engine
+    from app.models.sqla.brand import Brand
+    from app.repositories.brand import BrandRepository
     from app.repositories.brand_candidate import BrandCandidateRepository
     from app.repositories.brand_deal import BrandDealRepository
     from app.repositories.talent import TalentRepository
@@ -66,6 +68,24 @@ async def _kick_off_async(
             brand_deals=brand_deals,
             enabled_searches=tuple(enabled_searches) if enabled_searches else None,
         )
+
+        # M7.3 — Search 15 / 18 (Exa-driven) emit candidates for net-new
+        # brands not yet in the brand catalogue. Tier="emerging" sails
+        # through qualification's promoted floor, but the FK on
+        # brand_candidate.brand_id then fails because there's no Brand
+        # row. Auto-create a minimal stub for each missing brand so the
+        # upsert can land. Real seed-map writeback (with full attribute
+        # enrichment) happens out-of-band per the "pending_writeback" log
+        # line each search already emits.
+        brands_repo = BrandRepository(session, agency_id=agency_uuid)
+        for cand in result.candidates:
+            stub = Brand(
+                brand_id=cand.brand_id,
+                name=cand.brand_name,
+                industry_id=cand.industry_id,
+                data={"source": "exa_discovery", "first_surfaced_in_run": result.search_run_id},
+            )
+            await brands_repo.create_or_skip(stub)
 
         # Persist DB rows for kept candidates (blocked stay in JSON snapshot only).
         payloads = [_candidate_to_dict(c) for c in result.candidates]
