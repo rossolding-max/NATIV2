@@ -1,9 +1,17 @@
 """Per-brand contact-enrichment orchestrator.
 
 Single entry point ``run_enrichment(brand_id, *, talent_id=None,
-target_titles=None, brand_metadata=None)``. Runs the 9-step pipeline
-(2 → 3 → 4 → 5 → 6 → 8 → qualification → policy filter), returns an
+target_titles=None, brand_metadata=None)``. Runs the Phase A pipeline
+(2 → 3 → 4 → 6 → 8 → qualification → policy filter), returns an
 ``EnrichmentRunResult``.
+
+M8.1: Step 5 (email verify) is no longer in the Phase A chain. Apollo
+``/people/search`` returns no emails, and we no longer pre-emptively
+call Apollo ``/people/match`` for everyone. Email reveal fires
+per-row in the Phase C reveal task (``contact_email_reveal_task.py``)
+triggered by the operator selecting contacts. The strict honesty-floor
+logic that used to live in ``step_5_email_verify`` now lives in
+``step_5b_reveal_email`` and applies at per-row reveal time.
 
 Pure — no DB writes. The Celery task body
 (``contact_enrichment_task.py``) does the ``upsert_run_batch`` +
@@ -22,7 +30,6 @@ from app.services.contact_enrichment import (
     step_2_apollo_search,
     step_3_linkedin_enrich,
     step_4_web_fallback,
-    step_5_email_verify,
     step_6_decision_role,
     step_8_dedupe_merge,
 )
@@ -39,32 +46,6 @@ log = get_logger(__name__)
 def _new_run_id() -> str:
     ts = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
     return f"enrich_{ts}_{uuid.uuid4().hex[:8]}"
-
-
-def _resolve_brand_category(brand_metadata: dict[str, Any]) -> str | None:
-    """Map brand industry_id -> coarse category key in target_titles._TITLE_SETS."""
-    industry_id = (brand_metadata.get("industry_id") or "").strip().lower()
-    if not industry_id:
-        return None
-    # Lightweight inline mapping; a richer mapping lives in
-    # data/industries.json under industry.parent.
-    mapping: dict[str, str] = {
-        "sportswear": "consumer-goods",
-        "activewear": "consumer-goods",
-        "cosmetics": "consumer-goods",
-        "beauty-personal-care": "consumer-goods",
-        "fashion-streetwear": "consumer-goods",
-        "supplements-brands": "consumer-goods",
-        "saas": "b2b-saas",
-        "fintech": "b2b-saas",
-        "ad-tech": "b2b-saas",
-        "agency": "agency",
-        "media-publishing": "media-entertainment",
-        "gaming": "media-entertainment",
-        "ecommerce-platforms": "ecommerce",
-        "d2c-subscription": "ecommerce",
-    }
-    return mapping.get(industry_id)
 
 
 async def run_enrichment(
@@ -103,8 +84,7 @@ async def run_enrichment(
             talent_id=talent_id,
         )
 
-    category = _resolve_brand_category(brand_metadata)
-    titles = resolve_target_titles(caller_supplied=target_titles, brand_category=category)
+    titles = resolve_target_titles(caller_supplied=target_titles)
 
     # Step 2 — Apollo employee search.
     contacts: list[EnrichedContact] = []
@@ -147,11 +127,12 @@ async def run_enrichment(
         log.warning("step_4_failed", brand_id=brand_id, error=str(exc))
         errors.append(f"step_4_web_fallback: {exc!s}")
 
-    # Step 5 — strict email-verification honesty floor.
-    contacts = step_5_email_verify.run(contacts=contacts)
-    steps_run.append("step_5_email_verify")
+    # Step 5 SKIPPED in Phase A (M8.1). Apollo /people/search returns no
+    # emails; the strict honesty floor moves to step_5b_reveal_email,
+    # triggered per-row by the operator in Phase C.
 
-    # Step 6 — Claude decision_role classifier (one batched call).
+    # Step 6 — Claude decision_role + outreach_recommendation classifier
+    # (one batched call).
     if contacts:
         try:
             contacts = await step_6_decision_role.run(

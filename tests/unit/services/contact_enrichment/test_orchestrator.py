@@ -90,7 +90,8 @@ async def test_unit__orchestrator__happy_path_runs_all_steps() -> None:
     assert "step_2_apollo_search" in result.steps_run
     assert "step_3_linkedin_enrich" in result.steps_run
     assert "step_4_web_fallback" in result.steps_run
-    assert "step_5_email_verify" in result.steps_run
+    # M8.1: Step 5 SKIPPED in Phase A — email reveal moves to step_5b.
+    assert "step_5_email_verify" not in result.steps_run
     assert "step_6_decision_role" in result.steps_run
     assert "step_8_dedupe_merge" in result.steps_run
     assert len(result.contacts) == 1
@@ -101,7 +102,8 @@ async def test_unit__orchestrator__happy_path_runs_all_steps() -> None:
 async def test_unit__orchestrator__apollo_failure_recorded_but_continues() -> None:
     apollo = MagicMock()
     apollo.search_people = AsyncMock(side_effect=RuntimeError("Apollo down"))
-    # Even with Apollo down, Step 4 (Exa) and Step 5 still run.
+    # Even with Apollo down, Step 4 (Exa) still runs. Step 5 no longer
+    # in Phase A as of M8.1 — it's deferred to step_5b reveal task.
     exa = MagicMock()
     exa.search = AsyncMock(return_value={"results": []})
     llm = MagicMock()
@@ -120,7 +122,8 @@ async def test_unit__orchestrator__apollo_failure_recorded_but_continues() -> No
     # Apollo is fail-soft per-title, so Step 2 still appears in steps_run
     # (it didn't crash the orchestrator); errors list stays empty.
     assert "step_2_apollo_search" in result.steps_run
-    assert "step_5_email_verify" in result.steps_run
+    assert "step_4_web_fallback" in result.steps_run
+    assert "step_5_email_verify" not in result.steps_run  # M8.1 Phase C only
 
 
 @pytest.mark.asyncio
