@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 from uuid import UUID
 
@@ -27,7 +28,7 @@ def _row(
     return row
 
 
-def _apollo_response(*, email: str | None, email_status: str | None) -> dict:
+def _apollo_response(*, email: str | None, email_status: str | None) -> dict[str, Any]:
     return {"person": {"email": email, "email_status": email_status}}
 
 
