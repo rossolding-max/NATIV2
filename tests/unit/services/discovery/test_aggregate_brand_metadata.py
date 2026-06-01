@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 from app.services.discovery._models import CandidateSource
-from app.services.discovery.orchestrator import _aggregate_brand_metadata
+from app.services.discovery.orchestrator import (
+    _aggregate_brand_metadata,  # pyright: ignore[reportPrivateUsage]
+)
 
 
 def _src(

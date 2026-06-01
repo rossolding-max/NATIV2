@@ -12,7 +12,7 @@ def _tax(*, sub_industries: dict[str, list[str]] | None = None) -> Any:
     """Mock Taxonomies; ``get_sub_industries`` returns children per industry."""
     children = sub_industries or {}
     tax = MagicMock()
-    tax.get_sub_industries.side_effect = lambda iid: children.get(iid, [])
+    tax.get_sub_industries.side_effect = lambda iid: children.get(iid, [])  # pyright: ignore[reportUnknownLambdaType,reportUnknownArgumentType]
     return tax
 
 
