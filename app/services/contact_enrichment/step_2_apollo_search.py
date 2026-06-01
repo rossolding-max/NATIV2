@@ -1,13 +1,22 @@
-"""Step 2 — Apollo employee lookup for a brand's target titles.
+"""Step 2 — Apollo employee broad-capture for a brand's marketing team.
 
-For each target_title in the resolved set, hit
-``ApolloClient.search_people(domain, titles=[title], seniorities)``,
+For each target_title keyword in the resolved set, hit
+``ApolloClient.search_people(domain, titles=[keyword], seniorities)``,
 collect distinct people by Apollo ``id``, build ``EnrichedContact``
 records.
 
-Cost guard: capped at ``max_candidates`` (default 12) per brand so the
-LinkedIn-enrichment step downstream doesn't blow through that 30 req/min
-budget.
+M8.1 broadens the capture: 12 marketing-adjacent keywords (per
+``target_titles.BROAD_TITLE_KEYWORDS``) instead of 5-8 specific titles,
+``per_page`` bumped 10 → 100, and the brand-level dedup cap raised
+12 → 100. The expensive part of the pipeline (Apollo /people/match
+email reveal) does NOT fire here — it fires per-row in the M8.1
+Phase C reveal task, only on contacts the operator selects after
+seeing the Step 6 ``outreach_recommendation`` badges.
+
+The previous "cost guard" framing no longer applies: Apollo
+/people/search has no per-record cost. The 100-candidate cap is now
+purely an in-memory safety bound to keep the Step 6 batched Haiku
+prompt at sensible token size.
 """
 
 from __future__ import annotations
@@ -23,7 +32,8 @@ from app.vendors.apollo import ApolloClient
 log = get_logger(__name__)
 
 
-DEFAULT_MAX_CANDIDATES: int = 12
+DEFAULT_MAX_CANDIDATES: int = 100
+DEFAULT_PER_PAGE: int = 100
 _CONTACT_ID_PREFIX = "bc_"
 
 
@@ -116,7 +126,7 @@ async def run(
                 titles=[title],
                 seniorities=seniority_hints,
                 page=1,
-                per_page=10,
+                per_page=DEFAULT_PER_PAGE,
             )
         except Exception as exc:
             log.warning(

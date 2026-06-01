@@ -31,6 +31,15 @@ class EnrichedContact:
     # decision_role and rationale land after Step 6.
     decision_role: str = "unknown"
     decision_role_rationale: str = ""
+    # M8.1 — outreach_recommendation lands in the same batched Step 6 call
+    # alongside decision_role. Drives the UI "recommended / not / review" badge
+    # so the operator knows which contacts to actually click "reveal email" on.
+    outreach_recommendation: str = "requires_review"
+    outreach_recommendation_rationale: str = ""
+    # M8.1 — set per-row by Step 5b after the operator triggers email reveal.
+    # None until reveal attempted; populated even on reveal failure so the UI
+    # shows "we tried, no verified email available".
+    revealed_at: datetime | None = None
 
     def add_source(self, *, step: str, vendor: str, payload: dict[str, Any]) -> None:
         self.sources.append({"step": step, "vendor": vendor, "payload": payload})

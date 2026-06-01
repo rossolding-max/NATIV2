@@ -1,14 +1,27 @@
-"""Step 6 — Claude ``decision_role`` classifier (one batched call per run).
+"""Step 6 — Claude classifier: decision_role + outreach_recommendation (M8.1).
 
 Takes the candidate list (with title + seniority + function from
 Steps 2/3) and the brand metadata (revenue, headcount, tier, stage)
-and returns one of five ``decision_role`` values per contact:
+and returns TWO classifications per contact in ONE batched LLM call:
 
-- ``buyer`` — can say yes AND holds budget for this deal size
-- ``influencer`` — has input but not authority
-- ``gatekeeper`` — controls access to the buyer
-- ``champion`` — internal advocate / known fan of this talent type
-- ``unknown`` — insufficient signal (default fallback)
+1. ``decision_role`` (five values): the contact's role in the buying
+   decision — buyer / influencer / gatekeeper / champion / unknown.
+
+2. ``outreach_recommendation`` (three values, M8.1): whether the
+   operator should actually pitch this contact directly.
+   - ``recommended``: clear-fit role + appropriate seniority for a
+     direct pitch. (e.g. Influencer Marketing Manager at any brand;
+     Brand Manager at mid-size brand; Founder at <500-person brand.)
+   - ``not_recommended``: structurally wrong target — too senior to
+     respond to direct creator pitches (CMO at $50B brand), wrong
+     function (procurement reviewer), or known dead-end (placeholder
+     row with no name).
+   - ``requires_review``: ambiguous signal; operator should look at the
+     row before deciding.
+
+Both classifications come from one prompt → one JSON response → one
+parse. Parse failures default to ``unknown`` + ``requires_review`` so
+nothing surfaces as ``recommended`` without an actual LLM endorsement.
 
 Mirrors the ``search_13_values_aligned.py`` prompt + tolerant
 JSON-parser pattern. One LLM call per enrichment run — cheap.
@@ -30,6 +43,10 @@ _ALLOWED_ROLES: frozenset[str] = frozenset(
     {"buyer", "influencer", "gatekeeper", "champion", "unknown"}
 )
 
+_ALLOWED_RECOMMENDATIONS: frozenset[str] = frozenset(
+    {"recommended", "not_recommended", "requires_review"}
+)
+
 
 def _build_prompt(*, brand_metadata: dict[str, Any], contacts: list[EnrichedContact]) -> str:
     brand_summary = json.dumps(
@@ -48,23 +65,44 @@ def _build_prompt(*, brand_metadata: dict[str, Any], contacts: list[EnrichedCont
         for c in contacts
     )
     return f"""You are classifying business-development contacts at a brand for a
-talent agency planning to pitch an influencer-marketing deal.
+talent agency planning to pitch an influencer-marketing deal. For each
+contact, return TWO independent classifications.
 
 Brand metadata:
 {brand_summary}
 
-For each contact below, decide their ROLE in the buying decision:
-- "buyer": can say yes AND holds budget (founders at small/mid brands,
-  CMOs at small brands, VPs at $1B+ brands).
-- "influencer": has input but not final authority (mid-level marketers
-  at large brands).
-- "gatekeeper": controls access to the buyer (EAs, AOR contacts).
-- "champion": internal advocate for influencer marketing or this
-  talent type.
-- "unknown": insufficient signal to classify.
-
 Contacts:
 {candidates_block}
+
+CLASSIFICATION 1 — decision_role (role in the buying decision):
+- "buyer": can say yes AND holds budget (founders at small/mid brands,
+  CMOs at small brands, VPs at $1B+ brands, Influencer Marketing
+  Manager / Director of Creator Partnerships at any brand size).
+- "influencer": has input but not final authority (mid-level marketers
+  at large brands; CMOs/VPs at megabrands where deal sign-off happens
+  2-3 levels below).
+- "gatekeeper": controls access to the buyer (EAs, AOR account
+  directors, procurement).
+- "champion": internal advocate for influencer marketing or this
+  talent type (rare — only when there's explicit signal).
+- "unknown": insufficient signal to classify.
+
+CLASSIFICATION 2 — outreach_recommendation (M8.1):
+Should the operator pitch this contact DIRECTLY?
+- "recommended": yes — clear-fit role at the right level for a creator
+  pitch (Influencer Marketing Manager anywhere, Founder at <500-person
+  brand, Senior Brand Manager at mid-market). Email reveal worth paying
+  for.
+- "not_recommended": no — structurally wrong target. Examples: CMO at
+  $50B brand (too senior; will ignore or forward), procurement
+  reviewer, anyone whose title suggests they don't own creator-
+  marketing decisions, placeholder rows with "Unknown" name.
+- "requires_review": ambiguous — operator should look at the row
+  before deciding (e.g. unclear title, unfamiliar role).
+
+When in doubt, prefer "requires_review" over "recommended". The
+purpose of this flag is to save the operator email-reveal spend on
+contacts who'd never respond to a direct creator pitch.
 
 Respond with JSON ONLY in this exact format (no prose, no markdown
 fences):
@@ -73,7 +111,9 @@ fences):
     {{
       "contact_id": "...",
       "decision_role": "buyer|influencer|gatekeeper|champion|unknown",
-      "rationale": "one sentence"
+      "decision_role_rationale": "one sentence",
+      "outreach_recommendation": "recommended|not_recommended|requires_review",
+      "outreach_recommendation_rationale": "one sentence"
     }}
   ]
 }}
@@ -81,7 +121,14 @@ fences):
 
 
 def _parse_response(text: str) -> dict[str, dict[str, str]]:
-    """Return a contact_id -> {role, rationale} map."""
+    """Return a contact_id -> {role, role_rationale, recommendation,
+    recommendation_rationale} map.
+
+    Backwards compatible: pre-M8.1 Haiku responses with only ``rationale``
+    (single key, decision_role rationale) still parse correctly; the
+    recommendation fields fall back to ``requires_review`` + empty
+    rationale when missing.
+    """
     s = text.strip()
     if s.startswith("```"):
         s = re.sub(r"^```[a-zA-Z]*\n?", "", s)
@@ -110,8 +157,25 @@ def _parse_response(text: str) -> dict[str, dict[str, str]]:
         role = role.strip().lower()
         if role not in _ALLOWED_ROLES:
             role = "unknown"
-        rationale = item.get("rationale") or ""
-        out[cid] = {"role": role, "rationale": str(rationale).strip()}
+        # decision_role_rationale: new field name post-M8.1; legacy
+        # ``rationale`` key supported for backwards compat.
+        role_rationale = item.get("decision_role_rationale")
+        if not isinstance(role_rationale, str) or not role_rationale.strip():
+            role_rationale = item.get("rationale") or ""
+        # outreach_recommendation: new in M8.1. Default to requires_review
+        # when missing or invalid — never auto-promote to recommended.
+        recommendation = item.get("outreach_recommendation")
+        if isinstance(recommendation, str):
+            recommendation = recommendation.strip().lower()
+        if recommendation not in _ALLOWED_RECOMMENDATIONS:
+            recommendation = "requires_review"
+        recommendation_rationale = item.get("outreach_recommendation_rationale") or ""
+        out[cid] = {
+            "role": role,
+            "role_rationale": str(role_rationale).strip(),
+            "recommendation": recommendation,
+            "recommendation_rationale": str(recommendation_rationale).strip(),
+        }
     return out
 
 
@@ -153,5 +217,7 @@ async def run(
         if entry is None:
             continue
         c.decision_role = entry["role"]
-        c.decision_role_rationale = entry["rationale"]
+        c.decision_role_rationale = entry["role_rationale"]
+        c.outreach_recommendation = entry["recommendation"]
+        c.outreach_recommendation_rationale = entry["recommendation_rationale"]
     return contacts

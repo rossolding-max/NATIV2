@@ -145,3 +145,44 @@ async def test_unit__step_2__email_status_passed_through() -> None:
     )
     assert contacts[0].email_address == "vv@example.com"
     assert contacts[0].email_verification_status == "verified"
+
+
+# ── M8.1 — broadened capture parameters ───────────────────────────
+
+
+@pytest.mark.asyncio
+async def test_unit__step_2_m81__per_page_is_100() -> None:
+    """Apollo /people/search per_page bumped 10 → 100 in M8.1."""
+    client = MagicMock()
+    client.search_people = AsyncMock(return_value={"people": []})
+    await step_2_apollo_search.run(
+        brand_id="gymshark",
+        domain="gymshark.com",
+        target_titles=["marketing"],
+        apollo_client=client,
+    )
+    # Verify the per_page arg passed to Apollo.
+    _, kwargs = client.search_people.call_args
+    assert kwargs["per_page"] == 100
+
+
+@pytest.mark.asyncio
+async def test_unit__step_2_m81__default_max_candidates_is_100() -> None:
+    """The brand-level dedup cap bumped 12 → 100 to absorb broad pool."""
+    assert step_2_apollo_search.DEFAULT_MAX_CANDIDATES == 100
+
+
+@pytest.mark.asyncio
+async def test_unit__step_2_m81__broad_keyword_titles_each_query_apollo() -> None:
+    """Pass a 5-keyword title list; Apollo is queried once per keyword."""
+    client = MagicMock()
+    client.search_people = AsyncMock(return_value={"people": []})
+    await step_2_apollo_search.run(
+        brand_id="gymshark",
+        domain="gymshark.com",
+        target_titles=["marketing", "brand", "creator", "growth", "founder"],
+        apollo_client=client,
+    )
+    assert client.search_people.call_count == 5
+    queried_titles = [call.kwargs["titles"][0] for call in client.search_people.call_args_list]
+    assert queried_titles == ["marketing", "brand", "creator", "growth", "founder"]
