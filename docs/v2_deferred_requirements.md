@@ -258,6 +258,11 @@ Per `docs/vendor_roadmap.md`:
 - SimilarWeb (audience-overlap competitors)
 - Crunchbase (structured funding data)
 
+### V2-VENDOR-07 — Similar-talent sponsor-history automation (Modash / HypeAuditor)
+- **v0.1 behaviour:** Agency operator manually enters similar-talent peers + their past sponsored brands into `talent.data.similar_talent[]` after looking at each peer's Instagram / TikTok profile. ~10 min per peer. Phase 1's `similar_talent` walk seeds + Phase 3 S2 (`similar_talent_worked_with`) and S4 (`competitor_of_similar_talent`) consume the manual data unchanged. Researched 2026-06-01: Exa web search cannot reliably extract sponsor disclosures from Instagram/TikTok posts (login walls + non-indexable captions); the M7.7+ live test against James Breakwell returned only LLM-pattern-matched category guesses with no evidence-based partnerships, confirming the manual path for v0.1.
+- **v2 work:** Integrate Modash OR HypeAuditor API. Per peer handle, pull structured `[{brand_name, post_url, posted_at, disclosure_tag (#ad/#sponsored/#gifted), engagement_rate}]` history. Map brand_name → industry_id via taxonomy lookup + LLM fallback. Background Celery job refreshes peer sponsor history weekly; new brands flow into the agency inventory automatically tagged with `source="peer_sponsor_history"`. Removes the manual entry step entirely for any peer once added.
+- **v2 cost:** ~3-5 days build + ongoing vendor subscription (Modash starts ~$300-1500/mo per workspace depending on creator volume; HypeAuditor similar). Adds ~$0.50-2.00 per peer per refresh in API calls.
+
 ---
 
 ## 8. Data layer features

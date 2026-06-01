@@ -12,13 +12,13 @@ this (replacing the M5 stub body). REST callers also reach it via the
 
 from __future__ import annotations
 
-import json
 import uuid
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Literal
 
 from app.services.discovery import (
+    _industry_softener,
     search_1_reengagement,
     search_2_similar_talent_brands,
     search_3_competitors,
@@ -34,12 +34,23 @@ from app.services.discovery import (
     search_15_exa_newly_funded,
     search_16_last30days_trending,
     search_17_paid_social_signal,
+    search_18_established_brands,
+)
+from app.services.discovery._geographic_filter import (
+    extract_talent_countries,
+    filter_sources_by_geo,
+)
+from app.services.discovery._industry_expansion import (
+    expand_past_deal_industries_bidirectionally,
+    extract_industries_from_deals,
+    extract_industries_from_previous_brands,
 )
 from app.services.discovery._models import (
     CandidateSource,
     DiscoveryRunResult,
     QualifiedCandidate,
 )
+from app.services.discovery._seed_map_loader import load_merged_brand_industry_map
 from app.services.discovery.catalog import default_enabled_searches
 from app.services.discovery.policy_filter import apply_filters
 from app.services.discovery.qualification import (
@@ -73,11 +84,13 @@ def _new_search_run_id() -> str:
 
 
 def _load_brand_industry_map(data_dir: Path | None = None) -> dict[str, Any]:
-    repo_root = Path(__file__).resolve().parents[3]
-    path = (data_dir or repo_root / "data") / "brand_industry_map.json"
-    if not path.exists():
-        return {"brands": []}
-    return json.loads(path.read_text(encoding="utf-8"))
+    """Backwards-compat shim — delegates to ``load_merged_brand_industry_map``.
+
+    M7.4 split this into ``_seed_map_loader.load_merged_brand_industry_map``
+    so the curated file + auto-grown discovered file get unioned at load
+    time. Callers that import this symbol get the merged result.
+    """
+    return load_merged_brand_industry_map(data_dir)
 
 
 def _assign_tier(
@@ -102,13 +115,152 @@ def _merge_sources(
     return grouped
 
 
+def _aggregate_brand_metadata(
+    sources: list[CandidateSource],
+    brand_entry: dict[str, Any] | None,
+) -> tuple[str | None, dict[str, str | None], bool]:
+    """Walk a candidate's sources to fill (domain, social_handles, any_social).
+
+    First non-null per-platform wins from the sources. When no source
+    supplied a value, falls back to the seed-map ``brand_entry`` — many
+    curated entries carry a ``domain`` and ``social_handles`` block that
+    deterministic Phase 3 sources (S1/S2/S3/S4) wouldn't otherwise
+    propagate onto the candidate.
+
+    Returns ``(domain, social_handles_dict, any_social_was_non_null)``.
+    """
+    brand_domain: str | None = None
+    brand_social: dict[str, str | None] = {
+        "instagram": None,
+        "tiktok": None,
+        "youtube": None,
+        "x": None,
+        "linkedin": None,
+    }
+    for s in sources:
+        if brand_domain is None and s.brand_domain:
+            brand_domain = s.brand_domain
+        if s.brand_social_handles:
+            for platform, value in s.brand_social_handles.items():
+                if value and brand_social.get(platform) is None:
+                    brand_social[platform] = value
+
+    # Fall back to seed-map entry for fields not supplied by any source.
+    if isinstance(brand_entry, dict):
+        if brand_domain is None:
+            entry_domain = brand_entry.get("domain")
+            if isinstance(entry_domain, str) and entry_domain:
+                brand_domain = entry_domain
+        entry_social = brand_entry.get("social_handles")
+        if isinstance(entry_social, dict):
+            for platform in brand_social:
+                if brand_social[platform] is None:
+                    value = entry_social.get(platform)
+                    if isinstance(value, str) and value:
+                        brand_social[platform] = value
+
+    any_social = any(v for v in brand_social.values())
+    return brand_domain, brand_social, any_social
+
+
+def _industries_from_niche_affinity(
+    content_niches: list[str],
+    taxonomies: Taxonomies,
+) -> list[str]:
+    """Pull the deterministic primary+secondary affinity industry list.
+
+    Used as the baseline `current_industries` input to the LLM softener
+    so the model knows what's already in scope.
+    """
+    out: list[str] = []
+    seen: set[str] = set()
+    groups = (taxonomies.niche_industry_affinity or {}).get("groups") or []
+    for niche_id in content_niches:
+        for group in groups:
+            if not isinstance(group, dict) or group.get("niche_id") != niche_id:
+                continue
+            for tier_key in ("primary", "secondary"):
+                for industry_id in group.get(tier_key) or []:
+                    if isinstance(industry_id, str) and industry_id not in seen:
+                        seen.add(industry_id)
+                        out.append(industry_id)
+    return out
+
+
+async def _compute_industry_expansions(
+    *,
+    talent_data: dict[str, Any],
+    brand_deals: list[Any],
+    taxonomies: Taxonomies,
+) -> tuple[list[str], list[str]]:
+    """Return (bidirectional_walk_ids, softener_ids) for downstream wiring.
+
+    Both lists exclude industries already in the deterministic affinity
+    walk (no double-emit). The orchestrator merges them and passes the
+    combined extras list into S5/6/7 + S15/S18.
+    """
+    content_niches = [n for n in (talent_data.get("content_niches") or []) if isinstance(n, str)]
+    affinity_industries = _industries_from_niche_affinity(content_niches, taxonomies)
+    affinity_set = set(affinity_industries)
+
+    # Bidirectional walk from past-deal sub-industries. M7.6 — also
+    # include previous_brands industries so talents with past brand
+    # history (but no full deal record) still benefit from the walk.
+    deal_industries = extract_industries_from_deals(brand_deals)
+    previous_brand_industries = extract_industries_from_previous_brands(
+        list(talent_data.get("previous_brands") or [])
+    )
+    combined = list(dict.fromkeys(deal_industries + previous_brand_industries))
+    walked = expand_past_deal_industries_bidirectionally(combined, taxonomies)
+    walk_extras = [x for x in walked if x not in affinity_set]
+
+    # LLM softener.
+    softener_input = affinity_industries + walk_extras
+    softener_extras = await _industry_softener.run(
+        talent_data=talent_data,
+        current_industries=softener_input,
+        taxonomies=taxonomies,
+    )
+    softener_extras = [
+        x for x in softener_extras if x not in affinity_set and x not in set(walk_extras)
+    ]
+    return walk_extras, softener_extras
+
+
+def _build_exa_industry_seed(
+    *,
+    all_sources: list[CandidateSource],
+    industry_extras: list[str],
+) -> list[str]:
+    """Return the deduped industry seed for S15 + S18 fan-out.
+
+    Composes:
+      1. Industries that surfaced via S5/6 hits (deterministic affinity).
+      2. The precomputed extras (bidirectional walk + LLM softener).
+    """
+    seen: set[str] = set()
+    out: list[str] = []
+    for src in all_sources:
+        if (
+            src.search_tag in {"primary_industry", "secondary_industry"}
+            and src.industry_id not in seen
+        ):
+            seen.add(src.industry_id)
+            out.append(src.industry_id)
+    for industry_id in industry_extras:
+        if industry_id not in seen:
+            seen.add(industry_id)
+            out.append(industry_id)
+    return out
+
+
 async def run_discovery(
     *,
     talent_id: str,
     talent_data: dict[str, Any],
     brand_deals: list[Any],
     enabled_searches: tuple[str, ...] | None = None,
-    qualification_threshold: float = DEFAULT_QUALIFICATION_THRESHOLD,
+    qualification_threshold: float = DEFAULT_QUALIFICATION_THRESHOLD,  # noqa: ARG001 — kept for v0.1 callers; M7.4 dropped the hard floor in the orchestrator
     taxonomies: Taxonomies | None = None,
     brand_industry_map: dict[str, Any] | None = None,
     today: Any = None,
@@ -126,6 +278,16 @@ async def run_discovery(
     previous_brands = list(talent_data.get("previous_brands") or [])
     audience = dict(talent_data.get("audience_demographics") or {})
     brand_preferences = dict(talent_data.get("brand_preferences") or {})
+
+    # M7.4 — compute industry extras BEFORE any search fires so S5 can
+    # consume them. One Haiku call (softener) + a deterministic
+    # bidirectional walk on past-deal industries.
+    _walk_extras, _softener_extras = await _compute_industry_expansions(
+        talent_data=talent_data,
+        brand_deals=brand_deals,
+        taxonomies=tax,
+    )
+    _industry_extras: list[str] = list(_walk_extras) + list(_softener_extras)
 
     all_sources: list[CandidateSource] = []
     errors: list[str] = []
@@ -190,6 +352,7 @@ async def run_discovery(
                 tier="primary",
                 taxonomies=tax,
                 brand_industry_map=bim,
+                extra_target_industries=_industry_extras,
             ),
         )
     if "search_6_secondary_industry" in enabled:
@@ -265,25 +428,54 @@ async def run_discovery(
             ),
         )
 
-    if "search_15_exa_newly_funded" in enabled:
-        # Use the industries that already surfaced via Search 5/6/7 as
-        # the seed; if none, fall back to industries inferred from the
-        # talent's content niches via the affinity primary tier.
-        top_industries: list[str] = []
-        for src in all_sources:
-            if (
-                src.search_tag in {"primary_industry", "secondary_industry"}
-                and src.industry_id not in top_industries
-            ):
-                top_industries.append(src.industry_id)
-        if top_industries:
-            await _run_safely_async(
-                "search_15_exa_newly_funded",
-                search_15_exa_newly_funded.run(
-                    top_industry_ids=top_industries,
-                    brand_industry_map=bim,
-                ),
-            )
+    # M7.3 — extract the talent's geo anchor once so Search 15 + 18 can
+    # embed it in their Exa queries. Falls back to location.country when
+    # audience_demographics is empty (Kevin's case).
+    _talent_countries = extract_talent_countries(talent_data)
+    _talent_country = _talent_countries[0] if _talent_countries else None
+
+    # M7.4 — derive the fan-out industry list for Exa-driven searches.
+    # Combines S5/6 affinity hits (post-search) with the pre-computed
+    # bidirectional-walk + LLM-softener extras.
+    _exa_industry_seed_full = _build_exa_industry_seed(
+        all_sources=all_sources,
+        industry_extras=_industry_extras,
+    )
+    # M7.6 — cap the Exa fan-out to bound cost. S5/6/7/8 (cheap seed-map
+    # walks) still see the full industry list; only the Exa-driven
+    # S15/S18 are bounded. Ordering preserves affinity hits first, then
+    # bidirectional walk, then LLM softener — so the cap keeps the
+    # highest-signal industries.
+    from app.config import settings as _settings
+
+    _exa_industry_seed = _exa_industry_seed_full[: _settings.discovery_exa_max_industries]
+    if len(_exa_industry_seed_full) > len(_exa_industry_seed):
+        log.info(
+            "discovery_exa_seed_capped",
+            full=len(_exa_industry_seed_full),
+            used=len(_exa_industry_seed),
+            cap=_settings.discovery_exa_max_industries,
+        )
+
+    if "search_15_exa_newly_funded" in enabled and _exa_industry_seed:
+        await _run_safely_async(
+            "search_15_exa_newly_funded",
+            search_15_exa_newly_funded.run(
+                top_industry_ids=_exa_industry_seed,
+                brand_industry_map=bim,
+                talent_country=_talent_country,
+            ),
+        )
+
+    if "search_18_established_brands" in enabled and _exa_industry_seed:
+        await _run_safely_async(
+            "search_18_established_brands",
+            search_18_established_brands.run(
+                top_industry_ids=_exa_industry_seed,
+                brand_industry_map=bim,
+                talent_country=_talent_country,
+            ),
+        )
 
     if "search_16_last30days_trending" in enabled:
         # Gated: needs the last30days skill installed + OpenAI/xAI keys.
@@ -338,35 +530,92 @@ async def run_discovery(
             ),
         )
 
-    # Merge sources by brand, build qualified candidates.
-    grouped = _merge_sources(all_sources)
+    # Build the seed-map name->entry index once; used by both the geo
+    # filter and the per-brand qualification lookup.
     raw_brands: list[Any] = bim.get("brands") or []
     brand_lookup = {
         str(b.get("name", "")).strip().lower(): b for b in raw_brands if isinstance(b, dict)
     }
+
+    # M7.3 — apply the shared geographic filter to the aggregated
+    # sources BEFORE merge. Drops brands whose sells_in_countries is an
+    # explicit list NOT including any of the talent's countries (Tesco
+    # case for US-based Kevin). Net-new (Exa) brands not in the seed
+    # map pass through unaltered.
+    if _talent_countries:
+        all_sources = filter_sources_by_geo(all_sources, brand_lookup, _talent_countries)
+
+    # Merge sources by brand, build qualified candidates.
+    grouped = _merge_sources(all_sources)
     qualified: list[QualifiedCandidate] = []
     for brand_id, sources in grouped.items():
+        # M7.4 — score is informational metadata only. No drop based on
+        # score or tier thresholds; the agent sees every candidate that
+        # surfaced from any search and decides what to do with it.
         score = min(1.0, sum(s.weight for s in sources))
-        if score < _TIER_THRESHOLDS[-1][0]:
-            continue  # below the lowest tier threshold
         tags = {s.search_tag for s in sources}
         tier = _assign_tier(score=score, tags=tags)
         first_source = sources[0]
         brand_entry = brand_lookup.get(first_source.brand_name.strip().lower())
-        q_score, q_tier, signals = qualify_candidate(brand_entry)
-        if q_score < qualification_threshold:
-            continue  # dropped by qualification floor
+        # M7.3 — pass tags + notes so the qualifier can promote net-new
+        # Exa-discovered brands to "emerging" when LLM confidence >= 0.70.
+        q_score, q_tier, signals = qualify_candidate(
+            brand_entry,
+            source_tags=tags,
+            source_notes=[s.note for s in sources],
+        )
+        # M7.3 — when the brand surfaces only via Exa-discovery tags
+        # (recently_funded / established_exa_discovery) AND qualification
+        # promoted it to speculative+, override tier="emerging" so the
+        # UI distinguishes long-tail net-new brands from the seed-map
+        # tier system.
+        from app.services.discovery.qualification import EXA_DISCOVERY_TAGS
+
+        if (
+            brand_entry is None
+            and tags <= EXA_DISCOVERY_TAGS
+            and q_tier in {"qualified", "speculative"}
+        ):
+            tier = "emerging"  # type: ignore[assignment]
+        # M7.4 — qualification_threshold is informational. The
+        # qualification tier (qualified/speculative/unqualified) is
+        # already attached to the candidate; the agent can filter at the
+        # REST layer when they want to.
+        # M7.5 — aggregate brand-level metadata (domain + social handles)
+        # across all S15/S18 sources for this brand. First non-null wins
+        # per field; same for each social platform.
+        brand_domain, brand_social, any_social = _aggregate_brand_metadata(sources, brand_entry)
+
+        # M7.7 — derive top-level industry + sub-industry from the
+        # first-source industry_id. brand_category resolution centralised
+        # in _brand_category.infer_brand_category — covers every source
+        # the pipeline uses (Phase 2 categories, Phase 3 talent-specific,
+        # Phase 4 signal overlay, S15/S16 legacy) with seed-map fallback.
+        from app.services.discovery._brand_category import infer_brand_category
+        from app.services.discovery._industry_taxonomy import (
+            derive_top_level_and_sub_industry,
+        )
+
+        top_level_industry, sub_industry = derive_top_level_and_sub_industry(
+            first_source.industry_id, tax
+        )
+        brand_category = infer_brand_category([s.search_tag for s in sources], brand_entry)
+
         qualified.append(
             QualifiedCandidate(
                 brand_id=brand_id,
                 brand_name=first_source.brand_name,
-                industry_id=first_source.industry_id,
+                industry_id=top_level_industry,
                 score=score,
                 tier=tier,
                 sources=sources,
                 qualification_score=q_score,
                 qualification_tier=q_tier,
                 qualification_signals=signals,
+                domain=brand_domain,
+                social_handles=brand_social if any_social else None,
+                sub_industry_id=sub_industry,
+                brand_category=brand_category,  # type: ignore[arg-type]
             )
         )
 
@@ -393,3 +642,282 @@ async def run_discovery(
         blocked=blocked,
         errors=errors,
     )
+
+
+# ── M7.7 v2 architecture entry points ─────────────────────────────
+
+
+async def run_discovery_v2_maintenance(
+    *,
+    talent_id: str,
+    talent_data: dict[str, Any],
+    brand_deals: list[Any],
+    taxonomies: Taxonomies | None = None,
+    brand_industry_map: dict[str, Any] | None = None,
+    values_search_enabled: bool = False,
+    today: Any = None,
+) -> DiscoveryRunResult:
+    """M7.7 maintenance-mode discovery: Phase 3 + Phase 4 only.
+
+    Phase 3 fires the talent-specific searches (S1, S2, Exa-S3/S4, S13).
+    Phase 4 fires the global signal overlay (S15-residual + S16 + S17).
+    No Phase 1 industry compilation, no Phase 2 brand-universe build.
+    Cheap, daily-refreshable; ~$2-5 per run.
+    """
+    from app.services.discovery import phase_3_talent_specific, phase_4_signal_overlay
+
+    tax = taxonomies or get_taxonomies()
+    bim = brand_industry_map or _load_brand_industry_map()
+    talent_countries = extract_talent_countries(talent_data)
+    talent_country = talent_countries[0] if talent_countries else None
+
+    sources: list[CandidateSource] = []
+    errors: list[str] = []
+
+    try:
+        sources.extend(
+            await phase_3_talent_specific.run(
+                talent_data=talent_data,
+                brand_deals=brand_deals,
+                brand_industry_map=bim,
+                talent_country=talent_country,
+                values_search_enabled=values_search_enabled,
+                today=today,
+            )
+        )
+    except Exception as exc:
+        log.warning("v2_phase_3_failed", error=str(exc))
+        errors.append(f"phase_3: {exc!s}")
+
+    try:
+        sources.extend(
+            await phase_4_signal_overlay.run(
+                talent_data=talent_data,
+                taxonomies=tax,
+                brand_industry_map=bim,
+                talent_country=talent_country,
+            )
+        )
+    except Exception as exc:
+        log.warning("v2_phase_4_failed", error=str(exc))
+        errors.append(f"phase_4: {exc!s}")
+
+    if talent_countries:
+        sources = filter_sources_by_geo(sources, _brand_lookup(bim), talent_countries)
+
+    qualified = _build_qualified_candidates(sources=sources, brand_industry_map=bim, taxonomies=tax)
+    kept, blocked = apply_filters(
+        qualified,
+        talent_brand_preferences=dict(talent_data.get("brand_preferences") or {}),
+        do_not_recontact_brand_ids=_dnr_brand_ids(brand_deals),
+        taxonomies=tax,
+    )
+    return DiscoveryRunResult(
+        talent_id=talent_id,
+        search_run_id=_new_search_run_id(),
+        generated_at=datetime.now(UTC),
+        searches_run=["phase_3", "phase_4"],
+        candidates=kept,
+        blocked=blocked,
+        errors=errors,
+    )
+
+
+async def run_discovery_v2_phase_2(
+    *,
+    talent_id: str,
+    talent_data: dict[str, Any],
+    brand_deals: list[Any],
+    approved_industries: list[str],
+    taxonomies: Taxonomies | None = None,
+    brand_industry_map: dict[str, Any] | None = None,
+    values_search_enabled: bool = False,
+    today: Any = None,
+) -> DiscoveryRunResult:
+    """M7.7 full_build mode Step B: run Phase 2 + Phase 3 + Phase 4.
+
+    Step A (Phase 1 + persist review) runs separately when the operator
+    triggers ``mode=full_build`` on /brand-discovery/run. The Phase 2
+    Celery task picks up the approved industry list and calls this.
+    """
+    from app.services.discovery import (
+        _seed_map_walk,
+        phase_2_brand_universe_build,
+        phase_3_talent_specific,
+        phase_4_signal_overlay,
+    )
+
+    tax = taxonomies or get_taxonomies()
+    bim = brand_industry_map or _load_brand_industry_map()
+    talent_countries = extract_talent_countries(talent_data)
+    talent_country = talent_countries[0] if talent_countries else None
+
+    sources: list[CandidateSource] = []
+    errors: list[str] = []
+
+    # Phase 2 (free leg): emit candidates from the accumulated agency
+    # inventory before paying for any Exa fan-out. Brands the seed map
+    # already knows under the approved industries surface as
+    # `seed_map_walk` sources at no API cost.
+    try:
+        sources.extend(
+            _seed_map_walk.run(
+                approved_industries=approved_industries,
+                brand_industry_map=bim,
+                taxonomies=tax,
+            )
+        )
+    except Exception as exc:
+        log.warning("v2_phase_2_seed_walk_failed", error=str(exc))
+        errors.append(f"phase_2_seed_walk: {exc!s}")
+
+    try:
+        sources.extend(
+            await phase_2_brand_universe_build.run(
+                approved_industries=approved_industries,
+                brand_industry_map=bim,
+                taxonomies=tax,
+                talent_country=talent_country,
+            )
+        )
+    except Exception as exc:
+        log.warning("v2_phase_2_failed", error=str(exc))
+        errors.append(f"phase_2: {exc!s}")
+
+    try:
+        sources.extend(
+            await phase_3_talent_specific.run(
+                talent_data=talent_data,
+                brand_deals=brand_deals,
+                brand_industry_map=bim,
+                talent_country=talent_country,
+                approved_industries=approved_industries,
+                values_search_enabled=values_search_enabled,
+                today=today,
+            )
+        )
+    except Exception as exc:
+        log.warning("v2_phase_3_failed", error=str(exc))
+        errors.append(f"phase_3: {exc!s}")
+
+    try:
+        sources.extend(
+            await phase_4_signal_overlay.run(
+                talent_data=talent_data,
+                taxonomies=tax,
+                brand_industry_map=bim,
+                talent_country=talent_country,
+            )
+        )
+    except Exception as exc:
+        log.warning("v2_phase_4_failed", error=str(exc))
+        errors.append(f"phase_4: {exc!s}")
+
+    if talent_countries:
+        sources = filter_sources_by_geo(sources, _brand_lookup(bim), talent_countries)
+
+    qualified = _build_qualified_candidates(sources=sources, brand_industry_map=bim, taxonomies=tax)
+    kept, blocked = apply_filters(
+        qualified,
+        talent_brand_preferences=dict(talent_data.get("brand_preferences") or {}),
+        do_not_recontact_brand_ids=_dnr_brand_ids(brand_deals),
+        taxonomies=tax,
+    )
+    return DiscoveryRunResult(
+        talent_id=talent_id,
+        search_run_id=_new_search_run_id(),
+        generated_at=datetime.now(UTC),
+        searches_run=["phase_2_seed_walk", "phase_2", "phase_3", "phase_4"],
+        candidates=kept,
+        blocked=blocked,
+        errors=errors,
+    )
+
+
+# ── v2 shared helpers ──────────────────────────────────────────
+
+
+def _brand_lookup(brand_industry_map: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    out: dict[str, dict[str, Any]] = {}
+    for entry in brand_industry_map.get("brands") or []:
+        if not isinstance(entry, dict):
+            continue
+        name = entry.get("name")
+        if isinstance(name, str):
+            out[name.strip().lower()] = entry
+    return out
+
+
+def _dnr_brand_ids(brand_deals: list[Any]) -> set[str]:
+    out: set[str] = set()
+    for d in brand_deals:
+        if isinstance(d, dict) and d.get("do_not_recontact"):
+            bid = str(d.get("brand_id") or "").strip().lower()
+            if bid:
+                out.add(bid)
+    return out
+
+
+def _build_qualified_candidates(
+    *,
+    sources: list[CandidateSource],
+    brand_industry_map: dict[str, Any],
+    taxonomies: Taxonomies,
+) -> list[QualifiedCandidate]:
+    """v2 candidate-construction: merge sources by brand_id, score, qualify,
+    tier, derive first-class metadata (sub_industry + brand_category)."""
+    from app.services.discovery._brand_category import infer_brand_category
+    from app.services.discovery._industry_taxonomy import (
+        derive_top_level_and_sub_industry,
+    )
+    from app.services.discovery.qualification import (
+        EXA_DISCOVERY_TAGS,
+        qualify_candidate,
+    )
+
+    brand_lookup = _brand_lookup(brand_industry_map)
+    grouped = _merge_sources(sources)
+    qualified: list[QualifiedCandidate] = []
+    for brand_id, srcs in grouped.items():
+        score = min(1.0, sum(s.weight for s in srcs))
+        tags = {s.search_tag for s in srcs}
+        tier = _assign_tier(score=score, tags=tags)
+        first_source = srcs[0]
+        brand_entry = brand_lookup.get(first_source.brand_name.strip().lower())
+        q_score, q_tier, signals = qualify_candidate(
+            brand_entry,
+            source_tags=tags,
+            source_notes=[s.note for s in srcs],
+        )
+        if (
+            brand_entry is None
+            and tags <= EXA_DISCOVERY_TAGS
+            and q_tier in {"qualified", "speculative"}
+        ):
+            tier = "emerging"  # type: ignore[assignment]
+
+        brand_domain, brand_social, any_social = _aggregate_brand_metadata(srcs, brand_entry)
+
+        top_level_industry, sub_industry = derive_top_level_and_sub_industry(
+            first_source.industry_id, taxonomies
+        )
+        brand_category = infer_brand_category([s.search_tag for s in srcs], brand_entry)
+
+        qualified.append(
+            QualifiedCandidate(
+                brand_id=brand_id,
+                brand_name=first_source.brand_name,
+                industry_id=top_level_industry,
+                score=score,
+                tier=tier,
+                sources=srcs,
+                qualification_score=q_score,
+                qualification_tier=q_tier,
+                qualification_signals=signals,
+                domain=brand_domain,
+                social_handles=brand_social if any_social else None,
+                sub_industry_id=sub_industry,
+                brand_category=brand_category,  # type: ignore[arg-type]
+            )
+        )
+    return qualified

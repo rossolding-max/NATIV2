@@ -113,6 +113,47 @@ class Settings(BaseSettings):
     # the skill's auth + cost guards are configured for your installation.
     enable_last30days_discovery: bool = False
 
+    # ── Discovery: comprehensiveness softener (M7.4) ────────────────
+    # M7.4 dropped the orchestrator-level industry cap that pre-filtered
+    # before any search ran. M7.6 re-introduces a SEPARATE cap that only
+    # bounds the Exa-driven fan-out (S15/S18) — S5/6/7/8 still walk the
+    # full industry list cheaply against the seed map. The cap keeps
+    # Exa cost predictable when a talent's past-brand bidirectional walk
+    # explodes the industry seed (Kevin: 12 past brands → 62 industries).
+    #
+    # Per-run cost at the default: 25 industries x 13 queries x 5 results
+    # = ~1600 Exa calls (~$8) + ~325 Haiku calls (~$0.30). Bump higher
+    # only if budget allows.
+    discovery_exa_max_industries: int = Field(default=25, ge=1, le=200)
+    #
+    # The LLM softener (Haiku) augments the deterministic affinity walk
+    # with industries the hand-curated affinity rows don't enumerate.
+    # Off this to keep the discovery run deterministic in tests / cheap.
+    discovery_industry_softener_enabled: bool = True
+
+    # ── Discovery: M7.7 Phase 2 categories ──────────────────────────
+    # The Phase 2 brand-universe build fires per-industry Exa queries
+    # across emerging + established by default. M7.7 adds a "growth"
+    # category (mid-market / Series C+ / regional leaders) to close
+    # the gap between the two. Off cuts Phase 2 cost by ~33%.
+    discovery_growth_enabled: bool = True
+
+    # ── Discovery: M7.7 v2 architecture ─────────────────────────────
+    # When True, the brand-discovery Celery task uses the v2 phased
+    # orchestrator (run_discovery_v2) — Phase 1 industry compilation +
+    # Phase 1.5 human-review + Phase 2 brand universe build + Phase 3
+    # talent-specific + Phase 4 signal overlay. When False, the legacy
+    # M7.6 path (run_discovery) is used.
+    discovery_v2_enabled: bool = True
+
+    # The Phase 4 signal overlay runs on every discovery run AND
+    # monthly via Celery beat for active talents. Off disables both.
+    discovery_phase_4_monthly_enabled: bool = True
+
+    # Default values themes for the Phase 3 S13 standalone search when
+    # the talent has none configured. Empty = no-op.
+    discovery_values_search_default_themes: list[str] = Field(default_factory=list)
+
     # ── Discovery: paid social ad signal (M7.2 Search 17) ────────────
     # Off by default — Search 17 requires a Meta Ad Library token and hits
     # TikTok's unofficial public endpoint. Enable per-agency once the

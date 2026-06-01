@@ -1,0 +1,4056 @@
+{
+  "version": 1,
+  "updated": "2026-05-29T19:10:37Z",
+  "note": "Auto-grown by app/services/talent_background_research.py. Net-new brands surfaced by discovery runs are appended here so future runs surface them via Search 5/6/7. Curated brand_industry_map.json takes precedence on conflict.",
+  "brands": [
+    {
+      "brand_id": "fawn-friends",
+      "name": "Fawn Friends",
+      "industry_id": "toys",
+      "source": "recently_funded",
+      "first_surfaced_in_run": "run_20260529T164819Z_6a49da95",
+      "discovered_at": "2026-05-29T16:48:19Z",
+      "domain": "fawnfriends.com",
+      "social_handles": {
+        "linkedin": "linkedin.com/company/fawn-friends",
+        "instagram": "@fawn.friends",
+        "tiktok": "@fawn_friends"
+      },
+      "discovery_provenance": [
+        {
+          "search": "recently_funded",
+          "exa_query": "toys startup US Series A Series B 2026",
+          "exa_result_url": "https://fawnfriends.com/",
+          "exa_result_title": "Fawn Friends",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "updated_at": "2026-05-29T19:10:37Z",
+      "brand_category": "emerging"
+    },
+    {
+      "brand_id": "mushykinz",
+      "name": "Mushykinz",
+      "industry_id": "toys",
+      "source": "recently_funded",
+      "first_surfaced_in_run": "run_20260529T164819Z_6a49da95",
+      "discovered_at": "2026-05-29T16:48:19Z",
+      "domain": "mushykinz.com",
+      "social_handles": {
+        "linkedin": "linkedin.com/company/mushykinz-llc",
+        "instagram": "@mushykinz",
+        "tiktok": "@mushykinz"
+      },
+      "discovery_provenance": [
+        {
+          "search": "recently_funded",
+          "exa_query": "emerging US toys brand creator marketing",
+          "exa_result_url": "https://mushykinz.com/",
+          "exa_result_title": "Mushykinz LLC",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        },
+        {
+          "search": "recently_funded",
+          "exa_query": "toys startup creator partnership US",
+          "exa_result_url": "https://mushykinz.com/",
+          "exa_result_title": "Mushykinz LLC",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        },
+        {
+          "search": "recently_funded",
+          "exa_query": "indie toys brand US instagram tiktok",
+          "exa_result_url": "https://mushykinz.com/",
+          "exa_result_title": "Mushykinz LLC",
+          "first_surfaced_in_run": "run_20260529T190054Z_295a8f95"
+        }
+      ],
+      "updated_at": "2026-05-29T19:00:55Z",
+      "brand_category": "emerging"
+    },
+    {
+      "brand_id": "starpony",
+      "name": "Starpony",
+      "industry_id": "toys",
+      "source": "recently_funded",
+      "first_surfaced_in_run": "run_20260529T164819Z_6a49da95",
+      "discovered_at": "2026-05-29T16:48:19Z",
+      "domain": "starpony.com",
+      "social_handles": {
+        "linkedin": "linkedin.com/company/starpony-usa-limited",
+        "instagram": "@mewaii.official.starpony",
+        "tiktok": "@mewaii.starpony"
+      },
+      "discovery_provenance": [
+        {
+          "search": "recently_funded",
+          "exa_query": "toys startup US Series A Series B 2026",
+          "exa_result_url": "https://starpony.com/",
+          "exa_result_title": "Starpony",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "updated_at": "2026-05-29T19:10:37Z",
+      "brand_category": "emerging"
+    },
+    {
+      "brand_id": "playper",
+      "name": "Playper",
+      "industry_id": "toys",
+      "source": "recently_funded",
+      "first_surfaced_in_run": "run_20260529T164819Z_6a49da95",
+      "discovered_at": "2026-05-29T16:48:19Z",
+      "domain": "playper.com",
+      "social_handles": {
+        "instagram": "@playpertoys",
+        "tiktok": "@playpertoys",
+        "linkedin": "linkedin.com/company/playper-llc"
+      },
+      "discovery_provenance": [
+        {
+          "search": "recently_funded",
+          "exa_query": "toys startup US Series A Series B 2026",
+          "exa_result_url": "https://playper.com/",
+          "exa_result_title": "Playper Toys",
+          "first_surfaced_in_run": "run_20260529T190054Z_295a8f95"
+        },
+        {
+          "search": "recently_funded",
+          "exa_query": "toys startup creator partnership US",
+          "exa_result_url": "https://playper.com/",
+          "exa_result_title": "Playper Toys",
+          "first_surfaced_in_run": "run_20260529T190054Z_295a8f95"
+        },
+        {
+          "search": "recently_funded",
+          "exa_query": "newly funded US toys brand 2026",
+          "exa_result_url": "https://playper.com/",
+          "exa_result_title": "Playper Toys",
+          "first_surfaced_in_run": "run_20260529T191036Z_0aa929fc"
+        }
+      ],
+      "updated_at": "2026-05-29T19:10:37Z",
+      "brand_category": "emerging"
+    },
+    {
+      "brand_id": "yox",
+      "name": "YOX",
+      "industry_id": "toys",
+      "source": "recently_funded",
+      "first_surfaced_in_run": "run_20260529T164819Z_6a49da95",
+      "discovered_at": "2026-05-29T16:48:19Z",
+      "domain": "yoxtoys.com",
+      "social_handles": {
+        "linkedin": "linkedin.com/company/yoxtoys"
+      },
+      "discovery_provenance": [
+        {
+          "search": "recently_funded",
+          "exa_query": "newly funded US toys brand 2026",
+          "exa_result_url": "https://yoxtoys.com/",
+          "exa_result_title": "YOX",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "updated_at": "2026-05-29T18:31:40Z",
+      "brand_category": "emerging"
+    },
+    {
+      "brand_id": "freestyle",
+      "name": "Freestyle",
+      "industry_id": "diapers-nappies",
+      "source": "recently_funded",
+      "first_surfaced_in_run": "run_20260529T164819Z_6a49da95",
+      "discovered_at": "2026-05-29T16:48:19Z",
+      "domain": "freestyle.world",
+      "social_handles": {
+        "linkedin": "linkedin.com/company/freestyledotworld",
+        "instagram": "@freestyle",
+        "tiktok": "@harrymackofficial"
+      },
+      "discovery_provenance": [
+        {
+          "search": "recently_funded",
+          "exa_query": "newly funded US diapers nappies brand 2026",
+          "exa_result_url": "https://www.nonwovens-industry.com/breaking-news/freestyle-diaper-brand-secures-funding/",
+          "exa_result_title": "Freestyle Diaper Brand Secures Funding - Nonwovens Industry -",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        },
+        {
+          "search": "recently_funded",
+          "exa_query": "diapers nappies startup US Series A Series B 2026",
+          "exa_result_url": "https://freestyle.world/",
+          "exa_result_title": "Freestyle",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        },
+        {
+          "search": "recently_funded",
+          "exa_query": "emerging US diapers nappies brand creator marketing",
+          "exa_result_url": "https://freestyle.world/",
+          "exa_result_title": "Freestyle",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        },
+        {
+          "search": "recently_funded",
+          "exa_query": "new diapers nappies D2C launch US 2026",
+          "exa_result_url": "https://freestyle.world/",
+          "exa_result_title": "Freestyle",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        },
+        {
+          "search": "recently_funded",
+          "exa_query": "diapers nappies brands to watch US 2026",
+          "exa_result_url": "https://freestyle.world/",
+          "exa_result_title": "Freestyle",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "updated_at": "2026-05-29T19:00:55Z",
+      "brand_category": "emerging"
+    },
+    {
+      "brand_id": "kudos",
+      "name": "Kudos",
+      "industry_id": "diapers-nappies",
+      "source": "recently_funded",
+      "first_surfaced_in_run": "run_20260529T164819Z_6a49da95",
+      "discovered_at": "2026-05-29T16:48:19Z",
+      "domain": "mykudos.com",
+      "social_handles": {
+        "linkedin": "linkedin.com/company/kudostobaby",
+        "instagram": "@kudos",
+        "tiktok": "@kudosr6"
+      },
+      "discovery_provenance": [
+        {
+          "search": "recently_funded",
+          "exa_query": "diapers nappies startup US Series A Series B 2026",
+          "exa_result_url": "https://mykudos.com/",
+          "exa_result_title": "Kudos",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        },
+        {
+          "search": "recently_funded",
+          "exa_query": "indie diapers nappies brand US instagram tiktok",
+          "exa_result_url": "https://mykudos.com/",
+          "exa_result_title": "Kudos",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        },
+        {
+          "search": "established_exa_discovery",
+          "exa_query": "best diapers nappies brands for influencer marketing US",
+          "exa_result_url": "https://mykudos.com/",
+          "exa_result_title": "Kudos",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "updated_at": "2026-05-29T19:00:55Z",
+      "brand_category": "emerging"
+    },
+    {
+      "brand_id": "believe-baby",
+      "name": "Believe Baby",
+      "industry_id": "diapers-nappies",
+      "source": "recently_funded",
+      "first_surfaced_in_run": "run_20260529T164819Z_6a49da95",
+      "discovered_at": "2026-05-29T16:48:19Z",
+      "domain": "believebaby.com",
+      "social_handles": {
+        "linkedin": "linkedin.com/company/believe-baby",
+        "instagram": "@believe_babyco",
+        "tiktok": "@believe_diapers"
+      },
+      "discovery_provenance": [
+        {
+          "search": "established_exa_discovery",
+          "exa_query": "top diapers nappies brands US 2026",
+          "exa_result_url": "https://believebaby.com/",
+          "exa_result_title": "Believe Baby",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        },
+        {
+          "search": "recently_funded",
+          "exa_query": "emerging US diapers nappies brand creator marketing",
+          "exa_result_url": "https://believebaby.com/",
+          "exa_result_title": "Believe Baby",
+          "first_surfaced_in_run": "run_20260529T190054Z_295a8f95"
+        },
+        {
+          "search": "established_exa_discovery",
+          "exa_query": "diapers nappies brands creator program US",
+          "exa_result_url": "https://believebaby.com/",
+          "exa_result_title": "Believe Baby",
+          "first_surfaced_in_run": "run_20260529T190054Z_295a8f95"
+        },
+        {
+          "search": "recently_funded",
+          "exa_query": "new diapers nappies D2C launch US 2026",
+          "exa_result_url": "https://believebaby.com/",
+          "exa_result_title": "Believe Baby",
+          "first_surfaced_in_run": "run_20260529T191036Z_0aa929fc"
+        },
+        {
+          "search": "recently_funded",
+          "exa_query": "indie diapers nappies brand US instagram tiktok",
+          "exa_result_url": "https://believebaby.com/",
+          "exa_result_title": "Believe Baby",
+          "first_surfaced_in_run": "run_20260529T191036Z_0aa929fc"
+        }
+      ],
+      "updated_at": "2026-05-29T19:10:37Z",
+      "brand_category": "emerging"
+    },
+    {
+      "brand_id": "coterie",
+      "name": "Coterie",
+      "industry_id": "diapers-nappies",
+      "source": "recently_funded",
+      "first_surfaced_in_run": "run_20260529T164819Z_6a49da95",
+      "discovered_at": "2026-05-29T16:48:19Z",
+      "domain": "coterie.com",
+      "social_handles": {
+        "linkedin": "linkedin.com/company/coteriebabyllc",
+        "instagram": "@coterie",
+        "tiktok": "@coteriebaby"
+      },
+      "discovery_provenance": [
+        {
+          "search": "recently_funded",
+          "exa_query": "diapers nappies startup US Series A Series B 2026",
+          "exa_result_url": "https://coterie.com/",
+          "exa_result_title": "Coterie",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "updated_at": "2026-05-29T19:00:55Z",
+      "brand_category": "emerging"
+    },
+    {
+      "brand_id": "pluie",
+      "name": "Pluie",
+      "industry_id": "diapers-nappies",
+      "source": "recently_funded",
+      "first_surfaced_in_run": "run_20260529T164819Z_6a49da95",
+      "discovered_at": "2026-05-29T16:48:19Z",
+      "domain": "hellopluie.com",
+      "social_handles": {
+        "linkedin": "linkedin.com/company/hellopluie",
+        "instagram": "@hello_pluie",
+        "tiktok": "@hellopluie"
+      },
+      "discovery_provenance": [
+        {
+          "search": "recently_funded",
+          "exa_query": "diapers nappies brands to watch US 2026",
+          "exa_result_url": "https://hellopluie.com/",
+          "exa_result_title": "Pluie",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        },
+        {
+          "search": "recently_funded",
+          "exa_query": "diapers nappies startup US Series A Series B 2026",
+          "exa_result_url": "https://hellopluie.com/",
+          "exa_result_title": "Pluie",
+          "first_surfaced_in_run": "run_20260529T190054Z_295a8f95"
+        }
+      ],
+      "updated_at": "2026-05-29T19:00:55Z",
+      "brand_category": "emerging"
+    },
+    {
+      "brand_id": "kinder-cloth-diaper-co",
+      "name": "Kinder Cloth Diaper Co.",
+      "industry_id": "diapers-nappies",
+      "source": "recently_funded",
+      "first_surfaced_in_run": "run_20260529T164819Z_6a49da95",
+      "discovered_at": "2026-05-29T16:48:19Z",
+      "domain": "kinderclothdiapers.com",
+      "social_handles": {
+        "linkedin": "linkedin.com/company/kinder-clothdiaperco",
+        "instagram": "@kinderclothdiapers",
+        "tiktok": "@kinderclothdiapers"
+      },
+      "discovery_provenance": [
+        {
+          "search": "recently_funded",
+          "exa_query": "emerging US diapers nappies brand creator marketing",
+          "exa_result_url": "https://kinderclothdiapers.com/",
+          "exa_result_title": "Kinder Cloth Diaper Co.",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        },
+        {
+          "search": "recently_funded",
+          "exa_query": "new diapers nappies D2C launch US 2026",
+          "exa_result_url": "https://kinderclothdiapers.com/",
+          "exa_result_title": "Kinder Cloth Diaper Co.",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "updated_at": "2026-05-29T19:00:55Z",
+      "brand_category": "emerging"
+    },
+    {
+      "brand_id": "homekynd",
+      "name": "HOMEKYND",
+      "industry_id": "home-improvement",
+      "source": "recently_funded",
+      "first_surfaced_in_run": "run_20260529T164819Z_6a49da95",
+      "discovered_at": "2026-05-29T16:48:19Z",
+      "domain": "homekynd.com",
+      "social_handles": {
+        "linkedin": "linkedin.com/company/homekynd",
+        "instagram": "@homekynd",
+        "tiktok": "@homekynd"
+      },
+      "discovery_provenance": [
+        {
+          "search": "recently_funded",
+          "exa_query": "newly funded US home improvement brand 2026",
+          "exa_result_url": "https://homekynd.com/",
+          "exa_result_title": "HOMEKYND",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "updated_at": "2026-05-29T19:00:55Z",
+      "brand_category": "emerging"
+    },
+    {
+      "brand_id": "osta",
+      "name": "Osta",
+      "industry_id": "home-improvement",
+      "source": "recently_funded",
+      "first_surfaced_in_run": "run_20260529T164819Z_6a49da95",
+      "discovered_at": "2026-05-29T16:48:19Z",
+      "domain": "osta.ai",
+      "social_handles": {
+        "linkedin": "linkedin.com/company/ostaai"
+      },
+      "discovery_provenance": [
+        {
+          "search": "recently_funded",
+          "exa_query": "home improvement startup US Series A Series B 2026",
+          "exa_result_url": "https://osta.ai/",
+          "exa_result_title": "Osta",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "updated_at": "2026-05-29T18:31:40Z",
+      "brand_category": "emerging"
+    },
+    {
+      "brand_id": "aro-homes",
+      "name": "Aro Homes",
+      "industry_id": "home-improvement",
+      "source": "recently_funded",
+      "first_surfaced_in_run": "run_20260529T164819Z_6a49da95",
+      "discovered_at": "2026-05-29T16:48:19Z",
+      "domain": "aro.homes",
+      "social_handles": {
+        "linkedin": "linkedin.com/company/aro-homes",
+        "instagram": "@arohomesofficial"
+      },
+      "discovery_provenance": [
+        {
+          "search": "recently_funded",
+          "exa_query": "home improvement startup US Series A Series B 2026",
+          "exa_result_url": "https://aro.homes/",
+          "exa_result_title": "Aro Homes",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "updated_at": "2026-05-29T19:00:55Z",
+      "brand_category": "emerging"
+    },
+    {
+      "brand_id": "bild-ai",
+      "name": "Bild AI",
+      "industry_id": "home-improvement",
+      "source": "recently_funded",
+      "first_surfaced_in_run": "run_20260529T164819Z_6a49da95",
+      "discovered_at": "2026-05-29T16:48:19Z",
+      "domain": "bild.ai",
+      "social_handles": {
+        "linkedin": "linkedin.com/company/bild-ai"
+      },
+      "discovery_provenance": [
+        {
+          "search": "recently_funded",
+          "exa_query": "home improvement startup US Series A Series B 2026",
+          "exa_result_url": "https://bild.ai/",
+          "exa_result_title": "Bild AI",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "updated_at": "2026-05-29T18:31:40Z",
+      "brand_category": "emerging"
+    },
+    {
+      "brand_id": "stronghouse",
+      "name": "Stronghouse",
+      "industry_id": "home-improvement",
+      "source": "recently_funded",
+      "first_surfaced_in_run": "run_20260529T164819Z_6a49da95",
+      "discovered_at": "2026-05-29T16:48:19Z",
+      "domain": "stronghousebrands.com",
+      "social_handles": {
+        "linkedin": "linkedin.com/company/stronghouse-brands",
+        "instagram": "@stronghouse_brands",
+        "tiktok": "@stronghouse2020"
+      },
+      "discovery_provenance": [
+        {
+          "search": "recently_funded",
+          "exa_query": "newly funded US home improvement brand 2026",
+          "exa_result_url": "https://stronghousebrands.com/",
+          "exa_result_title": "Stronghouse",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        },
+        {
+          "search": "recently_funded",
+          "exa_query": "home improvement brands to watch US 2026",
+          "exa_result_url": "https://stronghousebrands.com/",
+          "exa_result_title": "Stronghouse",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "updated_at": "2026-05-29T19:00:55Z",
+      "brand_category": "emerging"
+    },
+    {
+      "brand_id": "oply",
+      "name": "Oply",
+      "industry_id": "home-improvement",
+      "source": "recently_funded",
+      "first_surfaced_in_run": "run_20260529T164819Z_6a49da95",
+      "discovered_at": "2026-05-29T16:48:19Z",
+      "domain": "oply.app",
+      "social_handles": {
+        "linkedin": "linkedin.com/company/oplyapp"
+      },
+      "discovery_provenance": [
+        {
+          "search": "recently_funded",
+          "exa_query": "home improvement startup creator partnership US",
+          "exa_result_url": "https://oply.app/",
+          "exa_result_title": "Oply",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "updated_at": "2026-05-29T18:31:40Z",
+      "brand_category": "emerging"
+    },
+    {
+      "brand_id": "allied-roofing-partners",
+      "name": "Allied Roofing Partners",
+      "industry_id": "home-improvement",
+      "source": "recently_funded",
+      "first_surfaced_in_run": "run_20260529T164819Z_6a49da95",
+      "discovered_at": "2026-05-29T16:48:19Z",
+      "domain": "alliedroofingpartners.com",
+      "social_handles": {
+        "linkedin": "linkedin.com/company/allied-roofing-partners"
+      },
+      "discovery_provenance": [
+        {
+          "search": "recently_funded",
+          "exa_query": "home improvement startup creator partnership US",
+          "exa_result_url": "https://alliedroofingpartners.com/",
+          "exa_result_title": "Allied Roofing Partners",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "updated_at": "2026-05-29T18:31:40Z",
+      "brand_category": "emerging"
+    },
+    {
+      "brand_id": "kwicwrk",
+      "name": "KwicWrk!",
+      "industry_id": "home-improvement",
+      "source": "recently_funded",
+      "first_surfaced_in_run": "run_20260529T164819Z_6a49da95",
+      "discovered_at": "2026-05-29T16:48:19Z",
+      "domain": "kwicwrk.com",
+      "social_handles": {
+        "linkedin": "https://linkedin.com/company/kwicwrk"
+      },
+      "discovery_provenance": [
+        {
+          "search": "recently_funded",
+          "exa_query": "home improvement startup creator partnership US",
+          "exa_result_url": "https://linkedin.com/company/kwicwrk",
+          "exa_result_title": "KwicWrk!",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "updated_at": "2026-05-29T18:31:40Z",
+      "brand_category": "emerging"
+    },
+    {
+      "brand_id": "signoff",
+      "name": "Signoff",
+      "industry_id": "home-improvement",
+      "source": "recently_funded",
+      "first_surfaced_in_run": "run_20260529T164819Z_6a49da95",
+      "discovered_at": "2026-05-29T16:48:19Z",
+      "domain": "getsignoff.com",
+      "social_handles": {
+        "linkedin": "linkedin.com/company/get-signoff"
+      },
+      "discovery_provenance": [
+        {
+          "search": "recently_funded",
+          "exa_query": "home improvement startup creator partnership US",
+          "exa_result_url": "https://getsignoff.com/",
+          "exa_result_title": "Signoff",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "updated_at": "2026-05-29T18:31:40Z",
+      "brand_category": "emerging"
+    },
+    {
+      "brand_id": "agorus",
+      "name": "AGORUS",
+      "industry_id": "home-improvement",
+      "source": "recently_funded",
+      "first_surfaced_in_run": "run_20260529T164819Z_6a49da95",
+      "discovered_at": "2026-05-29T16:48:19Z",
+      "domain": "agorus.com",
+      "social_handles": {
+        "linkedin": "linkedin.com/company/agorus",
+        "instagram": "@agorusbuild",
+        "tiktok": "@aorusofficial"
+      },
+      "discovery_provenance": [
+        {
+          "search": "recently_funded",
+          "exa_query": "home improvement startup US Series A Series B 2026",
+          "exa_result_url": "https://agorus.com/",
+          "exa_result_title": "AGORUS",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "updated_at": "2026-05-29T19:00:55Z",
+      "brand_category": "emerging"
+    },
+    {
+      "brand_id": "isshohomes",
+      "name": "isshohomes",
+      "industry_id": "home-improvement",
+      "source": "recently_funded",
+      "first_surfaced_in_run": "run_20260529T164819Z_6a49da95",
+      "discovered_at": "2026-05-29T16:48:19Z",
+      "domain": "issho.homes",
+      "social_handles": {
+        "linkedin": "linkedin.com/company/isshohomes",
+        "instagram": "@isshohomes"
+      },
+      "discovery_provenance": [
+        {
+          "search": "recently_funded",
+          "exa_query": "home improvement brands to watch US 2026",
+          "exa_result_url": "https://issho.homes/",
+          "exa_result_title": "isshohomes",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "updated_at": "2026-05-29T19:00:55Z",
+      "brand_category": "emerging"
+    },
+    {
+      "brand_id": "loona-agency",
+      "name": "Loona Agency",
+      "industry_id": "home-improvement",
+      "source": "recently_funded",
+      "first_surfaced_in_run": "run_20260529T164819Z_6a49da95",
+      "discovered_at": "2026-05-29T16:48:19Z",
+      "domain": "loona.agency",
+      "social_handles": {
+        "linkedin": "linkedin.com/company/loona-agency",
+        "instagram": "@loona.digital",
+        "tiktok": "@loonaaboutmarketing"
+      },
+      "discovery_provenance": [
+        {
+          "search": "recently_funded",
+          "exa_query": "indie home improvement brand US instagram tiktok",
+          "exa_result_url": "https://loona.agency/",
+          "exa_result_title": "Loona Agency",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "updated_at": "2026-05-29T19:00:55Z",
+      "brand_category": "emerging"
+    },
+    {
+      "brand_id": "also",
+      "name": "ALSO.",
+      "industry_id": "auto-oems",
+      "source": "recently_funded",
+      "first_surfaced_in_run": "run_20260529T164819Z_6a49da95",
+      "discovered_at": "2026-05-29T16:48:19Z",
+      "domain": "ridealso.com",
+      "social_handles": {
+        "linkedin": "linkedin.com/company/ridealso",
+        "instagram": "@alsolosangeles",
+        "tiktok": "@also.136"
+      },
+      "discovery_provenance": [
+        {
+          "search": "recently_funded",
+          "exa_query": "newly funded US auto oems brand 2026",
+          "exa_result_url": "https://ridealso.com/",
+          "exa_result_title": "ALSO.",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "updated_at": "2026-05-29T19:00:55Z",
+      "brand_category": "emerging"
+    },
+    {
+      "brand_id": "scout-motors",
+      "name": "Scout Motors",
+      "industry_id": "auto-oems",
+      "source": "recently_funded",
+      "first_surfaced_in_run": "run_20260529T164819Z_6a49da95",
+      "discovered_at": "2026-05-29T16:48:19Z",
+      "domain": "scoutmotors.com",
+      "social_handles": {
+        "linkedin": "linkedin.com/company/scoutmotors",
+        "instagram": "@scout_motors",
+        "tiktok": "@scoutmotors"
+      },
+      "discovery_provenance": [
+        {
+          "search": "recently_funded",
+          "exa_query": "newly funded US auto oems brand 2026",
+          "exa_result_url": "https://scoutmotors.com/",
+          "exa_result_title": "Scout Motors Inc.",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        },
+        {
+          "search": "recently_funded",
+          "exa_query": "emerging US auto oems brand creator marketing",
+          "exa_result_url": "https://scoutmotors.com/",
+          "exa_result_title": "Scout Motors Inc.",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        },
+        {
+          "search": "recently_funded",
+          "exa_query": "auto oems brands to watch US 2026",
+          "exa_result_url": "https://scoutmotors.com/",
+          "exa_result_title": "Scout Motors Inc.",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        },
+        {
+          "search": "established_exa_discovery",
+          "exa_query": "auto oems brands to watch US 2026",
+          "exa_result_url": "https://scoutmotors.com/",
+          "exa_result_title": "Scout Motors Inc.",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "updated_at": "2026-05-29T19:00:55Z",
+      "brand_category": "emerging"
+    },
+    {
+      "brand_id": "telo-trucks",
+      "name": "TELO Trucks",
+      "industry_id": "auto-oems",
+      "source": "recently_funded",
+      "first_surfaced_in_run": "run_20260529T164819Z_6a49da95",
+      "discovered_at": "2026-05-29T16:48:19Z",
+      "domain": "telotrucks.com",
+      "social_handles": {
+        "linkedin": "linkedin.com/company/telo-trucks",
+        "instagram": "@telotrucks",
+        "tiktok": "@telotrucks"
+      },
+      "discovery_provenance": [
+        {
+          "search": "recently_funded",
+          "exa_query": "auto oems startup US Series A Series B 2026",
+          "exa_result_url": "https://telotrucks.com/",
+          "exa_result_title": "TELO Trucks",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "updated_at": "2026-05-29T19:00:55Z",
+      "brand_category": "emerging"
+    },
+    {
+      "brand_id": "olympian-motors",
+      "name": "Olympian Motors",
+      "industry_id": "auto-oems",
+      "source": "recently_funded",
+      "first_surfaced_in_run": "run_20260529T164819Z_6a49da95",
+      "discovered_at": "2026-05-29T16:48:19Z",
+      "brand_category": "emerging"
+    },
+    {
+      "brand_id": "dacora-motors",
+      "name": "Dacora Motors",
+      "industry_id": "auto-oems",
+      "source": "recently_funded",
+      "first_surfaced_in_run": "run_20260529T164819Z_6a49da95",
+      "discovered_at": "2026-05-29T16:48:19Z",
+      "domain": "dacora.com",
+      "social_handles": {
+        "linkedin": "linkedin.com/company/dacora-motors",
+        "instagram": "@dacoramotors",
+        "tiktok": "@yungthegun11"
+      },
+      "discovery_provenance": [
+        {
+          "search": "recently_funded",
+          "exa_query": "emerging US auto oems brand creator marketing",
+          "exa_result_url": "https://dacora.com/",
+          "exa_result_title": "Dacora Motors",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "updated_at": "2026-05-29T19:00:55Z",
+      "brand_category": "emerging"
+    },
+    {
+      "brand_id": "yerth-motors",
+      "name": "Yerth Motors",
+      "industry_id": "auto-oems",
+      "source": "recently_funded",
+      "first_surfaced_in_run": "run_20260529T164819Z_6a49da95",
+      "discovered_at": "2026-05-29T16:48:19Z",
+      "brand_category": "emerging"
+    },
+    {
+      "brand_id": "revolve-motors",
+      "name": "Revolve Motors",
+      "industry_id": "auto-oems",
+      "source": "recently_funded",
+      "first_surfaced_in_run": "run_20260529T164819Z_6a49da95",
+      "discovered_at": "2026-05-29T16:48:19Z",
+      "domain": "revolvemotors.com",
+      "social_handles": {
+        "linkedin": "linkedin.com/company/revolvemotors",
+        "instagram": "@revoltmotorsin",
+        "tiktok": "@revolve.motors"
+      },
+      "discovery_provenance": [
+        {
+          "search": "recently_funded",
+          "exa_query": "new auto oems D2C launch US 2026",
+          "exa_result_url": "https://revolvemotors.com/",
+          "exa_result_title": "Revolve Motors",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "updated_at": "2026-05-29T19:00:55Z",
+      "brand_category": "emerging"
+    },
+    {
+      "brand_id": "vittori-motors",
+      "name": "Vittori Motors",
+      "industry_id": "auto-oems",
+      "source": "recently_funded",
+      "first_surfaced_in_run": "run_20260529T164819Z_6a49da95",
+      "discovered_at": "2026-05-29T16:48:19Z",
+      "domain": "vittori.com",
+      "social_handles": {
+        "linkedin": "linkedin.com/company/vittori-motors",
+        "instagram": "@vittorimotors",
+        "tiktok": "@vittorimotors"
+      },
+      "discovery_provenance": [
+        {
+          "search": "recently_funded",
+          "exa_query": "new auto oems D2C launch US 2026",
+          "exa_result_url": "https://vittori.com/",
+          "exa_result_title": "Vittori Motors",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "updated_at": "2026-05-29T19:00:55Z",
+      "brand_category": "emerging"
+    },
+    {
+      "brand_id": "lynx-motors",
+      "name": "LYNX Motors",
+      "industry_id": "auto-oems",
+      "source": "recently_funded",
+      "first_surfaced_in_run": "run_20260529T164819Z_6a49da95",
+      "discovered_at": "2026-05-29T16:48:19Z",
+      "domain": "lynx.car",
+      "social_handles": {
+        "linkedin": "linkedin.com/company/lynx-car",
+        "instagram": "@lynx_motors"
+      },
+      "discovery_provenance": [
+        {
+          "search": "recently_funded",
+          "exa_query": "new auto oems D2C launch US 2026",
+          "exa_result_url": "https://lynx.car/",
+          "exa_result_title": "LYNX Motors",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "updated_at": "2026-05-29T19:00:55Z",
+      "brand_category": "emerging"
+    },
+    {
+      "brand_id": "foundation-vehicles",
+      "name": "Foundation Vehicles",
+      "industry_id": "auto-oems",
+      "source": "recently_funded",
+      "first_surfaced_in_run": "run_20260529T164819Z_6a49da95",
+      "discovered_at": "2026-05-29T16:48:19Z",
+      "domain": "foundationvehicles.com",
+      "social_handles": {
+        "linkedin": "linkedin.com/company/foundation-vehicles",
+        "instagram": "@foundationvehicles"
+      },
+      "discovery_provenance": [
+        {
+          "search": "recently_funded",
+          "exa_query": "new auto oems D2C launch US 2026",
+          "exa_result_url": "https://foundationvehicles.com/",
+          "exa_result_title": "Foundation Vehicles",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "updated_at": "2026-05-29T19:00:55Z",
+      "brand_category": "emerging"
+    },
+    {
+      "brand_id": "blueoval-sk",
+      "name": "BlueOval SK",
+      "industry_id": "auto-oems",
+      "source": "recently_funded",
+      "first_surfaced_in_run": "run_20260529T164819Z_6a49da95",
+      "discovered_at": "2026-05-29T16:48:19Z",
+      "domain": "blueovalsk.com",
+      "social_handles": {
+        "linkedin": "linkedin.com/company/blueovalsk",
+        "instagram": "@blueoval_sk",
+        "tiktok": "@talknwesttn"
+      },
+      "discovery_provenance": [
+        {
+          "search": "recently_funded",
+          "exa_query": "auto oems brands to watch US 2026",
+          "exa_result_url": "https://blueovalsk.com/",
+          "exa_result_title": "BlueOval SK, LLC",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "updated_at": "2026-05-29T19:00:55Z",
+      "brand_category": "emerging"
+    },
+    {
+      "brand_id": "habiza",
+      "name": "Habiza",
+      "industry_id": "grocery",
+      "source": "recently_funded",
+      "first_surfaced_in_run": "run_20260529T164819Z_6a49da95",
+      "discovered_at": "2026-05-29T16:48:19Z",
+      "domain": "habizahummus.com",
+      "social_handles": {
+        "linkedin": "linkedin.com/company/habiza-hummus",
+        "instagram": "@habizahummus",
+        "tiktok": "@habizahummus"
+      },
+      "discovery_provenance": [
+        {
+          "search": "recently_funded",
+          "exa_query": "grocery brands to watch US 2026",
+          "exa_result_url": "https://habizahummus.com/",
+          "exa_result_title": "Habiza",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "updated_at": "2026-05-29T19:00:55Z",
+      "brand_category": "emerging"
+    },
+    {
+      "brand_id": "swish",
+      "name": "Swish",
+      "industry_id": "grocery",
+      "source": "recently_funded",
+      "first_surfaced_in_run": "run_20260529T164819Z_6a49da95",
+      "discovered_at": "2026-05-29T16:48:19Z",
+      "brand_category": "emerging"
+    },
+    {
+      "brand_id": "chichi",
+      "name": "ChiChi",
+      "industry_id": "grocery",
+      "source": "recently_funded",
+      "first_surfaced_in_run": "run_20260529T164819Z_6a49da95",
+      "discovered_at": "2026-05-29T16:48:19Z",
+      "domain": "chichifoods.com",
+      "social_handles": {
+        "linkedin": "linkedin.com/company/chichifoods",
+        "instagram": "@hot4chichi",
+        "tiktok": "@featuringchichi"
+      },
+      "discovery_provenance": [
+        {
+          "search": "recently_funded",
+          "exa_query": "grocery brands to watch US 2026",
+          "exa_result_url": "https://chichifoods.com/",
+          "exa_result_title": "ChiChi",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "updated_at": "2026-05-29T19:00:55Z",
+      "brand_category": "emerging"
+    },
+    {
+      "brand_id": "yax-culinary-inc",
+      "name": "YAX Culinary Inc",
+      "industry_id": "grocery",
+      "source": "recently_funded",
+      "first_surfaced_in_run": "run_20260529T164819Z_6a49da95",
+      "discovered_at": "2026-05-29T16:48:19Z",
+      "domain": "yaxsnacks.com",
+      "social_handles": {
+        "linkedin": "linkedin.com/company/yax-culinary-inc",
+        "instagram": "@yaxsnacks",
+        "tiktok": "@yax.snacks"
+      },
+      "discovery_provenance": [
+        {
+          "search": "recently_funded",
+          "exa_query": "grocery brands to watch US 2026",
+          "exa_result_url": "https://yaxsnacks.com/",
+          "exa_result_title": "YAX Culinary Inc",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "updated_at": "2026-05-29T19:00:55Z",
+      "brand_category": "emerging"
+    },
+    {
+      "brand_id": "gogo-grocer",
+      "name": "GoGo Grocer",
+      "industry_id": "grocery",
+      "source": "recently_funded",
+      "first_surfaced_in_run": "run_20260529T164819Z_6a49da95",
+      "discovered_at": "2026-05-29T16:48:19Z",
+      "domain": "gogrocergo.com",
+      "social_handles": {
+        "linkedin": "linkedin.com/company/gogo-grocer",
+        "instagram": "@gogo_grocer"
+      },
+      "discovery_provenance": [
+        {
+          "search": "recently_funded",
+          "exa_query": "grocery startup creator partnership US",
+          "exa_result_url": "https://gogrocergo.com/",
+          "exa_result_title": "GoGo Grocer",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "updated_at": "2026-05-29T19:00:55Z",
+      "brand_category": "emerging"
+    },
+    {
+      "brand_id": "pkn",
+      "name": "PKN",
+      "industry_id": "grocery",
+      "source": "recently_funded",
+      "first_surfaced_in_run": "run_20260529T164819Z_6a49da95",
+      "discovered_at": "2026-05-29T16:48:19Z",
+      "domain": "thispkn.com",
+      "social_handles": {
+        "linkedin": "linkedin.com/company/this-pkn",
+        "instagram": "@pkn",
+        "tiktok": "@official_pkn"
+      },
+      "discovery_provenance": [
+        {
+          "search": "recently_funded",
+          "exa_query": "emerging US grocery brand creator marketing",
+          "exa_result_url": "https://thispkn.com/",
+          "exa_result_title": "PKN",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "updated_at": "2026-05-29T19:00:55Z",
+      "brand_category": "emerging"
+    },
+    {
+      "brand_id": "bloxsnacks",
+      "name": "BloxSnacks",
+      "industry_id": "grocery",
+      "source": "recently_funded",
+      "first_surfaced_in_run": "run_20260529T164819Z_6a49da95",
+      "discovered_at": "2026-05-29T16:48:19Z",
+      "domain": "bloxsnacks.com",
+      "social_handles": {
+        "linkedin": "linkedin.com/company/bloxsnacks",
+        "instagram": "@bloxsnacks",
+        "tiktok": "@bloxsnacks"
+      },
+      "discovery_provenance": [
+        {
+          "search": "recently_funded",
+          "exa_query": "grocery startup creator partnership US",
+          "exa_result_url": "https://bloxsnacks.com/",
+          "exa_result_title": "BloxSnacks",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "updated_at": "2026-05-29T19:00:55Z",
+      "brand_category": "emerging"
+    },
+    {
+      "brand_id": "nixta-foods",
+      "name": "Nixta Foods",
+      "industry_id": "grocery",
+      "source": "recently_funded",
+      "first_surfaced_in_run": "run_20260529T164819Z_6a49da95",
+      "discovered_at": "2026-05-29T16:48:19Z",
+      "social_handles": {
+        "instagram": "@nixtafoods",
+        "linkedin": "linkedin.com/company/nixtafoods",
+        "tiktok": "@arnietex"
+      },
+      "discovery_provenance": [
+        {
+          "search": "recently_funded",
+          "exa_query": "indie grocery brand US instagram tiktok",
+          "exa_result_url": "https://instagram.com/nixtafoods",
+          "exa_result_title": "Nixta Foods",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "updated_at": "2026-05-29T19:00:55Z",
+      "brand_category": "emerging"
+    },
+    {
+      "brand_id": "jakks-pacific",
+      "name": "JAKKS Pacific",
+      "industry_id": "toys",
+      "source": "established_exa_discovery",
+      "first_surfaced_in_run": "run_20260529T164819Z_6a49da95",
+      "discovered_at": "2026-05-29T16:48:19Z",
+      "domain": "jakks.com",
+      "social_handles": {
+        "instagram": "@jakkspacific.toys",
+        "x": "@jakkstoys",
+        "linkedin": "linkedin.com/company/jakks-pacific",
+        "tiktok": "@jakkstoys"
+      },
+      "discovery_provenance": [
+        {
+          "search": "established_exa_discovery",
+          "exa_query": "toys brands to watch US 2026",
+          "exa_result_url": "https://jakks.com/",
+          "exa_result_title": "JAKKS Pacific",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        },
+        {
+          "search": "established_exa_discovery",
+          "exa_query": "top toys brands US 2026",
+          "exa_result_url": "https://jakks.com/",
+          "exa_result_title": "JAKKS Pacific",
+          "first_surfaced_in_run": "run_20260529T190054Z_295a8f95"
+        }
+      ],
+      "updated_at": "2026-05-29T19:00:55Z",
+      "brand_category": "established"
+    },
+    {
+      "brand_id": "jazwares",
+      "name": "Jazwares",
+      "industry_id": "toys",
+      "source": "established_exa_discovery",
+      "first_surfaced_in_run": "run_20260529T164819Z_6a49da95",
+      "discovered_at": "2026-05-29T16:48:19Z",
+      "domain": "jazwares.com",
+      "social_handles": {
+        "linkedin": "linkedin.com/company/jazwares",
+        "instagram": "@jazwares",
+        "tiktok": "@jazwares"
+      },
+      "discovery_provenance": [
+        {
+          "search": "established_exa_discovery",
+          "exa_query": "best toys brands for influencer marketing US",
+          "exa_result_url": "https://jazwares.com/",
+          "exa_result_title": "Jazwares, LLC",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        },
+        {
+          "search": "established_exa_discovery",
+          "exa_query": "toys brands creator program US",
+          "exa_result_url": "https://jazwares.com/",
+          "exa_result_title": "Jazwares, LLC",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        },
+        {
+          "search": "established_exa_discovery",
+          "exa_query": "established toys brands instagram tiktok US",
+          "exa_result_url": "https://jazwares.com/",
+          "exa_result_title": "Jazwares, LLC",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "updated_at": "2026-05-29T19:00:55Z",
+      "brand_category": "established"
+    },
+    {
+      "brand_id": "tru-kids-brands",
+      "name": "Tru Kids Brands",
+      "industry_id": "toys",
+      "source": "established_exa_discovery",
+      "first_surfaced_in_run": "run_20260529T164819Z_6a49da95",
+      "discovered_at": "2026-05-29T16:48:19Z",
+      "domain": "trukidsbrands.com",
+      "social_handles": {
+        "linkedin": "linkedin.com/company/trukidsbrands1",
+        "instagram": "@toysrus"
+      },
+      "discovery_provenance": [
+        {
+          "search": "established_exa_discovery",
+          "exa_query": "established toys brands instagram tiktok US",
+          "exa_result_url": "https://trukidsbrands.com/",
+          "exa_result_title": "Tru Kids Brands",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        },
+        {
+          "search": "established_exa_discovery",
+          "exa_query": "top toys brands US 2026",
+          "exa_result_url": "https://trukidsbrands.com/",
+          "exa_result_title": "Tru Kids Brands",
+          "first_surfaced_in_run": "run_20260529T190054Z_295a8f95"
+        }
+      ],
+      "updated_at": "2026-05-29T19:00:55Z",
+      "brand_category": "established"
+    },
+    {
+      "brand_id": "playmates-toys",
+      "name": "Playmates Toys",
+      "industry_id": "toys",
+      "source": "established_exa_discovery",
+      "first_surfaced_in_run": "run_20260529T164819Z_6a49da95",
+      "discovered_at": "2026-05-29T16:48:19Z",
+      "domain": "playmatestoys.com",
+      "social_handles": {
+        "linkedin": "linkedin.com/company/playmates-toys",
+        "instagram": "@playmatestoysinc",
+        "tiktok": "@playmatestoys"
+      },
+      "discovery_provenance": [
+        {
+          "search": "established_exa_discovery",
+          "exa_query": "established toys brands instagram tiktok US",
+          "exa_result_url": "https://playmatestoys.com/",
+          "exa_result_title": "Playmates Toys Inc.",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "updated_at": "2026-05-29T19:00:55Z",
+      "brand_category": "established"
+    },
+    {
+      "brand_id": "jada-toys",
+      "name": "Jada Toys",
+      "industry_id": "toys",
+      "source": "established_exa_discovery",
+      "first_surfaced_in_run": "run_20260529T164819Z_6a49da95",
+      "discovered_at": "2026-05-29T16:48:19Z",
+      "domain": "jadatoys.com",
+      "social_handles": {
+        "instagram": "@jadatoys",
+        "linkedin": "linkedin.com/company/jada-toys",
+        "tiktok": "@jadatoysofficial"
+      },
+      "discovery_provenance": [
+        {
+          "search": "established_exa_discovery",
+          "exa_query": "established toys brands instagram tiktok US",
+          "exa_result_url": "https://instagram.com/jadatoys",
+          "exa_result_title": "Jada Toys",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "updated_at": "2026-05-29T19:00:55Z",
+      "brand_category": "established"
+    },
+    {
+      "brand_id": "mcfarlane-toys",
+      "name": "McFarlane Toys",
+      "industry_id": "toys",
+      "source": "established_exa_discovery",
+      "first_surfaced_in_run": "run_20260529T164819Z_6a49da95",
+      "discovered_at": "2026-05-29T16:48:19Z",
+      "social_handles": {
+        "linkedin": "linkedin.com/company/mcfarlane-toys20",
+        "instagram": "@mcfarlane_toys_official",
+        "tiktok": "@mcfarlanetoys"
+      },
+      "discovery_provenance": [
+        {
+          "search": "established_exa_discovery",
+          "exa_query": "established toys brands instagram tiktok US",
+          "exa_result_url": "https://linkedin.com/company/mcfarlane-toys20",
+          "exa_result_title": "McFarlane Toys",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "updated_at": "2026-05-29T19:00:55Z",
+      "brand_category": "established"
+    },
+    {
+      "brand_id": "melissa-doug",
+      "name": "Melissa & Doug",
+      "industry_id": "toys",
+      "source": "established_exa_discovery",
+      "first_surfaced_in_run": "run_20260529T164819Z_6a49da95",
+      "discovered_at": "2026-05-29T16:48:19Z",
+      "domain": "melissaanddoug.com",
+      "discovery_provenance": [
+        {
+          "search": "established_exa_discovery",
+          "exa_query": "toys brands creator program US",
+          "exa_result_url": "https://www.melissaanddoug.com/pages/affiliate-program",
+          "exa_result_title": "The Melissa & Doug Affiliate Program",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "updated_at": "2026-05-29T19:00:55Z",
+      "social_handles": {
+        "instagram": "@melissaanddougtoys",
+        "tiktok": "@melissaanddoug"
+      },
+      "brand_category": "established"
+    },
+    {
+      "brand_id": "cotton-babies",
+      "name": "Cotton Babies",
+      "industry_id": "diapers-nappies",
+      "source": "established_exa_discovery",
+      "first_surfaced_in_run": "run_20260529T164819Z_6a49da95",
+      "discovered_at": "2026-05-29T16:48:19Z",
+      "domain": "cottonbabies.com",
+      "social_handles": {
+        "linkedin": "linkedin.com/company/cotton-babies",
+        "instagram": "@cottonbabies"
+      },
+      "discovery_provenance": [
+        {
+          "search": "established_exa_discovery",
+          "exa_query": "top diapers nappies brands US 2026",
+          "exa_result_url": "https://cottonbabies.com/",
+          "exa_result_title": "Cotton Babies",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        },
+        {
+          "search": "established_exa_discovery",
+          "exa_query": "diapers nappies brands creator program US",
+          "exa_result_url": "https://cottonbabies.com/",
+          "exa_result_title": "Cotton Babies",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "updated_at": "2026-05-29T19:00:55Z",
+      "brand_category": "established"
+    },
+    {
+      "brand_id": "bumgenius",
+      "name": "bumGenius",
+      "industry_id": "diapers-nappies",
+      "source": "established_exa_discovery",
+      "first_surfaced_in_run": "run_20260529T164819Z_6a49da95",
+      "discovered_at": "2026-05-29T16:48:19Z",
+      "domain": "bumgenius.com",
+      "social_handles": {
+        "linkedin": "linkedin.com/company/bumgenius",
+        "instagram": "@bumgenius",
+        "tiktok": "@rebyhardy"
+      },
+      "discovery_provenance": [
+        {
+          "search": "established_exa_discovery",
+          "exa_query": "top diapers nappies brands US 2026",
+          "exa_result_url": "https://cottonbabies.com/",
+          "exa_result_title": "Cotton Babies",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        },
+        {
+          "search": "established_exa_discovery",
+          "exa_query": "diapers nappies brands creator program US",
+          "exa_result_url": "https://bumgenius.com/",
+          "exa_result_title": "bumGenius",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        },
+        {
+          "search": "established_exa_discovery",
+          "exa_query": "established diapers nappies brands instagram tiktok US",
+          "exa_result_url": "https://bumgenius.com/",
+          "exa_result_title": "bumGenius",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "updated_at": "2026-05-29T19:00:55Z",
+      "brand_category": "established"
+    },
+    {
+      "brand_id": "millie-moon",
+      "name": "Millie Moon",
+      "industry_id": "diapers-nappies",
+      "source": "established_exa_discovery",
+      "first_surfaced_in_run": "run_20260529T164819Z_6a49da95",
+      "discovered_at": "2026-05-29T16:48:19Z",
+      "domain": "mymilliemoon.com",
+      "discovery_provenance": [
+        {
+          "search": "established_exa_discovery",
+          "exa_query": "diapers nappies brands creator program US",
+          "exa_result_url": "https://mymilliemoon.com/en-US/find-comfort-creator-program",
+          "exa_result_title": "Find Comfort Creator Program | Millie Moon",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "updated_at": "2026-05-29T19:00:55Z",
+      "social_handles": {
+        "instagram": "@mymilliemoon",
+        "tiktok": "@mymilliemoon"
+      },
+      "brand_category": "established"
+    },
+    {
+      "brand_id": "topbuild",
+      "name": "TopBuild",
+      "industry_id": "home-improvement",
+      "source": "established_exa_discovery",
+      "first_surfaced_in_run": "run_20260529T164819Z_6a49da95",
+      "discovered_at": "2026-05-29T16:48:19Z",
+      "domain": "topbuild.com",
+      "social_handles": {
+        "linkedin": "linkedin.com/company/topbuild",
+        "instagram": "@topbuildgroup",
+        "tiktok": "@topbuildcarpentry"
+      },
+      "discovery_provenance": [
+        {
+          "search": "established_exa_discovery",
+          "exa_query": "top home improvement brands US 2026",
+          "exa_result_url": "https://topbuild.com/",
+          "exa_result_title": "TopBuild",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "updated_at": "2026-05-29T19:00:55Z",
+      "brand_category": "established"
+    },
+    {
+      "brand_id": "general-motors",
+      "name": "General Motors",
+      "industry_id": "auto-oems",
+      "source": "established_exa_discovery",
+      "first_surfaced_in_run": "run_20260529T164819Z_6a49da95",
+      "discovered_at": "2026-05-29T16:48:19Z",
+      "domain": "gm.com",
+      "social_handles": {
+        "linkedin": "linkedin.com/company/general-motors",
+        "instagram": "@generalmotors",
+        "tiktok": "@generalmotors"
+      },
+      "discovery_provenance": [
+        {
+          "search": "established_exa_discovery",
+          "exa_query": "top auto oems brands US 2026",
+          "exa_result_url": "https://gm.com/",
+          "exa_result_title": "General Motors",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "updated_at": "2026-05-29T19:00:55Z",
+      "brand_category": "established"
+    },
+    {
+      "brand_id": "hyundai-motor-america",
+      "name": "Hyundai Motor America",
+      "industry_id": "auto-oems",
+      "source": "established_exa_discovery",
+      "first_surfaced_in_run": "run_20260529T164819Z_6a49da95",
+      "discovered_at": "2026-05-29T16:48:19Z",
+      "domain": "hyundaiusa.com",
+      "social_handles": {
+        "instagram": "@hyundaiusa",
+        "tiktok": "@hyundaiusa",
+        "linkedin": "linkedin.com/company/hyundai-motor-america"
+      },
+      "discovery_provenance": [
+        {
+          "search": "established_exa_discovery",
+          "exa_query": "top auto oems brands US 2026",
+          "exa_result_url": "https://hyundaiusa.com/",
+          "exa_result_title": "Hyundai Motor America",
+          "first_surfaced_in_run": "run_20260529T190054Z_295a8f95"
+        }
+      ],
+      "updated_at": "2026-05-29T19:00:55Z",
+      "brand_category": "established"
+    },
+    {
+      "brand_id": "bmw-group-us",
+      "name": "BMW Group US",
+      "industry_id": "auto-oems",
+      "source": "established_exa_discovery",
+      "first_surfaced_in_run": "run_20260529T164819Z_6a49da95",
+      "discovered_at": "2026-05-29T16:48:19Z",
+      "domain": "bmwusa.com",
+      "social_handles": {
+        "linkedin": "linkedin.com/company/bmw-of-north-america-llc",
+        "instagram": "@bmwusa",
+        "tiktok": "@bmw"
+      },
+      "discovery_provenance": [
+        {
+          "search": "established_exa_discovery",
+          "exa_query": "established auto oems brands instagram tiktok US",
+          "exa_result_url": "https://linkedin.com/company/bmw-of-north-america-llc",
+          "exa_result_title": "BMW Group US",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        },
+        {
+          "search": "established_exa_discovery",
+          "exa_query": "auto oems D2C brand directory US",
+          "exa_result_url": "https://bmwusa.com/",
+          "exa_result_title": "BMW Group US",
+          "first_surfaced_in_run": "run_20260529T190054Z_295a8f95"
+        }
+      ],
+      "updated_at": "2026-05-29T19:00:55Z",
+      "brand_category": "established"
+    },
+    {
+      "brand_id": "kia-america",
+      "name": "Kia America",
+      "industry_id": "auto-oems",
+      "source": "established_exa_discovery",
+      "first_surfaced_in_run": "run_20260529T164819Z_6a49da95",
+      "discovered_at": "2026-05-29T16:48:19Z",
+      "domain": "kia.com",
+      "social_handles": {
+        "linkedin": "linkedin.com/company/kia-america",
+        "instagram": "@kiausa",
+        "tiktok": "@kiausa"
+      },
+      "discovery_provenance": [
+        {
+          "search": "established_exa_discovery",
+          "exa_query": "auto oems brands to watch US 2026",
+          "exa_result_url": "https://kia.com/us/en",
+          "exa_result_title": "Kia America",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        },
+        {
+          "search": "established_exa_discovery",
+          "exa_query": "auto oems D2C brand directory US",
+          "exa_result_url": "https://kia.com/us/en",
+          "exa_result_title": "Kia America",
+          "first_surfaced_in_run": "run_20260529T190054Z_295a8f95"
+        }
+      ],
+      "updated_at": "2026-05-29T19:00:55Z",
+      "brand_category": "established"
+    },
+    {
+      "brand_id": "jeep",
+      "name": "Jeep",
+      "industry_id": "auto-oems",
+      "source": "established_exa_discovery",
+      "first_surfaced_in_run": "run_20260529T164819Z_6a49da95",
+      "discovered_at": "2026-05-29T16:48:19Z",
+      "domain": "jeep.com",
+      "social_handles": {
+        "linkedin": "linkedin.com/company/jeep",
+        "instagram": "@jeep",
+        "tiktok": "@jeep"
+      },
+      "discovery_provenance": [
+        {
+          "search": "established_exa_discovery",
+          "exa_query": "auto oems D2C brand directory US",
+          "exa_result_url": "https://jeep.com/",
+          "exa_result_title": "Jeep",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "updated_at": "2026-05-29T19:00:55Z",
+      "brand_category": "established"
+    },
+    {
+      "brand_id": "genesis-motor-america",
+      "name": "Genesis Motor America",
+      "industry_id": "auto-oems",
+      "source": "established_exa_discovery",
+      "first_surfaced_in_run": "run_20260529T164819Z_6a49da95",
+      "discovered_at": "2026-05-29T16:48:19Z",
+      "domain": "genesis.com",
+      "social_handles": {
+        "instagram": "@genesis_usa",
+        "tiktok": "@genesis_usa",
+        "linkedin": "linkedin.com/company/genesis-motor-america"
+      },
+      "discovery_provenance": [
+        {
+          "search": "established_exa_discovery",
+          "exa_query": "auto oems D2C brand directory US",
+          "exa_result_url": "https://genesis.com/us/en/home",
+          "exa_result_title": "Genesis Motor America",
+          "first_surfaced_in_run": "run_20260529T190054Z_295a8f95"
+        }
+      ],
+      "updated_at": "2026-05-29T19:00:55Z",
+      "brand_category": "established"
+    },
+    {
+      "brand_id": "audi-of-america",
+      "name": "Audi of America",
+      "industry_id": "auto-oems",
+      "source": "established_exa_discovery",
+      "first_surfaced_in_run": "run_20260529T164819Z_6a49da95",
+      "discovered_at": "2026-05-29T16:48:19Z",
+      "domain": "audi.us",
+      "social_handles": {
+        "instagram": "@audiusa",
+        "tiktok": "@audiusa",
+        "linkedin": "linkedin.com/company/audi-of-america"
+      },
+      "discovery_provenance": [
+        {
+          "search": "established_exa_discovery",
+          "exa_query": "auto oems D2C brand directory US",
+          "exa_result_url": "https://audi.us/",
+          "exa_result_title": "Audi of America",
+          "first_surfaced_in_run": "run_20260529T190054Z_295a8f95"
+        }
+      ],
+      "updated_at": "2026-05-29T19:00:55Z",
+      "brand_category": "established"
+    },
+    {
+      "brand_id": "mini-usa",
+      "name": "MINI USA",
+      "industry_id": "auto-oems",
+      "source": "established_exa_discovery",
+      "first_surfaced_in_run": "run_20260529T164819Z_6a49da95",
+      "discovered_at": "2026-05-29T16:48:19Z",
+      "domain": "miniusa.com",
+      "social_handles": {
+        "linkedin": "linkedin.com/showcase/mini-usa",
+        "instagram": "@miniusa",
+        "tiktok": "@miniusa"
+      },
+      "discovery_provenance": [
+        {
+          "search": "established_exa_discovery",
+          "exa_query": "established auto oems brands instagram tiktok US",
+          "exa_result_url": "https://linkedin.com/showcase/mini-usa",
+          "exa_result_title": "MINI USA",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "updated_at": "2026-05-29T19:00:55Z",
+      "brand_category": "established"
+    },
+    {
+      "brand_id": "kroger",
+      "name": "Kroger",
+      "industry_id": "grocery",
+      "source": "established_exa_discovery",
+      "first_surfaced_in_run": "run_20260529T164819Z_6a49da95",
+      "discovered_at": "2026-05-29T16:48:19Z",
+      "domain": "kroger.com",
+      "social_handles": {
+        "linkedin": "linkedin.com/company/kroger",
+        "instagram": "@krogerco",
+        "tiktok": "@kroger"
+      },
+      "discovery_provenance": [
+        {
+          "search": "established_exa_discovery",
+          "exa_query": "top grocery brands US 2026",
+          "exa_result_url": "https://kroger.com/",
+          "exa_result_title": "Kroger",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "updated_at": "2026-05-29T19:00:55Z",
+      "brand_category": "established"
+    },
+    {
+      "brand_id": "the-giant-company",
+      "name": "The GIANT Company",
+      "industry_id": "grocery",
+      "source": "established_exa_discovery",
+      "first_surfaced_in_run": "run_20260529T164819Z_6a49da95",
+      "discovered_at": "2026-05-29T16:48:19Z",
+      "domain": "giantfoodstores.com",
+      "social_handles": {
+        "linkedin": "linkedin.com/company/the-giant-company",
+        "instagram": "@giantfood",
+        "tiktok": "@giantfoodstores"
+      },
+      "discovery_provenance": [
+        {
+          "search": "established_exa_discovery",
+          "exa_query": "top grocery brands US 2026",
+          "exa_result_url": "https://giantfoodstores.com/",
+          "exa_result_title": "The GIANT Company",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "updated_at": "2026-05-29T19:00:55Z",
+      "brand_category": "established"
+    },
+    {
+      "brand_id": "food-lion",
+      "name": "Food Lion",
+      "industry_id": "grocery",
+      "source": "established_exa_discovery",
+      "first_surfaced_in_run": "run_20260529T164819Z_6a49da95",
+      "discovered_at": "2026-05-29T16:48:19Z",
+      "discovery_provenance": [
+        {
+          "search": "established_exa_discovery",
+          "exa_query": "top grocery brands US 2026",
+          "exa_result_url": "https://adusa.com/",
+          "exa_result_title": "Ahold Delhaize US.",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "updated_at": "2026-05-29T19:00:55Z",
+      "social_handles": {
+        "instagram": "@foodlion",
+        "tiktok": "@foodlionofficial"
+      },
+      "brand_category": "established"
+    },
+    {
+      "brand_id": "giant-food",
+      "name": "Giant Food",
+      "industry_id": "grocery",
+      "source": "established_exa_discovery",
+      "first_surfaced_in_run": "run_20260529T164819Z_6a49da95",
+      "discovered_at": "2026-05-29T16:48:19Z",
+      "discovery_provenance": [
+        {
+          "search": "established_exa_discovery",
+          "exa_query": "top grocery brands US 2026",
+          "exa_result_url": "https://adusa.com/",
+          "exa_result_title": "Ahold Delhaize US.",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "updated_at": "2026-05-29T19:00:55Z",
+      "social_handles": {
+        "instagram": "@giantfood",
+        "tiktok": "@giant.food"
+      },
+      "brand_category": "established"
+    },
+    {
+      "brand_id": "hannaford",
+      "name": "Hannaford",
+      "industry_id": "grocery",
+      "source": "established_exa_discovery",
+      "first_surfaced_in_run": "run_20260529T164819Z_6a49da95",
+      "discovered_at": "2026-05-29T16:48:19Z",
+      "discovery_provenance": [
+        {
+          "search": "established_exa_discovery",
+          "exa_query": "top grocery brands US 2026",
+          "exa_result_url": "https://adusa.com/",
+          "exa_result_title": "Ahold Delhaize US.",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "updated_at": "2026-05-29T19:00:55Z",
+      "social_handles": {
+        "instagram": "@hannafordmkts",
+        "tiktok": "@hannafordmkts"
+      },
+      "brand_category": "established"
+    },
+    {
+      "brand_id": "stop-shop",
+      "name": "Stop & Shop",
+      "industry_id": "grocery",
+      "source": "established_exa_discovery",
+      "first_surfaced_in_run": "run_20260529T164819Z_6a49da95",
+      "discovered_at": "2026-05-29T16:48:19Z",
+      "discovery_provenance": [
+        {
+          "search": "established_exa_discovery",
+          "exa_query": "top grocery brands US 2026",
+          "exa_result_url": "https://adusa.com/",
+          "exa_result_title": "Ahold Delhaize US.",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "updated_at": "2026-05-29T19:00:55Z",
+      "social_handles": {
+        "instagram": "@stopandshop",
+        "tiktok": "@officialstopandshop"
+      },
+      "brand_category": "established"
+    },
+    {
+      "brand_id": "ahold-delhaize-usa",
+      "name": "Ahold Delhaize USA",
+      "industry_id": "grocery",
+      "source": "established_exa_discovery",
+      "first_surfaced_in_run": "run_20260529T164819Z_6a49da95",
+      "discovered_at": "2026-05-29T16:48:19Z",
+      "domain": "adusa.com",
+      "social_handles": {
+        "linkedin": "linkedin.com/company/ahold-delhaize-us",
+        "instagram": "@aholddelhaizeusa",
+        "tiktok": "@ahold.delhaize.ne"
+      },
+      "discovery_provenance": [
+        {
+          "search": "established_exa_discovery",
+          "exa_query": "top grocery brands US 2026",
+          "exa_result_url": "https://adusa.com/",
+          "exa_result_title": "Ahold Delhaize US.",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "updated_at": "2026-05-29T19:00:55Z",
+      "brand_category": "established"
+    },
+    {
+      "brand_id": "chobani",
+      "name": "Chobani",
+      "industry_id": "grocery",
+      "source": "established_exa_discovery",
+      "first_surfaced_in_run": "run_20260529T164819Z_6a49da95",
+      "discovered_at": "2026-05-29T16:48:19Z",
+      "domain": "chobani.com",
+      "social_handles": {
+        "linkedin": "linkedin.com/company/chobani-incubator",
+        "instagram": "@chobani",
+        "tiktok": "@chobani"
+      },
+      "discovery_provenance": [
+        {
+          "search": "established_exa_discovery",
+          "exa_query": "grocery brands creator program US",
+          "exa_result_url": "https://chobani.com/impact/chobani-incubator",
+          "exa_result_title": "Chobani Incubator",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "updated_at": "2026-05-29T19:00:55Z",
+      "brand_category": "established"
+    },
+    {
+      "brand_id": "jawless-fish",
+      "name": "Jawless Fish",
+      "industry_id": "toys",
+      "source": "recently_funded",
+      "first_surfaced_in_run": "run_20260529T174213Z_2cbbcce5",
+      "discovered_at": "2026-05-29T17:42:13Z",
+      "domain": "jawless.fish",
+      "social_handles": {
+        "linkedin": "linkedin.com/company/jawlessfish",
+        "tiktok": "@thejawlessfish"
+      },
+      "discovery_provenance": [
+        {
+          "search": "recently_funded",
+          "exa_query": "new toys D2C launch US 2026",
+          "exa_result_url": "https://jawless.fish/",
+          "exa_result_title": "Jawless Fish",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        },
+        {
+          "search": "recently_funded",
+          "exa_query": "indie toys brand US instagram tiktok",
+          "exa_result_url": "https://jawless.fish/",
+          "exa_result_title": "Jawless Fish",
+          "first_surfaced_in_run": "run_20260529T190054Z_295a8f95"
+        }
+      ],
+      "updated_at": "2026-05-29T19:00:55Z",
+      "brand_category": "emerging"
+    },
+    {
+      "brand_id": "peachies",
+      "name": "Peachies",
+      "industry_id": "diapers-nappies",
+      "source": "recently_funded",
+      "first_surfaced_in_run": "run_20260529T174213Z_2cbbcce5",
+      "discovered_at": "2026-05-29T17:42:13Z",
+      "discovery_provenance": [
+        {
+          "search": "recently_funded",
+          "exa_query": "diapers nappies startup creator partnership US",
+          "exa_result_url": "https://www.and.digital/spotlight/startup-spotlight-peachies",
+          "exa_result_title": "Startup spotlight: Peachies - AND Digital",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "updated_at": "2026-05-29T19:10:37Z",
+      "social_handles": {
+        "instagram": "@wearepeachies",
+        "tiktok": "@wearepeachies"
+      },
+      "brand_category": "emerging"
+    },
+    {
+      "brand_id": "sproos",
+      "name": "sproos!",
+      "industry_id": "home-improvement",
+      "source": "recently_funded",
+      "first_surfaced_in_run": "run_20260529T174213Z_2cbbcce5",
+      "discovered_at": "2026-05-29T17:42:13Z",
+      "domain": "sproos.co",
+      "social_handles": {
+        "linkedin": "linkedin.com/company/sprooshome",
+        "instagram": "@sprooshome",
+        "tiktok": "@sprooshome"
+      },
+      "discovery_provenance": [
+        {
+          "search": "recently_funded",
+          "exa_query": "emerging US home improvement brand creator marketing",
+          "exa_result_url": "https://sproos.co/",
+          "exa_result_title": "sproos!",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "updated_at": "2026-05-29T19:00:55Z",
+      "brand_category": "emerging"
+    },
+    {
+      "brand_id": "cool-beans",
+      "name": "Cool Beans",
+      "industry_id": "grocery",
+      "source": "recently_funded",
+      "first_surfaced_in_run": "run_20260529T174213Z_2cbbcce5",
+      "discovered_at": "2026-05-29T17:42:13Z",
+      "domain": "eatcoolbeans.com",
+      "social_handles": {
+        "linkedin": "linkedin.com/company/eatcoolbeans",
+        "instagram": "@coolbeanscafe",
+        "tiktok": "@coolbeanscomedy"
+      },
+      "discovery_provenance": [
+        {
+          "search": "recently_funded",
+          "exa_query": "newly funded US grocery brand 2026",
+          "exa_result_url": "https://republic.com/eatcoolbeans",
+          "exa_result_title": "Cool Beans",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "updated_at": "2026-05-29T19:00:55Z",
+      "brand_category": "emerging"
+    },
+    {
+      "brand_id": "plonts",
+      "name": "Plonts",
+      "industry_id": "grocery",
+      "source": "recently_funded",
+      "first_surfaced_in_run": "run_20260529T174213Z_2cbbcce5",
+      "discovered_at": "2026-05-29T17:42:13Z",
+      "brand_category": "emerging"
+    },
+    {
+      "brand_id": "tezza-foods",
+      "name": "Tezza Foods",
+      "industry_id": "grocery",
+      "source": "recently_funded",
+      "first_surfaced_in_run": "run_20260529T174213Z_2cbbcce5",
+      "discovered_at": "2026-05-29T17:42:13Z",
+      "brand_category": "emerging"
+    },
+    {
+      "brand_id": "calii",
+      "name": "Calii",
+      "industry_id": "grocery",
+      "source": "recently_funded",
+      "first_surfaced_in_run": "run_20260529T174213Z_2cbbcce5",
+      "discovered_at": "2026-05-29T17:42:13Z",
+      "domain": "calii.com",
+      "social_handles": {
+        "linkedin": "linkedin.com/company/calii",
+        "instagram": "@caliicooks",
+        "tiktok": "@caliirolls"
+      },
+      "discovery_provenance": [
+        {
+          "search": "recently_funded",
+          "exa_query": "grocery startup US Series A Series B 2026",
+          "exa_result_url": "https://calii.com/",
+          "exa_result_title": "Calii",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "updated_at": "2026-05-29T19:00:55Z",
+      "brand_category": "emerging"
+    },
+    {
+      "brand_id": "duffl",
+      "name": "Duffl",
+      "industry_id": "grocery",
+      "source": "recently_funded",
+      "first_surfaced_in_run": "run_20260529T174213Z_2cbbcce5",
+      "discovered_at": "2026-05-29T17:42:13Z",
+      "domain": "duffl.com",
+      "social_handles": {
+        "linkedin": "linkedin.com/company/dufflstores",
+        "instagram": "@dufflstores",
+        "tiktok": "@duffl.com"
+      },
+      "discovery_provenance": [
+        {
+          "search": "recently_funded",
+          "exa_query": "grocery startup US Series A Series B 2026",
+          "exa_result_url": "https://duffl.com/",
+          "exa_result_title": "Duffl",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "updated_at": "2026-05-29T19:00:55Z",
+      "brand_category": "emerging"
+    },
+    {
+      "brand_id": "martie",
+      "name": "Martie",
+      "industry_id": "grocery",
+      "source": "recently_funded",
+      "first_surfaced_in_run": "run_20260529T174213Z_2cbbcce5",
+      "discovered_at": "2026-05-29T17:42:13Z",
+      "domain": "martie.com",
+      "social_handles": {
+        "linkedin": "linkedin.com/company/martiefoods",
+        "instagram": "@martiegoods",
+        "tiktok": "@hi.martie"
+      },
+      "discovery_provenance": [
+        {
+          "search": "recently_funded",
+          "exa_query": "new grocery D2C launch US 2026",
+          "exa_result_url": "https://martie.com/",
+          "exa_result_title": "Martie",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "updated_at": "2026-05-29T19:00:55Z",
+      "brand_category": "emerging"
+    },
+    {
+      "brand_id": "joon-foods",
+      "name": "Joon Foods",
+      "industry_id": "grocery",
+      "source": "recently_funded",
+      "first_surfaced_in_run": "run_20260529T174213Z_2cbbcce5",
+      "discovered_at": "2026-05-29T17:42:13Z",
+      "brand_category": "emerging"
+    },
+    {
+      "brand_id": "happier-grocery",
+      "name": "Happier Grocery",
+      "industry_id": "grocery",
+      "source": "recently_funded",
+      "first_surfaced_in_run": "run_20260529T174213Z_2cbbcce5",
+      "discovered_at": "2026-05-29T17:42:13Z",
+      "domain": "happiergrocery.com",
+      "social_handles": {
+        "linkedin": "linkedin.com/company/happier-grocery",
+        "instagram": "@happiergrocery",
+        "tiktok": "@happier.grocery"
+      },
+      "discovery_provenance": [
+        {
+          "search": "recently_funded",
+          "exa_query": "indie grocery brand US instagram tiktok",
+          "exa_result_url": "https://happiergrocery.com/",
+          "exa_result_title": "Happier Grocery",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "updated_at": "2026-05-29T19:00:55Z",
+      "brand_category": "emerging"
+    },
+    {
+      "brand_id": "littleton-s-market",
+      "name": "Littleton's Market",
+      "industry_id": "grocery",
+      "source": "recently_funded",
+      "first_surfaced_in_run": "run_20260529T174213Z_2cbbcce5",
+      "discovered_at": "2026-05-29T17:42:13Z",
+      "domain": "littletonsmarket.com",
+      "social_handles": {
+        "linkedin": "linkedin.com/company/littletonsmarket"
+      },
+      "discovery_provenance": [
+        {
+          "search": "recently_funded",
+          "exa_query": "indie grocery brand US instagram tiktok",
+          "exa_result_url": "https://littletonsmarket.com/",
+          "exa_result_title": "Littleton's Market",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "updated_at": "2026-05-29T18:31:40Z",
+      "brand_category": "emerging"
+    },
+    {
+      "brand_id": "chevrolet",
+      "name": "Chevrolet",
+      "industry_id": "auto-oems",
+      "source": "established_exa_discovery",
+      "first_surfaced_in_run": "run_20260529T174213Z_2cbbcce5",
+      "discovered_at": "2026-05-29T17:42:13Z",
+      "discovery_provenance": [
+        {
+          "search": "established_exa_discovery",
+          "exa_query": "top auto oems brands US 2026",
+          "exa_result_url": "https://gm.com/",
+          "exa_result_title": "General Motors",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "updated_at": "2026-05-29T19:00:55Z",
+      "social_handles": {
+        "instagram": "@chevrolet",
+        "tiktok": "@chevrolet"
+      },
+      "brand_category": "established"
+    },
+    {
+      "brand_id": "buick",
+      "name": "Buick",
+      "industry_id": "auto-oems",
+      "source": "established_exa_discovery",
+      "first_surfaced_in_run": "run_20260529T174213Z_2cbbcce5",
+      "discovered_at": "2026-05-29T17:42:13Z",
+      "discovery_provenance": [
+        {
+          "search": "established_exa_discovery",
+          "exa_query": "top auto oems brands US 2026",
+          "exa_result_url": "https://gm.com/",
+          "exa_result_title": "General Motors",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "updated_at": "2026-05-29T19:00:55Z",
+      "social_handles": {
+        "instagram": "@buickusa",
+        "tiktok": "@buickusa"
+      },
+      "brand_category": "established"
+    },
+    {
+      "brand_id": "gmc",
+      "name": "GMC",
+      "industry_id": "auto-oems",
+      "source": "established_exa_discovery",
+      "first_surfaced_in_run": "run_20260529T174213Z_2cbbcce5",
+      "discovered_at": "2026-05-29T17:42:13Z",
+      "discovery_provenance": [
+        {
+          "search": "established_exa_discovery",
+          "exa_query": "top auto oems brands US 2026",
+          "exa_result_url": "https://gm.com/",
+          "exa_result_title": "General Motors",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "updated_at": "2026-05-29T19:00:55Z",
+      "social_handles": {
+        "instagram": "@gmc",
+        "tiktok": "@gmc"
+      },
+      "brand_category": "established"
+    },
+    {
+      "brand_id": "cadillac",
+      "name": "Cadillac",
+      "industry_id": "auto-oems",
+      "source": "established_exa_discovery",
+      "first_surfaced_in_run": "run_20260529T174213Z_2cbbcce5",
+      "discovered_at": "2026-05-29T17:42:13Z",
+      "discovery_provenance": [
+        {
+          "search": "established_exa_discovery",
+          "exa_query": "top auto oems brands US 2026",
+          "exa_result_url": "https://gm.com/",
+          "exa_result_title": "General Motors",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "updated_at": "2026-05-29T19:00:55Z",
+      "social_handles": {
+        "instagram": "@cadillac",
+        "tiktok": "@cadillac"
+      },
+      "brand_category": "established"
+    },
+    {
+      "brand_id": "mini",
+      "name": "MINI",
+      "industry_id": "auto-oems",
+      "source": "established_exa_discovery",
+      "first_surfaced_in_run": "run_20260529T174213Z_2cbbcce5",
+      "discovered_at": "2026-05-29T17:42:13Z",
+      "domain": "miniusa.com",
+      "discovery_provenance": [
+        {
+          "search": "established_exa_discovery",
+          "exa_query": "auto oems D2C brand directory US",
+          "exa_result_url": "https://bmwusa.com/",
+          "exa_result_title": "BMW Group US",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "updated_at": "2026-05-29T19:00:55Z",
+      "social_handles": {
+        "instagram": "@mini",
+        "tiktok": "@mini"
+      },
+      "brand_category": "established"
+    },
+    {
+      "brand_id": "rolls-royce-motor-cars",
+      "name": "Rolls-Royce Motor Cars",
+      "industry_id": "auto-oems",
+      "source": "established_exa_discovery",
+      "first_surfaced_in_run": "run_20260529T174213Z_2cbbcce5",
+      "discovered_at": "2026-05-29T17:42:13Z",
+      "discovery_provenance": [
+        {
+          "search": "established_exa_discovery",
+          "exa_query": "auto oems D2C brand directory US",
+          "exa_result_url": "https://bmwusa.com/",
+          "exa_result_title": "BMW Group US",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "updated_at": "2026-05-29T19:00:55Z",
+      "social_handles": {
+        "instagram": "@rollsroycecars",
+        "tiktok": "@rollsroycemotorcarss"
+      },
+      "brand_category": "established"
+    },
+    {
+      "brand_id": "genesis",
+      "name": "Genesis",
+      "industry_id": "auto-oems",
+      "source": "established_exa_discovery",
+      "first_surfaced_in_run": "run_20260529T174213Z_2cbbcce5",
+      "discovered_at": "2026-05-29T17:42:13Z",
+      "domain": "genesis.com",
+      "social_handles": {
+        "linkedin": "linkedin.com/company/genesis-motor-america",
+        "instagram": "@genesis_worldwide",
+        "tiktok": "@genesis_usa"
+      },
+      "discovery_provenance": [
+        {
+          "search": "established_exa_discovery",
+          "exa_query": "auto oems D2C brand directory US",
+          "exa_result_url": "https://genesis.com/us/en/home",
+          "exa_result_title": "Genesis Motor America",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        },
+        {
+          "search": "established_exa_discovery",
+          "exa_query": "auto oems brands creator program US",
+          "exa_result_url": "https://genesis.com/us/en/home",
+          "exa_result_title": "Genesis Motor America",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "updated_at": "2026-05-29T19:00:55Z",
+      "brand_category": "established"
+    },
+    {
+      "brand_id": "acdelco",
+      "name": "ACDelco",
+      "industry_id": "auto-oems",
+      "source": "established_exa_discovery",
+      "first_surfaced_in_run": "run_20260529T174213Z_2cbbcce5",
+      "discovered_at": "2026-05-29T17:42:13Z",
+      "brand_category": "established"
+    },
+    {
+      "brand_id": "premier-home-pros",
+      "name": "Premier Home Pros",
+      "industry_id": "home-improvement",
+      "source": "recently_funded",
+      "first_surfaced_in_run": "run_20260529T175105Z_a76eab75",
+      "discovered_at": "2026-05-29T17:51:06Z",
+      "domain": "premier-homepros.com",
+      "social_handles": {
+        "linkedin": "linkedin.com/company/premier-home-pro",
+        "instagram": "@premierhomepros",
+        "tiktok": "@premierhomepros"
+      },
+      "discovery_provenance": [
+        {
+          "search": "recently_funded",
+          "exa_query": "newly funded US home improvement brand 2026",
+          "exa_result_url": "https://premier-homepros.com/",
+          "exa_result_title": "Premier Home Pros",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "updated_at": "2026-05-29T19:00:55Z",
+      "brand_category": "emerging"
+    },
+    {
+      "brand_id": "rolls-royce",
+      "name": "Rolls-Royce",
+      "industry_id": "auto-oems",
+      "source": "established_exa_discovery",
+      "first_surfaced_in_run": "run_20260529T175105Z_a76eab75",
+      "discovered_at": "2026-05-29T17:51:06Z",
+      "brand_category": "established"
+    },
+    {
+      "brand_id": "martin-s",
+      "name": "MARTIN'S",
+      "industry_id": "grocery",
+      "source": "established_exa_discovery",
+      "first_surfaced_in_run": "run_20260529T175105Z_a76eab75",
+      "discovered_at": "2026-05-29T17:51:06Z",
+      "discovery_provenance": [
+        {
+          "search": "established_exa_discovery",
+          "exa_query": "top grocery brands US 2026",
+          "exa_result_url": "https://giantfoodstores.com/",
+          "exa_result_title": "The GIANT Company",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "updated_at": "2026-05-29T19:00:55Z",
+      "social_handles": {
+        "instagram": "@martinsfamilyclothing",
+        "tiktok": "@martinsmainecoonshome"
+      },
+      "brand_category": "established"
+    },
+    {
+      "brand_id": "nino-salvaggio-international-marketplace",
+      "name": "Nino Salvaggio International Marketplace",
+      "industry_id": "grocery",
+      "source": "established_exa_discovery",
+      "first_surfaced_in_run": "run_20260529T175105Z_a76eab75",
+      "discovered_at": "2026-05-29T17:51:06Z",
+      "brand_category": "established"
+    },
+    {
+      "brand_id": "solobo-toys",
+      "name": "Solobo Toys",
+      "industry_id": "toys",
+      "source": "recently_funded",
+      "first_surfaced_in_run": "run_20260529T181642Z_dfcb4cfa",
+      "discovered_at": "2026-05-29T18:16:43Z",
+      "domain": "solobotoys.com",
+      "social_handles": {
+        "linkedin": "linkedin.com/company/solobo-toys",
+        "instagram": "@solobotoys",
+        "tiktok": "@saraheelizabethx"
+      },
+      "discovery_provenance": [
+        {
+          "search": "recently_funded",
+          "exa_query": "toys startup creator partnership US",
+          "exa_result_url": "https://solobotoys.com/",
+          "exa_result_title": "Solobo Toys",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        },
+        {
+          "search": "recently_funded",
+          "exa_query": "new toys D2C launch US 2026",
+          "exa_result_url": "https://solobotoys.com/",
+          "exa_result_title": "Solobo Toys",
+          "first_surfaced_in_run": "run_20260529T190054Z_295a8f95"
+        }
+      ],
+      "updated_at": "2026-05-29T19:00:55Z",
+      "brand_category": "emerging"
+    },
+    {
+      "brand_id": "sky-castle-toys",
+      "name": "Sky Castle Toys",
+      "industry_id": "toys",
+      "source": "recently_funded",
+      "first_surfaced_in_run": "run_20260529T181642Z_dfcb4cfa",
+      "discovered_at": "2026-05-29T18:16:43Z",
+      "domain": "skycastletoys.com",
+      "social_handles": {
+        "instagram": "@skycastletoys",
+        "tiktok": "@skycastletoys",
+        "linkedin": "linkedin.com/company/skycastletoys"
+      },
+      "discovery_provenance": [
+        {
+          "search": "recently_funded",
+          "exa_query": "indie toys brand US instagram tiktok",
+          "exa_result_url": "https://skycastletoys.com/",
+          "exa_result_title": "Sky Castle Toys",
+          "first_surfaced_in_run": "run_20260529T190054Z_295a8f95"
+        }
+      ],
+      "updated_at": "2026-05-29T19:00:55Z",
+      "brand_category": "emerging"
+    },
+    {
+      "brand_id": "hello-bello",
+      "name": "Hello Bello",
+      "industry_id": "diapers-nappies",
+      "source": "established_exa_discovery",
+      "first_surfaced_in_run": "run_20260529T181642Z_dfcb4cfa",
+      "discovered_at": "2026-05-29T18:16:43Z",
+      "brand_category": "established"
+    },
+    {
+      "brand_id": "bambo-nature",
+      "name": "Bambo Nature",
+      "industry_id": "diapers-nappies",
+      "source": "established_exa_discovery",
+      "first_surfaced_in_run": "run_20260529T181642Z_dfcb4cfa",
+      "discovered_at": "2026-05-29T18:16:43Z",
+      "brand_category": "established"
+    },
+    {
+      "brand_id": "dyper",
+      "name": "Dyper",
+      "industry_id": "diapers-nappies",
+      "source": "established_exa_discovery",
+      "first_surfaced_in_run": "run_20260529T181642Z_dfcb4cfa",
+      "discovered_at": "2026-05-29T18:16:43Z",
+      "domain": "dyper.com",
+      "social_handles": {
+        "instagram": "@get.dyper",
+        "tiktok": "@get.dyper",
+        "linkedin": "linkedin.com/company/getdyper"
+      },
+      "discovery_provenance": [
+        {
+          "search": "recently_funded",
+          "exa_query": "diapers nappies startup US Series A Series B 2026",
+          "exa_result_url": "https://dyper.com/",
+          "exa_result_title": "DYPER",
+          "first_surfaced_in_run": "run_20260529T191036Z_0aa929fc"
+        }
+      ],
+      "updated_at": "2026-05-29T19:10:37Z",
+      "brand_category": "established"
+    },
+    {
+      "brand_id": "playper-toys",
+      "name": "Playper Toys",
+      "industry_id": "toys",
+      "source": "recently_funded",
+      "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3",
+      "discovered_at": "2026-05-29T18:31:40Z",
+      "domain": "playper.com",
+      "social_handles": {
+        "instagram": "@playpertoys",
+        "tiktok": "@playpertoys",
+        "youtube": null,
+        "x": null,
+        "linkedin": "linkedin.com/company/playper-llc"
+      },
+      "discovery_provenance": [
+        {
+          "search": "recently_funded",
+          "exa_query": "newly funded US toys brand 2026",
+          "exa_result_url": "https://playper.com/",
+          "exa_result_title": "Playper Toys",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        },
+        {
+          "search": "recently_funded",
+          "exa_query": "toys startup US Series A Series B 2026",
+          "exa_result_url": "https://playper.com/",
+          "exa_result_title": "Playper Toys",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        },
+        {
+          "search": "recently_funded",
+          "exa_query": "toys startup creator partnership US",
+          "exa_result_url": "https://playper.com/",
+          "exa_result_title": "Playper Toys",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "updated_at": "2026-05-29T19:00:55Z",
+      "brand_category": "emerging"
+    },
+    {
+      "brand_id": "figgy",
+      "name": "Figgy",
+      "industry_id": "toys",
+      "source": "recently_funded",
+      "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3",
+      "discovered_at": "2026-05-29T18:31:40Z",
+      "domain": "figgyplay.com",
+      "social_handles": {
+        "instagram": "@figgyplay",
+        "tiktok": "@figgythekid",
+        "youtube": null,
+        "x": null,
+        "linkedin": "linkedin.com/company/figgyplay1"
+      },
+      "discovery_provenance": [
+        {
+          "search": "recently_funded",
+          "exa_query": "new toys D2C launch US 2026",
+          "exa_result_url": "https://figgyplay.com/",
+          "exa_result_title": "Figgy",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "updated_at": "2026-05-29T19:00:55Z",
+      "brand_category": "emerging"
+    },
+    {
+      "brand_id": "modi-toys",
+      "name": "Modi Toys",
+      "industry_id": "toys",
+      "source": "recently_funded",
+      "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3",
+      "discovered_at": "2026-05-29T18:31:40Z",
+      "domain": "moditoys.com",
+      "social_handles": {
+        "instagram": null,
+        "tiktok": null,
+        "youtube": null,
+        "x": null,
+        "linkedin": "linkedin.com/company/moditoys"
+      },
+      "discovery_provenance": [
+        {
+          "search": "recently_funded",
+          "exa_query": "indie toys brand US instagram tiktok",
+          "exa_result_url": "https://moditoys.com/",
+          "exa_result_title": "Modi Toys",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "brand_category": "emerging"
+    },
+    {
+      "brand_id": "webejoy",
+      "name": "Webejoy",
+      "industry_id": "toys",
+      "source": "recently_funded",
+      "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3",
+      "discovered_at": "2026-05-29T18:31:40Z",
+      "domain": "webejoy.com",
+      "social_handles": {
+        "instagram": null,
+        "tiktok": null,
+        "youtube": null,
+        "x": null,
+        "linkedin": "linkedin.com/company/webejoy"
+      },
+      "discovery_provenance": [
+        {
+          "search": "recently_funded",
+          "exa_query": "toys startup creator partnership US",
+          "exa_result_url": "https://webejoy.com/",
+          "exa_result_title": "Webejoy",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "brand_category": "emerging"
+    },
+    {
+      "brand_id": "little-toes",
+      "name": "Little Toes",
+      "industry_id": "diapers-nappies",
+      "source": "established_exa_discovery",
+      "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3",
+      "discovered_at": "2026-05-29T18:31:40Z",
+      "domain": "littletoes.com",
+      "social_handles": {
+        "instagram": "@littletoeseg",
+        "tiktok": "@little5toes",
+        "youtube": null,
+        "x": null,
+        "linkedin": "linkedin.com/company/products-on-the-go-llc-"
+      },
+      "discovery_provenance": [
+        {
+          "search": "recently_funded",
+          "exa_query": "diapers nappies startup creator partnership US",
+          "exa_result_url": "https://littletoes.com/",
+          "exa_result_title": "Products on the Go, LLC.®",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        },
+        {
+          "search": "established_exa_discovery",
+          "exa_query": "top diapers nappies brands US 2026",
+          "exa_result_url": "https://littletoes.com/",
+          "exa_result_title": "Products on the Go, LLC.®",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        },
+        {
+          "search": "established_exa_discovery",
+          "exa_query": "established diapers nappies brands instagram tiktok US",
+          "exa_result_url": "https://littletoes.com/",
+          "exa_result_title": "Products on the Go, LLC.®",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        },
+        {
+          "search": "recently_funded",
+          "exa_query": "indie diapers nappies brand US instagram tiktok",
+          "exa_result_url": "https://littletoes.com/",
+          "exa_result_title": "Products on the Go, LLC.®",
+          "first_surfaced_in_run": "run_20260529T190054Z_295a8f95"
+        }
+      ],
+      "updated_at": "2026-05-29T19:00:55Z",
+      "brand_category": "established"
+    },
+    {
+      "brand_id": "resibrands",
+      "name": "ResiBrands",
+      "industry_id": "home-improvement",
+      "source": "recently_funded",
+      "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3",
+      "discovered_at": "2026-05-29T18:31:40Z",
+      "domain": "resibrands.com",
+      "social_handles": {
+        "instagram": "@resibrands",
+        "tiktok": "@resibrands",
+        "youtube": null,
+        "x": null,
+        "linkedin": "linkedin.com/company/resibrands"
+      },
+      "discovery_provenance": [
+        {
+          "search": "recently_funded",
+          "exa_query": "newly funded US home improvement brand 2026",
+          "exa_result_url": "https://resibrands.com/",
+          "exa_result_title": "ResiBrands",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        },
+        {
+          "search": "recently_funded",
+          "exa_query": "emerging US home improvement brand creator marketing",
+          "exa_result_url": "https://resibrands.com/",
+          "exa_result_title": "ResiBrands",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        },
+        {
+          "search": "recently_funded",
+          "exa_query": "home improvement brands to watch US 2026",
+          "exa_result_url": "https://resibrands.com/",
+          "exa_result_title": "ResiBrands",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "updated_at": "2026-05-29T19:00:55Z",
+      "brand_category": "emerging"
+    },
+    {
+      "brand_id": "united-dwelling",
+      "name": "United Dwelling",
+      "industry_id": "home-improvement",
+      "source": "recently_funded",
+      "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3",
+      "discovered_at": "2026-05-29T18:31:40Z",
+      "domain": "uniteddwelling.com",
+      "social_handles": {
+        "instagram": "@uniteddwelling",
+        "tiktok": null,
+        "youtube": null,
+        "x": null,
+        "linkedin": "linkedin.com/company/uniteddwelling"
+      },
+      "discovery_provenance": [
+        {
+          "search": "recently_funded",
+          "exa_query": "home improvement startup US Series A Series B 2026",
+          "exa_result_url": "https://uniteddwelling.com/",
+          "exa_result_title": "United Dwelling",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "updated_at": "2026-05-29T19:00:55Z",
+      "brand_category": "emerging"
+    },
+    {
+      "brand_id": "homebodyhq",
+      "name": "homebodyHQ",
+      "industry_id": "home-improvement",
+      "source": "recently_funded",
+      "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3",
+      "discovered_at": "2026-05-29T18:31:40Z",
+      "domain": "homebodyhq.com",
+      "social_handles": {
+        "instagram": "@homebody_hq",
+        "tiktok": "@homebodyhq",
+        "youtube": null,
+        "x": null,
+        "linkedin": "linkedin.com/company/homebodyhq"
+      },
+      "discovery_provenance": [
+        {
+          "search": "recently_funded",
+          "exa_query": "emerging US home improvement brand creator marketing",
+          "exa_result_url": "https://homebodyhq.com/",
+          "exa_result_title": "homebodyHQ",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "updated_at": "2026-05-29T19:00:55Z",
+      "brand_category": "emerging"
+    },
+    {
+      "brand_id": "ready-remodel",
+      "name": "Ready Remodel",
+      "industry_id": "home-improvement",
+      "source": "recently_funded",
+      "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3",
+      "discovered_at": "2026-05-29T18:31:40Z",
+      "domain": "readyremodel.io",
+      "social_handles": {
+        "instagram": "@ready2remodel_",
+        "tiktok": "@ready_set_remodel",
+        "youtube": null,
+        "x": null,
+        "linkedin": "linkedin.com/company/readyremodel"
+      },
+      "discovery_provenance": [
+        {
+          "search": "recently_funded",
+          "exa_query": "emerging US home improvement brand creator marketing",
+          "exa_result_url": "https://readyremodel.io/",
+          "exa_result_title": "Ready Remodel",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "updated_at": "2026-05-29T19:00:55Z",
+      "brand_category": "emerging"
+    },
+    {
+      "brand_id": "maypop-building-workshop",
+      "name": "Maypop Building Workshop",
+      "industry_id": "home-improvement",
+      "source": "recently_funded",
+      "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3",
+      "discovered_at": "2026-05-29T18:31:40Z",
+      "social_handles": {
+        "instagram": "@maypop.tn",
+        "tiktok": null,
+        "youtube": null,
+        "x": null,
+        "linkedin": "linkedin.com/company/maypop-building-workshop"
+      },
+      "discovery_provenance": [
+        {
+          "search": "recently_funded",
+          "exa_query": "indie home improvement brand US instagram tiktok",
+          "exa_result_url": "https://instagram.com/maypop.tn",
+          "exa_result_title": "Maypop Building Workshop",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "brand_category": "emerging"
+    },
+    {
+      "brand_id": "sdverse",
+      "name": "SDVerse",
+      "industry_id": "auto-oems",
+      "source": "recently_funded",
+      "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3",
+      "discovered_at": "2026-05-29T18:31:40Z",
+      "domain": "sdverse.auto",
+      "social_handles": {
+        "instagram": null,
+        "tiktok": null,
+        "youtube": null,
+        "x": null,
+        "linkedin": "linkedin.com/company/sdverse"
+      },
+      "discovery_provenance": [
+        {
+          "search": "recently_funded",
+          "exa_query": "auto oems startup US Series A Series B 2026",
+          "exa_result_url": "https://sdverse.auto/",
+          "exa_result_title": "SDVerse",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        },
+        {
+          "search": "recently_funded",
+          "exa_query": "auto oems startup creator partnership US",
+          "exa_result_url": "https://sdverse.auto/",
+          "exa_result_title": "SDVerse",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "brand_category": "emerging"
+    },
+    {
+      "brand_id": "sensigo",
+      "name": "Sensigo",
+      "industry_id": "auto-oems",
+      "source": "recently_funded",
+      "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3",
+      "discovered_at": "2026-05-29T18:31:40Z",
+      "domain": "sensigo.com",
+      "social_handles": {
+        "instagram": "@startuplanes",
+        "tiktok": "@sensigo4",
+        "youtube": null,
+        "x": null,
+        "linkedin": "linkedin.com/company/sensigo-ai"
+      },
+      "discovery_provenance": [
+        {
+          "search": "recently_funded",
+          "exa_query": "auto oems startup US Series A Series B 2026",
+          "exa_result_url": "https://sensigo.com/",
+          "exa_result_title": "Sensigo",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "updated_at": "2026-05-29T19:00:55Z",
+      "brand_category": "emerging"
+    },
+    {
+      "brand_id": "sonatus",
+      "name": "Sonatus",
+      "industry_id": "auto-oems",
+      "source": "recently_funded",
+      "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3",
+      "discovered_at": "2026-05-29T18:31:40Z",
+      "domain": "sonatus.com",
+      "social_handles": {
+        "instagram": "@sonatushq",
+        "tiktok": null,
+        "youtube": null,
+        "x": null,
+        "linkedin": "linkedin.com/company/sonatus"
+      },
+      "discovery_provenance": [
+        {
+          "search": "recently_funded",
+          "exa_query": "auto oems startup US Series A Series B 2026",
+          "exa_result_url": "https://sonatus.com/",
+          "exa_result_title": "Sonatus",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "updated_at": "2026-05-29T19:00:55Z",
+      "brand_category": "emerging"
+    },
+    {
+      "brand_id": "indi-ev",
+      "name": "INDI EV",
+      "industry_id": "auto-oems",
+      "source": "recently_funded",
+      "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3",
+      "discovered_at": "2026-05-29T18:31:40Z",
+      "domain": "driveindi.com",
+      "social_handles": {
+        "instagram": "@driveindi",
+        "tiktok": "@drive_indi",
+        "youtube": null,
+        "x": null,
+        "linkedin": "linkedin.com/company/driveindi"
+      },
+      "discovery_provenance": [
+        {
+          "search": "recently_funded",
+          "exa_query": "indie auto oems brand US instagram tiktok",
+          "exa_result_url": "https://driveindi.com/",
+          "exa_result_title": "INDI EV",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "updated_at": "2026-05-29T19:00:55Z",
+      "brand_category": "emerging"
+    },
+    {
+      "brand_id": "cerebrumx",
+      "name": "CerebrumX",
+      "industry_id": "auto-oems",
+      "source": "recently_funded",
+      "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3",
+      "discovered_at": "2026-05-29T18:31:40Z",
+      "domain": "cerebrumx.ai",
+      "social_handles": {
+        "instagram": "@CerebrumX_",
+        "tiktok": "@cerebrum_iq",
+        "youtube": null,
+        "x": null,
+        "linkedin": "linkedin.com/company/cerebrumx"
+      },
+      "discovery_provenance": [
+        {
+          "search": "recently_funded",
+          "exa_query": "auto oems startup creator partnership US",
+          "exa_result_url": "https://cerebrumx.ai/",
+          "exa_result_title": "CEREBRUMX",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "updated_at": "2026-05-29T19:00:55Z",
+      "brand_category": "emerging"
+    },
+    {
+      "brand_id": "autonostix360",
+      "name": "Autonostix360",
+      "industry_id": "auto-oems",
+      "source": "recently_funded",
+      "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3",
+      "discovered_at": "2026-05-29T18:31:40Z",
+      "domain": "autonostix360.com",
+      "social_handles": {
+        "instagram": "@autonostix360",
+        "tiktok": "@autonotizen1",
+        "youtube": null,
+        "x": null,
+        "linkedin": "linkedin.com/company/autonostix360"
+      },
+      "discovery_provenance": [
+        {
+          "search": "recently_funded",
+          "exa_query": "auto oems startup creator partnership US",
+          "exa_result_url": "https://autonostix360.com/",
+          "exa_result_title": "Autonostix360",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "updated_at": "2026-05-29T19:00:55Z",
+      "brand_category": "emerging"
+    },
+    {
+      "brand_id": "grocery-shopii",
+      "name": "Grocery Shopii",
+      "industry_id": "grocery",
+      "source": "recently_funded",
+      "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3",
+      "discovered_at": "2026-05-29T18:31:40Z",
+      "domain": "groceryshopii.com",
+      "social_handles": {
+        "instagram": null,
+        "tiktok": null,
+        "youtube": null,
+        "x": null,
+        "linkedin": "linkedin.com/company/groceryshopii"
+      },
+      "discovery_provenance": [
+        {
+          "search": "recently_funded",
+          "exa_query": "newly funded US grocery brand 2026",
+          "exa_result_url": "https://groceryshopii.com/",
+          "exa_result_title": "Grocery Shopii 🍊",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        },
+        {
+          "search": "recently_funded",
+          "exa_query": "emerging US grocery brand creator marketing",
+          "exa_result_url": "https://groceryshopii.com/",
+          "exa_result_title": "Grocery Shopii 🍊",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "brand_category": "emerging"
+    },
+    {
+      "brand_id": "eclipse-foods",
+      "name": "Eclipse Foods",
+      "industry_id": "grocery",
+      "source": "recently_funded",
+      "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3",
+      "discovered_at": "2026-05-29T18:31:40Z",
+      "domain": "eclipsefoods.com",
+      "social_handles": {
+        "instagram": "@eclipsefoods",
+        "tiktok": "@eclipsefoods",
+        "youtube": null,
+        "x": null,
+        "linkedin": "linkedin.com/company/eclipse-foods"
+      },
+      "discovery_provenance": [
+        {
+          "search": "recently_funded",
+          "exa_query": "newly funded US grocery brand 2026",
+          "exa_result_url": "https://eclipsefoods.com/",
+          "exa_result_title": "Eclipse Foods",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "updated_at": "2026-05-29T19:10:37Z",
+      "brand_category": "emerging"
+    },
+    {
+      "brand_id": "jackbe",
+      "name": "JackBe",
+      "industry_id": "grocery",
+      "source": "recently_funded",
+      "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3",
+      "discovered_at": "2026-05-29T18:31:40Z",
+      "domain": "jackbe.com",
+      "social_handles": {
+        "instagram": null,
+        "tiktok": null,
+        "youtube": null,
+        "x": null,
+        "linkedin": "linkedin.com/company/jackbelife"
+      },
+      "discovery_provenance": [
+        {
+          "search": "recently_funded",
+          "exa_query": "grocery startup US Series A Series B 2026",
+          "exa_result_url": "https://jackbe.com/",
+          "exa_result_title": "JackBe",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "brand_category": "emerging"
+    },
+    {
+      "brand_id": "re-grocery",
+      "name": "re_ grocery",
+      "industry_id": "grocery",
+      "source": "recently_funded",
+      "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3",
+      "discovered_at": "2026-05-29T18:31:40Z",
+      "domain": "regrocery.co",
+      "social_handles": {
+        "instagram": "@re_grocery",
+        "tiktok": "@re_grocery",
+        "youtube": null,
+        "x": null,
+        "linkedin": "linkedin.com/company/regrocery"
+      },
+      "discovery_provenance": [
+        {
+          "search": "recently_funded",
+          "exa_query": "indie grocery brand US instagram tiktok",
+          "exa_result_url": "https://regrocery.co/",
+          "exa_result_title": "re_ grocery",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "updated_at": "2026-05-29T19:00:55Z",
+      "brand_category": "emerging"
+    },
+    {
+      "brand_id": "grocers-list",
+      "name": "Grocers List",
+      "industry_id": "grocery",
+      "source": "recently_funded",
+      "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3",
+      "discovered_at": "2026-05-29T18:31:40Z",
+      "domain": "grocerslist.com",
+      "social_handles": {
+        "instagram": "@grocerslist",
+        "tiktok": null,
+        "youtube": null,
+        "x": null,
+        "linkedin": "linkedin.com/company/grocerslist"
+      },
+      "discovery_provenance": [
+        {
+          "search": "recently_funded",
+          "exa_query": "grocery startup creator partnership US",
+          "exa_result_url": "https://grocerslist.com/",
+          "exa_result_title": "Grocers List",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "brand_category": "emerging"
+    },
+    {
+      "brand_id": "barbie",
+      "name": "Barbie",
+      "industry_id": "toys",
+      "source": "established_exa_discovery",
+      "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3",
+      "discovered_at": "2026-05-29T18:31:40Z",
+      "discovery_provenance": [
+        {
+          "search": "established_exa_discovery",
+          "exa_query": "best toys brands for influencer marketing US",
+          "exa_result_url": "https://mattel.com/",
+          "exa_result_title": "Mattel, Inc.",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "social_handles": {
+        "instagram": "@barbie",
+        "tiktok": "@barbie"
+      },
+      "updated_at": "2026-05-29T19:00:55Z",
+      "brand_category": "established"
+    },
+    {
+      "brand_id": "hot-wheels",
+      "name": "Hot Wheels",
+      "industry_id": "toys",
+      "source": "established_exa_discovery",
+      "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3",
+      "discovered_at": "2026-05-29T18:31:40Z",
+      "discovery_provenance": [
+        {
+          "search": "established_exa_discovery",
+          "exa_query": "best toys brands for influencer marketing US",
+          "exa_result_url": "https://mattel.com/",
+          "exa_result_title": "Mattel, Inc.",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "social_handles": {
+        "instagram": "@hotwheelsofficial",
+        "tiktok": "@hotwheels"
+      },
+      "updated_at": "2026-05-29T19:00:55Z",
+      "brand_category": "established"
+    },
+    {
+      "brand_id": "fisher-price",
+      "name": "Fisher-Price",
+      "industry_id": "toys",
+      "source": "established_exa_discovery",
+      "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3",
+      "discovered_at": "2026-05-29T18:31:40Z",
+      "discovery_provenance": [
+        {
+          "search": "established_exa_discovery",
+          "exa_query": "best toys brands for influencer marketing US",
+          "exa_result_url": "https://mattel.com/",
+          "exa_result_title": "Mattel, Inc.",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "social_handles": {
+        "instagram": "@fisherprice",
+        "tiktok": "@fisherprice"
+      },
+      "updated_at": "2026-05-29T19:00:55Z",
+      "brand_category": "established"
+    },
+    {
+      "brand_id": "american-girl",
+      "name": "American Girl",
+      "industry_id": "toys",
+      "source": "established_exa_discovery",
+      "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3",
+      "discovered_at": "2026-05-29T18:31:40Z",
+      "discovery_provenance": [
+        {
+          "search": "established_exa_discovery",
+          "exa_query": "best toys brands for influencer marketing US",
+          "exa_result_url": "https://mattel.com/",
+          "exa_result_title": "Mattel, Inc.",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "social_handles": {
+        "instagram": "@americangirlbrand",
+        "tiktok": "@americangirl"
+      },
+      "updated_at": "2026-05-29T19:00:55Z",
+      "brand_category": "established"
+    },
+    {
+      "brand_id": "thomas-friends",
+      "name": "Thomas & Friends",
+      "industry_id": "toys",
+      "source": "established_exa_discovery",
+      "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3",
+      "discovered_at": "2026-05-29T18:31:40Z",
+      "discovery_provenance": [
+        {
+          "search": "established_exa_discovery",
+          "exa_query": "best toys brands for influencer marketing US",
+          "exa_result_url": "https://mattel.com/",
+          "exa_result_title": "Mattel, Inc.",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "social_handles": {
+        "instagram": "@thomasandfriends",
+        "tiktok": "@thomasandfriends"
+      },
+      "updated_at": "2026-05-29T19:00:55Z",
+      "brand_category": "established"
+    },
+    {
+      "brand_id": "uno",
+      "name": "UNO",
+      "industry_id": "toys",
+      "source": "established_exa_discovery",
+      "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3",
+      "discovered_at": "2026-05-29T18:31:40Z",
+      "discovery_provenance": [
+        {
+          "search": "established_exa_discovery",
+          "exa_query": "best toys brands for influencer marketing US",
+          "exa_result_url": "https://mattel.com/",
+          "exa_result_title": "Mattel, Inc.",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "social_handles": {
+        "instagram": "@uno",
+        "tiktok": "@uno"
+      },
+      "updated_at": "2026-05-29T19:00:55Z",
+      "brand_category": "established"
+    },
+    {
+      "brand_id": "monster-high",
+      "name": "Monster High",
+      "industry_id": "toys",
+      "source": "established_exa_discovery",
+      "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3",
+      "discovered_at": "2026-05-29T18:31:40Z",
+      "discovery_provenance": [
+        {
+          "search": "established_exa_discovery",
+          "exa_query": "best toys brands for influencer marketing US",
+          "exa_result_url": "https://mattel.com/",
+          "exa_result_title": "Mattel, Inc.",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "social_handles": {
+        "instagram": "@monsterhigh",
+        "tiktok": "@monsterhigh"
+      },
+      "updated_at": "2026-05-29T19:00:55Z",
+      "brand_category": "established"
+    },
+    {
+      "brand_id": "polly-pocket",
+      "name": "Polly Pocket",
+      "industry_id": "toys",
+      "source": "established_exa_discovery",
+      "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3",
+      "discovered_at": "2026-05-29T18:31:40Z",
+      "discovery_provenance": [
+        {
+          "search": "established_exa_discovery",
+          "exa_query": "best toys brands for influencer marketing US",
+          "exa_result_url": "https://mattel.com/",
+          "exa_result_title": "Mattel, Inc.",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "social_handles": {
+        "instagram": "@pollypocket",
+        "tiktok": "@pollyypockettt"
+      },
+      "updated_at": "2026-05-29T19:00:55Z",
+      "brand_category": "established"
+    },
+    {
+      "brand_id": "squishmallows",
+      "name": "Squishmallows",
+      "industry_id": "toys",
+      "source": "established_exa_discovery",
+      "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3",
+      "discovered_at": "2026-05-29T18:31:40Z",
+      "discovery_provenance": [
+        {
+          "search": "established_exa_discovery",
+          "exa_query": "best toys brands for influencer marketing US",
+          "exa_result_url": "https://jazwares.com/",
+          "exa_result_title": "Jazwares, LLC",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        },
+        {
+          "search": "established_exa_discovery",
+          "exa_query": "toys brands creator program US",
+          "exa_result_url": "https://jazwares.com/",
+          "exa_result_title": "Jazwares, LLC",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        },
+        {
+          "search": "established_exa_discovery",
+          "exa_query": "established toys brands instagram tiktok US",
+          "exa_result_url": "https://jazwares.com/",
+          "exa_result_title": "Jazwares, LLC",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "social_handles": {
+        "instagram": "@squishmallows",
+        "tiktok": "@squishmallows"
+      },
+      "updated_at": "2026-05-29T19:00:55Z",
+      "brand_category": "established"
+    },
+    {
+      "brand_id": "toys-r-us",
+      "name": "Toys\"R\"Us",
+      "industry_id": "toys",
+      "source": "established_exa_discovery",
+      "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3",
+      "discovered_at": "2026-05-29T18:31:40Z",
+      "discovery_provenance": [
+        {
+          "search": "established_exa_discovery",
+          "exa_query": "established toys brands instagram tiktok US",
+          "exa_result_url": "https://trukidsbrands.com/",
+          "exa_result_title": "Tru Kids Brands",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "brand_category": "established"
+    },
+    {
+      "brand_id": "geffen-baby",
+      "name": "Geffen Baby",
+      "industry_id": "diapers-nappies",
+      "source": "established_exa_discovery",
+      "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3",
+      "discovered_at": "2026-05-29T18:31:40Z",
+      "domain": "geffenbaby.com",
+      "social_handles": {
+        "instagram": "@geffenbaby",
+        "tiktok": "@geffenbaby",
+        "youtube": null,
+        "x": null,
+        "linkedin": "linkedin.com/company/geffen-baby"
+      },
+      "discovery_provenance": [
+        {
+          "search": "established_exa_discovery",
+          "exa_query": "established diapers nappies brands instagram tiktok US",
+          "exa_result_url": "https://geffenbaby.com/",
+          "exa_result_title": "Geffen Baby",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "updated_at": "2026-05-29T19:00:55Z",
+      "brand_category": "established"
+    },
+    {
+      "brand_id": "slipfence",
+      "name": "Slipfence",
+      "industry_id": "home-improvement",
+      "source": "established_exa_discovery",
+      "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3",
+      "discovered_at": "2026-05-29T18:31:40Z",
+      "domain": "slipfence.com",
+      "discovery_provenance": [
+        {
+          "search": "established_exa_discovery",
+          "exa_query": "home improvement brands creator program US",
+          "exa_result_url": "https://slipfence.com/collab",
+          "exa_result_title": "Slipfence Influencer/Collaboration Program Questionnaire",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "brand_category": "established"
+    },
+    {
+      "brand_id": "top-knobs",
+      "name": "Top Knobs",
+      "industry_id": "home-improvement",
+      "source": "established_exa_discovery",
+      "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3",
+      "discovered_at": "2026-05-29T18:31:40Z",
+      "discovery_provenance": [
+        {
+          "search": "established_exa_discovery",
+          "exa_query": "home improvement brands creator program US",
+          "exa_result_url": "https://dimorabrands.com/",
+          "exa_result_title": "Dimora Brands",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "brand_category": "established"
+    },
+    {
+      "brand_id": "hardware-resources",
+      "name": "Hardware Resources",
+      "industry_id": "home-improvement",
+      "source": "established_exa_discovery",
+      "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3",
+      "discovered_at": "2026-05-29T18:31:40Z",
+      "discovery_provenance": [
+        {
+          "search": "established_exa_discovery",
+          "exa_query": "home improvement brands creator program US",
+          "exa_result_url": "https://dimorabrands.com/",
+          "exa_result_title": "Dimora Brands",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "brand_category": "established"
+    },
+    {
+      "brand_id": "wolf-home-products",
+      "name": "Wolf Home Products",
+      "industry_id": "home-improvement",
+      "source": "established_exa_discovery",
+      "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3",
+      "discovered_at": "2026-05-29T18:31:40Z",
+      "discovery_provenance": [
+        {
+          "search": "established_exa_discovery",
+          "exa_query": "home improvement brands creator program US",
+          "exa_result_url": "https://dimorabrands.com/",
+          "exa_result_title": "Dimora Brands",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "brand_category": "established"
+    },
+    {
+      "brand_id": "atlas-homewares",
+      "name": "Atlas Homewares",
+      "industry_id": "home-improvement",
+      "source": "established_exa_discovery",
+      "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3",
+      "discovered_at": "2026-05-29T18:31:40Z",
+      "discovery_provenance": [
+        {
+          "search": "established_exa_discovery",
+          "exa_query": "home improvement brands creator program US",
+          "exa_result_url": "https://dimorabrands.com/",
+          "exa_result_title": "Dimora Brands",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "brand_category": "established"
+    },
+    {
+      "brand_id": "watermark-designs",
+      "name": "Watermark Designs",
+      "industry_id": "home-improvement",
+      "source": "established_exa_discovery",
+      "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3",
+      "discovered_at": "2026-05-29T18:31:40Z",
+      "discovery_provenance": [
+        {
+          "search": "established_exa_discovery",
+          "exa_query": "home improvement brands creator program US",
+          "exa_result_url": "https://dimorabrands.com/",
+          "exa_result_title": "Dimora Brands",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "brand_category": "established"
+    },
+    {
+      "brand_id": "jeffrey-alexander",
+      "name": "Jeffrey Alexander",
+      "industry_id": "home-improvement",
+      "source": "established_exa_discovery",
+      "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3",
+      "discovered_at": "2026-05-29T18:31:40Z",
+      "discovery_provenance": [
+        {
+          "search": "established_exa_discovery",
+          "exa_query": "home improvement brands creator program US",
+          "exa_result_url": "https://dimorabrands.com/",
+          "exa_result_title": "Dimora Brands",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "brand_category": "established"
+    },
+    {
+      "brand_id": "gm-genuine-parts-acdelco",
+      "name": "GM Genuine Parts & ACDelco",
+      "industry_id": "auto-oems",
+      "source": "established_exa_discovery",
+      "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3",
+      "discovered_at": "2026-05-29T18:31:40Z",
+      "domain": "gmparts.com",
+      "social_handles": {
+        "instagram": "@gmparts_acdelco",
+        "tiktok": "@brownandsonsautoparts",
+        "youtube": null,
+        "x": null,
+        "linkedin": "linkedin.com/company/gmgenuinepartsacdelco"
+      },
+      "discovery_provenance": [
+        {
+          "search": "established_exa_discovery",
+          "exa_query": "established auto oems brands instagram tiktok US",
+          "exa_result_url": "https://gmparts.com/",
+          "exa_result_title": "GM Genuine Parts & ACDelco",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "updated_at": "2026-05-29T19:00:55Z",
+      "brand_category": "established"
+    },
+    {
+      "brand_id": "lipton",
+      "name": "Lipton",
+      "industry_id": "grocery",
+      "source": "established_exa_discovery",
+      "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3",
+      "discovered_at": "2026-05-29T18:31:40Z",
+      "domain": "lipton.com",
+      "discovery_provenance": [
+        {
+          "search": "established_exa_discovery",
+          "exa_query": "grocery brands creator program US",
+          "exa_result_url": "https://lumenbrands.co/",
+          "exa_result_title": "Lumen Brands",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "social_handles": {
+        "instagram": "@lipton",
+        "tiktok": "@liptonglobal"
+      },
+      "updated_at": "2026-05-29T19:00:55Z",
+      "brand_category": "established"
+    },
+    {
+      "brand_id": "magic-spoon",
+      "name": "Magic Spoon",
+      "industry_id": "grocery",
+      "source": "established_exa_discovery",
+      "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3",
+      "discovered_at": "2026-05-29T18:31:40Z",
+      "domain": "magicspoon.com",
+      "discovery_provenance": [
+        {
+          "search": "established_exa_discovery",
+          "exa_query": "grocery brands creator program US",
+          "exa_result_url": "https://lumenbrands.co/",
+          "exa_result_title": "Lumen Brands",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "social_handles": {
+        "instagram": "@magicspooncereal",
+        "tiktok": "@magicspooncereal"
+      },
+      "updated_at": "2026-05-29T19:00:55Z",
+      "brand_category": "established"
+    },
+    {
+      "brand_id": "castania",
+      "name": "Castania",
+      "industry_id": "grocery",
+      "source": "established_exa_discovery",
+      "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3",
+      "discovered_at": "2026-05-29T18:31:40Z",
+      "discovery_provenance": [
+        {
+          "search": "established_exa_discovery",
+          "exa_query": "grocery brands creator program US",
+          "exa_result_url": "https://lumenbrands.co/",
+          "exa_result_title": "Lumen Brands",
+          "first_surfaced_in_run": "run_20260529T183140Z_54dbe1f3"
+        }
+      ],
+      "social_handles": {
+        "instagram": "@castanianuts",
+        "tiktok": "@castania"
+      },
+      "updated_at": "2026-05-29T19:00:55Z",
+      "brand_category": "established"
+    },
+    {
+      "brand_id": "bondu",
+      "name": "bondu",
+      "industry_id": "toys",
+      "source": "recently_funded",
+      "first_surfaced_in_run": "run_20260529T190054Z_295a8f95",
+      "discovered_at": "2026-05-29T19:00:55Z",
+      "domain": "bondu.com",
+      "social_handles": {
+        "instagram": "@heybondu",
+        "tiktok": "@behind.thestartup",
+        "youtube": null,
+        "x": null,
+        "linkedin": "linkedin.com/company/theaitoycompany"
+      },
+      "discovery_provenance": [
+        {
+          "search": "recently_funded",
+          "exa_query": "toys startup US Series A Series B 2026",
+          "exa_result_url": "https://bondu.com/",
+          "exa_result_title": "bondu",
+          "first_surfaced_in_run": "run_20260529T190054Z_295a8f95"
+        }
+      ],
+      "brand_category": "emerging"
+    },
+    {
+      "brand_id": "playshifu",
+      "name": "PlayShifu",
+      "industry_id": "toys",
+      "source": "recently_funded",
+      "first_surfaced_in_run": "run_20260529T190054Z_295a8f95",
+      "discovered_at": "2026-05-29T19:00:55Z",
+      "domain": "playshifu.com",
+      "social_handles": {
+        "instagram": "@playshifu",
+        "tiktok": "@dianamarcoccia",
+        "youtube": null,
+        "x": null,
+        "linkedin": "linkedin.com/company/playshifu"
+      },
+      "discovery_provenance": [
+        {
+          "search": "recently_funded",
+          "exa_query": "toys startup US Series A Series B 2026",
+          "exa_result_url": "https://playshifu.com/",
+          "exa_result_title": "PlayShifu",
+          "first_surfaced_in_run": "run_20260529T190054Z_295a8f95"
+        }
+      ],
+      "brand_category": "emerging"
+    },
+    {
+      "brand_id": "doren-toy-company",
+      "name": "Doren Toy Company",
+      "industry_id": "toys",
+      "source": "recently_funded",
+      "first_surfaced_in_run": "run_20260529T190054Z_295a8f95",
+      "discovered_at": "2026-05-29T19:00:55Z",
+      "domain": "dorentoys.com",
+      "social_handles": {
+        "instagram": "@reels",
+        "tiktok": null,
+        "youtube": null,
+        "x": null,
+        "linkedin": "linkedin.com/company/doren-toy-company"
+      },
+      "discovery_provenance": [
+        {
+          "search": "recently_funded",
+          "exa_query": "emerging US toys brand creator marketing",
+          "exa_result_url": "https://dorentoys.com/",
+          "exa_result_title": "Doren Toy Company",
+          "first_surfaced_in_run": "run_20260529T190054Z_295a8f95"
+        }
+      ],
+      "brand_category": "emerging"
+    },
+    {
+      "brand_id": "toothbrush-toys",
+      "name": "Toothbrush Toys",
+      "industry_id": "toys",
+      "source": "recently_funded",
+      "first_surfaced_in_run": "run_20260529T190054Z_295a8f95",
+      "discovered_at": "2026-05-29T19:00:55Z",
+      "domain": "toothbrushtoys.com",
+      "social_handles": {
+        "instagram": "@toothbrushtoys",
+        "tiktok": "@toothbrushtoys",
+        "youtube": null,
+        "x": null,
+        "linkedin": "linkedin.com/company/toothbrush-toys"
+      },
+      "discovery_provenance": [
+        {
+          "search": "recently_funded",
+          "exa_query": "new toys D2C launch US 2026",
+          "exa_result_url": "https://toothbrushtoys.com/",
+          "exa_result_title": "Toothbrush Toys",
+          "first_surfaced_in_run": "run_20260529T190054Z_295a8f95"
+        }
+      ],
+      "brand_category": "emerging"
+    },
+    {
+      "brand_id": "ac-toyz",
+      "name": "AC TOYZ",
+      "industry_id": "toys",
+      "source": "recently_funded",
+      "first_surfaced_in_run": "run_20260529T190054Z_295a8f95",
+      "discovered_at": "2026-05-29T19:00:55Z",
+      "domain": "actoyz.uk",
+      "social_handles": {
+        "instagram": "@actoyz",
+        "tiktok": "@actoyz",
+        "youtube": null,
+        "x": null,
+        "linkedin": "linkedin.com/company/ac-toyz"
+      },
+      "discovery_provenance": [
+        {
+          "search": "recently_funded",
+          "exa_query": "indie toys brand US instagram tiktok",
+          "exa_result_url": "https://actoyz.uk/",
+          "exa_result_title": "AC TOYZ",
+          "first_surfaced_in_run": "run_20260529T190054Z_295a8f95"
+        }
+      ],
+      "brand_category": "emerging"
+    },
+    {
+      "brand_id": "noleo",
+      "name": "NOLEO",
+      "industry_id": "diapers-nappies",
+      "source": "recently_funded",
+      "first_surfaced_in_run": "run_20260529T190054Z_295a8f95",
+      "discovered_at": "2026-05-29T19:00:55Z",
+      "domain": "noleocare.com",
+      "social_handles": {
+        "instagram": "@noleocare",
+        "tiktok": "@noleocare",
+        "youtube": null,
+        "x": null,
+        "linkedin": "linkedin.com/company/noleocare"
+      },
+      "discovery_provenance": [
+        {
+          "search": "recently_funded",
+          "exa_query": "indie diapers nappies brand US instagram tiktok",
+          "exa_result_url": "https://noleocare.com/",
+          "exa_result_title": "NOLEO",
+          "first_surfaced_in_run": "run_20260529T190054Z_295a8f95"
+        }
+      ],
+      "brand_category": "emerging"
+    },
+    {
+      "brand_id": "bambino-mio",
+      "name": "Bambino Mio",
+      "industry_id": "diapers-nappies",
+      "source": "recently_funded",
+      "first_surfaced_in_run": "run_20260529T190054Z_295a8f95",
+      "discovered_at": "2026-05-29T19:00:55Z",
+      "domain": "bambinomio.com",
+      "social_handles": {
+        "instagram": "@bambinomio",
+        "tiktok": null,
+        "youtube": null,
+        "x": null,
+        "linkedin": "linkedin.com/company/bambino-mio"
+      },
+      "discovery_provenance": [
+        {
+          "search": "recently_funded",
+          "exa_query": "indie diapers nappies brand US instagram tiktok",
+          "exa_result_url": "https://bambinomio.com/",
+          "exa_result_title": "Bambino Mio®",
+          "first_surfaced_in_run": "run_20260529T190054Z_295a8f95"
+        }
+      ],
+      "brand_category": "emerging"
+    },
+    {
+      "brand_id": "hearth-brands",
+      "name": "Hearth Brands",
+      "industry_id": "home-improvement",
+      "source": "recently_funded",
+      "first_surfaced_in_run": "run_20260529T190054Z_295a8f95",
+      "discovered_at": "2026-05-29T19:00:55Z",
+      "domain": "hearthbrands.com",
+      "social_handles": {
+        "instagram": "@hearth.brand",
+        "tiktok": "@drinkhearth",
+        "youtube": null,
+        "x": null,
+        "linkedin": "linkedin.com/company/hearth-brands"
+      },
+      "discovery_provenance": [
+        {
+          "search": "recently_funded",
+          "exa_query": "home improvement brands to watch US 2026",
+          "exa_result_url": "https://hearthbrands.com/",
+          "exa_result_title": "Hearth Brands",
+          "first_surfaced_in_run": "run_20260529T190054Z_295a8f95"
+        }
+      ],
+      "brand_category": "emerging"
+    },
+    {
+      "brand_id": "stesso",
+      "name": "Stesso",
+      "industry_id": "home-improvement",
+      "source": "recently_funded",
+      "first_surfaced_in_run": "run_20260529T190054Z_295a8f95",
+      "discovered_at": "2026-05-29T19:00:55Z",
+      "domain": "stesso.com",
+      "social_handles": {
+        "instagram": "@stesso.style",
+        "tiktok": "@mirko_romano_smm",
+        "youtube": null,
+        "x": null,
+        "linkedin": "linkedin.com/company/stesso-diy"
+      },
+      "discovery_provenance": [
+        {
+          "search": "recently_funded",
+          "exa_query": "home improvement startup creator partnership US",
+          "exa_result_url": "https://stesso.com/",
+          "exa_result_title": "Stesso",
+          "first_surfaced_in_run": "run_20260529T190054Z_295a8f95"
+        }
+      ],
+      "brand_category": "emerging"
+    },
+    {
+      "brand_id": "formus",
+      "name": "Formus",
+      "industry_id": "home-improvement",
+      "source": "recently_funded",
+      "first_surfaced_in_run": "run_20260529T190054Z_295a8f95",
+      "discovered_at": "2026-05-29T19:00:55Z",
+      "domain": "formus.ai",
+      "social_handles": {
+        "instagram": "@formuslabs",
+        "tiktok": "@formus_",
+        "youtube": null,
+        "x": null,
+        "linkedin": "linkedin.com/company/formustechnology"
+      },
+      "discovery_provenance": [
+        {
+          "search": "recently_funded",
+          "exa_query": "home improvement startup creator partnership US",
+          "exa_result_url": "https://formus.ai/",
+          "exa_result_title": "Formus",
+          "first_surfaced_in_run": "run_20260529T190054Z_295a8f95"
+        }
+      ],
+      "brand_category": "emerging"
+    },
+    {
+      "brand_id": "renoverse-ai",
+      "name": "Renoverse AI",
+      "industry_id": "home-improvement",
+      "source": "recently_funded",
+      "first_surfaced_in_run": "run_20260529T190054Z_295a8f95",
+      "discovered_at": "2026-05-29T19:00:55Z",
+      "domain": "renoverse.ai",
+      "social_handles": {
+        "instagram": "@renoverse.ai",
+        "tiktok": "@aidesign.renovo",
+        "youtube": null,
+        "x": null,
+        "linkedin": "linkedin.com/company/renoverse-ai"
+      },
+      "discovery_provenance": [
+        {
+          "search": "recently_funded",
+          "exa_query": "home improvement startup creator partnership US",
+          "exa_result_url": "https://renoverse.ai/",
+          "exa_result_title": "Renoverse AI",
+          "first_surfaced_in_run": "run_20260529T190054Z_295a8f95"
+        }
+      ],
+      "brand_category": "emerging"
+    },
+    {
+      "brand_id": "vori",
+      "name": "Vori",
+      "industry_id": "grocery",
+      "source": "recently_funded",
+      "first_surfaced_in_run": "run_20260529T190054Z_295a8f95",
+      "discovered_at": "2026-05-29T19:00:55Z",
+      "social_handles": {
+        "instagram": "@vorihq",
+        "tiktok": "@indeavori",
+        "youtube": null,
+        "x": null,
+        "linkedin": null
+      },
+      "discovery_provenance": [
+        {
+          "search": "recently_funded",
+          "exa_query": "grocery startup US Series A Series B 2026",
+          "exa_result_url": "https://www.thesaasnews.com/news/vori-raises-22-million-in-series-b",
+          "exa_result_title": "Vori Raises $22 Million in Series B | The SaaS News",
+          "first_surfaced_in_run": "run_20260529T190054Z_295a8f95"
+        }
+      ],
+      "brand_category": "emerging"
+    },
+    {
+      "brand_id": "angelie",
+      "name": "Angelie",
+      "industry_id": "grocery",
+      "source": "recently_funded",
+      "first_surfaced_in_run": "run_20260529T190054Z_295a8f95",
+      "discovered_at": "2026-05-29T19:00:55Z",
+      "domain": "angelie.ai",
+      "social_handles": {
+        "instagram": "@angelie.j",
+        "tiktok": "@official.angelie",
+        "youtube": null,
+        "x": null,
+        "linkedin": "linkedin.com/company/angelie-d2c"
+      },
+      "discovery_provenance": [
+        {
+          "search": "recently_funded",
+          "exa_query": "new grocery D2C launch US 2026",
+          "exa_result_url": "https://angelie.ai/",
+          "exa_result_title": "Angelie D2C",
+          "first_surfaced_in_run": "run_20260529T190054Z_295a8f95"
+        }
+      ],
+      "brand_category": "emerging"
+    },
+    {
+      "brand_id": "matchbox",
+      "name": "Matchbox",
+      "industry_id": "toys",
+      "source": "established_exa_discovery",
+      "first_surfaced_in_run": "run_20260529T190054Z_295a8f95",
+      "discovered_at": "2026-05-29T19:00:55Z",
+      "social_handles": {
+        "instagram": "@matchboxworld",
+        "tiktok": "@matchboxparty",
+        "youtube": null,
+        "x": null,
+        "linkedin": null
+      },
+      "discovery_provenance": [
+        {
+          "search": "established_exa_discovery",
+          "exa_query": "best toys brands for influencer marketing US",
+          "exa_result_url": "https://mattel.com/",
+          "exa_result_title": "Mattel, Inc.",
+          "first_surfaced_in_run": "run_20260529T190054Z_295a8f95"
+        }
+      ],
+      "brand_category": "established"
+    },
+    {
+      "brand_id": "rascals",
+      "name": "Rascals",
+      "industry_id": "diapers-nappies",
+      "source": "established_exa_discovery",
+      "first_surfaced_in_run": "run_20260529T190054Z_295a8f95",
+      "discovered_at": "2026-05-29T19:00:55Z",
+      "social_handles": {
+        "instagram": "https://www.instagram.com/reel/DQH1rcPj2_N/",
+        "tiktok": "@rascalsbaby",
+        "youtube": null,
+        "x": null,
+        "linkedin": null
+      },
+      "discovery_provenance": [
+        {
+          "search": "established_exa_discovery",
+          "exa_query": "established diapers nappies brands instagram tiktok US",
+          "exa_result_url": "https://www.instagram.com/reel/DQH1rcPj2_N/",
+          "exa_result_title": "Rascals on Instagram: \"Who's cutting onions?! - : @jordannalamb ...",
+          "first_surfaced_in_run": "run_20260529T190054Z_295a8f95"
+        }
+      ],
+      "brand_category": "established"
+    },
+    {
+      "brand_id": "toyota-north-america",
+      "name": "Toyota North America",
+      "industry_id": "auto-oems",
+      "source": "established_exa_discovery",
+      "first_surfaced_in_run": "run_20260529T190054Z_295a8f95",
+      "discovered_at": "2026-05-29T19:00:55Z",
+      "domain": "toyota.com",
+      "social_handles": {
+        "instagram": "@toyotausa",
+        "tiktok": "@toyotausa",
+        "youtube": null,
+        "x": null,
+        "linkedin": "linkedin.com/company/toyota-north-america"
+      },
+      "discovery_provenance": [
+        {
+          "search": "established_exa_discovery",
+          "exa_query": "top auto oems brands US 2026",
+          "exa_result_url": "https://toyota.com/",
+          "exa_result_title": "Toyota North America",
+          "first_surfaced_in_run": "run_20260529T190054Z_295a8f95"
+        }
+      ],
+      "brand_category": "established"
+    },
+    {
+      "brand_id": "simple-truth",
+      "name": "Simple Truth",
+      "industry_id": "grocery",
+      "source": "established_exa_discovery",
+      "first_surfaced_in_run": "run_20260529T190054Z_295a8f95",
+      "discovered_at": "2026-05-29T19:00:55Z",
+      "social_handles": {
+        "instagram": "@simpletruth4u",
+        "tiktok": "@simpletruth",
+        "youtube": null,
+        "x": null,
+        "linkedin": null
+      },
+      "discovery_provenance": [
+        {
+          "search": "established_exa_discovery",
+          "exa_query": "top grocery brands US 2026",
+          "exa_result_url": "https://kroger.com/",
+          "exa_result_title": "Kroger",
+          "first_surfaced_in_run": "run_20260529T190054Z_295a8f95"
+        }
+      ],
+      "brand_category": "established"
+    },
+    {
+      "brand_id": "private-selection",
+      "name": "Private Selection",
+      "industry_id": "grocery",
+      "source": "established_exa_discovery",
+      "first_surfaced_in_run": "run_20260529T190054Z_295a8f95",
+      "discovered_at": "2026-05-29T19:00:55Z",
+      "social_handles": {
+        "instagram": "@prvt.selection",
+        "tiktok": "@privateselection",
+        "youtube": null,
+        "x": null,
+        "linkedin": null
+      },
+      "discovery_provenance": [
+        {
+          "search": "established_exa_discovery",
+          "exa_query": "top grocery brands US 2026",
+          "exa_result_url": "https://kroger.com/",
+          "exa_result_title": "Kroger",
+          "first_surfaced_in_run": "run_20260529T190054Z_295a8f95"
+        }
+      ],
+      "brand_category": "established"
+    },
+    {
+      "brand_id": "pika-diapers",
+      "name": "Pika Diapers",
+      "industry_id": "diapers-nappies",
+      "source": "recently_funded",
+      "first_surfaced_in_run": "run_20260529T191036Z_0aa929fc",
+      "discovered_at": "2026-05-29T19:10:37Z",
+      "social_handles": {
+        "instagram": "@pikadiapers",
+        "tiktok": "@pikadiapers",
+        "youtube": null,
+        "x": null,
+        "linkedin": null
+      },
+      "discovery_provenance": [
+        {
+          "search": "recently_funded",
+          "exa_query": "diapers nappies startup creator partnership US",
+          "exa_result_url": "https://www.youtube.com/watch?v=2NaPpXjteWM",
+          "exa_result_title": "The Startup Tank Investor Pitch Show: Pika Diapers - YouTube",
+          "first_surfaced_in_run": "run_20260529T191036Z_0aa929fc"
+        }
+      ],
+      "brand_category": "emerging"
+    }
+  ]
+}

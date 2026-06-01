@@ -31,16 +31,50 @@ _CURRENT_DIR = _REPO_ROOT / "data" / "brand_candidates" / "current"
 _RUNS_DIR = _REPO_ROOT / "data" / "brand_candidates" / "runs"
 
 
+def _primary_source_search(candidate: QualifiedCandidate) -> str | None:
+    """Return the search_tag of the heaviest-weight source for UI convenience.
+
+    Sorted by weight desc then search_tag asc (alphabetical) for
+    determinism — ties between equal-weight sources break the same way
+    every run.
+    """
+    if not candidate.sources:
+        return None
+    ordered = sorted(candidate.sources, key=lambda s: (-s.weight, s.search_tag))
+    return ordered[0].search_tag
+
+
 def _candidate_to_dict(candidate: QualifiedCandidate) -> dict[str, Any]:
     data: dict[str, Any] = {
         "brand": candidate.brand_name,
         "brand_id": candidate.brand_id,
         "industry_id": candidate.industry_id,
+        # M7.7 — first-class brand metadata. industry_id stays as the leaf
+        # (sub-industry) for back-compat; these explicitly split it.
+        "sub_industry_id": candidate.sub_industry_id,
+        "brand_category": candidate.brand_category,
         "score": round(candidate.score, 3),
         "tier": candidate.tier,
         "found_in_searches": len({s.search_tag for s in candidate.sources}),
+        # M7.4 — top-level pointer at the highest-weight source so the
+        # agent UI can render a single "discovered via X" tag without
+        # iterating the sources list.
+        "primary_source_search": _primary_source_search(candidate),
+        # M7.5 — brand-level metadata aggregated across sources (first
+        # non-null wins per field). null when no source surfaced it.
+        "domain": candidate.domain,
+        "social_handles": candidate.social_handles,
         "sources": [
-            {"search": s.search_tag, "weight": s.weight, "note": s.note} for s in candidate.sources
+            {
+                "search": s.search_tag,
+                "weight": s.weight,
+                "note": s.note,
+                # M7.5 — Exa provenance: present only for S15/S18 sources.
+                "exa_query": s.exa_query,
+                "exa_result_url": s.exa_result_url,
+                "exa_result_title": s.exa_result_title,
+            }
+            for s in candidate.sources
         ],
         "qualification": {
             "score": round(candidate.qualification_score, 3),

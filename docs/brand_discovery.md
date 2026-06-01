@@ -20,6 +20,86 @@ Produce an **exhaustive** ranked list of brand-deal candidates for a given talen
 
 ---
 
+## M7.7 v2 architecture (4 phases)
+
+M7.7 restructures the 18-search catalog into 4 phases with a human-in-the-loop review step between Phase 1 and Phase 2. The pipeline runs in one of two modes:
+
+**Mode: `maintenance` (default)** — Phase 3 + Phase 4 only. Cheap (~$2-5 per run). Refreshes talent-specific signals (own past brands, similar-talent brands, Exa competitors, values-aligned) plus the monthly global overlay (S15-residual + S16 + S17). Daily-refreshable.
+
+**Mode: `full_build` (explicit REST flag)** — multi-step:
+1. **Phase 1** (free, in-memory): compile industry universe from niche affinity + bidirectional walk on past brands + audience demographics (S9 logic) + life-stage (S11) + exclusivity adjacency (S12) + LLM softener. Each industry tagged with a one-sentence rationale.
+2. **Phase 1.5** (pauses for human review): the proposed industry list is persisted to the `industry_review` table. The agency operator fetches via `GET /talents/{id}/industry-review`, adds/deselects via `PATCH`, then approves via `POST .../approve`. Approval enqueues Phase 2.
+3. **Phase 2** (~$30-80, expensive one-off): for each APPROVED industry, three Exa+Claude category sweeps — emerging / growth / established. Three distinct search tags emitted (`exa_emerging`, `exa_growth`, `exa_established`). Geography embedded in every query.
+4. **Phase 3 + Phase 4**: same as maintenance mode.
+
+### REST surface
+
+```
+POST   /api/v1/talents/{id}/brand-discovery/run
+       Body: {"mode": "maintenance" | "full_build", "searches": [...] | null}
+       - maintenance: 202 + enqueues kick_off_brand_discovery
+       - full_build: runs Phase 1 inline + returns 202 + review_url pointer
+
+GET    /api/v1/talents/{id}/industry-review
+       Returns the most-recent pending review with items + rationales.
+
+PATCH  /api/v1/talents/{id}/industry-review
+       Body: {"added": [{"industry_id", "rationale?"}], "removed": ["industry_id", ...]}
+
+POST   /api/v1/talents/{id}/industry-review/approve
+       Marks approved + enqueues Phase 2 Celery task. Immutable after.
+```
+
+### Phase 2 three categories
+
+- **Emerging**: 7 queries — newly funded / Series A-B / < 5 years / D2C / indie / to watch / startup. Tag `exa_emerging`.
+- **Growth (NEW)**: 7 queries closing the gap between emerging + established — Series C+, regional chains, mid-market, 5-15 year DTCs, 100+ employees, $50M+ revenue. Tag `exa_growth`. **`brand_category=growth` on the candidate row.**
+- **Established**: 6 queries — top brands, household names, mainstream. Tag `exa_established`.
+
+Phase 2 has NO industry cap. The operator decided scope at Phase 1.5.
+
+### First-class brand metadata (M7.7)
+
+Every M7.7 candidate carries these top-level fields on `brand_candidate.data`:
+- `industry_id` — the **top-level sector** (e.g. `sports-outdoor`).
+- `sub_industry_id` — the leaf (e.g. `sportswear`). `null` when industry has no parent.
+- `brand_category` — `"emerging" | "growth" | "established" | null`. Null when the brand surfaced only via deterministic Phase 3 searches.
+- `domain` — brand website (M7.5).
+- `social_handles` — `{instagram, tiktok, youtube, x, linkedin}` (M7.5).
+- `primary_source_search` — highest-weight source's tag (M7.4).
+
+These propagate to the discovered seed map (`data/brand_industry_map_discovered.json`) so future runs for OTHER talents pick up the metadata at Search 5/6/7 walk time.
+
+### Phase 3 — talent-specific (every run)
+
+- **S1** (unchanged): re-engagement from `brand_deal` history.
+- **S2** (unchanged): similar talent's past brands.
+- **S3 v2 (Exa-based)**: `"competitors of {brand}"` Exa query per past brand. Replaces M7.6's curated `brand_competitors.json` lookup that only covered ~290 brands.
+- **S4 v2 (Exa-based)**: same shape, walked over similar-talent's brands.
+- **S13 v2 (opt-in)**: per `(theme × industry)` Exa search — `"sustainable activewear brands US"`, `"female-founded grocery brands US"`. Opt-in via talent's `brand_preferences.values_aligned_themes[]` OR `settings.discovery_values_search_default_themes`. Emits `values_aligned_exa` tag.
+
+### Phase 4 — signal overlay (every run + monthly cron)
+
+- **S15-residual (NEW v2)**: industry-AGNOSTIC global trending funded sweep. 7 queries like `"top recently funded brands US 2026"`, `"YC-backed consumer brands US 2026"`, `"a16z-backed consumer brands US 2026"`. Emits `global_trending_funded` tag.
+- **S16** (gated, existing): last30days social trending skill.
+- **S17** (gated, existing): Meta Ad Library + TikTok paid social.
+
+**Monthly cron**: `app.services.discovery_phase_4_monthly.fan_out_to_active_talents` runs every 30 days, walks talents with a deal in the last 90 days OR a discovery run in the last 60 days, and enqueues a maintenance-mode run for each.
+
+### Deprecated in M7.7 (kept on disk for rollback)
+
+- S5/6/7 (industry tier walks) — replaced by Phase 2 Exa category sweeps.
+- S8 (parent/sibling niche) — replaced by Phase 1 industry compilation.
+- S9 (demographic bridge) — industry-derivation logic preserved in `_industry_from_audience.py`; brand-surfacing moved to Phase 2.
+- S11 (life stage) — same shape.
+- S12 (complementary exclusivity) — same shape.
+- S14 (2nd-degree graph) — folded into Phase 3 Exa S3/S4 transitive walks.
+- S18 (established Exa) — replaced by Phase 2's `exa_established` category.
+
+`settings.discovery_v2_enabled` (default True) controls whether the REST trigger uses the v2 path or the legacy M7.6 path. Set False to roll back.
+
+---
+
 ## Output: schema, storage, merge semantics
 
 **Schema:** [`schemas/brand_candidates.schema.json`](../schemas/brand_candidates.schema.json) (JSON Schema Draft 2020-12). This is the authoritative shape of every candidates file. Validate on every write.
@@ -132,7 +212,7 @@ The full canonical example below conforms to `schemas/brand_candidates.schema.js
 
 ---
 
-## The brand discovery search catalog (16 shipped in M7/M7.1; Search 17 queued for M7.2)
+## The brand discovery search catalog (18 shipped — M7/M7.1/M7.2/M7.3)
 
 Each search is independent; all run in parallel; results merge by brand name + industry.
 
@@ -372,6 +452,127 @@ With v2 vendor data, the search transitions from "active ads count" to "estimate
 - Meta Ad Library API: free (public).
 - TikTok Creative Center scraping: free (rate-limited; ~50 queries / run; we self-limit to bound load).
 - LLM (Haiku) for brand-name normalisation: ~$0.05-$0.20 per discovery run.
+
+### Group I — Exa-driven mass discovery (M7.3)
+
+#### Search 18 — Established brands via Exa
+
+**Reads:** the same `top_industries[]` list Searches 15 / 16 / 17 seed from (primary + secondary tier hits from Searches 5/6) + the talent's geo anchor (audience top country → location.country fallback).
+
+**Logic:**
+1. For each industry (capped at `settings.discovery_max_industries_per_run = 5`), construct 6 query variations with the talent's country embedded:
+   - `"top {industry} brands {country} 2026"`
+   - `"best {industry} brands for influencer marketing {country}"`
+   - `"{country} {industry} D2C brand directory"`
+   - `"{industry} brands creator program {country}"`
+   - `"established {industry} brands instagram tiktok"`
+   - `"top {industry} brands to watch {country}"`
+2. Fan out across Exa neural search; collect results per query.
+3. Haiku-extract canonical brand names + confidence + evidence from each result snippet (same prompt pattern as Search 15).
+4. Drop extractions below confidence 0.70 (noise floor).
+5. Drop brands already in `brand_industry_map.json` (handled by the seed map — these would surface via Searches 5/6/7 anyway).
+6. Emit `CandidateSource` with `search_tag = "established_exa_discovery"`, weight 0.20–0.30 scaled by LLM confidence, and the LLM confidence embedded in `note` for the qualifier to read.
+
+**Why it matters:** Searches 5/6/7 are seed-map-bounded — they only surface brands curated into `brand_industry_map.json` (290 brands today). The real long tail (5,000+ brands per industry) is hidden. Search 18 mass-discovers established brands via Exa's neural search, letting a US-based dad-life creator see brands like Lego, Hasbro, Mattel — not just the seed-map's hand-curated set.
+
+**Source tag:** `established_exa_discovery` (weight `0.20-0.30` per LLM confidence).
+
+**Cost:** ~5 industries × 6 queries = 30 Exa calls per run ($0.005 / call ≈ $0.15) + ~30k Haiku tokens ≈ $0.04. Combined with Search 15 (~7 queries × 5 industries × ~$0.005 = $0.18), the M7.3 Exa-driven floor is ~$0.40/run.
+
+---
+
+## Geographic filter (M7.3)
+
+A shared utility — `app/services/discovery/_geographic_filter.py` — applies after all searches run + their sources are merged. The filter is a **soft floor** (per the v0.1 decision): drop a brand only when there is explicit evidence it cannot reach the talent's audience.
+
+**Talent geography resolution chain:**
+1. `talent.audience_demographics.top_countries[]` (top 3 by share, normalised to ISO-3166 alpha-2). Available post-OAuth.
+2. Falls back to `talent.location.country` (the talent's home country).
+3. If both are missing — the filter is bypassed (no filter applied; pass-through). This is the same conservative default as pre-M7.3.
+
+**Per-brand pass logic:**
+- `brand.sells_in_countries == "global"` → keep.
+- `brand.sells_in_countries` absent → keep (assume global until proven otherwise).
+- `brand.sells_in_countries` is an explicit list **intersecting** the talent's countries → keep.
+- `brand.sells_in_countries` is an explicit list **not intersecting** → drop.
+
+**Why a soft floor:** the seed map's `sells_in_countries` is hand-curated and far from comprehensive. A hard floor (drop everything without explicit talent-country overlap) would lose ~70% of the seed-map for any non-US/UK talent. The soft floor only drops brands we have positive evidence cannot serve the talent.
+
+**Post-merge, not per-search:** the geo filter runs once on the aggregated `all_sources` list, not inside each search. A brand that's borderline (caught by both Search 5 and Search 8) gets a single coherent geo decision rather than being dropped on one pass and re-added on the next.
+
+## Sub-industry expansion (M7.3)
+
+Searches 5/6/7 (industry tiers) + Search 8 (parent/sibling niche) now expand each target industry into its children via `Taxonomies.get_sub_industries(industry_id)`. The 2-level hierarchy already exists in `data/industries.json` via the `parent` field (22 sectors + 156 sub-industries) — M7.3 simply walks it.
+
+**Example:** a talent with affinity to `sports-outdoor` (a parent industry) now walks to `sportswear` and `outdoor-gear` (children). Brands listed under either child surface in the same search, where pre-M7.3 they'd be missed entirely if the talent's affinity row only named the parent.
+
+**Weight decay:** hits on the parent target keep their full tier weight (`0.30` primary, `0.20` secondary, `0.06` tertiary). Hits via sub-industry expansion are weighted by `0.8x` — `0.24` / `0.16` / `0.048` respectively. The `note` carries `"via sub-industry <child> of <parent>"` so the audit trail is clear.
+
+**Dedup:** within a single tier, a brand that surfaces from both the parent walk AND the child walk emits once (the highest-weight hit wins).
+
+**Depth = 1:** `industries.json` has 2 levels (parent + children). No grandchildren — no recursive walk needed.
+
+## Emerging tier (M7.3)
+
+A new `QualifiedCandidate.tier` value — `"emerging"` — surfaces Exa-discovered brands by default. Without this, every net-new Exa brand died in `qualify_candidate(brand_entry=None)` which returned `score=0.10`, below the 0.30 floor; the agent never saw them.
+
+**Promotion logic (in `app/services/discovery/qualification.py`):**
+- Brand is net-new (no entry in `brand_industry_map.json`).
+- Its source list includes a `search_tag` in `{"recently_funded", "established_exa_discovery"}` (the two Exa-driven searches).
+- The source `note` embeds `llm_confidence>=0.70`.
+- → `tier = "speculative"`, `score = 0.30`, signal `emerging_exa_discovery`.
+
+The orchestrator then assigns `tier="emerging"` (overriding `primary/secondary/tertiary`) when the candidate has ONLY Exa-discovery source tags and the qualification cleared `qualified` or `speculative`.
+
+**REST toggle:** `GET /api/v1/talents/{id}/brand-candidates?qualification=qualified,speculative` is the default (preserves v0.1 behaviour). `?qualification=all` surfaces the long tail including the lowest-confidence emerging brands; `?qualification=unqualified` returns only the tail.
+
+---
+
+## LLM industry softener (M7.4)
+
+The deterministic `niche_industry_affinity.json` hand-curates which industries match a niche, but it's necessarily incomplete. A dad-life creator might have plausible affinity to `pet-care`, `family-travel`, `home-improvement` even when the affinity row doesn't list them.
+
+M7.4 adds one Claude Haiku call at the start of every discovery run. Inputs: talent niches, audience signals, location, the deterministic affinity-hit shortlist, and the full `industries.json` catalogue. Output: up to 20 additional industry_ids, filtered against the known taxonomy (hallucinations are dropped silently).
+
+Augmented industries feed into:
+- Search 5 (as primary-tier extras for the seed-map walk).
+- Search 15 + Search 18 (as additional Exa-driven mass-discovery industries).
+
+**Settings gate:** `discovery_industry_softener_enabled: bool = True`. Off for cheap test runs.
+
+## Bidirectional sub-industry walk (M7.4)
+
+M7.3 walks parent → children (target industry expands into its sub-industries). M7.4 adds the inverse for past-deal industries.
+
+For each `deal.industry_id` that's a sub-industry:
+- include the parent (`get_industry_parent`), AND
+- include every other child of that parent (siblings via `get_sub_industries(parent)`).
+
+Example: past deal with a brand in `sportswear` → expansion to `sports-outdoor` (parent) + `outdoor-gear`, `gym-equipment` (siblings). All four feed Search 5 + Search 15/18.
+
+Top-level sectors (no parent) skip the expansion. The original past-deal industry always remains in the set.
+
+## Brand canonicalization (M7.4)
+
+Searches 15 + 18 now normalize LLM-extracted brand names against the seed map before emitting as net-new. The normalizer (`app/services/discovery/_brand_normalizer.py`) strips leading "the" and trailing corporate suffixes (`Inc`, `LLC`, `Corp`, `Motor Company`, `Holdings`, `Group`, `Company`, `Brands`, `Co`, etc.) with longest-first matching. It guards against eating single-word inputs.
+
+If a normalized name matches a seed entry (by name OR alias), the Exa hit is emitted onto the canonical `brand_id` as an extra Search 15/18 signal — boosting the existing brand instead of creating a duplicate emerging-tier candidate. `note` carries `canonicalised from <original> | …` for the audit trail.
+
+**Result for Kevin:** Exa hits for "Ford Motor Company", "General Motors", "Kroger" now land on `ford`, `gm` (alias), `kroger` (if seeded). Previously each emitted as `tier=emerging` net-new.
+
+## Auto-grown discovered seed map (M7.4)
+
+`data/brand_industry_map_discovered.json` is a sibling file to the curated `brand_industry_map.json`. The Celery task appends every net-new brand from each discovery run, atomically (tempfile → `os.replace`). Brands whose normalized name already appears in either file are skipped.
+
+The orchestrator's `load_merged_brand_industry_map` loads both files and dedupes with the curated entry winning on conflict — so a hand-curated row with `sells_in_countries`, `hq_country`, `social_handles` always beats a leaner discovered stub.
+
+**Outcome:** every Exa-driven discovery for any talent in the agency contributes brands to the shared seed map. Subsequent runs for other talents surface those brands via Search 5/6/7 — without re-paying for the Exa call.
+
+**Concurrency:** v1 accepts last-writer-wins. Concurrent Celery workers writing simultaneously may lose one brand. v2 could add a file lock or move to a DB table.
+
+## Per-candidate source provenance (always present; M7.4 surfaced)
+
+Every brand_candidate row's `data.sources[]` array carries one entry per search that surfaced the brand: `{search, weight, note}`. M7.4 adds a derived top-level `data.primary_source_search` field = the `search_tag` of the highest-weight source (ties broken alphabetically). UIs that need a single "discovered via" tag can read this without iterating `sources[]`.
 
 ---
 

@@ -53,6 +53,9 @@ async def test_unit__orchestrator__merges_sources_by_brand_id() -> None:
         brand_deals=[],
         taxonomies=tax,
         brand_industry_map=bim,
+        # Restrict to deterministic searches — M7.4 wires _industry_extras into
+        # the Exa seed for S15/S18 which would hit live APIs otherwise.
+        enabled_searches=("search_3_competitors", "search_5_primary_industry"),
     )
     macs = [c for c in result.candidates if c.brand_id == "mac"]
     assert len(macs) == 1
@@ -91,6 +94,9 @@ async def test_unit__orchestrator__reengage_tag_overrides_tier() -> None:
         taxonomies=tax,
         brand_industry_map=bim,
         today=today,
+        # Restrict to deterministic searches — M7.4 wires brand_deals
+        # industries into the Exa seed via the bidirectional walk.
+        enabled_searches=("search_1_reengagement", "search_5_primary_industry"),
     )
     gym = next((c for c in result.candidates if c.brand_id == "gymshark"), None)
     assert gym is not None
@@ -98,10 +104,11 @@ async def test_unit__orchestrator__reengage_tag_overrides_tier() -> None:
 
 
 @pytest.mark.asyncio
-async def test_unit__orchestrator__below_threshold_dropped() -> None:
-    """A candidate with score < 0.10 (lowest tier) is dropped."""
+async def test_unit__orchestrator__low_score_candidate_still_surfaces() -> None:
+    """M7.4 — score is informational; no threshold drop. A tertiary-tier
+    candidate at 0.06 still lands in result.candidates (the agent
+    decides what to do with low-confidence hits)."""
     tax = _make_taxonomies()
-    # Use the tertiary tier so the score is 0.06 — below the 0.10 floor.
     tax.niche_industry_affinity = {"groups": [{"niche_id": "beauty", "tertiary": ["telehealth"]}]}
     bim = _brand_map(
         {
@@ -119,7 +126,11 @@ async def test_unit__orchestrator__below_threshold_dropped() -> None:
         taxonomies=tax,
         brand_industry_map=bim,
     )
-    assert result.candidates == []
+    # Pre-M7.4 this was dropped at score < 0.10. Now it surfaces with the
+    # score visible on the row.
+    hims = next((c for c in result.candidates if c.brand_id == "hims"), None)
+    assert hims is not None
+    assert hims.score == pytest.approx(0.06)
 
 
 @pytest.mark.asyncio
@@ -135,6 +146,9 @@ async def test_unit__orchestrator__blocked_industry_partitioned() -> None:
             "company_stage": "public",
         }
     )
+    # Restrict to deterministic searches — the Exa-driven 15/18 hit live
+    # APIs and would surface many other cosmetics brands, breaking the
+    # `len(result.blocked) == 1` invariant.
     result = await run_discovery(
         talent_id="t1",
         talent_data={
@@ -144,6 +158,7 @@ async def test_unit__orchestrator__blocked_industry_partitioned() -> None:
         brand_deals=[],
         taxonomies=tax,
         brand_industry_map=bim,
+        enabled_searches=("search_5_primary_industry",),
     )
     assert result.candidates == []
     assert len(result.blocked) == 1
@@ -172,6 +187,9 @@ async def test_unit__orchestrator__error_in_one_search_does_not_kill_run() -> No
         brand_deals=[],
         taxonomies=tax,
         brand_industry_map=bim,
+        # Restrict to deterministic searches — keep S5 firing + S9 erroring,
+        # skip Exa-driven S15/S18 which would hit live APIs.
+        enabled_searches=("search_5_primary_industry", "search_9_demographic_bridge"),
     )
     # Search 5 still produces MAC; Search 9 errored.
     assert any(c.brand_id == "mac" for c in result.candidates)

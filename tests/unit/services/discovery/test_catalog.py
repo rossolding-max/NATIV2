@@ -10,8 +10,8 @@ from app.services.discovery.catalog import (
 )
 
 
-def test_unit__catalog__has_all_17_searches() -> None:
-    assert len(SEARCH_CATALOG) == 17
+def test_unit__catalog__has_all_18_searches() -> None:
+    assert len(SEARCH_CATALOG) == 18
     # The catalog name should match the canonical "search_<N>_..." pattern.
     for info in SEARCH_CATALOG:
         assert info.name.startswith("search_")
@@ -26,7 +26,7 @@ def test_unit__catalog__known_names_matches_catalog() -> None:
 
 def test_unit__catalog__default_enabled_returns_all_in_order() -> None:
     names = default_enabled_searches()
-    assert len(names) == 17
+    assert len(names) == 18
     assert names == tuple(s.name for s in SEARCH_CATALOG)
 
 
@@ -38,6 +38,16 @@ def test_unit__catalog__search_17_listed_with_weight_range() -> None:
     # Weight is a string range — single-platform 0.20 to multi-platform 0.30.
     assert "0.20" in info.weight
     assert "0.30" in info.weight
+
+
+def test_unit__catalog__search_18_listed_with_weight_range() -> None:
+    by_name = {s.name: s for s in SEARCH_CATALOG}
+    assert "search_18_established_brands" in by_name
+    info = by_name["search_18_established_brands"]
+    assert info.label == "Established brands via Exa"
+    assert "0.20" in info.weight
+    assert "0.30" in info.weight
+    assert info.requires_llm is True
 
 
 def test_unit__catalog__validate_known_names_returns_empty() -> None:

@@ -34,6 +34,7 @@ def _build_app() -> Celery:
             "app.services.enrollment_state_sync",
             "app.services.deal_phase_4_5_auto_fire_task",
             "app.services.deal_auto_archive_task",
+            "app.services.discovery_phase_4_monthly",
         ],
     )
 
@@ -81,6 +82,16 @@ def _build_app() -> Celery:
                 # The ``brand_deal`` closing-row write ships in M16.
                 "task": ("app.services.deal_auto_archive_task.auto_archive_trigger_check"),
                 "schedule": float(settings.cron_auto_archive_trigger_check_seconds),
+                "options": {"queue": "default"},
+            },
+            # M7.7 — monthly Phase 4 signal-overlay fan-out for active talents.
+            # Gated by settings.discovery_phase_4_monthly_enabled — when False
+            # the beat entry stays but the task body no-ops via the active-set
+            # query returning [] for everyone.
+            "discovery-phase-4-monthly": {
+                "task": ("app.services.discovery_phase_4_monthly.fan_out_to_active_talents"),
+                # ~30 days. Configurable per agency via env if needed.
+                "schedule": 30 * 24 * 60 * 60,
                 "options": {"queue": "default"},
             },
         },

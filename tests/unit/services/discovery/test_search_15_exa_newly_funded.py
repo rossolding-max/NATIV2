@@ -73,13 +73,18 @@ async def test_unit__search_15__happy_path_extracts_new_brand() -> None:
     assert sources[0].brand_id == "alo-yoga"
     assert sources[0].industry_id == "activewear"
     assert sources[0].search_tag == "recently_funded"
-    # Weight scales with confidence — 0.90 -> ~0.117
-    assert 0.10 <= sources[0].weight <= 0.15
+    # M7.3 — weight scales with confidence in the 0.20-0.30 range
+    # (bumped from 0.10-0.15 to clear the qualification noise floor).
+    assert 0.20 <= sources[0].weight <= 0.30
+    # M7.3 — the note embeds llm_confidence for the qualifier to read.
+    assert "llm_confidence=" in sources[0].note
 
 
 @pytest.mark.asyncio
-async def test_unit__search_15__existing_brand_in_seed_map_skipped() -> None:
-    """A brand already in brand_industry_map shouldn't be emitted as net-new."""
+async def test_unit__search_15__existing_brand_in_seed_map_canonicalised() -> None:
+    """M7.4 — A brand already in brand_industry_map gets emitted on the
+    canonical brand_id (extra Exa signal on the existing brand) rather
+    than skipped or duplicated as net-new."""
     exa = MagicMock()
     exa.search = AsyncMock(return_value=_mock_exa_search_response(["Gymshark"]))
     anthropic = MagicMock()
@@ -95,7 +100,7 @@ async def test_unit__search_15__existing_brand_in_seed_map_skipped() -> None:
             ]
         )
     )
-    seed = _brand_map({"name": "Gymshark", "industry_id": "activewear"})
+    seed = _brand_map({"brand_id": "gymshark", "name": "Gymshark", "industry_id": "activewear"})
 
     with (
         patch("app.vendors.exa.ExaClient", return_value=exa),
@@ -104,8 +109,12 @@ async def test_unit__search_15__existing_brand_in_seed_map_skipped() -> None:
         sources = await search_15_exa_newly_funded.run(
             top_industry_ids=["activewear"],
             brand_industry_map=seed,
+            queries_per_industry=1,  # M7.5 — one query → one source
         )
-    assert sources == []
+    # Emits once on the canonical brand_id with the Exa source attached.
+    assert len(sources) == 1
+    assert sources[0].brand_id == "gymshark"
+    assert sources[0].brand_name == "Gymshark"
 
 
 @pytest.mark.asyncio

@@ -284,6 +284,103 @@ Each milestone documented below with: inputs (what must exist) + outputs (delive
 
 ---
 
+## M7.3 — Phase 2 (Brand discovery comprehensiveness overhaul)
+
+**Inputs:** M7 + M7.1 (M7.2 orthogonal). Triggered by Kevin Cooney live test: 47 candidates, UK-only retailers leaking through, net-new Exa brands gated behind `pending_writeback`.
+
+**Outputs (shipped):**
+- `app/services/discovery/_geographic_filter.py` (NEW) — shared `extract_talent_countries()` + `brand_passes_geo()` + `filter_sources_by_geo()`. Soft-floor filter applied post-merge so a brand caught by multiple searches gets a single coherent geo decision. Talent geography chain: audience top countries → location.country → bypass when both missing.
+- `app/utils/taxonomies.py` — `get_sub_industries(industry_id) -> list[str]` helper backed by a pre-computed parent→children index built at load time.
+- `app/services/discovery/_models.py` — `QualifiedCandidate.tier` Literal extended with `"emerging"`.
+- `app/services/discovery/qualification.py` — net-new brands with an Exa-search source tag (`recently_funded` or `established_exa_discovery`) + LLM confidence ≥ 0.70 → `tier="speculative"`, `score=0.30`, signal `emerging_exa_discovery`. Backward-compat preserved for brands without seed entry AND without Exa tag (still `unqualified`).
+- `app/services/discovery/search_5_7_industry_tiers.py` + `search_8_parent_sibling_niche.py` — sub-industry walk: each target industry expands to its children via `get_sub_industries`. Weight decay `0.8x` for sub-industry hits.
+- `app/services/discovery/search_15_exa_newly_funded.py` — query variations bumped 2 → 7 per industry, talent country embedded, weight bumped `0.10-0.15` → `0.20-0.30` scaled by LLM confidence so net-new brands clear the qualification noise floor.
+- `app/services/discovery/search_18_established_brands.py` (NEW) — mirror of Search 15 for established brands. 6 query variations per industry covering `top/best/D2C/creator program/established/to watch` angles. `search_tag="established_exa_discovery"`.
+- `app/services/discovery/orchestrator.py` — dispatches Search 18 alongside Search 15, threads talent country through both, caps via `settings.discovery_max_industries_per_run=5`, applies geo filter post-merge, assigns `tier="emerging"` for Exa-only candidates that pass qualification.
+- `app/services/discovery/catalog.py` — registered 18th search entry.
+- `app/api/brand_candidates.py` — `?qualification=qualified,speculative,unqualified,all` query param on the list endpoint (default `qualified,speculative` preserves v0.1 behaviour). Tier pattern extended to include `emerging`.
+- `app/config.py` — `discovery_max_industries_per_run: int = 5`.
+- 29 new unit tests (geo filter permutations, sub-industry walk + decay, Search 15 query expansion, Search 18 full pipeline, qualification emerging tier, taxonomies sub-industry lookup, Kevin E2E) + 4 new integration tests for the `?qualification=` filter + updated catalog count test (17 → 18).
+- `docs/brand_discovery.md` — Search 18 spec, geo filter section, sub-industry expansion section, emerging tier section.
+
+**Acceptance:** Kevin-shaped synthetic E2E (real taxonomies + real brand_industry_map + mocked Exa/Claude) surfaces ≥ 50 candidates (v0.1 baseline 47), zero UK-only retailers, ≥ 1 `tier="emerging"` candidate. Live re-run for Kevin produces 150+ candidates (mocked-Exa quota permitting).
+
+**Skip notes:** N/A — overhaul of an already-shipped milestone. If reverted, the v0.1 Kevin run regresses to the 47-candidate UK-leaking baseline.
+
+**Interdependency checks:**
+- Geo filter does NOT regress talent runs where audience + location are both empty (filter is bypassed).
+- Sub-industry expansion does NOT regress single-leaf-industry talent runs (no children → no extra hits).
+- `?qualification=` default preserves v0.1 REST behaviour for any UI not yet aware of the toggle.
+
+**Deferred to v0.2:** large-scale seed-map writeback automation (the script that promotes high-confidence Search 15/18 discoveries into `brand_industry_map.json` quarterly), brand-size tiering, sub-niche → sub-industry affinity overrides.
+
+---
+
+## M7.4 — Phase 2 (Industry breadth + auto-grown seed map + brand canonicalization)
+
+**Inputs:** M7.3. Triggered by the live Kevin run: 142 candidates capped at 5 industries; false net-new "Ford Motor Company"/"General Motors" inflating emerging tier; no feedback loop from discovered brands into the seed map.
+
+**Outputs (shipped):**
+- `app/services/discovery/_brand_normalizer.py` (NEW) — `normalize_brand_name()` strips leading "the" + trailing corporate suffixes (longest-first); `find_canonical_seed_entry()` matches against seed name + aliases post-normalize.
+- `app/services/discovery/_seed_map_loader.py` (NEW) — `load_merged_brand_industry_map()` loads curated + auto-grown discovered files; dedupes via the brand normalizer; curated wins on conflict.
+- `app/services/discovery/_industry_expansion.py` (NEW) — `expand_past_deal_industries_bidirectionally()` walks past-deal sub-industries UP to parent + ACROSS to all siblings.
+- `app/services/discovery/_industry_softener.py` (NEW) — one Haiku call per run; given talent context + already-chosen industries + the full industries.json catalogue, returns up to 20 additional industry_ids filtered against the taxonomy whitelist.
+- `app/services/discovery/_discovered_writer.py` (NEW) — atomic `tempfile` → `os.replace` appender for `brand_industry_map_discovered.json`. Dedupes against curated + discovered before append.
+- `app/services/discovery/orchestrator.py` — pre-step `_compute_industry_expansions` runs at the top of `run_discovery`; combined extras feed Search 5 (as primary tier extras) + the Exa seed for S15/S18; `[: discovery_max_industries_per_run]` slicing removed; warn at >50 industries.
+- `app/services/discovery/search_5_7_industry_tiers.py` — `extra_target_industries` parameter; extras only fire on the primary tier (no double-emit at lower tiers).
+- `app/services/discovery/search_15_exa_newly_funded.py` + `search_18_established_brands.py` — replace inline `_slugify` with shared `slugify_brand_name`; pre-canonicalize via `find_canonical_seed_entry` so Exa hits for "Ford Motor Company" / "General Motors" emit onto the canonical "Ford" / "GM" brand_ids instead of as net-new emerging.
+- `app/services/discovery/snapshot.py::_candidate_to_dict` — adds derived top-level `primary_source_search` field (highest-weight source's `search_tag`, ties broken alphabetically).
+- `app/services/talent_background_research.py` — after `run_discovery`, calls `append_discovered_brands()` so net-new brands persist into `brand_industry_map_discovered.json` for future runs.
+- `app/utils/slugify.py` — adds lenient `slugify_brand_name()` (returns `"unknown"` on bad input) for Exa/LLM-extracted name canonicalization.
+- `app/config.py` — drops `discovery_max_industries_per_run`; adds `discovery_industry_softener_enabled: bool = True`.
+- `data/brand_industry_map_discovered.json` (NEW) — empty starter file that grows with every run.
+- 39 new unit tests: 13 normalizer + 4 loader + 8 expansion + 5 softener + 3 canonicalization + 6 writeback. 728 total unit tests pass.
+- `docs/brand_discovery.md` — M7.4 sections: industry softener, bidirectional walk, brand canonicalization, auto-grown discovered seed map, per-candidate source provenance.
+
+**Acceptance (unit):** Kevin synthetic E2E surfaces ≥ 50 candidates, every candidate has `primary_source_search` populated. **Acceptance (live, pending smoke run):** Kevin live re-run produces > 250 candidates (vs M7.3 baseline 142); zero "Ford Motor Company" / "General Motors" / "Kroger" net-new entries (canonicalised); `brand_industry_map_discovered.json` grows by 80+ entries that subsequent runs for other talents will see.
+
+**Skip notes:** N/A — overhaul of an already-shipped milestone. Reverting regresses to the 142-candidate M7.3 baseline.
+
+**Interdependency checks:**
+- LLM softener stays gated on `discovery_industry_softener_enabled` so test runs don't accidentally hit the live API.
+- Bidirectional walk fires only for past-deal industries — talents with no historical deals get the same behavior as M7.3.
+- `?qualification=` REST default still preserves v0.1 behaviour.
+- Discovered seed map appended atomically; concurrent Celery workers race is accepted v1 trade-off.
+
+**Deferred to v0.2:** brand-name canonicalization across runs (a brand named "Kroger" in run 1 and "The Kroger Co" in run 2 still lands as two discovered entries — per-run normalizer handles within-run only); discovered → curated promotion UI (promote a brand surfaced N+ times to curated); cost budget alarm; embedding-based brand similarity.
+
+---
+
+## M7.7 — Phase 2 (v2 architecture refactor — 4 phases + human-in-the-loop)
+
+**Inputs:** M7.6. Triggered by user wanting (a) Exa-based brand discovery instead of seed-map-bounded walks, (b) gap-free coverage between emerging + established, (c) human-in-the-loop industry review before expensive Exa fan-out, (d) one-off massive build + monthly maintenance cost shape.
+
+**Outputs (shipped):**
+- 4-phase architecture:
+  - **Phase 1** (`phase_1_industry_compilation.py`): composes affinity walk + bidirectional walk + softener + new `_industry_from_audience.py` / `_industry_from_life_stage.py` / `_industry_from_exclusivity.py` (extracts S9/S11/S12 industry-derivation logic). Returns `list[IndustryProposal]` each with rationale + source. Dedup priority: affinity > past-brand > similar-talent > bidirectional walk > audience > life-stage > exclusivity > softener > manual.
+  - **Phase 1.5** (`industry_review` SQLA model + REST endpoints): human-in-the-loop review queue. Three endpoints under `/talents/{id}/industry-review`: GET (fetch pending), PATCH (add/remove industries), POST `.../approve` (mark approved + enqueue Phase 2). One pending review per (talent, agency); supersedes prior pending.
+  - **Phase 2** (`phase_2_brand_universe_build.py`): per-industry Exa fan-out across 3 categories — emerging / **growth (NEW)** / established. NO cap on industries. Per-query Exa+Claude with M7.5 provenance. Three search tags: `exa_emerging`, `exa_growth`, `exa_established`. Phase 2 absorbs S5-S12, S14, S18.
+  - **Phase 3** (`phase_3_talent_specific.py`): wraps S1, S2, Exa-S3 (`_competitor_search_exa.py`), Exa-S4, S13 standalone (`_values_search.py`, opt-in).
+  - **Phase 4** (`phase_4_signal_overlay.py`): S15-residual rewritten as industry-AGNOSTIC global trending funded sweep + S16 (gated) + S17 (gated).
+- **First-class brand metadata**: `QualifiedCandidate` gains `sub_industry_id` + `brand_category`. Snapshot, discovered seed map, and Brand DB stub all carry them.
+- **REST**: `TriggerDiscoveryBody.mode: Literal["full_build", "maintenance"] = "maintenance"`. `full_build` runs Phase 1 inline + returns review URL pointer; operator approves to trigger Phase 2 Celery task (`kick_off_phase_2_brand_universe`).
+- **Monthly Phase 4 cron** (`discovery_phase_4_monthly.py` + Celery beat): walks active talents (deal in last 90d OR discovery in last 60d) and enqueues maintenance-mode runs.
+- **Config**: `discovery_v2_enabled` (default True; rollback to M7.6 via False), `discovery_growth_enabled` (default True), `discovery_phase_4_monthly_enabled` (default True), `discovery_values_search_default_themes` (default []).
+- 47 new unit tests + 8 integration tests for review queue + REST surface. 783+ total unit tests pass.
+
+**Acceptance (unit):** all phases produce expected outputs against mocked Exa+Claude. **Acceptance (live, pending Kevin smoke):** full_build → operator approves all 80+ industries → Phase 2 produces > 2000 candidates with 3 distinct `brand_category` tags + `sub_industry_id` set on most rows; discovered seed map grows by 1500+; subsequent maintenance run completes in < 2 min for < $5.
+
+**Skip notes:** Rollback via `discovery_v2_enabled=False` reverts to M7.6 legacy path. Deprecated search modules kept on disk through M7.7; M7.8 deletes them.
+
+**Interdependency checks:**
+- `industry_review` table migration (alembic 0005) runs before any v2 REST traffic.
+- `discovery_v2_enabled=True` requires the Phase 2 Celery task (`kick_off_phase_2_brand_universe`) to be registered (`app.services.talent_background_research`).
+- Geography embedded in every Phase 2 + Phase 3 + Phase 4 Exa query template so UK-only brands don't surface in the first place; M7.3 post-merge geo filter still runs as defence in depth.
+
+**Deferred to v0.2:** per-industry-vertical custom prompts; Phase 1 → Phase 2 incremental refresh; cross-talent discovered-brand promotion to curated; S16/S17 ungating (need vendor tokens); auto-expire pending reviews (14-day TTL); industry-review UI (REST surface ships M7.7; UI in a later milestone); deprecated search module deletion (kept for rollback through M7.7).
+
+---
+
 ## M8 — Phase 3a (Contact CRM)
 
 **Inputs:** M7.
