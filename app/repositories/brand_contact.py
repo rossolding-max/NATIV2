@@ -15,6 +15,7 @@ Mirrors the M7 ``BrandCandidateRepository`` shape:
 from __future__ import annotations
 
 from copy import deepcopy
+from datetime import datetime
 from typing import Any
 from uuid import UUID
 
@@ -126,14 +127,23 @@ class BrandContactRepository(BaseRepository[BrandContact]):
 
     @staticmethod
     def set_scalar_columns(row: BrandContact, contact_data: dict[str, Any]) -> None:
-        """Sync ``decision_role`` + ``email`` + ``do_not_contact`` scalar columns from JSONB.
+        """Sync indexed scalar columns from JSONB.
 
-        Idempotent — call after every JSONB write so the indexed scalar
-        columns stay consistent.
+        Covers: ``decision_role``, ``outreach_recommendation`` (M8.1),
+        ``email``, ``do_not_contact``. Idempotent — call after every
+        JSONB write so the indexed scalar columns stay consistent.
+
+        ``revealed_at`` is NOT synced here — it's only ever set by
+        ``update_email_reveal()`` after a successful Phase C reveal
+        attempt, never overwritten by ordinary Phase A enrichment writes.
         """
         role = contact_data.get("decision_role")
         if isinstance(role, str) and role.strip():
             row.decision_role = role.strip().lower()
+        # M8.1 — outreach_recommendation flag from extended Step 6 LLM call.
+        recommendation = contact_data.get("outreach_recommendation")
+        if isinstance(recommendation, str) and recommendation.strip():
+            row.outreach_recommendation = recommendation.strip().lower()
         email = contact_data.get("email")
         if isinstance(email, dict):
             address = email.get("address")
@@ -206,6 +216,66 @@ class BrandContactRepository(BaseRepository[BrandContact]):
         await self._session.flush()
         await self._session.refresh(instance)
         return instance
+
+    # ── M8.1 — Phase C email reveal ──────────────────────────────────
+
+    async def update_email_reveal(
+        self,
+        contact_id: str,
+        *,
+        email_address: str | None,
+        verification_status: str | None,
+        revealed_at: datetime,
+    ) -> BrandContact:
+        """Write the outcome of one Apollo /people/match reveal attempt.
+
+        Called per-contact from ``step_5b_reveal_email`` after the
+        operator triggers Phase C bulk reveal. Sets the scalar ``email``
+        + ``revealed_at`` columns AND merges the verification status
+        into the JSONB ``data.email`` block so the M8 schema audit
+        trail (``verification_status``, ``verification_sources``) stays
+        intact.
+
+        ``email_address=None`` is a valid input — captures "reveal
+        attempted, no verified email returned"; the row's ``revealed_at``
+        still moves forward so the UI shows we tried.
+        """
+        instance = await self.get_by_id(contact_id)
+        if instance is None:
+            raise NotFoundError(
+                f"brand_contact {contact_id!r} not found",
+                detail={"contact_id": contact_id},
+            )
+        merged_data = dict(instance.data or {})
+        email_block = dict(merged_data.get("email") or {})
+        if email_address:
+            email_block["address"] = email_address
+        if verification_status:
+            email_block["verification_status"] = verification_status
+        if email_block:
+            merged_data["email"] = email_block
+        instance.data = merged_data
+        instance.email = email_address or None
+        instance.revealed_at = revealed_at
+        await self._session.flush()
+        await self._session.refresh(instance)
+        return instance
+
+    async def find_unrevealed_by_brand(self, brand_id: str) -> list[BrandContact]:
+        """Return contacts at a brand whose Phase C reveal hasn't fired yet.
+
+        Drives the UI "show me contacts ready for email reveal" filter.
+        ``revealed_at IS NULL`` means no reveal attempt; ``revealed_at
+        IS NOT NULL`` means an attempt happened (regardless of whether
+        an email came back).
+        """
+        stmt = select(BrandContact).where(
+            BrandContact.brand_id == brand_id,
+            BrandContact.is_deleted.is_(False),
+            BrandContact.revealed_at.is_(None),
+        )
+        result = await self._session.execute(stmt)
+        return list(result.scalars().all())
 
 
 def _was_recently_pitched(data: dict[str, Any] | None, talent_id: str, *, days: int = 14) -> bool:
