@@ -161,6 +161,25 @@
           "type": "string",
           "description": "LLM-generated one-line explanation of why this `decision_role` was assigned. e.g. 'VP Marketing at Nike ($51B revenue) \u2014 too senior to approve individual \u00a35k Reel deals; useful for warm intros to the IM Manager 2 levels down (who is the actual buyer).'"
         },
+        "outreach_recommendation": {
+          "type": "string",
+          "enum": [
+            "recommended",
+            "not_recommended",
+            "requires_review"
+          ],
+          "default": "requires_review",
+          "description": "M8.1 \u2014 LLM's per-contact answer to 'should the operator pitch this contact directly?'. Distinct from `decision_role`: a CMO at a $50B brand is `influencer` (role) AND `not_recommended` (recommendation \u2014 too senior to engage). Drives the Phase B UI badge so the operator can filter the broad Phase A capture pool down to actual outreach candidates before paying for Apollo email-reveal. Default `requires_review` \u2014 never auto-promote to `recommended` without an explicit LLM endorsement."
+        },
+        "outreach_recommendation_rationale": {
+          "type": "string",
+          "description": "M8.1 \u2014 one-line explanation of the `outreach_recommendation`. e.g. 'IM Manager at growth-stage brand: clear-fit role at the right level for a creator pitch.'"
+        },
+        "revealed_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "M8.1 \u2014 timestamp the operator-triggered Apollo `/people/match` email-reveal call fired for this contact. Null until reveal attempted; populated even when the reveal returned no verified email (so 'we tried, nothing' is visible in the UI). The contact's `email.verification_status` captures the outcome (`verified` / `catchall` / `unverified` / `bounced` / `not_found` / `apollo_error`)."
+        },
         "decision_authority_size_band": {
           "type": "string",
           "enum": [

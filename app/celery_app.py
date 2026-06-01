@@ -30,6 +30,7 @@ def _build_app() -> Celery:
             "app.services.agency_warmup",
             "app.services.talent_background_research",
             "app.services.contact_enrichment_task",
+            "app.services.contact_email_reveal_task",
             "app.services.outreach_generation_task",
             "app.services.enrollment_state_sync",
             "app.services.deal_phase_4_5_auto_fire_task",

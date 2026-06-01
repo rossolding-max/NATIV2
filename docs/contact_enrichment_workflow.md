@@ -1,6 +1,6 @@
 # Contact Enrichment Workflow
 
-**Status:** Draft v0.1 (2026-05-26). Forward-looking spec for the system that takes a brand from "in our candidate list" to "we have N qualified named contacts with verified emails and decision-role tagging".
+**Status:** v0.1 shipped M8 (2026-05-26); reshaped M8.1 (2026-06-01) into broad Phase A capture + classify+recommend Phase B + user-gated bulk-reveal Phase C. Spec below reflects M8.1; M8 narrow-titles + per-row pre-revealed-emails behaviour deprecated.
 
 **Pairs with:**
 - `docs/brand_discovery.md` — produces the brands this workflow enriches contacts for.
@@ -42,23 +42,39 @@ The orchestrator never auto-enriches brands the qualification gate has filtered 
 
 ---
 
+## M8.1 — Three-phase shape
+
+The workflow splits into three phases with a human-in-the-loop gate
+between Phase B and Phase C. The expensive Apollo email-reveal call
+fires only on contacts the operator explicitly selects:
+
+| Phase | Trigger | Cost shape |
+|---|---|---|
+| **A. Broad capture** | `POST /api/v1/brands/{brand_id}/contact-enrichment/run` (manual) | Apollo `/people/search` (no email; per-query cost, not per-record); LinkedIn enrich; Exa fallback. ~$0.30-0.80 per brand. Surfaces 30-80 marketing-adjacent contacts. |
+| **B. Classify + recommend** | Same Celery task continues; runs Step 6 batched Haiku call | ~$0.01-0.02 per brand. Sets `decision_role` + `outreach_recommendation` on every contact. |
+| **C. Bulk reveal (operator-selected)** | `POST /api/v1/brands/{brand_id}/contact-emails/reveal` with `{contact_ids: [...]}` | Apollo `/people/match` fires per selected contact (~$0.20-0.50 each). 60/min rate limit → 20 contacts ≈ 20 seconds. Operator pays only for contacts they actually want to outreach. |
+
 ## The 9-step pipeline (per brand)
 
-### Step 1 — Identify target roles
+### Step 1 — Identify target roles (M8.1: broad-keyword pool)
 **Reads:** the brand's record in `brand_industry_map.json` (`typical_campaign_tier`, `headcount`, `revenue`, `company_stage`).
-**Logic:** the target role list scales with brand size.
 
-| Brand profile | Target roles |
-|---|---|
-| `typical_campaign_tier: premium` AND `headcount ≥ 10000_plus` (large multinationals) | "Director of Influencer Marketing", "Head of Creator Partnerships", "VP Brand Marketing", "Senior Brand Manager — [talent's niche]", "Influencer Marketing Manager" |
-| `typical_campaign_tier: macro` AND `headcount ∈ [1001_5000, 5001_10000]` | "Head of Influencer Marketing", "Brand Partnerships Manager", "Senior Brand Manager", "Social Media Director" |
-| `typical_campaign_tier: mid` AND `headcount ∈ [201_500, 501_1000]` | "Marketing Manager", "Brand Manager", "Influencer Lead", "Head of Marketing", "Founder/CEO" (often still hands-on at this scale) |
-| `typical_campaign_tier: micro` OR `headcount < 200` | "Founder", "CEO", "Head of Marketing", "Marketing Lead", "Anyone with 'marketing' in title" |
-| Sensitive verticals (gambling, alcohol etc.) | Add "Compliance" / "Brand Safety" roles to capture stakeholders who could block a deal |
+**M8.1 reshape:** The M8 5-category dicts (consumer-goods, b2b-saas, agency, media-entertainment, ecommerce) with ~6-8 narrow titles each are **replaced** by a single 12-keyword list:
+
+```
+marketing, brand, creator, influencer, partnerships, social,
+growth, communications, PR, community, affiliate, founder
+```
+
+Apollo `/people/search` does substring matching against `person_titles`, so "marketing" catches every "X Marketing Y" variation; "brand" catches "Brand Manager", "Senior Brand Marketing"; "creator" catches "Director of Creator Economy", "Creator Partnerships Lead"; etc. This casts a much wider net than the M8 narrow lists at the same per-query cost (Apollo search is per-query, not per-record).
+
+**The downstream filter is no longer the title list** — it's the Step 6 `outreach_recommendation` classifier (Phase B). The broad pool surfaces edge-case relevant titles + a tail of less-relevant titles; Phase B labels each row `recommended` / `not_recommended` / `requires_review` so the operator can filter to the contacts worth paying email-reveal cost on.
+
+Callers can still supply `target_titles=[...]` to override the broad list (used by integration tests + niche agency workflows).
 
 **Also pulled per-brand:** the brand's `creator_program_presence`. If `aspire`/`grin`/`ltk`/`shopmy` is listed, add "Creator Marketplace Lead" to targets. If `agency_of_record`, the talent's outreach goes via the AOR — add "Account Director at [AOR]" as a contact too.
 
-**Output:** ordered list of target titles (highest-priority first).
+**Output:** ordered list of target-title keywords (per-call override > broad list default).
 
 ### Step 2 — Apollo employee lookup
 **Reads:** brand's `domain` from `brand_industry_map.json` + target titles from Step 1.
@@ -105,19 +121,35 @@ people.search({
 3. LLM (Claude Haiku) extracts: name, title, LinkedIn handle (if visible), public claims about role/scope.
 **Output:** rough contact records — typically no email, no verified LinkedIn URL, lower confidence. Marked `source: exa_web_search` with confidence ≤ 0.50.
 
-### Step 5 — Email verification
-**Reads:** every contact record with an email from Steps 2–4.
-**Logic:**
-- **Apollo-sourced emails:** Apollo runs SMTP verification inline; respect their `verified` / `catchall` / `unverified` flag.
-- **LinkedIn / web-search-sourced emails:** if no email returned, generate `guessed_pattern` from the brand's known pattern (`firstname.lastname@brand.com` is the common default — derived from existing verified emails at the brand).
-  - Confidence flag: `guessed_pattern` is NOT a verified address. Outreach attempts mark it accordingly; bounce-back from a guess updates `verification_status: bounced` permanently for that pattern variant.
-- **Bounced emails:** if `pitch_history` shows a recent hard bounce, set `verification_status: bounced` and skip future outreach until the contact is re-enriched.
+### Step 5 — Email verification — REMOVED FROM PHASE A IN M8.1
+**M8.1 reshape:** Phase A no longer pre-emptively reveals emails for every contact. Apollo `/people/search` returns no emails anyway, and we never call `/people/match` for the broad pool — that's the cost saving. Email reveal moves entirely to Step 5b, fired by the operator after reviewing the Phase B recommendations.
 
-**Output:** every email field has a `verification_status`. Records with unverifiable emails are kept (with status flagged) — never deleted.
+The strict honesty floor (Apollo `verified` / `catchall` only, no pattern-guessing) is preserved verbatim — it just applies per-row at Phase C reveal time instead of inline in Phase A.
 
-### Step 6 — Decision-role classification
+### Step 5b — Bulk email reveal (M8.1 Phase C, operator-triggered)
+**Trigger:** `POST /api/v1/brands/{brand_id}/contact-emails/reveal` with body `{contact_ids: [str]}`.
+
+**Per contact_id:**
+1. Look up the row + its `linkedin_url` + the brand's `domain`.
+2. Fire `ApolloClient.match_person(linkedin_url=..., organization_domain=...)`. One HTTP call per contact; Apollo has no bulk endpoint; the global 60/min rate limit applies (20 contacts ≈ 20 seconds).
+3. Apply the strict honesty floor: keep the returned email only if Apollo flagged it `verified` or `catchall`. Anything else → `email` stays null on the row.
+4. Always set `revealed_at = now()` and record the actual `verification_status` (`verified` / `catchall` / `unverified` / `bounced` / `not_found` / `apollo_error`) so the UI shows "we tried" even when no usable email landed.
+
+**Output:** the operator's selected contacts have their email + `verification_status` updated; `revealed_at` set on every reveal attempt. The Phase A pool of un-selected contacts stays with `email=null, revealed_at=null` — still visible in the inventory but not outreach-ready.
+
+### Step 6 — Decision-role + outreach-recommendation classification (M8.1 dual call)
 **Reads:** all contact records assembled so far + the brand's metadata (revenue, headcount, typical_campaign_tier, company_stage) + the contact's title + seniority.
-**LLM call** (Claude Haiku, single prompt per contact):
+
+**M8.1:** One batched Haiku call now returns TWO independent classifications per contact:
+
+1. **`decision_role`** (existing): `buyer` / `influencer` / `gatekeeper` / `champion` / `unknown` — what role the contact plays in the buying decision.
+2. **`outreach_recommendation`** (NEW): `recommended` / `not_recommended` / `requires_review` — should the operator pitch this contact directly. Distinct from decision_role: a CMO at a $50B brand is `influencer` (role) AND `not_recommended` (recommendation — too senior to engage with a creator pitch). An IM Manager anywhere is `buyer` + `recommended`.
+
+The recommendation defaults to `requires_review` on any LLM error or invalid output — the system never auto-promotes a contact to `recommended` without an explicit LLM endorsement.
+
+**Output:** each contact has `decision_role` + `decision_role_rationale` + `outreach_recommendation` + `outreach_recommendation_rationale` populated. Both rationales are one-sentence LLM-generated explanations the operator sees in the UI.
+
+**LLM call** (Claude Haiku, single batched prompt per brand):
 
 Prompt template:
 ```
